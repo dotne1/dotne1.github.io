@@ -33,164 +33,1554 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2025-31910" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in reputeinfosystems bookingpress allows sql injection. this issue affects bookingpress: from n/a through 1.1.28.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31910" target="_blank">CVE-2025-31910</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in reputeinfosystems BookingPress allows SQL Injection. This issue affects BookingPress: from n/a through 1.1.28.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21986" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: switchdev: convert blocking notification chain to a raw one
+
+a blocking notification chain uses a read-write semaphore to protect the
+integrity of the chain. the semaphore is acquired for writing when
+adding / removing notifiers to / from the chain and acquired for reading
+when traversing the chain and informing notifiers about an event.
+
+in case of the blocking switchdev notification chain, recursive
+notifications are possible which leads to the semaphore being acquired
+twice for reading and to lockdep warnings being generated [1].
+
+specifically, this can happen when the bridge driver processes a
+switchdev_brport_unoffloaded event which causes it to emit notifications
+about deferred events when calling switchdev_deferred_process().
+
+fix this by converting the notification chain to a raw notification
+chain in a similar fashion to the netdev notification chain. protect
+the chain using the rtnl mutex by acquiring it when modifying the chain.
+events are always informed under the rtnl mutex, but add an assertion in
+call_switchdev_blocking_notifiers() to make sure this is not violated in
+the future.
+
+maintain the "blocking" prefix as events are always emitted from process
+context and listeners are allowed to block.
+
+[1]:
+warning: possible recursive locking detected
+6.14.0-rc4-custom-g079270089484 #1 not tainted
+--------------------------------------------
+ip/52731 is trying to acquire lock:
+ffffffff850918d8 ((switchdev_blocking_notif_chain).rwsem){++++}-{4:4}, at: blocking_notifier_call_chain+0x58/0xa0
+
+but task is already holding lock:
+ffffffff850918d8 ((switchdev_blocking_notif_chain).rwsem){++++}-{4:4}, at: blocking_notifier_call_chain+0x58/0xa0
+
+other info that might help us debug this:
+possible unsafe locking scenario:
+cpu0
+----
+lock((switchdev_blocking_notif_chain).rwsem);
+lock((switchdev_blocking_notif_chain).rwsem);
+
+*** deadlock ***
+may be due to missing lock nesting notation
+3 locks held by ip/52731:
+ #0: ffffffff84f795b0 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_newlink+0x727/0x1dc0
+ #1: ffffffff8731f628 (&net->rtnl_mutex){+.+.}-{4:4}, at: rtnl_newlink+0x790/0x1dc0
+ #2: ffffffff850918d8 ((switchdev_blocking_notif_chain).rwsem){++++}-{4:4}, at: blocking_notifier_call_chain+0x58/0xa0
+
+stack backtrace:
+...
+? __pfx_down_read+0x10/0x10
+? __pfx_mark_lock+0x10/0x10
+? __pfx_switchdev_port_attr_set_deferred+0x10/0x10
+blocking_notifier_call_chain+0x58/0xa0
+switchdev_port_attr_notify.constprop.0+0xb3/0x1b0
+? __pfx_switchdev_port_attr_notify.constprop.0+0x10/0x10
+? mark_held_locks+0x94/0xe0
+? switchdev_deferred_process+0x11a/0x340
+switchdev_port_attr_set_deferred+0x27/0xd0
+switchdev_deferred_process+0x164/0x340
+br_switchdev_port_unoffload+0xc8/0x100 [bridge]
+br_switchdev_blocking_event+0x29f/0x580 [bridge]
+notifier_call_chain+0xa2/0x440
+blocking_notifier_call_chain+0x6e/0xa0
+switchdev_bridge_port_unoffload+0xde/0x1a0
+...">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21986" target="_blank">CVE-2025-21986</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: switchdev: Convert blocking notification chain to a raw one
+
+A blocking notification chain uses a read-write semaphore to protect the
+integrity of the chain. The semaphore is acquired for writing when
+adding / removing notifiers to / from the chain and acquired for reading
+when traversing the chain and informing notifiers about an event.
+
+In case of the blocking switchdev notification chain, recursive
+notifications are possible which leads to the semaphore being acquired
+twice for reading and to lockdep warnings being generated [1].
+
+Specifically, this can happen when the bridge driver processes a
+SWITCHDEV_BRPORT_UNOFFLOADED event which causes it to emit notifications
+about deferred events when calling switchdev_deferred_process().
+
+Fix this by converting the notification chain to a raw notification
+chain in a similar fashion to the netdev notification chain. Protect
+the chain using the RTNL mutex by acquiring it when modifying the chain.
+Events are always informed under the RTNL mutex, but add an assertion in
+call_switchdev_blocking_notifiers() to make sure this is not violated in
+the future.
+
+Maintain the "blocking" prefix as events are always emitted from process
+context and listeners are allowed to block.
+
+[1]:
+WARNING: possible recursive locking detected
+6.14.0-rc4-custom-g079270089484 #1 Not tainted
+--------------------------------------------
+ip/52731 is trying to acquire lock:
+ffffffff850918d8 ((switchdev_blocking_notif_chain).rwsem){++++}-{4:4}, at: blocking_notifier_call_chain+0x58/0xa0
+
+but task is already holding lock:
+ffffffff850918d8 ((switchdev_blocking_notif_chain).rwsem){++++}-{4:4}, at: blocking_notifier_call_chain+0x58/0xa0
+
+other info that might help us debug this:
+Possible unsafe locking scenario:
+CPU0
+----
+lock((switchdev_blocking_notif_chain).rwsem);
+lock((switchdev_blocking_notif_chain).rwsem);
+
+*** DEADLOCK ***
+May be due to missing lock nesting notation
+3 locks held by ip/52731:
+ #0: ffffffff84f795b0 (rtnl_mutex){+.+.}-{4:4}, at: rtnl_newlink+0x727/0x1dc0
+ #1: ffffffff8731f628 (&net->rtnl_mutex){+.+.}-{4:4}, at: rtnl_newlink+0x790/0x1dc0
+ #2: ffffffff850918d8 ((switchdev_blocking_notif_chain).rwsem){++++}-{4:4}, at: blocking_notifier_call_chain+0x58/0xa0
+
+stack backtrace:
+...
+? __pfx_down_read+0x10/0x10
+? __pfx_mark_lock+0x10/0x10
+? __pfx_switchdev_port_attr_set_deferred+0x10/0x10
+blocking_notifier_call_chain+0x58/0xa0
+switchdev_port_attr_notify.constprop.0+0xb3/0x1b0
+? __pfx_switchdev_port_attr_notify.constprop.0+0x10/0x10
+? mark_held_locks+0x94/0xe0
+? switchdev_deferred_process+0x11a/0x340
+switchdev_port_attr_set_deferred+0x27/0xd0
+switchdev_deferred_process+0x164/0x340
+br_switchdev_port_unoffload+0xc8/0x100 [bridge]
+br_switchdev_blocking_event+0x29f/0x580 [bridge]
+notifier_call_chain+0xa2/0x440
+blocking_notifier_call_chain+0x6e/0xa0
+switchdev_bridge_port_unoffload+0xde/0x1a0
+...</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31908" data-description="cross-site request forgery (csrf) vulnerability in sami ahmed siddiqui json structuring markup allows stored xss. this issue affects json structuring markup: from n/a through 0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31908" target="_blank">CVE-2025-31908</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in Sami Ahmed Siddiqui JSON Structuring Markup allows Stored XSS. This issue affects JSON Structuring Markup: from n/a through 0.1.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21985" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/amd/display: fix out-of-bound accesses
+
+[what & how]
+hpo_stream_to_link_encoder_mapping has size max_hpo_dp2_encoders(=4),
+but location can have size up to 6. as a result, it is necessary to
+check location against max_hpo_dp2_encoders.
+
+similiarly, disp_cfg_stream_location can be used as an array index which
+should be 0..5, so the assert's conditions should be less without equal.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21985" target="_blank">CVE-2025-21985</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/amd/display: Fix out-of-bound accesses
+
+[WHAT & HOW]
+hpo_stream_to_link_encoder_mapping has size MAX_HPO_DP2_ENCODERS(=4),
+but location can have size up to 6. As a result, it is necessary to
+check location against MAX_HPO_DP2_ENCODERS.
+
+Similiarly, disp_cfg_stream_location can be used as an array index which
+should be 0..5, so the ASSERT's conditions should be less without equal.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31906" data-description="cross-site request forgery (csrf) vulnerability in profitshare.ro wp profitshare allows stored xss. this issue affects wp profitshare: from n/a through 1.4.9.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31906" target="_blank">CVE-2025-31906</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in ProfitShare.ro WP Profitshare allows Stored XSS. This issue affects WP Profitshare: from n/a through 1.4.9.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21984" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mm: fix kernel bug when userfaultfd_move encounters swapcache
+
+userfaultfd_move() checks whether the pte entry is present or a
+swap entry.
+
+- if the pte entry is present, move_present_pte() handles folio
+  migration by setting:
+
+  src_folio->index = linear_page_index(dst_vma, dst_addr);
+
+- if the pte entry is a swap entry, move_swap_pte() simply copies
+  the pte to the new dst_addr.
+
+this approach is incorrect because, even if the pte is a swap entry,
+it can still reference a folio that remains in the swap cache.
+
+this creates a race window between steps 2 and 4.
+ 1. add_to_swap: the folio is added to the swapcache.
+ 2. try_to_unmap: ptes are converted to swap entries.
+ 3. pageout: the folio is written back.
+ 4. swapcache is cleared.
+if userfaultfd_move() occurs in the window between steps 2 and 4,
+after the swap pte has been moved to the destination, accessing the
+destination triggers do_swap_page(), which may locate the folio in
+the swapcache. however, since the folio's index has not been updated
+to match the destination vma, do_swap_page() will detect a mismatch.
+
+this can result in two critical issues depending on the system
+configuration.
+
+if ksm is disabled, both small and large folios can trigger a bug
+during the add_rmap operation due to:
+
+ page_pgoff(folio, page) != linear_page_index(vma, address)
+
+[   13.336953] page: refcount:6 mapcount:1 mapping:00000000f43db19c index:0xffffaf150 pfn:0x4667c
+[   13.337520] head: order:2 mapcount:1 entire_mapcount:0 nr_pages_mapped:1 pincount:0
+[   13.337716] memcg:ffff00000405f000
+[   13.337849] anon flags: 0x3fffc0000020459(locked|uptodate|dirty|owner_priv_1|head|swapbacked|node=0|zone=0|lastcpupid=0xffff)
+[   13.338630] raw: 03fffc0000020459 ffff80008507b538 ffff80008507b538 ffff000006260361
+[   13.338831] raw: 0000000ffffaf150 0000000000004000 0000000600000000 ffff00000405f000
+[   13.339031] head: 03fffc0000020459 ffff80008507b538 ffff80008507b538 ffff000006260361
+[   13.339204] head: 0000000ffffaf150 0000000000004000 0000000600000000 ffff00000405f000
+[   13.339375] head: 03fffc0000000202 fffffdffc0199f01 ffffffff00000000 0000000000000001
+[   13.339546] head: 0000000000000004 0000000000000000 00000000ffffffff 0000000000000000
+[   13.339736] page dumped because: vm_bug_on_page(page_pgoff(folio, page) != linear_page_index(vma, address))
+[   13.340190] ------------[ cut here ]------------
+[   13.340316] kernel bug at mm/rmap.c:1380!
+[   13.340683] internal error: oops - bug: 00000000f2000800 [#1] preempt smp
+[   13.340969] modules linked in:
+[   13.341257] cpu: 1 uid: 0 pid: 107 comm: a.out not tainted 6.14.0-rc3-gcf42737e247a-dirty #299
+[   13.341470] hardware name: linux,dummy-virt (dt)
+[   13.341671] pstate: 60000005 (nzcv daif -pan -uao -tco -dit -ssbs btype=--)
+[   13.341815] pc : __page_check_anon_rmap+0xa0/0xb0
+[   13.341920] lr : __page_check_anon_rmap+0xa0/0xb0
+[   13.342018] sp : ffff80008752bb20
+[   13.342093] x29: ffff80008752bb20 x28: fffffdffc0199f00 x27: 0000000000000001
+[   13.342404] x26: 0000000000000000 x25: 0000000000000001 x24: 0000000000000001
+[   13.342575] x23: 0000ffffaf0d0000 x22: 0000ffffaf0d0000 x21: fffffdffc0199f00
+[   13.342731] x20: fffffdffc0199f00 x19: ffff000006210700 x18: 00000000ffffffff
+[   13.342881] x17: 6c203d2120296567 x16: 6170202c6f696c6f x15: 662866666f67705f
+[   13.343033] x14: 6567617028454741 x13: 2929737365726464 x12: ffff800083728ab0
+[   13.343183] x11: ffff800082996bf8 x10: 0000000000000fd7 x9 : ffff80008011bc40
+[   13.343351] x8 : 0000000000017fe8 x7 : 00000000fffff000 x6 : ffff8000829eebf8
+[   13.343498] x5 : c0000000fffff000 x4 : 0000000000000000 x3 : 0000000000000000
+[   13.343645] x2 : 0000000000000000 x1 : ffff0000062db980 x0 : 000000000000005f
+[   13.343876] call trace:
+[   13.344045]  __page_check_anon_rmap+0xa0/0xb0 (p)
+[   13.344234]  folio_add_anon_rmap_ptes+0x22c/0x320
+[   13.344333]  do_swap_page+0x1060/0x1400
+[   13.344417]  __handl
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21984" target="_blank">CVE-2025-21984</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mm: fix kernel BUG when userfaultfd_move encounters swapcache
+
+userfaultfd_move() checks whether the PTE entry is present or a
+swap entry.
+
+- If the PTE entry is present, move_present_pte() handles folio
+  migration by setting:
+
+  src_folio->index = linear_page_index(dst_vma, dst_addr);
+
+- If the PTE entry is a swap entry, move_swap_pte() simply copies
+  the PTE to the new dst_addr.
+
+This approach is incorrect because, even if the PTE is a swap entry,
+it can still reference a folio that remains in the swap cache.
+
+This creates a race window between steps 2 and 4.
+ 1. add_to_swap: The folio is added to the swapcache.
+ 2. try_to_unmap: PTEs are converted to swap entries.
+ 3. pageout: The folio is written back.
+ 4. Swapcache is cleared.
+If userfaultfd_move() occurs in the window between steps 2 and 4,
+after the swap PTE has been moved to the destination, accessing the
+destination triggers do_swap_page(), which may locate the folio in
+the swapcache. However, since the folio's index has not been updated
+to match the destination VMA, do_swap_page() will detect a mismatch.
+
+This can result in two critical issues depending on the system
+configuration.
+
+If KSM is disabled, both small and large folios can trigger a BUG
+during the add_rmap operation due to:
+
+ page_pgoff(folio, page) != linear_page_index(vma, address)
+
+[   13.336953] page: refcount:6 mapcount:1 mapping:00000000f43db19c index:0xffffaf150 pfn:0x4667c
+[   13.337520] head: order:2 mapcount:1 entire_mapcount:0 nr_pages_mapped:1 pincount:0
+[   13.337716] memcg:ffff00000405f000
+[   13.337849] anon flags: 0x3fffc0000020459(locked|uptodate|dirty|owner_priv_1|head|swapbacked|node=0|zone=0|lastcpupid=0xffff)
+[   13.338630] raw: 03fffc0000020459 ffff80008507b538 ffff80008507b538 ffff000006260361
+[   13.338831] raw: 0000000ffffaf150 0000000000004000 0000000600000000 ffff00000405f000
+[   13.339031] head: 03fffc0000020459 ffff80008507b538 ffff80008507b538 ffff000006260361
+[   13.339204] head: 0000000ffffaf150 0000000000004000 0000000600000000 ffff00000405f000
+[   13.339375] head: 03fffc0000000202 fffffdffc0199f01 ffffffff00000000 0000000000000001
+[   13.339546] head: 0000000000000004 0000000000000000 00000000ffffffff 0000000000000000
+[   13.339736] page dumped because: VM_BUG_ON_PAGE(page_pgoff(folio, page) != linear_page_index(vma, address))
+[   13.340190] ------------[ cut here ]------------
+[   13.340316] kernel BUG at mm/rmap.c:1380!
+[   13.340683] Internal error: Oops - BUG: 00000000f2000800 [#1] PREEMPT SMP
+[   13.340969] Modules linked in:
+[   13.341257] CPU: 1 UID: 0 PID: 107 Comm: a.out Not tainted 6.14.0-rc3-gcf42737e247a-dirty #299
+[   13.341470] Hardware name: linux,dummy-virt (DT)
+[   13.341671] pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[   13.341815] pc : __page_check_anon_rmap+0xa0/0xb0
+[   13.341920] lr : __page_check_anon_rmap+0xa0/0xb0
+[   13.342018] sp : ffff80008752bb20
+[   13.342093] x29: ffff80008752bb20 x28: fffffdffc0199f00 x27: 0000000000000001
+[   13.342404] x26: 0000000000000000 x25: 0000000000000001 x24: 0000000000000001
+[   13.342575] x23: 0000ffffaf0d0000 x22: 0000ffffaf0d0000 x21: fffffdffc0199f00
+[   13.342731] x20: fffffdffc0199f00 x19: ffff000006210700 x18: 00000000ffffffff
+[   13.342881] x17: 6c203d2120296567 x16: 6170202c6f696c6f x15: 662866666f67705f
+[   13.343033] x14: 6567617028454741 x13: 2929737365726464 x12: ffff800083728ab0
+[   13.343183] x11: ffff800082996bf8 x10: 0000000000000fd7 x9 : ffff80008011bc40
+[   13.343351] x8 : 0000000000017fe8 x7 : 00000000fffff000 x6 : ffff8000829eebf8
+[   13.343498] x5 : c0000000fffff000 x4 : 0000000000000000 x3 : 0000000000000000
+[   13.343645] x2 : 0000000000000000 x1 : ffff0000062db980 x0 : 000000000000005f
+[   13.343876] Call trace:
+[   13.344045]  __page_check_anon_rmap+0xa0/0xb0 (P)
+[   13.344234]  folio_add_anon_rmap_ptes+0x22c/0x320
+[   13.344333]  do_swap_page+0x1060/0x1400
+[   13.344417]  __handl
+---truncated---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31904" data-description="cross-site request forgery (csrf) vulnerability in infoway llc ebook downloader allows cross site request forgery. this issue affects ebook downloader: from n/a through 1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31904" target="_blank">CVE-2025-31904</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in Infoway LLC Ebook Downloader allows Cross Site Request Forgery. This issue affects Ebook Downloader: from n/a through 1.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21983" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mm/slab/kvfree_rcu: switch to wq_mem_reclaim wq
+
+currently kvfree_rcu() apis use a system workqueue which is
+"system_unbound_wq" to driver rcu machinery to reclaim a memory.
+
+recently, it has been noted that the following kernel warning can
+be observed:
+
+<snip>
+workqueue: wq_mem_reclaim nvme-wq:nvme_scan_work is flushing !wq_mem_reclaim events_unbound:kfree_rcu_work
+  warning: cpu: 21 pid: 330 at kernel/workqueue.c:3719 check_flush_dependency+0x112/0x120
+  modules linked in: intel_uncore_frequency(e) intel_uncore_frequency_common(e) skx_edac(e) ...
+  cpu: 21 uid: 0 pid: 330 comm: kworker/u144:6 tainted: g            e      6.13.2-0_g925d379822da #1
+  hardware name: wiwynn twin lakes mp/twin lakes passive mp, bios ymm20 02/01/2023
+  workqueue: nvme-wq nvme_scan_work
+  rip: 0010:check_flush_dependency+0x112/0x120
+  code: 05 9a 40 14 02 01 48 81 c6 c0 00 00 00 48 8b 50 18 48 81 c7 c0 00 00 00 48 89 f9 48 ...
+  rsp: 0018:ffffc90000df7bd8 eflags: 00010082
+  rax: 000000000000006a rbx: ffffffff81622390 rcx: 0000000000000027
+  rdx: 00000000fffeffff rsi: 000000000057ffa8 rdi: ffff88907f960c88
+  rbp: 0000000000000000 r08: ffffffff83068e50 r09: 000000000002fffd
+  r10: 0000000000000004 r11: 0000000000000000 r12: ffff8881001a4400
+  r13: 0000000000000000 r14: ffff88907f420fb8 r15: 0000000000000000
+  fs:  0000000000000000(0000) gs:ffff88907f940000(0000) knlgs:0000000000000000
+  cr2: 00007f60c3001000 cr3: 000000107d010005 cr4: 00000000007726f0
+  pkru: 55555554
+  call trace:
+   <task>
+   ? __warn+0xa4/0x140
+   ? check_flush_dependency+0x112/0x120
+   ? report_bug+0xe1/0x140
+   ? check_flush_dependency+0x112/0x120
+   ? handle_bug+0x5e/0x90
+   ? exc_invalid_op+0x16/0x40
+   ? asm_exc_invalid_op+0x16/0x20
+   ? timer_recalc_next_expiry+0x190/0x190
+   ? check_flush_dependency+0x112/0x120
+   ? check_flush_dependency+0x112/0x120
+   __flush_work.llvm.1643880146586177030+0x174/0x2c0
+   flush_rcu_work+0x28/0x30
+   kvfree_rcu_barrier+0x12f/0x160
+   kmem_cache_destroy+0x18/0x120
+   bioset_exit+0x10c/0x150
+   disk_release.llvm.6740012984264378178+0x61/0xd0
+   device_release+0x4f/0x90
+   kobject_put+0x95/0x180
+   nvme_put_ns+0x23/0xc0
+   nvme_remove_invalid_namespaces+0xb3/0xd0
+   nvme_scan_work+0x342/0x490
+   process_scheduled_works+0x1a2/0x370
+   worker_thread+0x2ff/0x390
+   ? pwq_release_workfn+0x1e0/0x1e0
+   kthread+0xb1/0xe0
+   ? __kthread_parkme+0x70/0x70
+   ret_from_fork+0x30/0x40
+   ? __kthread_parkme+0x70/0x70
+   ret_from_fork_asm+0x11/0x20
+   </task>
+  ---[ end trace 0000000000000000 ]---
+<snip>
+
+to address this switch to use of independent wq_mem_reclaim
+workqueue, so the rules are not violated from workqueue framework
+point of view.
+
+apart of that, since kvfree_rcu() does reclaim memory it is worth
+to go with wq_mem_reclaim type of wq because it is designed for
+this purpose.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21983" target="_blank">CVE-2025-21983</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mm/slab/kvfree_rcu: Switch to WQ_MEM_RECLAIM wq
+
+Currently kvfree_rcu() APIs use a system workqueue which is
+"system_unbound_wq" to driver RCU machinery to reclaim a memory.
+
+Recently, it has been noted that the following kernel warning can
+be observed:
+
+<snip>
+workqueue: WQ_MEM_RECLAIM nvme-wq:nvme_scan_work is flushing !WQ_MEM_RECLAIM events_unbound:kfree_rcu_work
+  WARNING: CPU: 21 PID: 330 at kernel/workqueue.c:3719 check_flush_dependency+0x112/0x120
+  Modules linked in: intel_uncore_frequency(E) intel_uncore_frequency_common(E) skx_edac(E) ...
+  CPU: 21 UID: 0 PID: 330 Comm: kworker/u144:6 Tainted: G            E      6.13.2-0_g925d379822da #1
+  Hardware name: Wiwynn Twin Lakes MP/Twin Lakes Passive MP, BIOS YMM20 02/01/2023
+  Workqueue: nvme-wq nvme_scan_work
+  RIP: 0010:check_flush_dependency+0x112/0x120
+  Code: 05 9a 40 14 02 01 48 81 c6 c0 00 00 00 48 8b 50 18 48 81 c7 c0 00 00 00 48 89 f9 48 ...
+  RSP: 0018:ffffc90000df7bd8 EFLAGS: 00010082
+  RAX: 000000000000006a RBX: ffffffff81622390 RCX: 0000000000000027
+  RDX: 00000000fffeffff RSI: 000000000057ffa8 RDI: ffff88907f960c88
+  RBP: 0000000000000000 R08: ffffffff83068e50 R09: 000000000002fffd
+  R10: 0000000000000004 R11: 0000000000000000 R12: ffff8881001a4400
+  R13: 0000000000000000 R14: ffff88907f420fb8 R15: 0000000000000000
+  FS:  0000000000000000(0000) GS:ffff88907f940000(0000) knlGS:0000000000000000
+  CR2: 00007f60c3001000 CR3: 000000107d010005 CR4: 00000000007726f0
+  PKRU: 55555554
+  Call Trace:
+   <TASK>
+   ? __warn+0xa4/0x140
+   ? check_flush_dependency+0x112/0x120
+   ? report_bug+0xe1/0x140
+   ? check_flush_dependency+0x112/0x120
+   ? handle_bug+0x5e/0x90
+   ? exc_invalid_op+0x16/0x40
+   ? asm_exc_invalid_op+0x16/0x20
+   ? timer_recalc_next_expiry+0x190/0x190
+   ? check_flush_dependency+0x112/0x120
+   ? check_flush_dependency+0x112/0x120
+   __flush_work.llvm.1643880146586177030+0x174/0x2c0
+   flush_rcu_work+0x28/0x30
+   kvfree_rcu_barrier+0x12f/0x160
+   kmem_cache_destroy+0x18/0x120
+   bioset_exit+0x10c/0x150
+   disk_release.llvm.6740012984264378178+0x61/0xd0
+   device_release+0x4f/0x90
+   kobject_put+0x95/0x180
+   nvme_put_ns+0x23/0xc0
+   nvme_remove_invalid_namespaces+0xb3/0xd0
+   nvme_scan_work+0x342/0x490
+   process_scheduled_works+0x1a2/0x370
+   worker_thread+0x2ff/0x390
+   ? pwq_release_workfn+0x1e0/0x1e0
+   kthread+0xb1/0xe0
+   ? __kthread_parkme+0x70/0x70
+   ret_from_fork+0x30/0x40
+   ? __kthread_parkme+0x70/0x70
+   ret_from_fork_asm+0x11/0x20
+   </TASK>
+  ---[ end trace 0000000000000000 ]---
+<snip>
+
+To address this switch to use of independent WQ_MEM_RECLAIM
+workqueue, so the rules are not violated from workqueue framework
+point of view.
+
+Apart of that, since kvfree_rcu() does reclaim memory it is worth
+to go with WQ_MEM_RECLAIM type of wq because it is designed for
+this purpose.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31897" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in arrow plugins arrow custom feed for twitter allows stored xss. this issue affects arrow custom feed for twitter: from n/a through 1.5.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31897" target="_blank">CVE-2025-31897</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Arrow Plugins Arrow Custom Feed for Twitter allows Stored XSS. This issue affects Arrow Custom Feed for Twitter: from n/a through 1.5.3.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21982" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+pinctrl: nuvoton: npcm8xx: add null check in npcm8xx_gpio_fw
+
+devm_kasprintf() calls can return null pointers on failure.
+but the return values were not checked in npcm8xx_gpio_fw().
+add null check in npcm8xx_gpio_fw(), to handle kernel null
+pointer dereference error.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21982" target="_blank">CVE-2025-21982</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+pinctrl: nuvoton: npcm8xx: Add NULL check in npcm8xx_gpio_fw
+
+devm_kasprintf() calls can return null pointers on failure.
+But the return values were not checked in npcm8xx_gpio_fw().
+Add NULL check in npcm8xx_gpio_fw(), to handle kernel NULL
+pointer dereference error.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31895" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in paulrosen abc notation allows stored xss. this issue affects abc notation: from n/a through 6.1.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31895" target="_blank">CVE-2025-31895</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in paulrosen ABC Notation allows Stored XSS. This issue affects ABC Notation: from n/a through 6.1.3.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21981" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ice: fix memory leak in arfs after reset
+
+fix arfs (accelerated receive flow steering) structures memory leak by
+adding a checker to verify if arfs memory is already allocated while
+configuring vsi. arfs objects are allocated in two cases:
+- as part of vsi initialization (at probe), and
+- as part of reset handling
+
+however, vsi reconfiguration executed during reset involves memory
+allocation one more time, without prior releasing already allocated
+resources. this led to the memory leak with the following signature:
+
+[root@os-delivery ~]# cat /sys/kernel/debug/kmemleak
+unreferenced object 0xff3c1ca7252e6000 (size 8192):
+  comm "kworker/0:0", pid 8, jiffies 4296833052
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace (crc 0):
+    [<ffffffff991ec485>] __kmalloc_cache_noprof+0x275/0x340
+    [<ffffffffc0a6e06a>] ice_init_arfs+0x3a/0xe0 [ice]
+    [<ffffffffc09f1027>] ice_vsi_cfg_def+0x607/0x850 [ice]
+    [<ffffffffc09f244b>] ice_vsi_setup+0x5b/0x130 [ice]
+    [<ffffffffc09c2131>] ice_init+0x1c1/0x460 [ice]
+    [<ffffffffc09c64af>] ice_probe+0x2af/0x520 [ice]
+    [<ffffffff994fbcd3>] local_pci_probe+0x43/0xa0
+    [<ffffffff98f07103>] work_for_cpu_fn+0x13/0x20
+    [<ffffffff98f0b6d9>] process_one_work+0x179/0x390
+    [<ffffffff98f0c1e9>] worker_thread+0x239/0x340
+    [<ffffffff98f14abc>] kthread+0xcc/0x100
+    [<ffffffff98e45a6d>] ret_from_fork+0x2d/0x50
+    [<ffffffff98e083ba>] ret_from_fork_asm+0x1a/0x30
+    ...">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21981" target="_blank">CVE-2025-21981</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ice: fix memory leak in aRFS after reset
+
+Fix aRFS (accelerated Receive Flow Steering) structures memory leak by
+adding a checker to verify if aRFS memory is already allocated while
+configuring VSI. aRFS objects are allocated in two cases:
+- as part of VSI initialization (at probe), and
+- as part of reset handling
+
+However, VSI reconfiguration executed during reset involves memory
+allocation one more time, without prior releasing already allocated
+resources. This led to the memory leak with the following signature:
+
+[root@os-delivery ~]# cat /sys/kernel/debug/kmemleak
+unreferenced object 0xff3c1ca7252e6000 (size 8192):
+  comm "kworker/0:0", pid 8, jiffies 4296833052
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace (crc 0):
+    [<ffffffff991ec485>] __kmalloc_cache_noprof+0x275/0x340
+    [<ffffffffc0a6e06a>] ice_init_arfs+0x3a/0xe0 [ice]
+    [<ffffffffc09f1027>] ice_vsi_cfg_def+0x607/0x850 [ice]
+    [<ffffffffc09f244b>] ice_vsi_setup+0x5b/0x130 [ice]
+    [<ffffffffc09c2131>] ice_init+0x1c1/0x460 [ice]
+    [<ffffffffc09c64af>] ice_probe+0x2af/0x520 [ice]
+    [<ffffffff994fbcd3>] local_pci_probe+0x43/0xa0
+    [<ffffffff98f07103>] work_for_cpu_fn+0x13/0x20
+    [<ffffffff98f0b6d9>] process_one_work+0x179/0x390
+    [<ffffffff98f0c1e9>] worker_thread+0x239/0x340
+    [<ffffffff98f14abc>] kthread+0xcc/0x100
+    [<ffffffff98e45a6d>] ret_from_fork+0x2d/0x50
+    [<ffffffff98e083ba>] ret_from_fork_asm+0x1a/0x30
+    ...</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31894" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in infoway llc ebook downloader allows stored xss. this issue affects ebook downloader: from n/a through 1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31894" target="_blank">CVE-2025-31894</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Infoway LLC Ebook Downloader allows Stored XSS. This issue affects Ebook Downloader: from n/a through 1.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21980" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+sched: address a potential null pointer dereference in the gred scheduler.
+
+if kzalloc in gred_init returns a null pointer, the code follows the
+error handling path, invoking gred_destroy. this, in turn, calls
+gred_offload, where memset could receive a null pointer as input,
+potentially leading to a kernel crash.
+
+when table->opt is null in gred_init(), gred_change_table_def()
+is not called yet, so it is not necessary to call ->ndo_setup_tc()
+in gred_offload().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21980" target="_blank">CVE-2025-21980</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+sched: address a potential NULL pointer dereference in the GRED scheduler.
+
+If kzalloc in gred_init returns a NULL pointer, the code follows the
+error handling path, invoking gred_destroy. This, in turn, calls
+gred_offload, where memset could receive a NULL pointer as input,
+potentially leading to a kernel crash.
+
+When table->opt is NULL in gred_init(), gred_change_table_def()
+is not called yet, so it is not necessary to call ->ndo_setup_tc()
+in gred_offload().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31892" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in themeum wp crowdfunding allows stored xss. this issue affects wp crowdfunding: from n/a through 2.1.13.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31892" target="_blank">CVE-2025-31892</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Themeum WP Crowdfunding allows Stored XSS. This issue affects WP Crowdfunding: from n/a through 2.1.13.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21979" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: cfg80211: cancel wiphy_work before freeing wiphy
+
+a wiphy_work can be queued from the moment the wiphy is allocated and
+initialized (i.e. wiphy_new_nm). when a wiphy_work is queued, the
+rdev::wiphy_work is getting queued.
+
+if wiphy_free is called before the rdev::wiphy_work had a chance to run,
+the wiphy memory will be freed, and then when it eventally gets to run
+it'll use invalid memory.
+
+fix this by canceling the work before freeing the wiphy.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21979" target="_blank">CVE-2025-21979</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: cfg80211: cancel wiphy_work before freeing wiphy
+
+A wiphy_work can be queued from the moment the wiphy is allocated and
+initialized (i.e. wiphy_new_nm). When a wiphy_work is queued, the
+rdev::wiphy_work is getting queued.
+
+If wiphy_free is called before the rdev::wiphy_work had a chance to run,
+the wiphy memory will be freed, and then when it eventally gets to run
+it'll use invalid memory.
+
+Fix this by canceling the work before freeing the wiphy.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31891" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in gosign gosign – posts slider block allows stored xss. this issue affects gosign – posts slider block: from n/a through 1.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31891" target="_blank">CVE-2025-31891</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Gosign Gosign – Posts Slider Block allows Stored XSS. This issue affects Gosign – Posts Slider Block: from n/a through 1.1.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21978" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/hyperv: fix address space leak when hyper-v drm device is removed
+
+when a hyper-v drm device is probed, the driver allocates mmio space for
+the vram, and maps it cacheable. if the device removed, or in the error
+path for device probing, the mmio space is released but no unmap is done.
+consequently the kernel address space for the mapping is leaked.
+
+fix this by adding iounmap() calls in the device removal path, and in the
+error path during device probing.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21978" target="_blank">CVE-2025-21978</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/hyperv: Fix address space leak when Hyper-V DRM device is removed
+
+When a Hyper-V DRM device is probed, the driver allocates MMIO space for
+the vram, and maps it cacheable. If the device removed, or in the error
+path for device probing, the MMIO space is released but no unmap is done.
+Consequently the kernel address space for the mapping is leaked.
+
+Fix this by adding iounmap() calls in the device removal path, and in the
+error path during device probing.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31890" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in mashi simple map no api allows stored xss. this issue affects simple map no api: from n/a through 1.9.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31890" target="_blank">CVE-2025-31890</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Mashi Simple Map No Api allows Stored XSS. This issue affects Simple Map No Api: from n/a through 1.9.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21977" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fbdev: hyperv_fb: fix hang in kdump kernel when on hyper-v gen 2 vms
+
+gen 2 hyper-v vms boot via efi and have a standard efi framebuffer
+device. when the kdump kernel runs in such a vm, loading the efifb
+driver may hang because of accessing the framebuffer at the wrong
+memory address.
+
+the scenario occurs when the hyperv_fb driver in the original kernel
+moves the framebuffer to a different mmio address because of conflicts
+with an already-running efifb or simplefb driver. the hyperv_fb driver
+then informs hyper-v of the change, which is allowed by the hyper-v fb
+vmbus device protocol. however, when the kexec command loads the kdump
+kernel into crash memory via the kexec_file_load() system call, the
+system call doesn't know the framebuffer has moved, and it sets up the
+kdump screen_info using the original framebuffer address. the transition
+to the kdump kernel does not go through the hyper-v host, so hyper-v
+does not reset the framebuffer address like it would do on a reboot.
+when efifb tries to run, it accesses a non-existent framebuffer
+address, which traps to the hyper-v host. after many such accesses,
+the hyper-v host thinks the guest is being malicious, and throttles
+the guest to the point that it runs very slowly or appears to have hung.
+
+when the kdump kernel is loaded into crash memory via the kexec_load()
+system call, the problem does not occur. in this case, the kexec command
+builds the screen_info table itself in user space from data returned
+by the fbioget_fscreeninfo ioctl against /dev/fb0, which gives it the
+new framebuffer location.
+
+this problem was originally reported in 2020 [1], resulting in commit
+3cb73bc3fa2a ("hyperv_fb: update screen_info after removing old
+framebuffer"). this commit solved the problem by setting orig_video_isvga
+to 0, so the kdump kernel was unaware of the efi framebuffer. the efifb
+driver did not try to load, and no hang occurred. but in 2024, commit
+c25a19afb81c ("fbdev/hyperv_fb: do not clear global screen_info")
+effectively reverted 3cb73bc3fa2a. commit c25a19afb81c has no reference
+to 3cb73bc3fa2a, so perhaps it was done without knowing the implications
+that were reported with 3cb73bc3fa2a. in any case, as of commit
+c25a19afb81c, the original problem came back again.
+
+interestingly, the hyperv_drm driver does not have this problem because
+it never moves the framebuffer. the difference is that the hyperv_drm
+driver removes any conflicting framebuffers *before* allocating an mmio
+address, while the hyperv_fb drivers removes conflicting framebuffers
+*after* allocating an mmio address. with the "after" ordering, hyperv_fb
+may encounter a conflict and move the framebuffer to a different mmio
+address. but the conflict is essentially bogus because it is removed
+a few lines of code later.
+
+rather than fix the problem with the approach from 2020 in commit
+3cb73bc3fa2a, instead slightly reorder the steps in hyperv_fb so
+conflicting framebuffers are removed before allocating an mmio address.
+then the default framebuffer mmio address should always be available, and
+there's never any confusion about which framebuffer address the kdump
+kernel should use -- it's always the original address provided by
+the hyper-v host. this approach is already used by the hyperv_drm
+driver, and is consistent with the usage guidelines at the head of
+the module with the function aperture_remove_conflicting_devices().
+
+this approach also solves a related minor problem when kexec_load()
+is used to load the kdump kernel. with current code, unbinding and
+rebinding the hyperv_fb driver could result in the framebuffer moving
+back to the default framebuffer address, because on the rebind there
+are no conflicts. if such a move is done after the kdump kernel is
+loaded with the new framebuffer address, at kdump time it could again
+have the wrong address.
+
+this problem and fix are described in terms of the kdump kernel, but
+it can also occur
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21977" target="_blank">CVE-2025-21977</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fbdev: hyperv_fb: Fix hang in kdump kernel when on Hyper-V Gen 2 VMs
+
+Gen 2 Hyper-V VMs boot via EFI and have a standard EFI framebuffer
+device. When the kdump kernel runs in such a VM, loading the efifb
+driver may hang because of accessing the framebuffer at the wrong
+memory address.
+
+The scenario occurs when the hyperv_fb driver in the original kernel
+moves the framebuffer to a different MMIO address because of conflicts
+with an already-running efifb or simplefb driver. The hyperv_fb driver
+then informs Hyper-V of the change, which is allowed by the Hyper-V FB
+VMBus device protocol. However, when the kexec command loads the kdump
+kernel into crash memory via the kexec_file_load() system call, the
+system call doesn't know the framebuffer has moved, and it sets up the
+kdump screen_info using the original framebuffer address. The transition
+to the kdump kernel does not go through the Hyper-V host, so Hyper-V
+does not reset the framebuffer address like it would do on a reboot.
+When efifb tries to run, it accesses a non-existent framebuffer
+address, which traps to the Hyper-V host. After many such accesses,
+the Hyper-V host thinks the guest is being malicious, and throttles
+the guest to the point that it runs very slowly or appears to have hung.
+
+When the kdump kernel is loaded into crash memory via the kexec_load()
+system call, the problem does not occur. In this case, the kexec command
+builds the screen_info table itself in user space from data returned
+by the FBIOGET_FSCREENINFO ioctl against /dev/fb0, which gives it the
+new framebuffer location.
+
+This problem was originally reported in 2020 [1], resulting in commit
+3cb73bc3fa2a ("hyperv_fb: Update screen_info after removing old
+framebuffer"). This commit solved the problem by setting orig_video_isVGA
+to 0, so the kdump kernel was unaware of the EFI framebuffer. The efifb
+driver did not try to load, and no hang occurred. But in 2024, commit
+c25a19afb81c ("fbdev/hyperv_fb: Do not clear global screen_info")
+effectively reverted 3cb73bc3fa2a. Commit c25a19afb81c has no reference
+to 3cb73bc3fa2a, so perhaps it was done without knowing the implications
+that were reported with 3cb73bc3fa2a. In any case, as of commit
+c25a19afb81c, the original problem came back again.
+
+Interestingly, the hyperv_drm driver does not have this problem because
+it never moves the framebuffer. The difference is that the hyperv_drm
+driver removes any conflicting framebuffers *before* allocating an MMIO
+address, while the hyperv_fb drivers removes conflicting framebuffers
+*after* allocating an MMIO address. With the "after" ordering, hyperv_fb
+may encounter a conflict and move the framebuffer to a different MMIO
+address. But the conflict is essentially bogus because it is removed
+a few lines of code later.
+
+Rather than fix the problem with the approach from 2020 in commit
+3cb73bc3fa2a, instead slightly reorder the steps in hyperv_fb so
+conflicting framebuffers are removed before allocating an MMIO address.
+Then the default framebuffer MMIO address should always be available, and
+there's never any confusion about which framebuffer address the kdump
+kernel should use -- it's always the original address provided by
+the Hyper-V host. This approach is already used by the hyperv_drm
+driver, and is consistent with the usage guidelines at the head of
+the module with the function aperture_remove_conflicting_devices().
+
+This approach also solves a related minor problem when kexec_load()
+is used to load the kdump kernel. With current code, unbinding and
+rebinding the hyperv_fb driver could result in the framebuffer moving
+back to the default framebuffer address, because on the rebind there
+are no conflicts. If such a move is done after the kdump kernel is
+loaded with the new framebuffer address, at kdump time it could again
+have the wrong address.
+
+This problem and fix are described in terms of the kdump kernel, but
+it can also occur
+---truncated---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31888" data-description="cross-site request forgery (csrf) vulnerability in wpexperts.io wp multistore locator allows cross site request forgery. this issue affects wp multistore locator: from n/a through 2.5.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31888" target="_blank">CVE-2025-31888</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in WPExperts.io WP Multistore Locator allows Cross Site Request Forgery. This issue affects WP Multistore Locator: from n/a through 2.5.2.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21976" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fbdev: hyperv_fb: allow graceful removal of framebuffer
+
+when a hyper-v framebuffer device is unbind, hyperv_fb driver tries to
+release the framebuffer forcefully. if this framebuffer is in use it
+produce the following warn and hence this framebuffer is never released.
+
+[   44.111220] warning: cpu: 35 pid: 1882 at drivers/video/fbdev/core/fb_info.c:70 framebuffer_release+0x2c/0x40
+< snip >
+[   44.111289] call trace:
+[   44.111290]  <task>
+[   44.111291]  ? show_regs+0x6c/0x80
+[   44.111295]  ? __warn+0x8d/0x150
+[   44.111298]  ? framebuffer_release+0x2c/0x40
+[   44.111300]  ? report_bug+0x182/0x1b0
+[   44.111303]  ? handle_bug+0x6e/0xb0
+[   44.111306]  ? exc_invalid_op+0x18/0x80
+[   44.111308]  ? asm_exc_invalid_op+0x1b/0x20
+[   44.111311]  ? framebuffer_release+0x2c/0x40
+[   44.111313]  ? hvfb_remove+0x86/0xa0 [hyperv_fb]
+[   44.111315]  vmbus_remove+0x24/0x40 [hv_vmbus]
+[   44.111323]  device_remove+0x40/0x80
+[   44.111325]  device_release_driver_internal+0x20b/0x270
+[   44.111327]  ? bus_find_device+0xb3/0xf0
+
+fix this by moving the release of framebuffer and assosiated memory
+to fb_ops.fb_destroy function, so that framebuffer framework handles
+it gracefully.
+
+while we fix this, also replace manual registrations/unregistration of
+framebuffer with devm_register_framebuffer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21976" target="_blank">CVE-2025-21976</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fbdev: hyperv_fb: Allow graceful removal of framebuffer
+
+When a Hyper-V framebuffer device is unbind, hyperv_fb driver tries to
+release the framebuffer forcefully. If this framebuffer is in use it
+produce the following WARN and hence this framebuffer is never released.
+
+[   44.111220] WARNING: CPU: 35 PID: 1882 at drivers/video/fbdev/core/fb_info.c:70 framebuffer_release+0x2c/0x40
+< snip >
+[   44.111289] Call Trace:
+[   44.111290]  <TASK>
+[   44.111291]  ? show_regs+0x6c/0x80
+[   44.111295]  ? __warn+0x8d/0x150
+[   44.111298]  ? framebuffer_release+0x2c/0x40
+[   44.111300]  ? report_bug+0x182/0x1b0
+[   44.111303]  ? handle_bug+0x6e/0xb0
+[   44.111306]  ? exc_invalid_op+0x18/0x80
+[   44.111308]  ? asm_exc_invalid_op+0x1b/0x20
+[   44.111311]  ? framebuffer_release+0x2c/0x40
+[   44.111313]  ? hvfb_remove+0x86/0xa0 [hyperv_fb]
+[   44.111315]  vmbus_remove+0x24/0x40 [hv_vmbus]
+[   44.111323]  device_remove+0x40/0x80
+[   44.111325]  device_release_driver_internal+0x20b/0x270
+[   44.111327]  ? bus_find_device+0xb3/0xf0
+
+Fix this by moving the release of framebuffer and assosiated memory
+to fb_ops.fb_destroy function, so that framebuffer framework handles
+it gracefully.
+
+While we fix this, also replace manual registrations/unregistration of
+framebuffer with devm_register_framebuffer.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31887" data-description="missing authorization vulnerability in zookatron mybookprogress by stormhill media allows exploiting incorrectly configured access control security levels. this issue affects mybookprogress by stormhill media: from n/a through 1.0.8.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31887" target="_blank">CVE-2025-31887</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in zookatron MyBookProgress by Stormhill Media allows Exploiting Incorrectly Configured Access Control Security Levels. This issue affects MyBookProgress by Stormhill Media: from n/a through 1.0.8.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21975" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/mlx5: handle errors in mlx5_chains_create_table()
+
+in mlx5_chains_create_table(), the return value of mlx5_get_fdb_sub_ns()
+and mlx5_get_flow_namespace() must be checked to prevent null pointer
+dereferences. if either function fails, the function should log error
+message with mlx5_core_warn() and return error pointer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21975" target="_blank">CVE-2025-21975</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/mlx5: handle errors in mlx5_chains_create_table()
+
+In mlx5_chains_create_table(), the return value of mlx5_get_fdb_sub_ns()
+and mlx5_get_flow_namespace() must be checked to prevent NULL pointer
+dereferences. If either function fails, the function should log error
+message with mlx5_core_warn() and return error pointer.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31886" data-description="missing authorization vulnerability in repuso social proof testimonials and reviews by repuso allows exploiting incorrectly configured access control security levels. this issue affects social proof testimonials and reviews by repuso: from n/a through 5.21.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31886" target="_blank">CVE-2025-31886</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in Repuso Social proof testimonials and reviews by Repuso allows Exploiting Incorrectly Configured Access Control Security Levels. This issue affects Social proof testimonials and reviews by Repuso: from n/a through 5.21.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21974" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+eth: bnxt: return fail if interface is down in bnxt_queue_mem_alloc()
+
+the bnxt_queue_mem_alloc() is called to allocate new queue memory when
+a queue is restarted.
+it internally accesses rx buffer descriptor corresponding to the index.
+the rx buffer descriptor is allocated and set when the interface is up
+and it's freed when the interface is down.
+so, if queue is restarted if interface is down, kernel panic occurs.
+
+splat looks like:
+ bug: unable to handle page fault for address: 000000000000b240
+ #pf: supervisor read access in kernel mode
+ #pf: error_code(0x0000) - not-present page
+ pgd 0 p4d 0
+ oops: oops: 0000 [#1] preempt smp nopti
+ cpu: 3 uid: 0 pid: 1563 comm: ncdevmem2 not tainted 6.14.0-rc2+ #9 844ddba6e7c459cafd0bf4db9a3198e
+ hardware name: asus system product name/prime z690-p d4, bios 0603 11/01/2021
+ rip: 0010:bnxt_queue_mem_alloc+0x3f/0x4e0 [bnxt_en]
+ code: 41 54 4d 89 c4 4d 69 c0 c0 05 00 00 55 48 89 f5 53 48 89 fb 4c 8d b5 40 05 00 00 48 83 ec 15
+ rsp: 0018:ffff9dcc83fef9e8 eflags: 00010202
+ rax: ffffffffc0457720 rbx: ffff934ed8d40000 rcx: 0000000000000000
+ rdx: 000000000000001f rsi: ffff934ea508f800 rdi: ffff934ea508f808
+ rbp: ffff934ea508f800 r08: 000000000000b240 r09: ffff934e84f4b000
+ r10: ffff9dcc83fefa30 r11: ffff934e84f4b000 r12: 000000000000001f
+ r13: ffff934ed8d40ac0 r14: ffff934ea508fd40 r15: ffff934e84f4b000
+ fs:  00007fa73888c740(0000) gs:ffff93559f780000(0000) knlgs:0000000000000000
+ cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+ cr2: 000000000000b240 cr3: 0000000145a2e000 cr4: 00000000007506f0
+ pkru: 55555554
+ call trace:
+  <task>
+  ? __die+0x20/0x70
+  ? page_fault_oops+0x15a/0x460
+  ? exc_page_fault+0x6e/0x180
+  ? asm_exc_page_fault+0x22/0x30
+  ? __pfx_bnxt_queue_mem_alloc+0x10/0x10 [bnxt_en 7f85e76f4d724ba07471d7e39d9e773aea6597b7]
+  ? bnxt_queue_mem_alloc+0x3f/0x4e0 [bnxt_en 7f85e76f4d724ba07471d7e39d9e773aea6597b7]
+  netdev_rx_queue_restart+0xc5/0x240
+  net_devmem_bind_dmabuf_to_queue+0xf8/0x200
+  netdev_nl_bind_rx_doit+0x3a7/0x450
+  genl_family_rcv_msg_doit+0xd9/0x130
+  genl_rcv_msg+0x184/0x2b0
+  ? __pfx_netdev_nl_bind_rx_doit+0x10/0x10
+  ? __pfx_genl_rcv_msg+0x10/0x10
+  netlink_rcv_skb+0x54/0x100
+  genl_rcv+0x24/0x40
+...">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21974" target="_blank">CVE-2025-21974</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+eth: bnxt: return fail if interface is down in bnxt_queue_mem_alloc()
+
+The bnxt_queue_mem_alloc() is called to allocate new queue memory when
+a queue is restarted.
+It internally accesses rx buffer descriptor corresponding to the index.
+The rx buffer descriptor is allocated and set when the interface is up
+and it's freed when the interface is down.
+So, if queue is restarted if interface is down, kernel panic occurs.
+
+Splat looks like:
+ BUG: unable to handle page fault for address: 000000000000b240
+ #PF: supervisor read access in kernel mode
+ #PF: error_code(0x0000) - not-present page
+ PGD 0 P4D 0
+ Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI
+ CPU: 3 UID: 0 PID: 1563 Comm: ncdevmem2 Not tainted 6.14.0-rc2+ #9 844ddba6e7c459cafd0bf4db9a3198e
+ Hardware name: ASUS System Product Name/PRIME Z690-P D4, BIOS 0603 11/01/2021
+ RIP: 0010:bnxt_queue_mem_alloc+0x3f/0x4e0 [bnxt_en]
+ Code: 41 54 4d 89 c4 4d 69 c0 c0 05 00 00 55 48 89 f5 53 48 89 fb 4c 8d b5 40 05 00 00 48 83 ec 15
+ RSP: 0018:ffff9dcc83fef9e8 EFLAGS: 00010202
+ RAX: ffffffffc0457720 RBX: ffff934ed8d40000 RCX: 0000000000000000
+ RDX: 000000000000001f RSI: ffff934ea508f800 RDI: ffff934ea508f808
+ RBP: ffff934ea508f800 R08: 000000000000b240 R09: ffff934e84f4b000
+ R10: ffff9dcc83fefa30 R11: ffff934e84f4b000 R12: 000000000000001f
+ R13: ffff934ed8d40ac0 R14: ffff934ea508fd40 R15: ffff934e84f4b000
+ FS:  00007fa73888c740(0000) GS:ffff93559f780000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 000000000000b240 CR3: 0000000145a2e000 CR4: 00000000007506f0
+ PKRU: 55555554
+ Call Trace:
+  <TASK>
+  ? __die+0x20/0x70
+  ? page_fault_oops+0x15a/0x460
+  ? exc_page_fault+0x6e/0x180
+  ? asm_exc_page_fault+0x22/0x30
+  ? __pfx_bnxt_queue_mem_alloc+0x10/0x10 [bnxt_en 7f85e76f4d724ba07471d7e39d9e773aea6597b7]
+  ? bnxt_queue_mem_alloc+0x3f/0x4e0 [bnxt_en 7f85e76f4d724ba07471d7e39d9e773aea6597b7]
+  netdev_rx_queue_restart+0xc5/0x240
+  net_devmem_bind_dmabuf_to_queue+0xf8/0x200
+  netdev_nl_bind_rx_doit+0x3a7/0x450
+  genl_family_rcv_msg_doit+0xd9/0x130
+  genl_rcv_msg+0x184/0x2b0
+  ? __pfx_netdev_nl_bind_rx_doit+0x10/0x10
+  ? __pfx_genl_rcv_msg+0x10/0x10
+  netlink_rcv_skb+0x54/0x100
+  genl_rcv+0x24/0x40
+...</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31885" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in daniel floeter hyperlink group block allows dom-based xss. this issue affects hyperlink group block: from n/a through 2.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31885" target="_blank">CVE-2025-31885</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Daniel Floeter Hyperlink Group Block allows DOM-Based XSS. This issue affects Hyperlink Group Block: from n/a through 2.0.1.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21973" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+eth: bnxt: fix kernel panic in the bnxt_get_queue_stats{rx | tx}
+
+when qstats-get operation is executed, callbacks of netdev_stats_ops
+are called. the bnxt_get_queue_stats{rx | tx} collect per-queue stats
+from sw_stats in the rings.
+but {rx | tx | cp}_ring are allocated when the interface is up.
+so, these rings are not allocated when the interface is down.
+
+the qstats-get is allowed even if the interface is down. however,
+the bnxt_get_queue_stats{rx | tx}() accesses cp_ring and tx_ring
+without null check.
+so, it needs to avoid accessing rings if the interface is down.
+
+reproducer:
+ ip link set $interface down
+ ./cli.py --spec netdev.yaml --dump qstats-get
+or
+ ip link set $interface down
+ python ./stats.py
+
+splat looks like:
+ bug: kernel null pointer dereference, address: 0000000000000000
+ #pf: supervisor read access in kernel mode
+ #pf: error_code(0x0000) - not-present page
+ pgd 1680fa067 p4d 1680fa067 pud 16be3b067 pmd 0
+ oops: oops: 0000 [#1] preempt smp nopti
+ cpu: 0 uid: 0 pid: 1495 comm: python3 not tainted 6.14.0-rc4+ #32 5cd0f999d5a15c574ac72b3e4b907341
+ hardware name: asus system product name/prime z690-p d4, bios 0603 11/01/2021
+ rip: 0010:bnxt_get_queue_stats_rx+0xf/0x70 [bnxt_en]
+ code: c6 87 b5 18 00 00 02 eb a2 66 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 01
+ rsp: 0018:ffffabef43cdb7e0 eflags: 00010282
+ rax: 0000000000000000 rbx: ffffffffc04c8710 rcx: 0000000000000000
+ rdx: ffffabef43cdb858 rsi: 0000000000000000 rdi: ffff8d504e850000
+ rbp: ffff8d506c9f9c00 r08: 0000000000000004 r09: ffff8d506bcd901c
+ r10: 0000000000000015 r11: ffff8d506bcd9000 r12: 0000000000000000
+ r13: ffffabef43cdb8c0 r14: ffff8d504e850000 r15: 0000000000000000
+ fs:  00007f2c5462b080(0000) gs:ffff8d575f600000(0000) knlgs:0000000000000000
+ cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+ cr2: 0000000000000000 cr3: 0000000167fd0000 cr4: 00000000007506f0
+ pkru: 55555554
+ call trace:
+  <task>
+  ? __die+0x20/0x70
+  ? page_fault_oops+0x15a/0x460
+  ? sched_balance_find_src_group+0x58d/0xd10
+  ? exc_page_fault+0x6e/0x180
+  ? asm_exc_page_fault+0x22/0x30
+  ? bnxt_get_queue_stats_rx+0xf/0x70 [bnxt_en cdd546fd48563c280cfd30e9647efa420db07bf1]
+  netdev_nl_stats_by_netdev+0x2b1/0x4e0
+  ? xas_load+0x9/0xb0
+  ? xas_find+0x183/0x1d0
+  ? xa_find+0x8b/0xe0
+  netdev_nl_qstats_get_dumpit+0xbf/0x1e0
+  genl_dumpit+0x31/0x90
+  netlink_dump+0x1a8/0x360">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21973" target="_blank">CVE-2025-21973</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+eth: bnxt: fix kernel panic in the bnxt_get_queue_stats{rx | tx}
+
+When qstats-get operation is executed, callbacks of netdev_stats_ops
+are called. The bnxt_get_queue_stats{rx | tx} collect per-queue stats
+from sw_stats in the rings.
+But {rx | tx | cp}_ring are allocated when the interface is up.
+So, these rings are not allocated when the interface is down.
+
+The qstats-get is allowed even if the interface is down. However,
+the bnxt_get_queue_stats{rx | tx}() accesses cp_ring and tx_ring
+without null check.
+So, it needs to avoid accessing rings if the interface is down.
+
+Reproducer:
+ ip link set $interface down
+ ./cli.py --spec netdev.yaml --dump qstats-get
+OR
+ ip link set $interface down
+ python ./stats.py
+
+Splat looks like:
+ BUG: kernel NULL pointer dereference, address: 0000000000000000
+ #PF: supervisor read access in kernel mode
+ #PF: error_code(0x0000) - not-present page
+ PGD 1680fa067 P4D 1680fa067 PUD 16be3b067 PMD 0
+ Oops: Oops: 0000 [#1] PREEMPT SMP NOPTI
+ CPU: 0 UID: 0 PID: 1495 Comm: python3 Not tainted 6.14.0-rc4+ #32 5cd0f999d5a15c574ac72b3e4b907341
+ Hardware name: ASUS System Product Name/PRIME Z690-P D4, BIOS 0603 11/01/2021
+ RIP: 0010:bnxt_get_queue_stats_rx+0xf/0x70 [bnxt_en]
+ Code: c6 87 b5 18 00 00 02 eb a2 66 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 01
+ RSP: 0018:ffffabef43cdb7e0 EFLAGS: 00010282
+ RAX: 0000000000000000 RBX: ffffffffc04c8710 RCX: 0000000000000000
+ RDX: ffffabef43cdb858 RSI: 0000000000000000 RDI: ffff8d504e850000
+ RBP: ffff8d506c9f9c00 R08: 0000000000000004 R09: ffff8d506bcd901c
+ R10: 0000000000000015 R11: ffff8d506bcd9000 R12: 0000000000000000
+ R13: ffffabef43cdb8c0 R14: ffff8d504e850000 R15: 0000000000000000
+ FS:  00007f2c5462b080(0000) GS:ffff8d575f600000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 0000000000000000 CR3: 0000000167fd0000 CR4: 00000000007506f0
+ PKRU: 55555554
+ Call Trace:
+  <TASK>
+  ? __die+0x20/0x70
+  ? page_fault_oops+0x15a/0x460
+  ? sched_balance_find_src_group+0x58d/0xd10
+  ? exc_page_fault+0x6e/0x180
+  ? asm_exc_page_fault+0x22/0x30
+  ? bnxt_get_queue_stats_rx+0xf/0x70 [bnxt_en cdd546fd48563c280cfd30e9647efa420db07bf1]
+  netdev_nl_stats_by_netdev+0x2b1/0x4e0
+  ? xas_load+0x9/0xb0
+  ? xas_find+0x183/0x1d0
+  ? xa_find+0x8b/0xe0
+  netdev_nl_qstats_get_dumpit+0xbf/0x1e0
+  genl_dumpit+0x31/0x90
+  netlink_dump+0x1a8/0x360</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31884" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in wp cms ninja norse rune oracle plugin allows stored xss. this issue affects norse rune oracle plugin: from n/a through 1.4.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31884" target="_blank">CVE-2025-31884</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in WP CMS Ninja Norse Rune Oracle Plugin allows Stored XSS. This issue affects Norse Rune Oracle Plugin: from n/a through 1.4.3.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21972" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: mctp: unshare packets when reassembling
+
+ensure that the frag_list used for reassembly isn't shared with other
+packets. this avoids incorrect reassembly when packets are cloned, and
+prevents a memory leak due to circular references between fragments and
+their skb_shared_info.
+
+the upcoming mctp-over-usb driver uses skb_clone which can trigger the
+problem - other mctp drivers don't share skbs.
+
+a kunit test is added to reproduce the issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21972" target="_blank">CVE-2025-21972</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: mctp: unshare packets when reassembling
+
+Ensure that the frag_list used for reassembly isn't shared with other
+packets. This avoids incorrect reassembly when packets are cloned, and
+prevents a memory leak due to circular references between fragments and
+their skb_shared_info.
+
+The upcoming MCTP-over-USB driver uses skb_clone which can trigger the
+problem - other MCTP drivers don't share SKBs.
+
+A kunit test is added to reproduce the issue.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31883" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in wpwebinarsystem webinarpress allows stored xss. this issue affects webinarpress: from n/a through 1.33.27.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31883" target="_blank">CVE-2025-31883</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in WPWebinarSystem WebinarPress allows Stored XSS. This issue affects WebinarPress: from n/a through 1.33.27.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21971" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net_sched: prevent creation of classes with tc_h_root
+
+the function qdisc_tree_reduce_backlog() uses tc_h_root as a termination
+condition when traversing up the qdisc tree to update parent backlog
+counters. however, if a class is created with classid tc_h_root, the
+traversal terminates prematurely at this class instead of reaching the
+actual root qdisc, causing parent statistics to be incorrectly maintained.
+in case of drr, this could lead to a crash as reported by mingi cho.
+
+prevent the creation of any qdisc class with classid tc_h_root
+(0xffffffff) across all qdisc types, as suggested by jamal.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21971" target="_blank">CVE-2025-21971</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net_sched: Prevent creation of classes with TC_H_ROOT
+
+The function qdisc_tree_reduce_backlog() uses TC_H_ROOT as a termination
+condition when traversing up the qdisc tree to update parent backlog
+counters. However, if a class is created with classid TC_H_ROOT, the
+traversal terminates prematurely at this class instead of reaching the
+actual root qdisc, causing parent statistics to be incorrectly maintained.
+In case of DRR, this could lead to a crash as reported by Mingi Cho.
+
+Prevent the creation of any Qdisc class with classid TC_H_ROOT
+(0xFFFFFFFF) across all qdisc types, as suggested by Jamal.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31882" data-description="missing authorization vulnerability in wpwebinarsystem webinarpress allows exploiting incorrectly configured access control security levels. this issue affects webinarpress: from n/a through 1.33.27.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31882" target="_blank">CVE-2025-31882</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in WPWebinarSystem WebinarPress allows Exploiting Incorrectly Configured Access Control Security Levels. This issue affects WebinarPress: from n/a through 1.33.27.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21970" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/mlx5: bridge, fix the crash caused by lag state check
+
+when removing lag device from bridge, netdev_changeupper event is
+triggered. driver finds the lower devices (pfs) to flush all the
+offloaded entries. and mlx5_lag_is_shared_fdb is checked, it returns
+false if one of pf is unloaded. in such case,
+mlx5_esw_bridge_lag_rep_get() and its caller return null, instead of
+the alive pf, and the flush is skipped.
+
+besides, the bridge fdb entry's lastuse is updated in mlx5 bridge
+event handler. but this switchdev_fdb_add_to_bridge event can be
+ignored in this case because the upper interface for bond is deleted,
+and the entry will never be aged because lastuse is never updated.
+
+to make things worse, as the entry is alive, mlx5 bridge workqueue
+keeps sending that event, which is then handled by kernel bridge
+notifier. it causes the following crash when accessing the passed bond
+netdev which is already destroyed.
+
+to fix this issue, remove such checks. lag state is already checked in
+commit 15f8f168952f ("net/mlx5: bridge, verify lag state when adding
+bond to bridge"), driver still need to skip offload if lag becomes
+invalid state after initialization.
+
+ oops: stack segment: 0000 [#1] smp
+ cpu: 3 uid: 0 pid: 23695 comm: kworker/u40:3 tainted: g           oe      6.11.0_mlnx #1
+ tainted: [o]=oot_module, [e]=unsigned_module
+ hardware name: qemu standard pc (q35 + ich9, 2009), bios rel-1.13.0-0-gf21b5a4aeb02-prebuilt.qemu.org 04/01/2014
+ workqueue: mlx5_bridge_wq mlx5_esw_bridge_update_work [mlx5_core]
+ rip: 0010:br_switchdev_event+0x2c/0x110 [bridge]
+ code: 44 00 00 48 8b 02 48 f7 00 00 02 00 00 74 69 41 54 55 53 48 83 ec 08 48 8b a8 08 01 00 00 48 85 ed 74 4a 48 83 fe 02 48 89 d3 <4c> 8b 65 00 74 23 76 49 48 83 fe 05 74 7e 48 83 fe 06 75 2f 0f b7
+ rsp: 0018:ffffc900092cfda0 eflags: 00010297
+ rax: ffff888123bfe000 rbx: ffffc900092cfe08 rcx: 00000000ffffffff
+ rdx: ffffc900092cfe08 rsi: 0000000000000001 rdi: ffffffffa0c585f0
+ rbp: 6669746f6e690a30 r08: 0000000000000000 r09: ffff888123ae92c8
+ r10: 0000000000000000 r11: fefefefefefefeff r12: ffff888123ae9c60
+ r13: 0000000000000001 r14: ffffc900092cfe08 r15: 0000000000000000
+ fs:  0000000000000000(0000) gs:ffff88852c980000(0000) knlgs:0000000000000000
+ cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+ cr2: 00007f15914c8734 cr3: 0000000002830005 cr4: 0000000000770ef0
+ dr0: 0000000000000000 dr1: 0000000000000000 dr2: 0000000000000000
+ dr3: 0000000000000000 dr6: 00000000fffe0ff0 dr7: 0000000000000400
+ pkru: 55555554
+ call trace:
+  <task>
+  ? __die_body+0x1a/0x60
+  ? die+0x38/0x60
+  ? do_trap+0x10b/0x120
+  ? do_error_trap+0x64/0xa0
+  ? exc_stack_segment+0x33/0x50
+  ? asm_exc_stack_segment+0x22/0x30
+  ? br_switchdev_event+0x2c/0x110 [bridge]
+  ? sched_balance_newidle.isra.149+0x248/0x390
+  notifier_call_chain+0x4b/0xa0
+  atomic_notifier_call_chain+0x16/0x20
+  mlx5_esw_bridge_update+0xec/0x170 [mlx5_core]
+  mlx5_esw_bridge_update_work+0x19/0x40 [mlx5_core]
+  process_scheduled_works+0x81/0x390
+  worker_thread+0x106/0x250
+  ? bh_worker+0x110/0x110
+  kthread+0xb7/0xe0
+  ? kthread_park+0x80/0x80
+  ret_from_fork+0x2d/0x50
+  ? kthread_park+0x80/0x80
+  ret_from_fork_asm+0x11/0x20
+  </task>">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21970" target="_blank">CVE-2025-21970</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/mlx5: Bridge, fix the crash caused by LAG state check
+
+When removing LAG device from bridge, NETDEV_CHANGEUPPER event is
+triggered. Driver finds the lower devices (PFs) to flush all the
+offloaded entries. And mlx5_lag_is_shared_fdb is checked, it returns
+false if one of PF is unloaded. In such case,
+mlx5_esw_bridge_lag_rep_get() and its caller return NULL, instead of
+the alive PF, and the flush is skipped.
+
+Besides, the bridge fdb entry's lastuse is updated in mlx5 bridge
+event handler. But this SWITCHDEV_FDB_ADD_TO_BRIDGE event can be
+ignored in this case because the upper interface for bond is deleted,
+and the entry will never be aged because lastuse is never updated.
+
+To make things worse, as the entry is alive, mlx5 bridge workqueue
+keeps sending that event, which is then handled by kernel bridge
+notifier. It causes the following crash when accessing the passed bond
+netdev which is already destroyed.
+
+To fix this issue, remove such checks. LAG state is already checked in
+commit 15f8f168952f ("net/mlx5: Bridge, verify LAG state when adding
+bond to bridge"), driver still need to skip offload if LAG becomes
+invalid state after initialization.
+
+ Oops: stack segment: 0000 [#1] SMP
+ CPU: 3 UID: 0 PID: 23695 Comm: kworker/u40:3 Tainted: G           OE      6.11.0_mlnx #1
+ Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+ Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.13.0-0-gf21b5a4aeb02-prebuilt.qemu.org 04/01/2014
+ Workqueue: mlx5_bridge_wq mlx5_esw_bridge_update_work [mlx5_core]
+ RIP: 0010:br_switchdev_event+0x2c/0x110 [bridge]
+ Code: 44 00 00 48 8b 02 48 f7 00 00 02 00 00 74 69 41 54 55 53 48 83 ec 08 48 8b a8 08 01 00 00 48 85 ed 74 4a 48 83 fe 02 48 89 d3 <4c> 8b 65 00 74 23 76 49 48 83 fe 05 74 7e 48 83 fe 06 75 2f 0f b7
+ RSP: 0018:ffffc900092cfda0 EFLAGS: 00010297
+ RAX: ffff888123bfe000 RBX: ffffc900092cfe08 RCX: 00000000ffffffff
+ RDX: ffffc900092cfe08 RSI: 0000000000000001 RDI: ffffffffa0c585f0
+ RBP: 6669746f6e690a30 R08: 0000000000000000 R09: ffff888123ae92c8
+ R10: 0000000000000000 R11: fefefefefefefeff R12: ffff888123ae9c60
+ R13: 0000000000000001 R14: ffffc900092cfe08 R15: 0000000000000000
+ FS:  0000000000000000(0000) GS:ffff88852c980000(0000) knlGS:0000000000000000
+ CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ CR2: 00007f15914c8734 CR3: 0000000002830005 CR4: 0000000000770ef0
+ DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+ DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+ PKRU: 55555554
+ Call Trace:
+  <TASK>
+  ? __die_body+0x1a/0x60
+  ? die+0x38/0x60
+  ? do_trap+0x10b/0x120
+  ? do_error_trap+0x64/0xa0
+  ? exc_stack_segment+0x33/0x50
+  ? asm_exc_stack_segment+0x22/0x30
+  ? br_switchdev_event+0x2c/0x110 [bridge]
+  ? sched_balance_newidle.isra.149+0x248/0x390
+  notifier_call_chain+0x4b/0xa0
+  atomic_notifier_call_chain+0x16/0x20
+  mlx5_esw_bridge_update+0xec/0x170 [mlx5_core]
+  mlx5_esw_bridge_update_work+0x19/0x40 [mlx5_core]
+  process_scheduled_works+0x81/0x390
+  worker_thread+0x106/0x250
+  ? bh_worker+0x110/0x110
+  kthread+0xb7/0xe0
+  ? kthread_park+0x80/0x80
+  ret_from_fork+0x2d/0x50
+  ? kthread_park+0x80/0x80
+  ret_from_fork_asm+0x11/0x20
+  </TASK></p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31881" data-description="missing authorization vulnerability in stylemix pearl allows exploiting incorrectly configured access control security levels. this issue affects pearl: from n/a through 1.3.9.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31881" target="_blank">CVE-2025-31881</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Missing Authorization vulnerability in Stylemix Pearl allows Exploiting Incorrectly Configured Access Control Security Levels. This issue affects Pearl: from n/a through 1.3.9.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21969" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bluetooth: l2cap: fix slab-use-after-free read in l2cap_send_cmd
+
+after the hci sync command releases l2cap_conn, the hci receive data work
+queue references the released l2cap_conn when sending to the upper layer.
+add hci dev lock to the hci receive data work queue to synchronize the two.
+
+[1]
+bug: kasan: slab-use-after-free in l2cap_send_cmd+0x187/0x8d0 net/bluetooth/l2cap_core.c:954
+read of size 8 at addr ffff8880271a4000 by task kworker/u9:2/5837
+
+cpu: 0 uid: 0 pid: 5837 comm: kworker/u9:2 not tainted 6.13.0-rc5-syzkaller-00163-gab75170520d4 #0
+hardware name: google google compute engine/google compute engine, bios google 09/13/2024
+workqueue: hci1 hci_rx_work
+call trace:
+ <task>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:378 [inline]
+ print_report+0x169/0x550 mm/kasan/report.c:489
+ kasan_report+0x143/0x180 mm/kasan/report.c:602
+ l2cap_build_cmd net/bluetooth/l2cap_core.c:2964 [inline]
+ l2cap_send_cmd+0x187/0x8d0 net/bluetooth/l2cap_core.c:954
+ l2cap_sig_send_rej net/bluetooth/l2cap_core.c:5502 [inline]
+ l2cap_sig_channel net/bluetooth/l2cap_core.c:5538 [inline]
+ l2cap_recv_frame+0x221f/0x10db0 net/bluetooth/l2cap_core.c:6817
+ hci_acldata_packet net/bluetooth/hci_core.c:3797 [inline]
+ hci_rx_work+0x508/0xdb0 net/bluetooth/hci_core.c:4040
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.s:244
+ </task>
+
+allocated by task 5837:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ poison_kmalloc_redzone mm/kasan/common.c:377 [inline]
+ __kasan_kmalloc+0x98/0xb0 mm/kasan/common.c:394
+ kasan_kmalloc include/linux/kasan.h:260 [inline]
+ __kmalloc_cache_noprof+0x243/0x390 mm/slub.c:4329
+ kmalloc_noprof include/linux/slab.h:901 [inline]
+ kzalloc_noprof include/linux/slab.h:1037 [inline]
+ l2cap_conn_add+0xa9/0x8e0 net/bluetooth/l2cap_core.c:6860
+ l2cap_connect_cfm+0x115/0x1090 net/bluetooth/l2cap_core.c:7239
+ hci_connect_cfm include/net/bluetooth/hci_core.h:2057 [inline]
+ hci_remote_features_evt+0x68e/0xac0 net/bluetooth/hci_event.c:3726
+ hci_event_func net/bluetooth/hci_event.c:7473 [inline]
+ hci_event_packet+0xac2/0x1540 net/bluetooth/hci_event.c:7525
+ hci_rx_work+0x3f3/0xdb0 net/bluetooth/hci_core.c:4035
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.s:244
+
+freed by task 54:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ kasan_save_free_info+0x40/0x50 mm/kasan/generic.c:582
+ poison_slab_object mm/kasan/common.c:247 [inline]
+ __kasan_slab_free+0x59/0x70 mm/kasan/common.c:264
+ kasan_slab_free include/linux/kasan.h:233 [inline]
+ slab_free_hook mm/slub.c:2353 [inline]
+ slab_free mm/slub.c:4613 [inline]
+ kfree+0x196/0x430 mm/slub.c:4761
+ l2cap_connect_cfm+0xcc/0x1090 net/bluetooth/l2cap_core.c:7235
+ hci_connect_cfm include/net/bluetooth/hci_core.h:2057 [inline]
+ hci_conn_failed+0x287/0x400 net/bluetooth/hci_conn.c:1266
+ hci_abort_conn_sync+0x56c/0x11f0 net/bluetooth/hci_sync.c:5603
+ hci_cmd_sync_work+0x22b/0x400 net/bluetooth/hci_sync.c:332
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entr
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21969" target="_blank">CVE-2025-21969</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Bluetooth: L2CAP: Fix slab-use-after-free Read in l2cap_send_cmd
+
+After the hci sync command releases l2cap_conn, the hci receive data work
+queue references the released l2cap_conn when sending to the upper layer.
+Add hci dev lock to the hci receive data work queue to synchronize the two.
+
+[1]
+BUG: KASAN: slab-use-after-free in l2cap_send_cmd+0x187/0x8d0 net/bluetooth/l2cap_core.c:954
+Read of size 8 at addr ffff8880271a4000 by task kworker/u9:2/5837
+
+CPU: 0 UID: 0 PID: 5837 Comm: kworker/u9:2 Not tainted 6.13.0-rc5-syzkaller-00163-gab75170520d4 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 09/13/2024
+Workqueue: hci1 hci_rx_work
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:94 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:120
+ print_address_description mm/kasan/report.c:378 [inline]
+ print_report+0x169/0x550 mm/kasan/report.c:489
+ kasan_report+0x143/0x180 mm/kasan/report.c:602
+ l2cap_build_cmd net/bluetooth/l2cap_core.c:2964 [inline]
+ l2cap_send_cmd+0x187/0x8d0 net/bluetooth/l2cap_core.c:954
+ l2cap_sig_send_rej net/bluetooth/l2cap_core.c:5502 [inline]
+ l2cap_sig_channel net/bluetooth/l2cap_core.c:5538 [inline]
+ l2cap_recv_frame+0x221f/0x10db0 net/bluetooth/l2cap_core.c:6817
+ hci_acldata_packet net/bluetooth/hci_core.c:3797 [inline]
+ hci_rx_work+0x508/0xdb0 net/bluetooth/hci_core.c:4040
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+ </TASK>
+
+Allocated by task 5837:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ poison_kmalloc_redzone mm/kasan/common.c:377 [inline]
+ __kasan_kmalloc+0x98/0xb0 mm/kasan/common.c:394
+ kasan_kmalloc include/linux/kasan.h:260 [inline]
+ __kmalloc_cache_noprof+0x243/0x390 mm/slub.c:4329
+ kmalloc_noprof include/linux/slab.h:901 [inline]
+ kzalloc_noprof include/linux/slab.h:1037 [inline]
+ l2cap_conn_add+0xa9/0x8e0 net/bluetooth/l2cap_core.c:6860
+ l2cap_connect_cfm+0x115/0x1090 net/bluetooth/l2cap_core.c:7239
+ hci_connect_cfm include/net/bluetooth/hci_core.h:2057 [inline]
+ hci_remote_features_evt+0x68e/0xac0 net/bluetooth/hci_event.c:3726
+ hci_event_func net/bluetooth/hci_event.c:7473 [inline]
+ hci_event_packet+0xac2/0x1540 net/bluetooth/hci_event.c:7525
+ hci_rx_work+0x3f3/0xdb0 net/bluetooth/hci_core.c:4035
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+Freed by task 54:
+ kasan_save_stack mm/kasan/common.c:47 [inline]
+ kasan_save_track+0x3f/0x80 mm/kasan/common.c:68
+ kasan_save_free_info+0x40/0x50 mm/kasan/generic.c:582
+ poison_slab_object mm/kasan/common.c:247 [inline]
+ __kasan_slab_free+0x59/0x70 mm/kasan/common.c:264
+ kasan_slab_free include/linux/kasan.h:233 [inline]
+ slab_free_hook mm/slub.c:2353 [inline]
+ slab_free mm/slub.c:4613 [inline]
+ kfree+0x196/0x430 mm/slub.c:4761
+ l2cap_connect_cfm+0xcc/0x1090 net/bluetooth/l2cap_core.c:7235
+ hci_connect_cfm include/net/bluetooth/hci_core.h:2057 [inline]
+ hci_conn_failed+0x287/0x400 net/bluetooth/hci_conn.c:1266
+ hci_abort_conn_sync+0x56c/0x11f0 net/bluetooth/hci_sync.c:5603
+ hci_cmd_sync_work+0x22b/0x400 net/bluetooth/hci_sync.c:332
+ process_one_work kernel/workqueue.c:3229 [inline]
+ process_scheduled_works+0xa66/0x1840 kernel/workqueue.c:3310
+ worker_thread+0x870/0xd30 kernel/workqueue.c:3391
+ kthread+0x2f0/0x390 kernel/kthread.c:389
+ ret_from_fork+0x4b/0x80 arch/x86/kernel/process.c:147
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entr
+---truncated---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31880" data-description="cross-site request forgery (csrf) vulnerability in stylemix pearl allows cross site request forgery. this issue affects pearl: from n/a through 1.3.9.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31880" target="_blank">CVE-2025-31880</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in Stylemix Pearl allows Cross Site Request Forgery. This issue affects Pearl: from n/a through 1.3.9.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21968" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/amd/display: fix slab-use-after-free on hdcp_work
+
+[why]
+a slab-use-after-free is reported when hdcp is destroyed but the
+property_validate_dwork queue is still running.
+
+[how]
+cancel the delayed work when destroying workqueue.
+
+(cherry picked from commit 725a04ba5a95e89c89633d4322430cfbca7ce128)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21968" target="_blank">CVE-2025-21968</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/amd/display: Fix slab-use-after-free on hdcp_work
+
+[Why]
+A slab-use-after-free is reported when HDCP is destroyed but the
+property_validate_dwork queue is still running.
+
+[How]
+Cancel the delayed work when destroying workqueue.
+
+(cherry picked from commit 725a04ba5a95e89c89633d4322430cfbca7ce128)</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-31879" data-description="missing authorization vulnerability in dmitry v. (ceo of "ukr solution") barcode generator for woocommerce allows exploiting incorrectly configured access control security levels. this issue affects barcode generator for woocommerce: from n/a through 2.0.4.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31879" target="_blank">CVE-2025-31879</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-04-01 10:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Missing Authorization vulnerability in Dmitry V. (CEO of "UKR Solution") Barcode Generator for WooCommerce allows Exploiting Incorrectly Configured Access Control Security Levels. This issue affects Barcode Generator for WooCommerce: from n/a through 2.0.4.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-21967" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: fix use-after-free in ksmbd_free_work_struct
+
+->interim_entry of ksmbd_work could be deleted after oplock is freed.
+we don't need to manage it with linked list. the interim request could be
+immediately sent whenever a oplock break wait is needed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-21967" target="_blank">CVE-2025-21967</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-04-01 11:15:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: fix use-after-free in ksmbd_free_work_struct
+
+->interim_entry of ksmbd_work could be deleted after oplock is freed.
+We don't need to manage it with linked list. The interim request could be
+immediately sent whenever a oplock break wait is needed.</p>
                 </div>
         
             </div>
