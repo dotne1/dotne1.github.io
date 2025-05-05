@@ -33,6 +33,300 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-47240" data-description="rejected reason: do not use this candidate number. consultids: none. reason: this candidate was withdrawn by its cna. further investigation showed that it was not a security issue. notes: none.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-47240" target="_blank">CVE-2025-47240</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-05-05 10:15:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: DO NOT USE THIS CANDIDATE NUMBER. ConsultIDs: none. Reason: This candidate was withdrawn by its CNA. Further investigation showed that it was not a security issue. Notes: none.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-58237" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: consider that tail calls invalidate packet pointers
+
+tail-called programs could execute any of the helpers that invalidate
+packet pointers. hence, conservatively assume that each tail call
+invalidates packet pointers.
+
+making the change in bpf_helper_changes_pkt_data() automatically makes
+use of check_cfg() logic that computes 'changes_pkt_data' effect for
+global sub-programs, such that the following program could be
+rejected:
+
+    int tail_call(struct __sk_buff *sk)
+    {
+    	bpf_tail_call_static(sk, &jmp_table, 0);
+    	return 0;
+    }
+
+    sec("tc")
+    int not_safe(struct __sk_buff *sk)
+    {
+    	int *p = (void *)(long)sk->data;
+    	... make p valid ...
+    	tail_call(sk);
+    	*p = 42; /* this is unsafe */
+    	...
+    }
+
+the tc_bpf2bpf.c:subprog_tc() needs change: mark it as a function that
+can invalidate packet pointers. otherwise, it can't be freplaced with
+tailcall_freplace.c:entry_freplace() that does a tail call.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-58237" target="_blank">CVE-2024-58237</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-05-05 10:15:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: consider that tail calls invalidate packet pointers
+
+Tail-called programs could execute any of the helpers that invalidate
+packet pointers. Hence, conservatively assume that each tail call
+invalidates packet pointers.
+
+Making the change in bpf_helper_changes_pkt_data() automatically makes
+use of check_cfg() logic that computes 'changes_pkt_data' effect for
+global sub-programs, such that the following program could be
+rejected:
+
+    int tail_call(struct __sk_buff *sk)
+    {
+    	bpf_tail_call_static(sk, &jmp_table, 0);
+    	return 0;
+    }
+
+    SEC("tc")
+    int not_safe(struct __sk_buff *sk)
+    {
+    	int *p = (void *)(long)sk->data;
+    	... make p valid ...
+    	tail_call(sk);
+    	*p = 42; /* this is unsafe */
+    	...
+    }
+
+The tc_bpf2bpf.c:subprog_tc() needs change: mark it as a function that
+can invalidate packet pointers. Otherwise, it can't be freplaced with
+tailcall_freplace.c:entry_freplace() that does a tail call.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-58100" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: check changes_pkt_data property for extension programs
+
+when processing calls to global sub-programs, verifier decides whether
+to invalidate all packet pointers in current state depending on the
+changes_pkt_data property of the global sub-program.
+
+because of this, an extension program replacing a global sub-program
+must be compatible with changes_pkt_data property of the sub-program
+being replaced.
+
+this commit:
+- adds changes_pkt_data flag to struct bpf_prog_aux:
+  - this flag is set in check_cfg() for main sub-program;
+  - in jit_subprogs() for other sub-programs;
+- modifies bpf_check_attach_btf_id() to check changes_pkt_data flag;
+- moves call to check_attach_btf_id() after the call to check_cfg(),
+  because it needs changes_pkt_data flag to be set:
+
+    bpf_check:
+      ...                             ...
+    - check_attach_btf_id             resolve_pseudo_ldimm64
+      resolve_pseudo_ldimm64   -->    bpf_prog_is_offloaded
+      bpf_prog_is_offloaded           check_cfg
+      check_cfg                     + check_attach_btf_id
+      ...                             ...
+
+the following fields are set by check_attach_btf_id():
+- env->ops
+- prog->aux->attach_btf_trace
+- prog->aux->attach_func_name
+- prog->aux->attach_func_proto
+- prog->aux->dst_trampoline
+- prog->aux->mod
+- prog->aux->saved_dst_attach_type
+- prog->aux->saved_dst_prog_type
+- prog->expected_attach_type
+
+neither of these fields are used by resolve_pseudo_ldimm64() or
+bpf_prog_offload_verifier_prep() (for netronome and netdevsim
+drivers), so the reordering is safe.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-58100" target="_blank">CVE-2024-58100</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-05-05 10:15:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: check changes_pkt_data property for extension programs
+
+When processing calls to global sub-programs, verifier decides whether
+to invalidate all packet pointers in current state depending on the
+changes_pkt_data property of the global sub-program.
+
+Because of this, an extension program replacing a global sub-program
+must be compatible with changes_pkt_data property of the sub-program
+being replaced.
+
+This commit:
+- adds changes_pkt_data flag to struct bpf_prog_aux:
+  - this flag is set in check_cfg() for main sub-program;
+  - in jit_subprogs() for other sub-programs;
+- modifies bpf_check_attach_btf_id() to check changes_pkt_data flag;
+- moves call to check_attach_btf_id() after the call to check_cfg(),
+  because it needs changes_pkt_data flag to be set:
+
+    bpf_check:
+      ...                             ...
+    - check_attach_btf_id             resolve_pseudo_ldimm64
+      resolve_pseudo_ldimm64   -->    bpf_prog_is_offloaded
+      bpf_prog_is_offloaded           check_cfg
+      check_cfg                     + check_attach_btf_id
+      ...                             ...
+
+The following fields are set by check_attach_btf_id():
+- env->ops
+- prog->aux->attach_btf_trace
+- prog->aux->attach_func_name
+- prog->aux->attach_func_proto
+- prog->aux->dst_trampoline
+- prog->aux->mod
+- prog->aux->saved_dst_attach_type
+- prog->aux->saved_dst_prog_type
+- prog->expected_attach_type
+
+Neither of these fields are used by resolve_pseudo_ldimm64() or
+bpf_prog_offload_verifier_prep() (for netronome and netdevsim
+drivers), so the reordering is safe.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-58098" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: track changes_pkt_data property for global functions
+
+when processing calls to certain helpers, verifier invalidates all
+packet pointers in a current state. for example, consider the
+following program:
+
+    __attribute__((__noinline__))
+    long skb_pull_data(struct __sk_buff *sk, __u32 len)
+    {
+        return bpf_skb_pull_data(sk, len);
+    }
+
+    sec("tc")
+    int test_invalidate_checks(struct __sk_buff *sk)
+    {
+        int *p = (void *)(long)sk->data;
+        if ((void *)(p + 1) > (void *)(long)sk->data_end) return tcx_drop;
+        skb_pull_data(sk, 0);
+        *p = 42;
+        return tcx_pass;
+    }
+
+after a call to bpf_skb_pull_data() the pointer 'p' can't be used
+safely. see function filter.c:bpf_helper_changes_pkt_data() for a list
+of such helpers.
+
+at the moment verifier invalidates packet pointers when processing
+helper function calls, and does not traverse global sub-programs when
+processing calls to global sub-programs. this means that calls to
+helpers done from global sub-programs do not invalidate pointers in
+the caller state. e.g. the program above is unsafe, but is not
+rejected by verifier.
+
+this commit fixes the omission by computing field
+bpf_subprog_info->changes_pkt_data for each sub-program before main
+verification pass.
+changes_pkt_data should be set if:
+- subprogram calls helper for which bpf_helper_changes_pkt_data
+  returns true;
+- subprogram calls a global function,
+  for which bpf_subprog_info->changes_pkt_data should be set.
+
+the verifier.c:check_cfg() pass is modified to compute this
+information. the commit relies on depth first instruction traversal
+done by check_cfg() and absence of recursive function calls:
+- check_cfg() would eventually visit every call to subprogram s in a
+  state when s is fully explored;
+- when s is fully explored:
+  - every direct helper call within s is explored
+    (and thus changes_pkt_data is set if needed);
+  - every call to subprogram s1 called by s was visited with s1 fully
+    explored (and thus s inherits changes_pkt_data from s1).
+
+the downside of such approach is that dead code elimination is not
+taken into account: if a helper call inside global function is dead
+because of current configuration, verifier would conservatively assume
+that the call occurs for the purpose of the changes_pkt_data
+computation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-58098" target="_blank">CVE-2024-58098</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-05-05 10:15:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: track changes_pkt_data property for global functions
+
+When processing calls to certain helpers, verifier invalidates all
+packet pointers in a current state. For example, consider the
+following program:
+
+    __attribute__((__noinline__))
+    long skb_pull_data(struct __sk_buff *sk, __u32 len)
+    {
+        return bpf_skb_pull_data(sk, len);
+    }
+
+    SEC("tc")
+    int test_invalidate_checks(struct __sk_buff *sk)
+    {
+        int *p = (void *)(long)sk->data;
+        if ((void *)(p + 1) > (void *)(long)sk->data_end) return TCX_DROP;
+        skb_pull_data(sk, 0);
+        *p = 42;
+        return TCX_PASS;
+    }
+
+After a call to bpf_skb_pull_data() the pointer 'p' can't be used
+safely. See function filter.c:bpf_helper_changes_pkt_data() for a list
+of such helpers.
+
+At the moment verifier invalidates packet pointers when processing
+helper function calls, and does not traverse global sub-programs when
+processing calls to global sub-programs. This means that calls to
+helpers done from global sub-programs do not invalidate pointers in
+the caller state. E.g. the program above is unsafe, but is not
+rejected by verifier.
+
+This commit fixes the omission by computing field
+bpf_subprog_info->changes_pkt_data for each sub-program before main
+verification pass.
+changes_pkt_data should be set if:
+- subprogram calls helper for which bpf_helper_changes_pkt_data
+  returns true;
+- subprogram calls a global function,
+  for which bpf_subprog_info->changes_pkt_data should be set.
+
+The verifier.c:check_cfg() pass is modified to compute this
+information. The commit relies on depth first instruction traversal
+done by check_cfg() and absence of recursive function calls:
+- check_cfg() would eventually visit every call to subprogram S in a
+  state when S is fully explored;
+- when S is fully explored:
+  - every direct helper call within S is explored
+    (and thus changes_pkt_data is set if needed);
+  - every call to subprogram S1 called by S was visited with S1 fully
+    explored (and thus S inherits changes_pkt_data from S1).
+
+The downside of such approach is that dead code elimination is not
+taken into account: if a helper call inside global function is dead
+because of current configuration, verifier would conservatively assume
+that the call occurs for the purpose of the changes_pkt_data
+computation.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-4316" data-description="improper access control in pam feature in devolutions server 2025.1.6.0 and earlier allows a pam user to self approve their pam requests even if disallowed by the configured policy via specific user interface actions.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-4316" target="_blank">CVE-2025-4316</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-05-05 09:15:29 CDT</p>
@@ -180,8 +474,8 @@ DoS attacks such as "Billion Laughs" payloads can cause service disruption.</p>
                 <div class="cve-entry" data-cve-id="CVE-2025-3583" data-description="the newsletter  wordpress plugin before 8.7.1 does not sanitise and escape some of its settings, which could allow high privilege users such as admin to perform stored cross-site scripting attacks even when the unfiltered_html capability is disallowed (for example in multisite setup).">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-3583" target="_blank">CVE-2025-3583</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-05-05 01:15:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.5</p>
                     <p>The Newsletter  WordPress plugin before 8.7.1 does not sanitise and escape some of its settings, which could allow high privilege users such as admin to perform Stored Cross-Site Scripting attacks even when the unfiltered_html capability is disallowed (for example in multisite setup).</p>
                 </div>
         
@@ -199,38 +493,6 @@ DoS attacks such as "Billion Laughs" payloads can cause service disruption.</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.3</p>
                     <p>A vulnerability classified as critical was found in PHPGurukul Emergency Ambulance Hiring Portal 1.0. Affected by this vulnerability is an unknown functionality of the file /admin/contact-us.php. The manipulation of the argument mobnum leads to sql injection. The attack can be launched remotely. The exploit has been disclosed to the public and may be used. Other parameters might be affected as well.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-4264" data-description="a vulnerability classified as critical has been found in phpgurukul emergency ambulance hiring portal 1.0. affected is an unknown function of the file /admin/edit-ambulance.php. the manipulation of the argument dconnum leads to sql injection. it is possible to launch the attack remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-4264" target="_blank">CVE-2025-4264</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-05-05 00:15:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability classified as critical has been found in PHPGurukul Emergency Ambulance Hiring Portal 1.0. Affected is an unknown function of the file /admin/edit-ambulance.php. The manipulation of the argument dconnum leads to sql injection. It is possible to launch the attack remotely. The exploit has been disclosed to the public and may be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-4263" data-description="a vulnerability was found in phpgurukul online dj booking management system 1.0. it has been rated as critical. this issue affects some unknown processing of the file /admin/booking-search.php. the manipulation of the argument searchdata leads to sql injection. the attack may be initiated remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-4263" target="_blank">CVE-2025-4263</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-05-04 23:16:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was found in PHPGurukul Online DJ Booking Management System 1.0. It has been rated as critical. This issue affects some unknown processing of the file /admin/booking-search.php. The manipulation of the argument searchdata leads to sql injection. The attack may be initiated remotely. The exploit has been disclosed to the public and may be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-4262" data-description="a vulnerability was found in phpgurukul online dj booking management system 1.0. it has been declared as critical. this vulnerability affects unknown code of the file /admin/user-search.php. the manipulation of the argument searchdata leads to sql injection. the attack can be initiated remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-4262" target="_blank">CVE-2025-4262</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-05-04 23:16:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was found in PHPGurukul Online DJ Booking Management System 1.0. It has been declared as critical. This vulnerability affects unknown code of the file /admin/user-search.php. The manipulation of the argument searchdata leads to sql injection. The attack can be initiated remotely. The exploit has been disclosed to the public and may be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-4260" data-description="a vulnerability was found in zhangyanbo2007 youkefu up to 4.2.0 and classified as problematic. affected by this issue is the function impsave of the file m\web\handler\admin\system\templatecontroller.java. the manipulation of the argument datafile leads to deserialization. the attack may be launched remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-4260" target="_blank">CVE-2025-4260</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-05-04 22:15:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was found in zhangyanbo2007 youkefu up to 4.2.0 and classified as problematic. Affected by this issue is the function impsave of the file m\web\handler\admin\system\TemplateController.java. The manipulation of the argument dataFile leads to deserialization. The attack may be launched remotely. The exploit has been disclosed to the public and may be used.</p>
                 </div>
         
             </div>
