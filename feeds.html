@@ -33,226 +33,1366 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2025-38095" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2025-38173" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-dma-buf: insert memory barrier before updating num_fences
+crypto: marvell/cesa - handle zero-length skcipher requests
 
-smp_store_mb() inserts memory barrier after storing operation.
-it is different with what the comment is originally aiming so null
-pointer dereference can be happened if memory update is reordered.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38095" target="_blank">CVE-2025-38095</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-03 03:15:26 CDT</p>
+do not access random memory for zero-length skcipher requests.
+just return 0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38173" target="_blank">CVE-2025-38173</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-dma-buf: insert memory barrier before updating num_fences
+crypto: marvell/cesa - Handle zero-length skcipher requests
 
-smp_store_mb() inserts memory barrier after storing operation.
-It is different with what the comment is originally aiming so Null
-pointer dereference can be happened if memory update is reordered.</p>
+Do not access random memory for zero-length skcipher requests.
+Just return 0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-38094" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2025-38172" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: cadence: macb: fix a possible deadlock in macb_halt_tx.
+erofs: avoid using multiple devices with different type
 
-there is a situation where after thalt is set high, tgo stays high as
-well. because jiffies are never updated, as we are in a context with
-interrupts disabled, we never exit that loop and have a deadlock.
+for multiple devices, both primary and extra devices should be the
+same type. `erofs_init_device` has already guaranteed that if the
+primary is a file-backed device, extra devices should also be
+regular files.
 
-that deadlock was noticed on a sama5d4 device that stayed locked for days.
+however, if the primary is a block device while the extra device
+is a file-backed device, `erofs_init_device` will get an enotblk,
+which is not treated as an error in `erofs_fc_get_tree`, and that
+leads to an uaf:
 
-use retries instead of jiffies so that the timeout really works and we do
-not have a deadlock anymore.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38094" target="_blank">CVE-2025-38094</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-03 03:15:25 CDT</p>
+  erofs_fc_get_tree
+    get_tree_bdev_flags(erofs_fc_fill_super)
+      erofs_read_superblock
+        erofs_init_device  // sbi->dif0 is not inited yet,
+                           // return -enotblk
+      deactivate_locked_super
+        free(sbi)
+    if (err is -enotblk)
+      sbi->dif0.file = filp_open()  // sbi uaf
+
+so if -enotblk is hitted in `erofs_init_device`, it means the
+primary device must be a block device, and the extra device
+is not a block device. the error can be converted to -einval.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38172" target="_blank">CVE-2025-38172</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: cadence: macb: Fix a possible deadlock in macb_halt_tx.
+erofs: avoid using multiple devices with different type
 
-There is a situation where after THALT is set high, TGO stays high as
-well. Because jiffies are never updated, as we are in a context with
-interrupts disabled, we never exit that loop and have a deadlock.
+For multiple devices, both primary and extra devices should be the
+same type. `erofs_init_device` has already guaranteed that if the
+primary is a file-backed device, extra devices should also be
+regular files.
 
-That deadlock was noticed on a sama5d4 device that stayed locked for days.
+However, if the primary is a block device while the extra device
+is a file-backed device, `erofs_init_device` will get an ENOTBLK,
+which is not treated as an error in `erofs_fc_get_tree`, and that
+leads to an UAF:
 
-Use retries instead of jiffies so that the timeout really works and we do
-not have a deadlock anymore.</p>
+  erofs_fc_get_tree
+    get_tree_bdev_flags(erofs_fc_fill_super)
+      erofs_read_superblock
+        erofs_init_device  // sbi->dif0 is not inited yet,
+                           // return -ENOTBLK
+      deactivate_locked_super
+        free(sbi)
+    if (err is -ENOTBLK)
+      sbi->dif0.file = filp_open()  // sbi UAF
+
+So if -ENOTBLK is hitted in `erofs_init_device`, it means the
+primary device must be a block device, and the extra device
+is not a block device. The error can be converted to -EINVAL.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2024-9017" data-description="the peepso core: groups plugin for wordpress is vulnerable to stored cross-site scripting via the group description field in all versions up to, and including, 6.4.6.0 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with subscriber-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-9017" target="_blank">CVE-2024-9017</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-03 02:15:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The PeepSo Core: Groups plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the Group Description field in all versions up to, and including, 6.4.6.0 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Subscriber-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-5944" data-description="the element pack addons for elementor plugin for wordpress is vulnerable to stored cross-site scripting via the ‘data-caption’ attribute in all versions up to, and including, 8.0.0 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-5944" target="_blank">CVE-2025-5944</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-03 00:15:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Element Pack Addons for Elementor plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the ‘data-caption’ attribute in all versions up to, and including, 8.0.0 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-52842" data-description="improper neutralization of input during web page generation (xss or 'cross-site scripting') vulnerability in laundry on linux, macos allows account takeover. this issue affects laundry: 2.3.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-52842" target="_blank">CVE-2025-52842</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:31 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-38171" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+power: supply: max77705: fix workqueue error handling in probe
+
+the create_singlethread_workqueue() doesn't return error pointers, it
+returns null.  also cleanup the workqueue on the error paths.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38171" target="_blank">CVE-2025-38171</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Input During Web Page Generation (XSS or 'Cross-site Scripting') vulnerability in Laundry on Linux, MacOS allows Account Takeover. This issue affects Laundry: 2.3.0.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+power: supply: max77705: Fix workqueue error handling in probe
+
+The create_singlethread_workqueue() doesn't return error pointers, it
+returns NULL.  Also cleanup the workqueue on the error paths.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-52559" data-description="zulip is an open-source team chat application. from versions 2.0.0-rc1 to before 10.4 in zulip server, the /digest/ url of a server shows a preview of what the email weekly digest would contain. this url, though not the digest itself, contains a cross-site scripting (xss) vulnerability in both topic names and channel names. this issue has been fixed in zulip server 10.4. a workaround for this issue involves denying access to /digest/.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-52559" target="_blank">CVE-2025-52559</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>Zulip is an open-source team chat application. From versions 2.0.0-rc1 to before 10.4 in Zulip Server, the /digest/ URL of a server shows a preview of what the email weekly digest would contain. This URL, though not the digest itself, contains a cross-site scripting (XSS) vulnerability in both topic names and channel names. This issue has been fixed in Zulip Server 10.4. A workaround for this issue involves denying access to /digest/.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-43025" data-description="hp universal print driver is potentially vulnerable to denial of service due to buffer overflow in versions of upd 7.4 or older (e.g., v7.3.x, v7.2.x, v7.1.x, etc.).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-43025" target="_blank">CVE-2025-43025</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-38170" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+arm64/fpsimd: discard stale cpu state when handling sme traps
+
+the logic for handling sme traps manipulates saved fpsimd/sve/sme state
+incorrectly, and a race with preemption can result in a task having
+tif_sme set and tif_foreign_fpstate clear even though the live cpu state
+is stale (e.g. with sme traps enabled). this can result in warnings from
+do_sme_acc() where sme traps are not expected while tif_sme is set:
+
+|        /* with tif_sme userspace shouldn't generate any traps */
+|        if (test_and_set_thread_flag(tif_sme))
+|                warn_on(1);
+
+this is very similar to the sve issue we fixed in commit:
+
+  751ecf6afd6568ad ("arm64/sve: discard stale cpu state when handling sve traps")
+
+the race can occur when the sme trap handler is preempted before and
+after manipulating the saved fpsimd/sve/sme state, starting and ending on
+the same cpu, e.g.
+
+| void do_sme_acc(unsigned long esr, struct pt_regs *regs)
+| {
+|         // trap on cpu 0 with tif_sme clear, sme traps enabled
+|         // task->fpsimd_cpu is 0.
+|         // per_cpu_ptr(&fpsimd_last_state, 0) is task.
+|
+|         ...
+|
+|         // preempted; migrated from cpu 0 to cpu 1.
+|         // tif_foreign_fpstate is set.
+|
+|         get_cpu_fpsimd_context();
+|
+|         /* with tif_sme userspace shouldn't generate any traps */
+|         if (test_and_set_thread_flag(tif_sme))
+|                 warn_on(1);
+|
+|         if (!test_thread_flag(tif_foreign_fpstate)) {
+|                 unsigned long vq_minus_one =
+|                         sve_vq_from_vl(task_get_sme_vl(current)) - 1;
+|                 sme_set_vq(vq_minus_one);
+|
+|                 fpsimd_bind_task_to_cpu();
+|         }
+|
+|         put_cpu_fpsimd_context();
+|
+|         // preempted; migrated from cpu 1 to cpu 0.
+|         // task->fpsimd_cpu is still 0
+|         // if per_cpu_ptr(&fpsimd_last_state, 0) is still task then:
+|         // - stale hw state is reused (with sme traps enabled)
+|         // - tif_foreign_fpstate is cleared
+|         // - a return to userspace skips hw state restore
+| }
+
+fix the case where the state is not live and tif_foreign_fpstate is set
+by calling fpsimd_flush_task_state() to detach from the saved cpu
+state. this ensures that a subsequent context switch will not reuse the
+stale cpu state, and will instead set tif_foreign_fpstate, forcing the
+new state to be reloaded from memory prior to a return to userspace.
+
+note: this was originallly posted as [1].
+
+[ rutland: rewrite commit message ]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38170" target="_blank">CVE-2025-38170</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>HP Universal Print Driver is potentially vulnerable to denial of service due to buffer overflow in versions of UPD 7.4 or older (e.g., v7.3.x, v7.2.x, v7.1.x, etc.).</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+arm64/fpsimd: Discard stale CPU state when handling SME traps
+
+The logic for handling SME traps manipulates saved FPSIMD/SVE/SME state
+incorrectly, and a race with preemption can result in a task having
+TIF_SME set and TIF_FOREIGN_FPSTATE clear even though the live CPU state
+is stale (e.g. with SME traps enabled). This can result in warnings from
+do_sme_acc() where SME traps are not expected while TIF_SME is set:
+
+|        /* With TIF_SME userspace shouldn't generate any traps */
+|        if (test_and_set_thread_flag(TIF_SME))
+|                WARN_ON(1);
+
+This is very similar to the SVE issue we fixed in commit:
+
+  751ecf6afd6568ad ("arm64/sve: Discard stale CPU state when handling SVE traps")
+
+The race can occur when the SME trap handler is preempted before and
+after manipulating the saved FPSIMD/SVE/SME state, starting and ending on
+the same CPU, e.g.
+
+| void do_sme_acc(unsigned long esr, struct pt_regs *regs)
+| {
+|         // Trap on CPU 0 with TIF_SME clear, SME traps enabled
+|         // task->fpsimd_cpu is 0.
+|         // per_cpu_ptr(&fpsimd_last_state, 0) is task.
+|
+|         ...
+|
+|         // Preempted; migrated from CPU 0 to CPU 1.
+|         // TIF_FOREIGN_FPSTATE is set.
+|
+|         get_cpu_fpsimd_context();
+|
+|         /* With TIF_SME userspace shouldn't generate any traps */
+|         if (test_and_set_thread_flag(TIF_SME))
+|                 WARN_ON(1);
+|
+|         if (!test_thread_flag(TIF_FOREIGN_FPSTATE)) {
+|                 unsigned long vq_minus_one =
+|                         sve_vq_from_vl(task_get_sme_vl(current)) - 1;
+|                 sme_set_vq(vq_minus_one);
+|
+|                 fpsimd_bind_task_to_cpu();
+|         }
+|
+|         put_cpu_fpsimd_context();
+|
+|         // Preempted; migrated from CPU 1 to CPU 0.
+|         // task->fpsimd_cpu is still 0
+|         // If per_cpu_ptr(&fpsimd_last_state, 0) is still task then:
+|         // - Stale HW state is reused (with SME traps enabled)
+|         // - TIF_FOREIGN_FPSTATE is cleared
+|         // - A return to userspace skips HW state restore
+| }
+
+Fix the case where the state is not live and TIF_FOREIGN_FPSTATE is set
+by calling fpsimd_flush_task_state() to detach from the saved CPU
+state. This ensures that a subsequent context switch will not reuse the
+stale CPU state, and will instead set TIF_FOREIGN_FPSTATE, forcing the
+new state to be reloaded from memory prior to a return to userspace.
+
+Note: this was originallly posted as [1].
+
+[ Rutland: rewrite commit message ]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-34092" data-description="a cookie encryption bypass vulnerability exists in google chrome’s appbound mechanism due to weak path validation logic within the elevation service. when chrome encrypts a cookie key, it records its own executable path as validation metadata. later, when decrypting, the elevation service compares the requesting process’s path to this stored path. however, due to path canonicalization inconsistencies, an attacker can impersonate chrome (e.g., by naming their binary chrome.exe and placing it in a similar path) and successfully retrieve the encrypted cookie key. this allows malicious processes to retrieve cookies intended to be restricted to the chrome process only.
+                <div class="cve-entry" data-cve-id="CVE-2025-38169" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-confirmed in google chrome with appbound encryption enabled. other chromium-based browsers may be affected if they implement similar com-based encryption mechanisms.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34092" target="_blank">CVE-2025-34092</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:30 CDT</p>
+arm64/fpsimd: avoid clobbering kernel fpsimd state with smstop
+
+on system with sme, a thread's kernel fpsimd state may be erroneously
+clobbered during a context switch immediately after that state is
+restored. systems without sme are unaffected.
+
+if the cpu happens to be in streaming sve mode before a context switch
+to a thread with kernel fpsimd state, fpsimd_thread_switch() will
+restore the kernel fpsimd state using fpsimd_load_kernel_state() while
+the cpu is still in streaming sve mode. when fpsimd_thread_switch()
+subsequently calls fpsimd_flush_cpu_state(), this will execute an
+smstop, causing an exit from streaming sve mode. the exit from
+streaming sve mode will cause the hardware to reset a number of
+fpsimd/sve/sme registers, clobbering the fpsimd state.
+
+fix this by calling fpsimd_flush_cpu_state() before restoring the kernel
+fpsimd state.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38169" target="_blank">CVE-2025-38169</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A cookie encryption bypass vulnerability exists in Google Chrome’s AppBound mechanism due to weak path validation logic within the elevation service. When Chrome encrypts a cookie key, it records its own executable path as validation metadata. Later, when decrypting, the elevation service compares the requesting process’s path to this stored path. However, due to path canonicalization inconsistencies, an attacker can impersonate Chrome (e.g., by naming their binary chrome.exe and placing it in a similar path) and successfully retrieve the encrypted cookie key. This allows malicious processes to retrieve cookies intended to be restricted to the Chrome process only.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Confirmed in Google Chrome with AppBound Encryption enabled. Other Chromium-based browsers may be affected if they implement similar COM-based encryption mechanisms.</p>
+arm64/fpsimd: Avoid clobbering kernel FPSIMD state with SMSTOP
+
+On system with SME, a thread's kernel FPSIMD state may be erroneously
+clobbered during a context switch immediately after that state is
+restored. Systems without SME are unaffected.
+
+If the CPU happens to be in streaming SVE mode before a context switch
+to a thread with kernel FPSIMD state, fpsimd_thread_switch() will
+restore the kernel FPSIMD state using fpsimd_load_kernel_state() while
+the CPU is still in streaming SVE mode. When fpsimd_thread_switch()
+subsequently calls fpsimd_flush_cpu_state(), this will execute an
+SMSTOP, causing an exit from streaming SVE mode. The exit from
+streaming SVE mode will cause the hardware to reset a number of
+FPSIMD/SVE/SME registers, clobbering the FPSIMD state.
+
+Fix this by calling fpsimd_flush_cpu_state() before restoring the kernel
+FPSIMD state.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-34091" data-description="a padding oracle vulnerability exists in google chrome’s appbound cookie encryption mechanism due to observable decryption failure behavior in windows event logs when handling malformed ciphertext in system-dpapi-encrypted blobs. a local attacker can repeatedly send malformed ciphertexts to the chrome elevation service and distinguish between padding and mac errors, enabling a padding oracle attack. this allows partial decryption of the system-dpapi layer and eventual recovery of the user-dpapi encrypted cookie key, which is trivially decrypted by the attacker’s own context. this issue undermines the core purpose of appbound encryption by enabling low-privileged cookie theft through cryptographic misuse and verbose error feedback.
+                <div class="cve-entry" data-cve-id="CVE-2025-38168" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-confirmed in google chrome with appbound encryption enabled. other chromium-based browsers may be affected if they implement similar com-based encryption mechanisms.
+perf: arm-ni: unregister pmus on probe failure
 
-this behavior arises from a combination of chrome’s appbound implementation and the way microsoft windows dpapi reports decryption failures via event logs. as such, the vulnerability relies on cryptographic behavior and error visibility in all supported versions of windows.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34091" target="_blank">CVE-2025-34091</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:30 CDT</p>
+when a resource allocation fails in one clock domain of an ni device,
+we need to properly roll back all previously registered perf pmus in
+other clock domains of the same device.
+
+otherwise, it can lead to kernel panics.
+
+calling arm_ni_init+0x0/0xff8 [arm_ni] @ 2374
+arm-ni armhcb70:00: failed to request pmu region 0x1f3c13000
+arm-ni armhcb70:00: probe with driver arm-ni failed with error -16
+list_add corruption: next->prev should be prev (fffffd01e9698a18),
+but was 0000000000000000. (next=ffff10001a0decc8).
+pstate: 6340009 (nzcv daif +pan -uao +tco +dit -ssbs btype=--)
+pc : list_add_valid_or_report+0x7c/0xb8
+lr : list_add_valid_or_report+0x7c/0xb8
+call trace:
+ __list_add_valid_or_report+0x7c/0xb8
+ perf_pmu_register+0x22c/0x3a0
+ arm_ni_probe+0x554/0x70c [arm_ni]
+ platform_probe+0x70/0xe8
+ really_probe+0xc6/0x4d8
+ driver_probe_device+0x48/0x170
+ __driver_attach+0x8e/0x1c0
+ bus_for_each_dev+0x64/0xf0
+ driver_add+0x138/0x260
+ bus_add_driver+0x68/0x138
+ __platform_driver_register+0x2c/0x40
+ arm_ni_init+0x14/0x2a [arm_ni]
+ do_init_module+0x36/0x298
+---[ end trace 0000000000000000 ]---
+kernel panic - not syncing: oops - bug: fatal exception
+smp: stopping secondary cpus">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38168" target="_blank">CVE-2025-38168</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A padding oracle vulnerability exists in Google Chrome’s AppBound cookie encryption mechanism due to observable decryption failure behavior in Windows Event Logs when handling malformed ciphertext in SYSTEM-DPAPI-encrypted blobs. A local attacker can repeatedly send malformed ciphertexts to the Chrome elevation service and distinguish between padding and MAC errors, enabling a padding oracle attack. This allows partial decryption of the SYSTEM-DPAPI layer and eventual recovery of the user-DPAPI encrypted cookie key, which is trivially decrypted by the attacker’s own context. This issue undermines the core purpose of AppBound Encryption by enabling low-privileged cookie theft through cryptographic misuse and verbose error feedback.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Confirmed in Google Chrome with AppBound Encryption enabled. Other Chromium-based browsers may be affected if they implement similar COM-based encryption mechanisms.
+perf: arm-ni: Unregister PMUs on probe failure
 
-This behavior arises from a combination of Chrome’s AppBound implementation and the way Microsoft Windows DPAPI reports decryption failures via Event Logs. As such, the vulnerability relies on cryptographic behavior and error visibility in all supported versions of Windows.</p>
+When a resource allocation fails in one clock domain of an NI device,
+we need to properly roll back all previously registered perf PMUs in
+other clock domains of the same device.
+
+Otherwise, it can lead to kernel panics.
+
+Calling arm_ni_init+0x0/0xff8 [arm_ni] @ 2374
+arm-ni ARMHCB70:00: Failed to request PMU region 0x1f3c13000
+arm-ni ARMHCB70:00: probe with driver arm-ni failed with error -16
+list_add corruption: next->prev should be prev (fffffd01e9698a18),
+but was 0000000000000000. (next=ffff10001a0decc8).
+pstate: 6340009 (nZCv daif +PAN -UAO +TCO +DIT -SSBS BTYPE=--)
+pc : list_add_valid_or_report+0x7c/0xb8
+lr : list_add_valid_or_report+0x7c/0xb8
+Call trace:
+ __list_add_valid_or_report+0x7c/0xb8
+ perf_pmu_register+0x22c/0x3a0
+ arm_ni_probe+0x554/0x70c [arm_ni]
+ platform_probe+0x70/0xe8
+ really_probe+0xc6/0x4d8
+ driver_probe_device+0x48/0x170
+ __driver_attach+0x8e/0x1c0
+ bus_for_each_dev+0x64/0xf0
+ driver_add+0x138/0x260
+ bus_add_driver+0x68/0x138
+ __platform_driver_register+0x2c/0x40
+ arm_ni_init+0x14/0x2a [arm_ni]
+ do_init_module+0x36/0x298
+---[ end trace 0000000000000000 ]---
+Kernel panic - not syncing: Oops - BUG: Fatal exception
+SMP: stopping secondary CPUs</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-34090" data-description="a security bypass vulnerability exists in google chrome appbound cookie encryption mechanism due to insufficient validation of com server paths during inter-process communication. a local low-privileged attacker can hijack the com class identifier (clsid) registration used by chrome's elevation service and point it to a non-existent or malicious binary. when this hijack occurs, chrome silently falls back to the legacy cookie encryption mechanism (protected only by user-dpapi), thereby enabling cookie decryption by any user-context malware without system-level access. this flaw bypasses the protections intended by the appbound encryption design and allows cookie theft from chromium-based browsers.
+                <div class="cve-entry" data-cve-id="CVE-2025-38167" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-confirmed in google chrome with appbound encryption enabled. other chromium-based browsers may be affected if they implement similar com-based encryption mechanisms.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34090" target="_blank">CVE-2025-34090</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:30 CDT</p>
+fs/ntfs3: handle hdr_first_de() return value
+
+the hdr_first_de() function returns a pointer to a struct ntfs_de. this
+pointer may be null. to handle the null error effectively, it is important
+to implement an error handler. this will help manage potential errors
+consistently.
+
+additionally, error handling for the return value already exists at other
+points where this function is called.
+
+found by linux verification center (linuxtesting.org) with svace.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38167" target="_blank">CVE-2025-38167</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A security bypass vulnerability exists in Google Chrome AppBound cookie encryption mechanism due to insufficient validation of COM server paths during inter-process communication. A local low-privileged attacker can hijack the COM class identifier (CLSID) registration used by Chrome's elevation service and point it to a non-existent or malicious binary. When this hijack occurs, Chrome silently falls back to the legacy cookie encryption mechanism (protected only by user-DPAPI), thereby enabling cookie decryption by any user-context malware without SYSTEM-level access. This flaw bypasses the protections intended by the AppBound encryption design and allows cookie theft from Chromium-based browsers.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Confirmed in Google Chrome with AppBound Encryption enabled. Other Chromium-based browsers may be affected if they implement similar COM-based encryption mechanisms.</p>
+fs/ntfs3: handle hdr_first_de() return value
+
+The hdr_first_de() function returns a pointer to a struct NTFS_DE. This
+pointer may be NULL. To handle the NULL error effectively, it is important
+to implement an error handler. This will help manage potential errors
+consistently.
+
+Additionally, error handling for the return value already exists at other
+points where this function is called.
+
+Found by Linux Verification Center (linuxtesting.org) with SVACE.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-34079" data-description="an authenticated remote code execution vulnerability exists in nsclient++ version 0.5.2.35 when the web interface and externalscripts module are enabled. a remote attacker with the administrator password can authenticate to the web interface (default port 8443), inject arbitrary commands as external scripts via the /settings/query.json api, save the configuration, and trigger the script via the /query/{name} endpoint. the injected commands are executed with system privileges, enabling full remote compromise.
+                <div class="cve-entry" data-cve-id="CVE-2025-38166" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this capability is an intended feature, but the lack of safeguards or privilege separation makes it risky when exposed to untrusted actors.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34079" target="_blank">CVE-2025-34079</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:29 CDT</p>
+bpf: fix ktls panic with sockmap
+
+[ 2172.936997] ------------[ cut here ]------------
+[ 2172.936999] kernel bug at lib/iov_iter.c:629!
+......
+[ 2172.944996] pkru: 55555554
+[ 2172.945155] call trace:
+[ 2172.945299]  <task>
+[ 2172.945428]  ? die+0x36/0x90
+[ 2172.945601]  ? do_trap+0xdd/0x100
+[ 2172.945795]  ? iov_iter_revert+0x178/0x180
+[ 2172.946031]  ? iov_iter_revert+0x178/0x180
+[ 2172.946267]  ? do_error_trap+0x7d/0x110
+[ 2172.946499]  ? iov_iter_revert+0x178/0x180
+[ 2172.946736]  ? exc_invalid_op+0x50/0x70
+[ 2172.946961]  ? iov_iter_revert+0x178/0x180
+[ 2172.947197]  ? asm_exc_invalid_op+0x1a/0x20
+[ 2172.947446]  ? iov_iter_revert+0x178/0x180
+[ 2172.947683]  ? iov_iter_revert+0x5c/0x180
+[ 2172.947913]  tls_sw_sendmsg_locked.isra.0+0x794/0x840
+[ 2172.948206]  tls_sw_sendmsg+0x52/0x80
+[ 2172.948420]  ? inet_sendmsg+0x1f/0x70
+[ 2172.948634]  __sys_sendto+0x1cd/0x200
+[ 2172.948848]  ? find_held_lock+0x2b/0x80
+[ 2172.949072]  ? syscall_trace_enter+0x140/0x270
+[ 2172.949330]  ? __lock_release.isra.0+0x5e/0x170
+[ 2172.949595]  ? find_held_lock+0x2b/0x80
+[ 2172.949817]  ? syscall_trace_enter+0x140/0x270
+[ 2172.950211]  ? lockdep_hardirqs_on_prepare+0xda/0x190
+[ 2172.950632]  ? ktime_get_coarse_real_ts64+0xc2/0xd0
+[ 2172.951036]  __x64_sys_sendto+0x24/0x30
+[ 2172.951382]  do_syscall_64+0x90/0x170
+......
+
+after calling bpf_exec_tx_verdict(), the size of msg_pl->sg may increase,
+e.g., when the bpf program executes bpf_msg_push_data().
+
+if the bpf program sets cork_bytes and sg.size is smaller than cork_bytes,
+it will return -enospc and attempt to roll back to the non-zero copy
+logic. however, during rollback, msg->msg_iter is reset, but since
+msg_pl->sg.size has been increased, subsequent executions will exceed the
+actual size of msg_iter.
+'''
+iov_iter_revert(&msg->msg_iter, msg_pl->sg.size - orig_size);
+'''
+
+the changes in this commit are based on the following considerations:
+
+1. when cork_bytes is set, rolling back to non-zero copy logic is
+pointless and can directly go to zero-copy logic.
+
+2. we can not calculate the correct number of bytes to revert msg_iter.
+
+assume the original data is "abcdefgh" (8 bytes), and after 3 pushes
+by the bpf program, it becomes 11-byte data: "abc?de?fgh?".
+then, we set cork_bytes to 6, which means the first 6 bytes have been
+processed, and the remaining 5 bytes "?fgh?" will be cached until the
+length meets the cork_bytes requirement.
+
+however, some data in "?fgh?" is not within 'sg->msg_iter'
+(but in msg_pl instead), especially the data "?" we pushed.
+
+so it doesn't seem as simple as just reverting through an offset of
+msg_iter.
+
+3. for non-tls sockets in tcp_bpf_sendmsg, when a "cork" situation occurs,
+the user-space send() doesn't return an error, and the returned length is
+the same as the input length parameter, even if some data is cached.
+
+additionally, i saw that the current non-zero-copy logic for handling
+corking is written as:
+'''
+line 1177
+else if (ret != -eagain) {
+	if (ret == -enospc)
+		ret = 0;
+	goto send_end;
+'''
+
+so it's ok to just return 'copied' without error when a "cork" situation
+occurs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38166" target="_blank">CVE-2025-38166</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authenticated remote code execution vulnerability exists in NSClient++ version 0.5.2.35 when the web interface and ExternalScripts module are enabled. A remote attacker with the administrator password can authenticate to the web interface (default port 8443), inject arbitrary commands as external scripts via the /settings/query.json API, save the configuration, and trigger the script via the /query/{name} endpoint. The injected commands are executed with SYSTEM privileges, enabling full remote compromise.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This capability is an intended feature, but the lack of safeguards or privilege separation makes it risky when exposed to untrusted actors.</p>
+bpf: fix ktls panic with sockmap
+
+[ 2172.936997] ------------[ cut here ]------------
+[ 2172.936999] kernel BUG at lib/iov_iter.c:629!
+......
+[ 2172.944996] PKRU: 55555554
+[ 2172.945155] Call Trace:
+[ 2172.945299]  <TASK>
+[ 2172.945428]  ? die+0x36/0x90
+[ 2172.945601]  ? do_trap+0xdd/0x100
+[ 2172.945795]  ? iov_iter_revert+0x178/0x180
+[ 2172.946031]  ? iov_iter_revert+0x178/0x180
+[ 2172.946267]  ? do_error_trap+0x7d/0x110
+[ 2172.946499]  ? iov_iter_revert+0x178/0x180
+[ 2172.946736]  ? exc_invalid_op+0x50/0x70
+[ 2172.946961]  ? iov_iter_revert+0x178/0x180
+[ 2172.947197]  ? asm_exc_invalid_op+0x1a/0x20
+[ 2172.947446]  ? iov_iter_revert+0x178/0x180
+[ 2172.947683]  ? iov_iter_revert+0x5c/0x180
+[ 2172.947913]  tls_sw_sendmsg_locked.isra.0+0x794/0x840
+[ 2172.948206]  tls_sw_sendmsg+0x52/0x80
+[ 2172.948420]  ? inet_sendmsg+0x1f/0x70
+[ 2172.948634]  __sys_sendto+0x1cd/0x200
+[ 2172.948848]  ? find_held_lock+0x2b/0x80
+[ 2172.949072]  ? syscall_trace_enter+0x140/0x270
+[ 2172.949330]  ? __lock_release.isra.0+0x5e/0x170
+[ 2172.949595]  ? find_held_lock+0x2b/0x80
+[ 2172.949817]  ? syscall_trace_enter+0x140/0x270
+[ 2172.950211]  ? lockdep_hardirqs_on_prepare+0xda/0x190
+[ 2172.950632]  ? ktime_get_coarse_real_ts64+0xc2/0xd0
+[ 2172.951036]  __x64_sys_sendto+0x24/0x30
+[ 2172.951382]  do_syscall_64+0x90/0x170
+......
+
+After calling bpf_exec_tx_verdict(), the size of msg_pl->sg may increase,
+e.g., when the BPF program executes bpf_msg_push_data().
+
+If the BPF program sets cork_bytes and sg.size is smaller than cork_bytes,
+it will return -ENOSPC and attempt to roll back to the non-zero copy
+logic. However, during rollback, msg->msg_iter is reset, but since
+msg_pl->sg.size has been increased, subsequent executions will exceed the
+actual size of msg_iter.
+'''
+iov_iter_revert(&msg->msg_iter, msg_pl->sg.size - orig_size);
+'''
+
+The changes in this commit are based on the following considerations:
+
+1. When cork_bytes is set, rolling back to non-zero copy logic is
+pointless and can directly go to zero-copy logic.
+
+2. We can not calculate the correct number of bytes to revert msg_iter.
+
+Assume the original data is "abcdefgh" (8 bytes), and after 3 pushes
+by the BPF program, it becomes 11-byte data: "abc?de?fgh?".
+Then, we set cork_bytes to 6, which means the first 6 bytes have been
+processed, and the remaining 5 bytes "?fgh?" will be cached until the
+length meets the cork_bytes requirement.
+
+However, some data in "?fgh?" is not within 'sg->msg_iter'
+(but in msg_pl instead), especially the data "?" we pushed.
+
+So it doesn't seem as simple as just reverting through an offset of
+msg_iter.
+
+3. For non-TLS sockets in tcp_bpf_sendmsg, when a "cork" situation occurs,
+the user-space send() doesn't return an error, and the returned length is
+the same as the input length parameter, even if some data is cached.
+
+Additionally, I saw that the current non-zero-copy logic for handling
+corking is written as:
+'''
+line 1177
+else if (ret != -EAGAIN) {
+	if (ret == -ENOSPC)
+		ret = 0;
+	goto send_end;
+'''
+
+So it's ok to just return 'copied' without error when a "cork" situation
+occurs.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-34078" data-description="a local privilege escalation vulnerability exists in nsclient++ 0.5.2.35 when both the web interface and externalscripts features are enabled. the configuration file (nsclient.ini) stores the administrative password in plaintext and is readable by local users. by extracting this password, an attacker can authenticate to the nsclient++ web interface (typically accessible on port 8443) and abuse the externalscripts plugin to inject and execute arbitrary commands as system by registering a custom script, saving the configuration, and triggering it via the api.
+                <div class="cve-entry" data-cve-id="CVE-2025-38165" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this behavior is documented but insecure, as the plaintext credential exposure undermines access isolation between local users and administrative functions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34078" target="_blank">CVE-2025-34078</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:29 CDT</p>
+bpf, sockmap: fix panic when calling skb_linearize
+
+the panic can be reproduced by executing the command:
+./bench sockmap -c 2 -p 1 -a --rx-verdict-ingress --rx-strp 100000
+
+then a kernel panic was captured:
+'''
+[  657.460555] kernel bug at net/core/skbuff.c:2178!
+[  657.462680] tainted: [w]=warn
+[  657.463287] workqueue: events sk_psock_backlog
+...
+[  657.469610]  <task>
+[  657.469738]  ? die+0x36/0x90
+[  657.469916]  ? do_trap+0x1d0/0x270
+[  657.470118]  ? pskb_expand_head+0x612/0xf40
+[  657.470376]  ? pskb_expand_head+0x612/0xf40
+[  657.470620]  ? do_error_trap+0xa3/0x170
+[  657.470846]  ? pskb_expand_head+0x612/0xf40
+[  657.471092]  ? handle_invalid_op+0x2c/0x40
+[  657.471335]  ? pskb_expand_head+0x612/0xf40
+[  657.471579]  ? exc_invalid_op+0x2d/0x40
+[  657.471805]  ? asm_exc_invalid_op+0x1a/0x20
+[  657.472052]  ? pskb_expand_head+0xd1/0xf40
+[  657.472292]  ? pskb_expand_head+0x612/0xf40
+[  657.472540]  ? lock_acquire+0x18f/0x4e0
+[  657.472766]  ? find_held_lock+0x2d/0x110
+[  657.472999]  ? __pfx_pskb_expand_head+0x10/0x10
+[  657.473263]  ? __kmalloc_cache_noprof+0x5b/0x470
+[  657.473537]  ? __pfx___lock_release.isra.0+0x10/0x10
+[  657.473826]  __pskb_pull_tail+0xfd/0x1d20
+[  657.474062]  ? __kasan_slab_alloc+0x4e/0x90
+[  657.474707]  sk_psock_skb_ingress_enqueue+0x3bf/0x510
+[  657.475392]  ? __kasan_kmalloc+0xaa/0xb0
+[  657.476010]  sk_psock_backlog+0x5cf/0xd70
+[  657.476637]  process_one_work+0x858/0x1a20
+'''
+
+the panic originates from the assertion bug_on(skb_shared(skb)) in
+skb_linearize(). a previous commit(see fixes tag) introduced skb_get()
+to avoid race conditions between skb operations in the backlog and skb
+release in the recvmsg path. however, this caused the panic to always
+occur when skb_linearize is executed.
+
+the "--rx-strp 100000" parameter forces the rx path to use the strparser
+module which aggregates data until it reaches 100kb before calling sockmap
+logic. the 100kb payload exceeds max_msg_frags, triggering skb_linearize.
+
+to fix this issue, just move skb_get into sk_psock_skb_ingress_enqueue.
+
+'''
+sk_psock_backlog:
+    sk_psock_handle_skb
+       skb_get(skb) <== we move it into 'sk_psock_skb_ingress_enqueue'
+       sk_psock_skb_ingress____________
+                                       ↓
+                                       |
+                                       | → sk_psock_skb_ingress_self
+                                       |      sk_psock_skb_ingress_enqueue
+sk_psock_verdict_apply_________________↑          skb_linearize
+'''
+
+note that for verdict_apply path, the skb_get operation is unnecessary so
+we add 'take_ref' param to control it's behavior.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38165" target="_blank">CVE-2025-38165</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A local privilege escalation vulnerability exists in NSClient++ 0.5.2.35 when both the web interface and ExternalScripts features are enabled. The configuration file (nsclient.ini) stores the administrative password in plaintext and is readable by local users. By extracting this password, an attacker can authenticate to the NSClient++ web interface (typically accessible on port 8443) and abuse the ExternalScripts plugin to inject and execute arbitrary commands as SYSTEM by registering a custom script, saving the configuration, and triggering it via the API.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This behavior is documented but insecure, as the plaintext credential exposure undermines access isolation between local users and administrative functions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-34076" data-description="an authenticated local file inclusion vulnerability exists in microweber cms versions <= 1.2.11 through misuse of the backup management api. authenticated users can abuse the /api/backupv2/upload and /api/backupv2/download endpoints to read arbitrary files from the underlying filesystem. by specifying an absolute file path in the src parameter of the upload request, the server may relocate or delete the target file depending on the web service user’s privileges. the corresponding download endpoint can then be used to retrieve the file contents, effectively enabling local file disclosure. this behavior stems from insufficient validation of user-supplied paths and inadequate restrictions on file access and backup logic.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34076" target="_blank">CVE-2025-34076</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authenticated local file inclusion vulnerability exists in Microweber CMS versions <= 1.2.11 through misuse of the backup management API. Authenticated users can abuse the /api/BackupV2/upload and /api/BackupV2/download endpoints to read arbitrary files from the underlying filesystem. By specifying an absolute file path in the src parameter of the upload request, the server may relocate or delete the target file depending on the web service user’s privileges. The corresponding download endpoint can then be used to retrieve the file contents, effectively enabling local file disclosure. This behavior stems from insufficient validation of user-supplied paths and inadequate restrictions on file access and backup logic.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-34075" data-description="an authenticated virtual machine escape vulnerability exists in hashicorp vagrant when using the default synced folder configuration. by design, vagrant automatically mounts the host system’s project directory into the guest vm under /vagrant (or c:\vagrant on windows). this includes the vagrantfile configuration file, which is a ruby script evaluated by the host every time a vagrant command is executed in the project directory. if a low-privileged attacker obtains shell access to the guest vm, they can append arbitrary ruby code to the mounted vagrantfile. when a user on the host later runs any vagrant command, the injected code is executed on the host with that user’s privileges.
+bpf, sockmap: Fix panic when calling skb_linearize
 
- while this shared-folder behavior is well-documented by vagrant, the security implications of vagrantfile execution from guest-writable storage are not explicitly addressed. this effectively enables guest-to-host code execution in multi-tenant or adversarial vm scenarios.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34075" target="_blank">CVE-2025-34075</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authenticated virtual machine escape vulnerability exists in HashiCorp Vagrant when using the default synced folder configuration. By design, Vagrant automatically mounts the host system’s project directory into the guest VM under /vagrant (or C:\vagrant on Windows). This includes the Vagrantfile configuration file, which is a Ruby script evaluated by the host every time a vagrant command is executed in the project directory. If a low-privileged attacker obtains shell access to the guest VM, they can append arbitrary Ruby code to the mounted Vagrantfile. When a user on the host later runs any vagrant command, the injected code is executed on the host with that user’s privileges.
+The panic can be reproduced by executing the command:
+./bench sockmap -c 2 -p 1 -a --rx-verdict-ingress --rx-strp 100000
 
- While this shared-folder behavior is well-documented by Vagrant, the security implications of Vagrantfile execution from guest-writable storage are not explicitly addressed. This effectively enables guest-to-host code execution in multi-tenant or adversarial VM scenarios.</p>
+Then a kernel panic was captured:
+'''
+[  657.460555] kernel BUG at net/core/skbuff.c:2178!
+[  657.462680] Tainted: [W]=WARN
+[  657.463287] Workqueue: events sk_psock_backlog
+...
+[  657.469610]  <TASK>
+[  657.469738]  ? die+0x36/0x90
+[  657.469916]  ? do_trap+0x1d0/0x270
+[  657.470118]  ? pskb_expand_head+0x612/0xf40
+[  657.470376]  ? pskb_expand_head+0x612/0xf40
+[  657.470620]  ? do_error_trap+0xa3/0x170
+[  657.470846]  ? pskb_expand_head+0x612/0xf40
+[  657.471092]  ? handle_invalid_op+0x2c/0x40
+[  657.471335]  ? pskb_expand_head+0x612/0xf40
+[  657.471579]  ? exc_invalid_op+0x2d/0x40
+[  657.471805]  ? asm_exc_invalid_op+0x1a/0x20
+[  657.472052]  ? pskb_expand_head+0xd1/0xf40
+[  657.472292]  ? pskb_expand_head+0x612/0xf40
+[  657.472540]  ? lock_acquire+0x18f/0x4e0
+[  657.472766]  ? find_held_lock+0x2d/0x110
+[  657.472999]  ? __pfx_pskb_expand_head+0x10/0x10
+[  657.473263]  ? __kmalloc_cache_noprof+0x5b/0x470
+[  657.473537]  ? __pfx___lock_release.isra.0+0x10/0x10
+[  657.473826]  __pskb_pull_tail+0xfd/0x1d20
+[  657.474062]  ? __kasan_slab_alloc+0x4e/0x90
+[  657.474707]  sk_psock_skb_ingress_enqueue+0x3bf/0x510
+[  657.475392]  ? __kasan_kmalloc+0xaa/0xb0
+[  657.476010]  sk_psock_backlog+0x5cf/0xd70
+[  657.476637]  process_one_work+0x858/0x1a20
+'''
+
+The panic originates from the assertion BUG_ON(skb_shared(skb)) in
+skb_linearize(). A previous commit(see Fixes tag) introduced skb_get()
+to avoid race conditions between skb operations in the backlog and skb
+release in the recvmsg path. However, this caused the panic to always
+occur when skb_linearize is executed.
+
+The "--rx-strp 100000" parameter forces the RX path to use the strparser
+module which aggregates data until it reaches 100KB before calling sockmap
+logic. The 100KB payload exceeds MAX_MSG_FRAGS, triggering skb_linearize.
+
+To fix this issue, just move skb_get into sk_psock_skb_ingress_enqueue.
+
+'''
+sk_psock_backlog:
+    sk_psock_handle_skb
+       skb_get(skb) <== we move it into 'sk_psock_skb_ingress_enqueue'
+       sk_psock_skb_ingress____________
+                                       ↓
+                                       |
+                                       | → sk_psock_skb_ingress_self
+                                       |      sk_psock_skb_ingress_enqueue
+sk_psock_verdict_apply_________________↑          skb_linearize
+'''
+
+Note that for verdict_apply path, the skb_get operation is unnecessary so
+we add 'take_ref' param to control it's behavior.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-34074" data-description="an authenticated remote code execution vulnerability exists in lucee’s administrative interface due to insecure design in the scheduled task functionality. an administrator with access to /lucee/admin/web.cfm can configure a scheduled job to retrieve a remote .cfm file from an attacker-controlled server, which is written to the lucee webroot and executed with the privileges of the lucee service account. because lucee does not enforce integrity checks, path restrictions, or execution controls for scheduled task fetches, this feature can be abused to achieve arbitrary code execution. this issue is distinct from cve-2024-55354.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-34074" target="_blank">CVE-2025-34074</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 15:15:29 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-38164" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+f2fs: zone: fix to avoid inconsistence in between sit and ssa
+
+w/ below testcase, it will cause inconsistence in between sit and ssa.
+
+create_null_blk 512 2 1024 1024
+mkfs.f2fs -m /dev/nullb0
+mount /dev/nullb0 /mnt/f2fs/
+touch /mnt/f2fs/file
+f2fs_io pinfile set /mnt/f2fs/file
+fallocate -l 4gib /mnt/f2fs/file
+
+f2fs-fs (nullb0): inconsistent segment (0) type [1, 0] in ssa and sit
+cpu: 5 uid: 0 pid: 2398 comm: fallocate tainted: g           o       6.13.0-rc1 #84
+tainted: [o]=oot_module
+hardware name: innotek gmbh virtualbox/virtualbox, bios virtualbox 12/01/2006
+call trace:
+ <task>
+ dump_stack_lvl+0xb3/0xd0
+ dump_stack+0x14/0x20
+ f2fs_handle_critical_error+0x18c/0x220 [f2fs]
+ f2fs_stop_checkpoint+0x38/0x50 [f2fs]
+ do_garbage_collect+0x674/0x6e0 [f2fs]
+ f2fs_gc_range+0x12b/0x230 [f2fs]
+ f2fs_allocate_pinning_section+0x5c/0x150 [f2fs]
+ f2fs_expand_inode_data+0x1cc/0x3c0 [f2fs]
+ f2fs_fallocate+0x3c3/0x410 [f2fs]
+ vfs_fallocate+0x15f/0x4b0
+ __x64_sys_fallocate+0x4a/0x80
+ x64_sys_call+0x15e8/0x1b80
+ do_syscall_64+0x68/0x130
+ entry_syscall_64_after_hwframe+0x67/0x6f
+rip: 0033:0x7f9dba5197ca
+f2fs-fs (nullb0): stopped filesystem due to reason: 4
+
+the reason is f2fs_gc_range() may try to migrate block in curseg, however,
+its ssa block is not uptodate due to the last summary block data is still
+in cache of curseg.
+
+in this patch, we add a condition in f2fs_gc_range() to check whether
+section is opened or not, and skip block migration for opened section.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38164" target="_blank">CVE-2025-38164</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authenticated remote code execution vulnerability exists in Lucee’s administrative interface due to insecure design in the scheduled task functionality. An administrator with access to /lucee/admin/web.cfm can configure a scheduled job to retrieve a remote .cfm file from an attacker-controlled server, which is written to the Lucee webroot and executed with the privileges of the Lucee service account. Because Lucee does not enforce integrity checks, path restrictions, or execution controls for scheduled task fetches, this feature can be abused to achieve arbitrary code execution. This issue is distinct from CVE-2024-55354.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+f2fs: zone: fix to avoid inconsistence in between SIT and SSA
+
+w/ below testcase, it will cause inconsistence in between SIT and SSA.
+
+create_null_blk 512 2 1024 1024
+mkfs.f2fs -m /dev/nullb0
+mount /dev/nullb0 /mnt/f2fs/
+touch /mnt/f2fs/file
+f2fs_io pinfile set /mnt/f2fs/file
+fallocate -l 4GiB /mnt/f2fs/file
+
+F2FS-fs (nullb0): Inconsistent segment (0) type [1, 0] in SSA and SIT
+CPU: 5 UID: 0 PID: 2398 Comm: fallocate Tainted: G           O       6.13.0-rc1 #84
+Tainted: [O]=OOT_MODULE
+Hardware name: innotek GmbH VirtualBox/VirtualBox, BIOS VirtualBox 12/01/2006
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0xb3/0xd0
+ dump_stack+0x14/0x20
+ f2fs_handle_critical_error+0x18c/0x220 [f2fs]
+ f2fs_stop_checkpoint+0x38/0x50 [f2fs]
+ do_garbage_collect+0x674/0x6e0 [f2fs]
+ f2fs_gc_range+0x12b/0x230 [f2fs]
+ f2fs_allocate_pinning_section+0x5c/0x150 [f2fs]
+ f2fs_expand_inode_data+0x1cc/0x3c0 [f2fs]
+ f2fs_fallocate+0x3c3/0x410 [f2fs]
+ vfs_fallocate+0x15f/0x4b0
+ __x64_sys_fallocate+0x4a/0x80
+ x64_sys_call+0x15e8/0x1b80
+ do_syscall_64+0x68/0x130
+ entry_SYSCALL_64_after_hwframe+0x67/0x6f
+RIP: 0033:0x7f9dba5197ca
+F2FS-fs (nullb0): Stopped filesystem due to reason: 4
+
+The reason is f2fs_gc_range() may try to migrate block in curseg, however,
+its SSA block is not uptodate due to the last summary block data is still
+in cache of curseg.
+
+In this patch, we add a condition in f2fs_gc_range() to check whether
+section is opened or not, and skip block migration for opened section.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-49713" data-description="access of resource using incompatible type ('type confusion') in microsoft edge (chromium-based) allows an unauthorized attacker to execute code over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-49713" target="_blank">CVE-2025-49713</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 13:15:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Access of resource using incompatible type ('type confusion') in Microsoft Edge (Chromium-based) allows an unauthorized attacker to execute code over a network.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-45813" data-description="enensys ipguard v2 2.10.0 was discovered to contain hardcoded credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-45813" target="_blank">CVE-2025-45813</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 13:15:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>ENENSYS IPGuard v2 2.10.0 was discovered to contain hardcoded credentials.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-52841" data-description="cross-site request forgery (csrf) vulnerability in laundry on linux, macos allows to perform an account takeover. this issue affects laundry: 2.3.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-52841" target="_blank">CVE-2025-52841</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 12:15:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-38163" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+f2fs: fix to do sanity check on sbi->total_valid_block_count
+
+syzbot reported a f2fs bug as below:
+
+------------[ cut here ]------------
+kernel bug at fs/f2fs/f2fs.h:2521!
+rip: 0010:dec_valid_block_count+0x3b2/0x3c0 fs/f2fs/f2fs.h:2521
+call trace:
+ f2fs_truncate_data_blocks_range+0xc8c/0x11a0 fs/f2fs/file.c:695
+ truncate_dnode+0x417/0x740 fs/f2fs/node.c:973
+ truncate_nodes+0x3ec/0xf50 fs/f2fs/node.c:1014
+ f2fs_truncate_inode_blocks+0x8e3/0x1370 fs/f2fs/node.c:1197
+ f2fs_do_truncate_blocks+0x840/0x12b0 fs/f2fs/file.c:810
+ f2fs_truncate_blocks+0x10d/0x300 fs/f2fs/file.c:838
+ f2fs_truncate+0x417/0x720 fs/f2fs/file.c:888
+ f2fs_setattr+0xc4f/0x12f0 fs/f2fs/file.c:1112
+ notify_change+0xbca/0xe90 fs/attr.c:552
+ do_truncate+0x222/0x310 fs/open.c:65
+ handle_truncate fs/namei.c:3466 [inline]
+ do_open fs/namei.c:3849 [inline]
+ path_openat+0x2e4f/0x35d0 fs/namei.c:4004
+ do_filp_open+0x284/0x4e0 fs/namei.c:4031
+ do_sys_openat2+0x12b/0x1d0 fs/open.c:1429
+ do_sys_open fs/open.c:1444 [inline]
+ __do_sys_creat fs/open.c:1522 [inline]
+ __se_sys_creat fs/open.c:1516 [inline]
+ __x64_sys_creat+0x124/0x170 fs/open.c:1516
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/syscall_64.c:94
+
+the reason is: in fuzzed image, sbi->total_valid_block_count is
+inconsistent w/ mapped blocks indexed by inode, so, we should
+not trigger panic for such case, instead, let's print log and
+set fsck flag.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38163" target="_blank">CVE-2025-38163</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in Laundry on Linux, MacOS allows to perform an Account Takeover. This issue affects Laundry: 2.3.0.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+f2fs: fix to do sanity check on sbi->total_valid_block_count
+
+syzbot reported a f2fs bug as below:
+
+------------[ cut here ]------------
+kernel BUG at fs/f2fs/f2fs.h:2521!
+RIP: 0010:dec_valid_block_count+0x3b2/0x3c0 fs/f2fs/f2fs.h:2521
+Call Trace:
+ f2fs_truncate_data_blocks_range+0xc8c/0x11a0 fs/f2fs/file.c:695
+ truncate_dnode+0x417/0x740 fs/f2fs/node.c:973
+ truncate_nodes+0x3ec/0xf50 fs/f2fs/node.c:1014
+ f2fs_truncate_inode_blocks+0x8e3/0x1370 fs/f2fs/node.c:1197
+ f2fs_do_truncate_blocks+0x840/0x12b0 fs/f2fs/file.c:810
+ f2fs_truncate_blocks+0x10d/0x300 fs/f2fs/file.c:838
+ f2fs_truncate+0x417/0x720 fs/f2fs/file.c:888
+ f2fs_setattr+0xc4f/0x12f0 fs/f2fs/file.c:1112
+ notify_change+0xbca/0xe90 fs/attr.c:552
+ do_truncate+0x222/0x310 fs/open.c:65
+ handle_truncate fs/namei.c:3466 [inline]
+ do_open fs/namei.c:3849 [inline]
+ path_openat+0x2e4f/0x35d0 fs/namei.c:4004
+ do_filp_open+0x284/0x4e0 fs/namei.c:4031
+ do_sys_openat2+0x12b/0x1d0 fs/open.c:1429
+ do_sys_open fs/open.c:1444 [inline]
+ __do_sys_creat fs/open.c:1522 [inline]
+ __se_sys_creat fs/open.c:1516 [inline]
+ __x64_sys_creat+0x124/0x170 fs/open.c:1516
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/syscall_64.c:94
+
+The reason is: in fuzzed image, sbi->total_valid_block_count is
+inconsistent w/ mapped blocks indexed by inode, so, we should
+not trigger panic for such case, instead, let's print log and
+set fsck flag.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-45814" data-description="missing authentication checks in the query.fcgi endpoint of ns3000 v8.1.1.125110 , v7.2.8.124852 , and v7.x and ns2000 v7.02.08 allows attackers to execute a session hijacking attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-45814" target="_blank">CVE-2025-45814</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 12:15:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Missing authentication checks in the query.fcgi endpoint of NS3000 v8.1.1.125110 , v7.2.8.124852 , and v7.x and NS2000 v7.02.08 allows attackers to execute a session hijacking attack.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-38162" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+netfilter: nft_set_pipapo: prevent overflow in lookup table allocation
+
+when calculating the lookup table size, ensure the following
+multiplication does not overflow:
+
+- desc->field_len[] maximum value is u8_max multiplied by
+  nft_pipapo_groups_per_byte(f) that can be 2, worst case.
+- nft_pipapo_buckets(f->bb) is 2^8, worst case.
+- sizeof(unsigned long), from sizeof(*f->lt), lt in
+  struct nft_pipapo_field.
+
+then, use check_mul_overflow() to multiply by bucket size and then use
+check_add_overflow() to the alignment for avx2 (if needed). finally, add
+lt_size_check_overflow() helper and use it to consolidate this.
+
+while at it, replace leftover allocation using the gfp_kernel to
+gfp_kernel_account for consistency, in pipapo_resize().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38162" target="_blank">CVE-2025-38162</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+netfilter: nft_set_pipapo: prevent overflow in lookup table allocation
+
+When calculating the lookup table size, ensure the following
+multiplication does not overflow:
+
+- desc->field_len[] maximum value is U8_MAX multiplied by
+  NFT_PIPAPO_GROUPS_PER_BYTE(f) that can be 2, worst case.
+- NFT_PIPAPO_BUCKETS(f->bb) is 2^8, worst case.
+- sizeof(unsigned long), from sizeof(*f->lt), lt in
+  struct nft_pipapo_field.
+
+Then, use check_mul_overflow() to multiply by bucket size and then use
+check_add_overflow() to the alignment for avx2 (if needed). Finally, add
+lt_size_check_overflow() helper and use it to consolidate this.
+
+While at it, replace leftover allocation using the GFP_KERNEL to
+GFP_KERNEL_ACCOUNT for consistency, in pipapo_resize().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-45424" data-description="incorrect access control in xinference before v1.4.0 allows attackers to access the web gui without authentication.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-45424" target="_blank">CVE-2025-45424</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-02 12:15:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Incorrect access control in Xinference before v1.4.0 allows attackers to access the Web GUI without authentication.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-38161" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/mlx5: fix error flow upon firmware failure for rq destruction
+
+upon rq destruction if the firmware command fails which is the
+last resource to be destroyed some sw resources were already cleaned
+regardless of the failure.
+
+now properly rollback the object to its original state upon such failure.
+
+in order to avoid a use-after free in case someone tries to destroy the
+object again, which results in the following kernel trace:
+refcount_t: underflow; use-after-free.
+warning: cpu: 0 pid: 37589 at lib/refcount.c:28 refcount_warn_saturate+0xf4/0x148
+modules linked in: rdma_ucm(oe) rdma_cm(oe) iw_cm(oe) ib_ipoib(oe) ib_cm(oe) ib_umad(oe) mlx5_ib(oe) rfkill mlx5_core(oe) mlxdevm(oe) ib_uverbs(oe) ib_core(oe) psample mlxfw(oe) mlx_compat(oe) macsec tls pci_hyperv_intf sunrpc vfat fat virtio_net net_failover failover fuse loop nfnetlink vsock_loopback vmw_vsock_virtio_transport_common vmw_vsock_vmci_transport vmw_vmci vsock xfs crct10dif_ce ghash_ce sha2_ce sha256_arm64 sha1_ce virtio_console virtio_gpu virtio_blk virtio_dma_buf virtio_mmio dm_mirror dm_region_hash dm_log dm_mod xpmem(oe)
+cpu: 0 uid: 0 pid: 37589 comm: python3 kdump: loaded tainted: g           oe     -------  ---  6.12.0-54.el10.aarch64 #1
+tainted: [o]=oot_module, [e]=unsigned_module
+hardware name: qemu kvm virtual machine, bios 0.0.0 02/06/2015
+pstate: 60400005 (nzcv daif +pan -uao -tco -dit -ssbs btype=--)
+pc : refcount_warn_saturate+0xf4/0x148
+lr : refcount_warn_saturate+0xf4/0x148
+sp : ffff80008b81b7e0
+x29: ffff80008b81b7e0 x28: ffff000133d51600 x27: 0000000000000001
+x26: 0000000000000000 x25: 00000000ffffffea x24: ffff00010ae80f00
+x23: ffff00010ae80f80 x22: ffff0000c66e5d08 x21: 0000000000000000
+x20: ffff0000c66e0000 x19: ffff00010ae80340 x18: 0000000000000006
+x17: 0000000000000000 x16: 0000000000000020 x15: ffff80008b81b37f
+x14: 0000000000000000 x13: 2e656572662d7265 x12: ffff80008283ef78
+x11: ffff80008257efd0 x10: ffff80008283efd0 x9 : ffff80008021ed90
+x8 : 0000000000000001 x7 : 00000000000bffe8 x6 : c0000000ffff7fff
+x5 : ffff0001fb8e3408 x4 : 0000000000000000 x3 : ffff800179993000
+x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000133d51600
+call trace:
+ refcount_warn_saturate+0xf4/0x148
+ mlx5_core_put_rsc+0x88/0xa0 [mlx5_ib]
+ mlx5_core_destroy_rq_tracked+0x64/0x98 [mlx5_ib]
+ mlx5_ib_destroy_wq+0x34/0x80 [mlx5_ib]
+ ib_destroy_wq_user+0x30/0xc0 [ib_core]
+ uverbs_free_wq+0x28/0x58 [ib_uverbs]
+ destroy_hw_idr_uobject+0x34/0x78 [ib_uverbs]
+ uverbs_destroy_uobject+0x48/0x240 [ib_uverbs]
+ __uverbs_cleanup_ufile+0xd4/0x1a8 [ib_uverbs]
+ uverbs_destroy_ufile_hw+0x48/0x120 [ib_uverbs]
+ ib_uverbs_close+0x2c/0x100 [ib_uverbs]
+ __fput+0xd8/0x2f0
+ __fput_sync+0x50/0x70
+ __arm64_sys_close+0x40/0x90
+ invoke_syscall.constprop.0+0x74/0xd0
+ do_el0_svc+0x48/0xe8
+ el0_svc+0x44/0x1d0
+ el0t_64_sync_handler+0x120/0x130
+ el0t_64_sync+0x1a4/0x1a8">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38161" target="_blank">CVE-2025-38161</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/mlx5: Fix error flow upon firmware failure for RQ destruction
+
+Upon RQ destruction if the firmware command fails which is the
+last resource to be destroyed some SW resources were already cleaned
+regardless of the failure.
+
+Now properly rollback the object to its original state upon such failure.
+
+In order to avoid a use-after free in case someone tries to destroy the
+object again, which results in the following kernel trace:
+refcount_t: underflow; use-after-free.
+WARNING: CPU: 0 PID: 37589 at lib/refcount.c:28 refcount_warn_saturate+0xf4/0x148
+Modules linked in: rdma_ucm(OE) rdma_cm(OE) iw_cm(OE) ib_ipoib(OE) ib_cm(OE) ib_umad(OE) mlx5_ib(OE) rfkill mlx5_core(OE) mlxdevm(OE) ib_uverbs(OE) ib_core(OE) psample mlxfw(OE) mlx_compat(OE) macsec tls pci_hyperv_intf sunrpc vfat fat virtio_net net_failover failover fuse loop nfnetlink vsock_loopback vmw_vsock_virtio_transport_common vmw_vsock_vmci_transport vmw_vmci vsock xfs crct10dif_ce ghash_ce sha2_ce sha256_arm64 sha1_ce virtio_console virtio_gpu virtio_blk virtio_dma_buf virtio_mmio dm_mirror dm_region_hash dm_log dm_mod xpmem(OE)
+CPU: 0 UID: 0 PID: 37589 Comm: python3 Kdump: loaded Tainted: G           OE     -------  ---  6.12.0-54.el10.aarch64 #1
+Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
+Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
+pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : refcount_warn_saturate+0xf4/0x148
+lr : refcount_warn_saturate+0xf4/0x148
+sp : ffff80008b81b7e0
+x29: ffff80008b81b7e0 x28: ffff000133d51600 x27: 0000000000000001
+x26: 0000000000000000 x25: 00000000ffffffea x24: ffff00010ae80f00
+x23: ffff00010ae80f80 x22: ffff0000c66e5d08 x21: 0000000000000000
+x20: ffff0000c66e0000 x19: ffff00010ae80340 x18: 0000000000000006
+x17: 0000000000000000 x16: 0000000000000020 x15: ffff80008b81b37f
+x14: 0000000000000000 x13: 2e656572662d7265 x12: ffff80008283ef78
+x11: ffff80008257efd0 x10: ffff80008283efd0 x9 : ffff80008021ed90
+x8 : 0000000000000001 x7 : 00000000000bffe8 x6 : c0000000ffff7fff
+x5 : ffff0001fb8e3408 x4 : 0000000000000000 x3 : ffff800179993000
+x2 : 0000000000000000 x1 : 0000000000000000 x0 : ffff000133d51600
+Call trace:
+ refcount_warn_saturate+0xf4/0x148
+ mlx5_core_put_rsc+0x88/0xa0 [mlx5_ib]
+ mlx5_core_destroy_rq_tracked+0x64/0x98 [mlx5_ib]
+ mlx5_ib_destroy_wq+0x34/0x80 [mlx5_ib]
+ ib_destroy_wq_user+0x30/0xc0 [ib_core]
+ uverbs_free_wq+0x28/0x58 [ib_uverbs]
+ destroy_hw_idr_uobject+0x34/0x78 [ib_uverbs]
+ uverbs_destroy_uobject+0x48/0x240 [ib_uverbs]
+ __uverbs_cleanup_ufile+0xd4/0x1a8 [ib_uverbs]
+ uverbs_destroy_ufile_hw+0x48/0x120 [ib_uverbs]
+ ib_uverbs_close+0x2c/0x100 [ib_uverbs]
+ __fput+0xd8/0x2f0
+ __fput_sync+0x50/0x70
+ __arm64_sys_close+0x40/0x90
+ invoke_syscall.constprop.0+0x74/0xd0
+ do_el0_svc+0x48/0xe8
+ el0_svc+0x44/0x1d0
+ el0t_64_sync_handler+0x120/0x130
+ el0t_64_sync+0x1a4/0x1a8</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38160" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+clk: bcm: rpi: add null check in raspberrypi_clk_register()
+
+devm_kasprintf() returns null when memory allocation fails. currently,
+raspberrypi_clk_register() does not check for this case, which results
+in a null pointer dereference.
+
+add null check after devm_kasprintf() to prevent this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38160" target="_blank">CVE-2025-38160</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+clk: bcm: rpi: Add NULL check in raspberrypi_clk_register()
+
+devm_kasprintf() returns NULL when memory allocation fails. Currently,
+raspberrypi_clk_register() does not check for this case, which results
+in a NULL pointer dereference.
+
+Add NULL check after devm_kasprintf() to prevent this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38159" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: rtw88: fix the 'para' buffer size to avoid reading out of bounds
+
+set the size to 6 instead of 2, since 'para' array is passed to
+'rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1])', which reads
+5 bytes:
+
+void rtw_fw_bt_wifi_control(struct rtw_dev *rtwdev, u8 op_code, u8 *data)
+{
+    ...
+    set_bt_wifi_control_data1(h2c_pkt, *data);
+    set_bt_wifi_control_data2(h2c_pkt, *(data + 1));
+    ...
+    set_bt_wifi_control_data5(h2c_pkt, *(data + 4));
+
+detected using the static analysis tool - svace.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38159" target="_blank">CVE-2025-38159</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: rtw88: fix the 'para' buffer size to avoid reading out of bounds
+
+Set the size to 6 instead of 2, since 'para' array is passed to
+'rtw_fw_bt_wifi_control(rtwdev, para[0], &para[1])', which reads
+5 bytes:
+
+void rtw_fw_bt_wifi_control(struct rtw_dev *rtwdev, u8 op_code, u8 *data)
+{
+    ...
+    SET_BT_WIFI_CONTROL_DATA1(h2c_pkt, *data);
+    SET_BT_WIFI_CONTROL_DATA2(h2c_pkt, *(data + 1));
+    ...
+    SET_BT_WIFI_CONTROL_DATA5(h2c_pkt, *(data + 4));
+
+Detected using the static analysis tool - Svace.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38158" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+hisi_acc_vfio_pci: fix xqe dma address error
+
+the dma addresses of eqe and aeqe are wrong after migration and
+results in guest kernel-mode encryption services  failure.
+comparing the definition of hardware registers, we found that
+there was an error when the data read from the register was
+combined into an address. therefore, the address combination
+sequence needs to be corrected.
+
+even after fixing the above problem, we still have an issue
+where the guest from an old kernel can get migrated to
+new kernel and may result in wrong data.
+
+in order to ensure that the address is correct after migration,
+if an old magic number is detected, the dma address needs to be
+updated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38158" target="_blank">CVE-2025-38158</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+hisi_acc_vfio_pci: fix XQE dma address error
+
+The dma addresses of EQE and AEQE are wrong after migration and
+results in guest kernel-mode encryption services  failure.
+Comparing the definition of hardware registers, we found that
+there was an error when the data read from the register was
+combined into an address. Therefore, the address combination
+sequence needs to be corrected.
+
+Even after fixing the above problem, we still have an issue
+where the Guest from an old kernel can get migrated to
+new kernel and may result in wrong data.
+
+In order to ensure that the address is correct after migration,
+if an old magic number is detected, the dma address needs to be
+updated.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38157" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: ath9k_htc: abort software beacon handling if disabled
+
+a malicious usb device can send a wmi_swba_eventid event from an
+ath9k_htc-managed device before beaconing has been enabled. this causes
+a device-by-zero error in the driver, leading to either a crash or an
+out of bounds read.
+
+prevent this by aborting the handling in ath9k_htc_swba() if beacons are
+not enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38157" target="_blank">CVE-2025-38157</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: ath9k_htc: Abort software beacon handling if disabled
+
+A malicious USB device can send a WMI_SWBA_EVENTID event from an
+ath9k_htc-managed device before beaconing has been enabled. This causes
+a device-by-zero error in the driver, leading to either a crash or an
+out of bounds read.
+
+Prevent this by aborting the handling in ath9k_htc_swba() if beacons are
+not enabled.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38156" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: mt76: mt7996: fix null-ptr-deref in mt7996_mmio_wed_init()
+
+devm_ioremap() returns null on error. currently, mt7996_mmio_wed_init()
+does not check for this case, which results in a null pointer
+dereference.
+
+prevent null pointer dereference in mt7996_mmio_wed_init()">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38156" target="_blank">CVE-2025-38156</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: mt76: mt7996: Fix null-ptr-deref in mt7996_mmio_wed_init()
+
+devm_ioremap() returns NULL on error. Currently, mt7996_mmio_wed_init()
+does not check for this case, which results in a NULL pointer
+dereference.
+
+Prevent null pointer dereference in mt7996_mmio_wed_init()</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38155" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: mt76: mt7915: fix null-ptr-deref in mt7915_mmio_wed_init()
+
+devm_ioremap() returns null on error. currently, mt7915_mmio_wed_init()
+does not check for this case, which results in a null pointer
+dereference.
+
+prevent null pointer dereference in mt7915_mmio_wed_init().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38155" target="_blank">CVE-2025-38155</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: mt76: mt7915: Fix null-ptr-deref in mt7915_mmio_wed_init()
+
+devm_ioremap() returns NULL on error. Currently, mt7915_mmio_wed_init()
+does not check for this case, which results in a NULL pointer
+dereference.
+
+Prevent null pointer dereference in mt7915_mmio_wed_init().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38154" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf, sockmap: avoid using sk_socket after free when sending
+
+the sk->sk_socket is not locked or referenced in backlog thread, and
+during the call to skb_send_sock(), there is a race condition with
+the release of sk_socket. all types of sockets(tcp/udp/unix/vsock)
+will be affected.
+
+race conditions:
+'''
+cpu0                               cpu1
+
+backlog::skb_send_sock
+  sendmsg_unlocked
+    sock_sendmsg
+      sock_sendmsg_nosec
+                                   close(fd):
+                                     ...
+                                     ops->release() -> sock_map_close()
+                                     sk_socket->ops = null
+                                     free(socket)
+      sock->ops->sendmsg
+            ^
+            panic here
+'''
+
+the ref of psock become 0 after sock_map_close() executed.
+'''
+void sock_map_close()
+{
+    ...
+    if (likely(psock)) {
+    ...
+    // !! here we remove psock and the ref of psock become 0
+    sock_map_remove_links(sk, psock)
+    psock = sk_psock_get(sk);
+    if (unlikely(!psock))
+        goto no_psock; <=== control jumps here via goto
+        ...
+        cancel_delayed_work_sync(&psock->work); <=== not executed
+        sk_psock_put(sk, psock);
+        ...
+}
+'''
+
+based on the fact that we already wait for the workqueue to finish in
+sock_map_close() if psock is held, we simply increase the psock
+reference count to avoid race conditions.
+
+with this patch, if the backlog thread is running, sock_map_close() will
+wait for the backlog thread to complete and cancel all pending work.
+
+if no backlog running, any pending work that hasn't started by then will
+fail when invoked by sk_psock_get(), as the psock reference count have
+been zeroed, and sk_psock_drop() will cancel all jobs via
+cancel_delayed_work_sync().
+
+in summary, we require synchronization to coordinate the backlog thread
+and close() thread.
+
+the panic i catched:
+'''
+workqueue: events sk_psock_backlog
+rip: 0010:sock_sendmsg+0x21d/0x440
+rax: 0000000000000000 rbx: ffffc9000521fad8 rcx: 0000000000000001
+...
+call trace:
+ <task>
+ ? die_addr+0x40/0xa0
+ ? exc_general_protection+0x14c/0x230
+ ? asm_exc_general_protection+0x26/0x30
+ ? sock_sendmsg+0x21d/0x440
+ ? sock_sendmsg+0x3e0/0x440
+ ? __pfx_sock_sendmsg+0x10/0x10
+ __skb_send_sock+0x543/0xb70
+ sk_psock_backlog+0x247/0xb80
+...
+'''">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38154" target="_blank">CVE-2025-38154</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-03 04:15:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf, sockmap: Avoid using sk_socket after free when sending
+
+The sk->sk_socket is not locked or referenced in backlog thread, and
+during the call to skb_send_sock(), there is a race condition with
+the release of sk_socket. All types of sockets(tcp/udp/unix/vsock)
+will be affected.
+
+Race conditions:
+'''
+CPU0                               CPU1
+
+backlog::skb_send_sock
+  sendmsg_unlocked
+    sock_sendmsg
+      sock_sendmsg_nosec
+                                   close(fd):
+                                     ...
+                                     ops->release() -> sock_map_close()
+                                     sk_socket->ops = NULL
+                                     free(socket)
+      sock->ops->sendmsg
+            ^
+            panic here
+'''
+
+The ref of psock become 0 after sock_map_close() executed.
+'''
+void sock_map_close()
+{
+    ...
+    if (likely(psock)) {
+    ...
+    // !! here we remove psock and the ref of psock become 0
+    sock_map_remove_links(sk, psock)
+    psock = sk_psock_get(sk);
+    if (unlikely(!psock))
+        goto no_psock; <=== Control jumps here via goto
+        ...
+        cancel_delayed_work_sync(&psock->work); <=== not executed
+        sk_psock_put(sk, psock);
+        ...
+}
+'''
+
+Based on the fact that we already wait for the workqueue to finish in
+sock_map_close() if psock is held, we simply increase the psock
+reference count to avoid race conditions.
+
+With this patch, if the backlog thread is running, sock_map_close() will
+wait for the backlog thread to complete and cancel all pending work.
+
+If no backlog running, any pending work that hasn't started by then will
+fail when invoked by sk_psock_get(), as the psock reference count have
+been zeroed, and sk_psock_drop() will cancel all jobs via
+cancel_delayed_work_sync().
+
+In summary, we require synchronization to coordinate the backlog thread
+and close() thread.
+
+The panic I catched:
+'''
+Workqueue: events sk_psock_backlog
+RIP: 0010:sock_sendmsg+0x21d/0x440
+RAX: 0000000000000000 RBX: ffffc9000521fad8 RCX: 0000000000000001
+...
+Call Trace:
+ <TASK>
+ ? die_addr+0x40/0xa0
+ ? exc_general_protection+0x14c/0x230
+ ? asm_exc_general_protection+0x26/0x30
+ ? sock_sendmsg+0x21d/0x440
+ ? sock_sendmsg+0x3e0/0x440
+ ? __pfx_sock_sendmsg+0x10/0x10
+ __skb_send_sock+0x543/0xb70
+ sk_psock_backlog+0x247/0xb80
+...
+'''</p>
                 </div>
         
             </div>
