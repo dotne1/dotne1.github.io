@@ -33,6 +33,238 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-7169" data-description="a vulnerability classified as critical has been found in code-projects crime reporting system 1.0. affected is an unknown function of the file /complainer_page.php. the manipulation of the argument location leads to sql injection. it is possible to launch the attack remotely. the exploit has been disclosed to the public and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7169" target="_blank">CVE-2025-7169</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-08 03:15:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability classified as critical has been found in code-projects Crime Reporting System 1.0. Affected is an unknown function of the file /complainer_page.php. The manipulation of the argument location leads to sql injection. It is possible to launch the attack remotely. The exploit has been disclosed to the public and may be used.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-7168" data-description="a vulnerability was found in code-projects crime reporting system 1.0. it has been rated as critical. this issue affects some unknown processing of the file /userlogin.php. the manipulation of the argument email leads to sql injection. the attack may be initiated remotely. the exploit has been disclosed to the public and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7168" target="_blank">CVE-2025-7168</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-08 03:15:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability was found in code-projects Crime Reporting System 1.0. It has been rated as critical. This issue affects some unknown processing of the file /userlogin.php. The manipulation of the argument email leads to sql injection. The attack may be initiated remotely. The exploit has been disclosed to the public and may be used.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38237" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+media: platform: exynos4-is: add hardware sync wait to fimc_is_hw_change_mode()
+
+in fimc_is_hw_change_mode(), the function changes camera modes without
+waiting for hardware completion, risking corrupted data or system hangs
+if subsequent operations proceed before the hardware is ready.
+
+add fimc_is_hw_wait_intmsr0_intmsd0() after mode configuration, ensuring
+hardware state synchronization and stable interrupt handling.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38237" target="_blank">CVE-2025-38237</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-08 03:15:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+media: platform: exynos4-is: Add hardware sync wait to fimc_is_hw_change_mode()
+
+In fimc_is_hw_change_mode(), the function changes camera modes without
+waiting for hardware completion, risking corrupted data or system hangs
+if subsequent operations proceed before the hardware is ready.
+
+Add fimc_is_hw_wait_intmsr0_intmsd0() after mode configuration, ensuring
+hardware state synchronization and stable interrupt handling.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38236" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+af_unix: don't leave consecutive consumed oob skbs.
+
+jann horn reported a use-after-free in unix_stream_read_generic().
+
+the following sequences reproduce the issue:
+
+  $ python3
+  from socket import *
+  s1, s2 = socketpair(af_unix, sock_stream)
+  s1.send(b'x', msg_oob)
+  s2.recv(1, msg_oob)     # leave a consumed oob skb
+  s1.send(b'y', msg_oob)
+  s2.recv(1, msg_oob)     # leave a consumed oob skb
+  s1.send(b'z', msg_oob)
+  s2.recv(1)              # recv 'z' illegally
+  s2.recv(1, msg_oob)     # access 'z' skb (use-after-free)
+
+even though a user reads oob data, the skb holding the data stays on
+the recv queue to mark the oob boundary and break the next recv().
+
+after the last send() in the scenario above, the sk2's recv queue has
+2 leading consumed oob skbs and 1 real oob skb.
+
+then, the following happens during the next recv() without msg_oob
+
+  1. unix_stream_read_generic() peeks the first consumed oob skb
+  2. manage_oob() returns the next consumed oob skb
+  3. unix_stream_read_generic() fetches the next not-yet-consumed oob skb
+  4. unix_stream_read_generic() reads and frees the oob skb
+
+, and the last recv(msg_oob) triggers kasan splat.
+
+the 3. above occurs because of the so_peek_off code, which does not
+expect unix_skb_len(skb) to be 0, but this is true for such consumed
+oob skbs.
+
+  while (skip >= unix_skb_len(skb)) {
+    skip -= unix_skb_len(skb);
+    skb = skb_peek_next(skb, &sk->sk_receive_queue);
+    ...
+  }
+
+in addition to this use-after-free, there is another issue that
+ioctl(siocatmark) does not function properly with consecutive consumed
+oob skbs.
+
+so, nothing good comes out of such a situation.
+
+instead of complicating manage_oob(), ioctl() handling, and the next
+econnreset fix by introducing a loop for consecutive consumed oob skbs,
+let's not leave such consecutive oob unnecessarily.
+
+now, while receiving an oob skb in unix_stream_recv_urg(), if its
+previous skb is a consumed oob skb, it is freed.
+
+[0]:
+bug: kasan: slab-use-after-free in unix_stream_read_actor (net/unix/af_unix.c:3027)
+read of size 4 at addr ffff888106ef2904 by task python3/315
+
+cpu: 2 uid: 0 pid: 315 comm: python3 not tainted 6.16.0-rc1-00407-gec315832f6f9 #8 preempt(voluntary)
+hardware name: qemu standard pc (i440fx + piix, 1996), bios 1.16.3-4.fc42 04/01/2014
+call trace:
+ <task>
+ dump_stack_lvl (lib/dump_stack.c:122)
+ print_report (mm/kasan/report.c:409 mm/kasan/report.c:521)
+ kasan_report (mm/kasan/report.c:636)
+ unix_stream_read_actor (net/unix/af_unix.c:3027)
+ unix_stream_read_generic (net/unix/af_unix.c:2708 net/unix/af_unix.c:2847)
+ unix_stream_recvmsg (net/unix/af_unix.c:3048)
+ sock_recvmsg (net/socket.c:1063 (discriminator 20) net/socket.c:1085 (discriminator 20))
+ __sys_recvfrom (net/socket.c:2278)
+ __x64_sys_recvfrom (net/socket.c:2291 (discriminator 1) net/socket.c:2287 (discriminator 1) net/socket.c:2287 (discriminator 1))
+ do_syscall_64 (arch/x86/entry/syscall_64.c:63 (discriminator 1) arch/x86/entry/syscall_64.c:94 (discriminator 1))
+ entry_syscall_64_after_hwframe (arch/x86/entry/entry_64.s:130)
+rip: 0033:0x7f8911fcea06
+code: 5d e8 41 8b 93 08 03 00 00 59 5e 48 83 f8 fc 75 19 83 e2 39 83 fa 08 75 11 e8 26 ff ff ff 66 0f 1f 44 00 00 48 8b 45 10 0f 05 <48> 8b 5d f8 c9 c3 0f 1f 40 00 f3 0f 1e fa 55 48 89 e5 48 83 ec 08
+rsp: 002b:00007fffdb0dccb0 eflags: 00000202 orig_rax: 000000000000002d
+rax: ffffffffffffffda rbx: 00007fffdb0dcdc8 rcx: 00007f8911fcea06
+rdx: 0000000000000001 rsi: 00007f8911a5e060 rdi: 0000000000000006
+rbp: 00007fffdb0dccd0 r08: 0000000000000000 r09: 0000000000000000
+r10: 0000000000000001 r11: 0000000000000202 r12: 00007f89119a7d20
+r13: ffffffffc4653600 r14: 0000000000000000 r15: 0000000000000000
+ </task>
+
+allocated by task 315:
+ kasan_save_stack (mm/kasan/common.c:48)
+ kasan_save_track (mm/kasan/common.c:60 (discriminator 1) mm/kasan/common.c:69 (discriminator 1))
+ __kasan_slab_alloc (mm/kasan/common.c:348)
+ kmem_cache_alloc_
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38236" target="_blank">CVE-2025-38236</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-08 03:15:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+af_unix: Don't leave consecutive consumed OOB skbs.
+
+Jann Horn reported a use-after-free in unix_stream_read_generic().
+
+The following sequences reproduce the issue:
+
+  $ python3
+  from socket import *
+  s1, s2 = socketpair(AF_UNIX, SOCK_STREAM)
+  s1.send(b'x', MSG_OOB)
+  s2.recv(1, MSG_OOB)     # leave a consumed OOB skb
+  s1.send(b'y', MSG_OOB)
+  s2.recv(1, MSG_OOB)     # leave a consumed OOB skb
+  s1.send(b'z', MSG_OOB)
+  s2.recv(1)              # recv 'z' illegally
+  s2.recv(1, MSG_OOB)     # access 'z' skb (use-after-free)
+
+Even though a user reads OOB data, the skb holding the data stays on
+the recv queue to mark the OOB boundary and break the next recv().
+
+After the last send() in the scenario above, the sk2's recv queue has
+2 leading consumed OOB skbs and 1 real OOB skb.
+
+Then, the following happens during the next recv() without MSG_OOB
+
+  1. unix_stream_read_generic() peeks the first consumed OOB skb
+  2. manage_oob() returns the next consumed OOB skb
+  3. unix_stream_read_generic() fetches the next not-yet-consumed OOB skb
+  4. unix_stream_read_generic() reads and frees the OOB skb
+
+, and the last recv(MSG_OOB) triggers KASAN splat.
+
+The 3. above occurs because of the SO_PEEK_OFF code, which does not
+expect unix_skb_len(skb) to be 0, but this is true for such consumed
+OOB skbs.
+
+  while (skip >= unix_skb_len(skb)) {
+    skip -= unix_skb_len(skb);
+    skb = skb_peek_next(skb, &sk->sk_receive_queue);
+    ...
+  }
+
+In addition to this use-after-free, there is another issue that
+ioctl(SIOCATMARK) does not function properly with consecutive consumed
+OOB skbs.
+
+So, nothing good comes out of such a situation.
+
+Instead of complicating manage_oob(), ioctl() handling, and the next
+ECONNRESET fix by introducing a loop for consecutive consumed OOB skbs,
+let's not leave such consecutive OOB unnecessarily.
+
+Now, while receiving an OOB skb in unix_stream_recv_urg(), if its
+previous skb is a consumed OOB skb, it is freed.
+
+[0]:
+BUG: KASAN: slab-use-after-free in unix_stream_read_actor (net/unix/af_unix.c:3027)
+Read of size 4 at addr ffff888106ef2904 by task python3/315
+
+CPU: 2 UID: 0 PID: 315 Comm: python3 Not tainted 6.16.0-rc1-00407-gec315832f6f9 #8 PREEMPT(voluntary)
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-4.fc42 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl (lib/dump_stack.c:122)
+ print_report (mm/kasan/report.c:409 mm/kasan/report.c:521)
+ kasan_report (mm/kasan/report.c:636)
+ unix_stream_read_actor (net/unix/af_unix.c:3027)
+ unix_stream_read_generic (net/unix/af_unix.c:2708 net/unix/af_unix.c:2847)
+ unix_stream_recvmsg (net/unix/af_unix.c:3048)
+ sock_recvmsg (net/socket.c:1063 (discriminator 20) net/socket.c:1085 (discriminator 20))
+ __sys_recvfrom (net/socket.c:2278)
+ __x64_sys_recvfrom (net/socket.c:2291 (discriminator 1) net/socket.c:2287 (discriminator 1) net/socket.c:2287 (discriminator 1))
+ do_syscall_64 (arch/x86/entry/syscall_64.c:63 (discriminator 1) arch/x86/entry/syscall_64.c:94 (discriminator 1))
+ entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:130)
+RIP: 0033:0x7f8911fcea06
+Code: 5d e8 41 8b 93 08 03 00 00 59 5e 48 83 f8 fc 75 19 83 e2 39 83 fa 08 75 11 e8 26 ff ff ff 66 0f 1f 44 00 00 48 8b 45 10 0f 05 <48> 8b 5d f8 c9 c3 0f 1f 40 00 f3 0f 1e fa 55 48 89 e5 48 83 ec 08
+RSP: 002b:00007fffdb0dccb0 EFLAGS: 00000202 ORIG_RAX: 000000000000002d
+RAX: ffffffffffffffda RBX: 00007fffdb0dcdc8 RCX: 00007f8911fcea06
+RDX: 0000000000000001 RSI: 00007f8911a5e060 RDI: 0000000000000006
+RBP: 00007fffdb0dccd0 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000202 R12: 00007f89119a7d20
+R13: ffffffffc4653600 R14: 0000000000000000 R15: 0000000000000000
+ </TASK>
+
+Allocated by task 315:
+ kasan_save_stack (mm/kasan/common.c:48)
+ kasan_save_track (mm/kasan/common.c:60 (discriminator 1) mm/kasan/common.c:69 (discriminator 1))
+ __kasan_slab_alloc (mm/kasan/common.c:348)
+ kmem_cache_alloc_
+---truncated---</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-7346" data-description="any unauthenticated attacker can bypass the localhost 
 restrictions posed by the application and utilize this to create 
 arbitrary packages">
@@ -163,38 +395,6 @@ arbitrary packages</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.8</p>
                     <p>A local attacker with a local user account can leverage a vulnerable script via SSH to escalate privileges to root due to improper input validation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-24004" data-description="a physical attacker with access to the device display via usb-c can send a message to the device which triggers an unsecure copy to a buffer resulting in loss of integrity and a temporary denial-of-service for the stations until they got restarted by the watchdog.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-24004" target="_blank">CVE-2025-24004</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-08 02:15:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.2</p>
-                    <p>A physical attacker with access to the device display via USB-C can send a message to the device which triggers an unsecure copy to a buffer resulting in loss of integrity and a temporary denial-of-service for the stations until they got restarted by the watchdog.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-24003" data-description="an unauthenticated remote attacker can use mqtt messages to trigger out-of-bounds writes in charging stations complying with german calibration law, resulting in a loss of integrity for only eichrechtagents and potential denial-of-service for these stations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-24003" target="_blank">CVE-2025-24003</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-08 02:15:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>An unauthenticated remote attacker can use MQTT messages to trigger out-of-bounds writes in charging stations complying with German Calibration Law, resulting in a loss of integrity for only EichrechtAgents and potential denial-of-service for these stations.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-24002" data-description="an unauthenticated remote attacker can use mqtt messages to crash a service on charging stations complying with german calibration law, resulting in a temporary denial-of-service for these stations until they got restarted by the watchdog.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-24002" target="_blank">CVE-2025-24002</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-08 02:15:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>An unauthenticated remote attacker can use MQTT messages to crash a service on charging stations complying with German Calibration Law, resulting in a temporary denial-of-service for these stations until they got restarted by the watchdog.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-7327" data-description="the widget for google reviews plugin for wordpress is vulnerable to directory traversal in all versions up to, and including, 1.0.15 via the layout parameter. this makes it possible for authenticated attackers, with subscriber-level access and above, to include and execute arbitrary files on the server, allowing the execution of any php code in those files. this can be used to bypass access controls, obtain sensitive data, or achieve code execution in cases where images and other “safe” file types can be uploaded and included. this is limited to just php files.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7327" target="_blank">CVE-2025-7327</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-08 01:15:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The Widget for Google Reviews plugin for WordPress is vulnerable to Directory Traversal in all versions up to, and including, 1.0.15 via the layout parameter. This makes it possible for authenticated attackers, with Subscriber-level access and above, to include and execute arbitrary files on the server, allowing the execution of any PHP code in those files. This can be used to bypass access controls, obtain sensitive data, or achieve code execution in cases where images and other “safe” file types can be uploaded and included. This is limited to just PHP files.</p>
                 </div>
         
             </div>
