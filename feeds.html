@@ -33,6 +33,172 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-6197" data-description="an open redirect vulnerability has been identified in grafana oss organization switching functionality.
+
+
+prerequisites for exploitation:
+
+- multiple organizations must exist in the grafana instance
+
+- victim must be on a different organization than the one specified in the url">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6197" target="_blank">CVE-2025-6197</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.2</p>
+                    <p>An open redirect vulnerability has been identified in Grafana OSS organization switching functionality.
+
+
+Prerequisites for exploitation:
+
+- Multiple organizations must exist in the Grafana instance
+
+- Victim must be on a different organization than the one specified in the URL</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-6023" data-description="an open redirect vulnerability has been identified in grafana oss that can be exploited to achieve xss attacks. the vulnerability was introduced in grafana v11.5.0.
+
+the open redirect can be chained with path traversal vulnerabilities to achieve xss.
+
+fixed in versions 12.0.2+security-01, 11.6.3+security-01, 11.5.6+security-01, 11.4.6+security-01 and 11.3.8+security-01">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6023" target="_blank">CVE-2025-6023</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
+                    <p>An open redirect vulnerability has been identified in Grafana OSS that can be exploited to achieve XSS attacks. The vulnerability was introduced in Grafana v11.5.0.
+
+The open redirect can be chained with path traversal vulnerabilities to achieve XSS.
+
+Fixed in versions 12.0.2+security-01, 11.6.3+security-01, 11.5.6+security-01, 11.4.6+security-01 and 11.3.8+security-01</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-38349" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+eventpoll: don't decrement ep refcount while still holding the ep mutex
+
+jann horn points out that epoll is decrementing the ep refcount and then
+doing a
+
+    mutex_unlock(&ep->mtx);
+
+afterwards. that's very wrong, because it can lead to a use-after-free.
+
+that pattern is actually fine for the very last reference, because the
+code in question will delay the actual call to "ep_free(ep)" until after
+it has unlocked the mutex.
+
+but it's wrong for the much subtler "next to last" case when somebody
+*else* may also be dropping their reference and free the ep while we're
+still using the mutex.
+
+note that this is true even if that other user is also using the same ep
+mutex: mutexes, unlike spinlocks, can not be used for object ownership,
+even if they guarantee mutual exclusion.
+
+a mutex "unlock" operation is not atomic, and as one user is still
+accessing the mutex as part of unlocking it, another user can come in
+and get the now released mutex and free the data structure while the
+first user is still cleaning up.
+
+see our mutex documentation in documentation/locking/mutex-design.rst,
+in particular the section [1] about semantics:
+
+	"mutex_unlock() may access the mutex structure even after it has
+	 internally released the lock already - so it's not safe for
+	 another context to acquire the mutex and assume that the
+	 mutex_unlock() context is not using the structure anymore"
+
+so if we drop our ep ref before the mutex unlock, but we weren't the
+last one, we may then unlock the mutex, another user comes in, drops
+_their_ reference and releases the 'ep' as it now has no users - all
+while the mutex_unlock() is still accessing it.
+
+fix this by simply moving the ep refcount dropping to outside the mutex:
+the refcount itself is atomic, and doesn't need mutex protection (that's
+the whole _point_ of refcounts: unlike mutexes, they are inherently
+about object lifetimes).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38349" target="_blank">CVE-2025-38349</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+eventpoll: don't decrement ep refcount while still holding the ep mutex
+
+Jann Horn points out that epoll is decrementing the ep refcount and then
+doing a
+
+    mutex_unlock(&ep->mtx);
+
+afterwards. That's very wrong, because it can lead to a use-after-free.
+
+That pattern is actually fine for the very last reference, because the
+code in question will delay the actual call to "ep_free(ep)" until after
+it has unlocked the mutex.
+
+But it's wrong for the much subtler "next to last" case when somebody
+*else* may also be dropping their reference and free the ep while we're
+still using the mutex.
+
+Note that this is true even if that other user is also using the same ep
+mutex: mutexes, unlike spinlocks, can not be used for object ownership,
+even if they guarantee mutual exclusion.
+
+A mutex "unlock" operation is not atomic, and as one user is still
+accessing the mutex as part of unlocking it, another user can come in
+and get the now released mutex and free the data structure while the
+first user is still cleaning up.
+
+See our mutex documentation in Documentation/locking/mutex-design.rst,
+in particular the section [1] about semantics:
+
+	"mutex_unlock() may access the mutex structure even after it has
+	 internally released the lock already - so it's not safe for
+	 another context to acquire the mutex and assume that the
+	 mutex_unlock() context is not using the structure anymore"
+
+So if we drop our ep ref before the mutex unlock, but we weren't the
+last one, we may then unlock the mutex, another user comes in, drops
+_their_ reference and releases the 'ep' as it now has no users - all
+while the mutex_unlock() is still accessing it.
+
+Fix this by simply moving the ep refcount dropping to outside the mutex:
+the refcount itself is atomic, and doesn't need mutex protection (that's
+the whole _point_ of refcounts: unlike mutexes, they are inherently
+about object lifetimes).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-26855" data-description="a sql injection in articles calendar extension 1.0.0 - 1.0.1.0007 for joomla allows attackers to execute arbitrary sql commands.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-26855" target="_blank">CVE-2025-26855</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A SQL injection in Articles Calendar extension 1.0.0 - 1.0.1.0007 for Joomla allows attackers to execute arbitrary SQL commands.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-26854" data-description="a sql injection in articles good search extension 1.0.0 - 1.2.4.0011 for joomla allows attackers to execute arbitrary sql commands.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-26854" target="_blank">CVE-2025-26854</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A SQL injection in Articles Good Search extension 1.0.0 - 1.2.4.0011 for Joomla allows attackers to execute arbitrary SQL commands.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-32124" data-description="an improper access control vulnerability [cwe-284] in fortiisolator version 2.4.4, version 2.4.3, 2.3 all versions logging component may allow a remote authenticated read-only attacker to alter logs via a crafted http request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-32124" target="_blank">CVE-2024-32124</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>An improper access control vulnerability [CWE-284] in FortiIsolator version 2.4.4, version 2.4.3, 2.3 all versions logging component may allow a remote authenticated read-only attacker to alter logs via a crafted HTTP request.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-27779" data-description="an insufficient session expiration vulnerability [cwe-613] in fortisandbox fortisandbox version 4.4.4 and below, version 4.2.6 and below, 4.0 all versions, 3.2 all versions and fortiisolator version 2.4 and below, 2.3 all versions, 2.2 all versions, 2.1 all versions, 2.0 all versions, 1.2 all versions may allow a remote attacker in possession of an admin session cookie to keep using that admin's session even after the admin user was deleted.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-27779" target="_blank">CVE-2024-27779</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-18 03:15:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
+                    <p>An insufficient session expiration vulnerability [CWE-613] in FortiSandbox FortiSandbox version 4.4.4 and below, version 4.2.6 and below, 4.0 all versions, 3.2 all versions and FortiIsolator version 2.4 and below, 2.3 all versions, 2.2 all versions, 2.1 all versions, 2.0 all versions, 1.2 all versions may allow a remote attacker in possession of an admin session cookie to keep using that admin's session even after the admin user was deleted.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-7772" data-description="the malcure malware scanner — #1 toolset for wordpress malware removal plugin for wordpress is vulnerable to arbitrary file read in all versions up to, and including, 16.8 via the wpmr_inspect_file() function due to a missing capability check. this makes it possible for authenticated attackers, with subscriber-level access and above, to read the contents of arbitrary files on the server, which can contain sensitive information.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7772" target="_blank">CVE-2025-7772</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-07-18 02:15:28 CDT</p>
@@ -135,62 +301,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>The Vertical scroll image slideshow gallery plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the ‘width’ parameter in all versions up to, and including, 11.1 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-29572" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-29572" target="_blank">CVE-2025-29572</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 01:15:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-7660" data-description="the map my locations plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's 'map_my_locations' shortcode in all versions up to, and including, 1.1 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7660" target="_blank">CVE-2025-7660</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 00:15:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Map My Locations plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's 'map_my_locations' shortcode in all versions up to, and including, 1.1 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-7648" data-description="the ruven themes: shortcodes plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's 'ruven_button' shortcode in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7648" target="_blank">CVE-2025-7648</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 00:15:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Ruven Themes: Shortcodes plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's 'ruven_button' shortcode in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-7638" data-description="the forminator forms – contact form, payment form & custom form builder plugin for wordpress is vulnerable to time-based sql injection via the `order_by` parameter in all versions up to, and including, 1.45.0 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query.  this makes it possible for authenticated attackers, with administrator-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-7638" target="_blank">CVE-2025-7638</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 00:15:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>The Forminator Forms – Contact Form, Payment Form & Custom Form Builder plugin for WordPress is vulnerable to time-based SQL Injection via the `order_by` parameter in all versions up to, and including, 1.45.0 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query.  This makes it possible for authenticated attackers, with Administrator-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-6813" data-description="the aapanel wp toolkit plugin for wordpress is vulnerable to privilege escalation due to missing authorization checks within the auto_login() function in versions 1.0 to 1.1. this makes it possible for authenticated attackers, with subscriber-level access and above, to bypass all role checks and gain full admin privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6813" target="_blank">CVE-2025-6813</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 00:15:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The aapanel WP Toolkit plugin for WordPress is vulnerable to Privilege Escalation due to missing authorization checks within the auto_login() function in versions 1.0 to 1.1. This makes it possible for authenticated attackers, with Subscriber-level access and above, to bypass all role checks and gain full admin privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-6781" data-description="the copymatic – ai content writer & generator plugin for wordpress is vulnerable to cross-site request forgery in all versions up to, and including, 2.1. this is due to missing or incorrect nonce validation on the 'copymatic-menu' page. this makes it possible for unauthenticated attackers to update the copymatic_apikey option via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6781" target="_blank">CVE-2025-6781</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 00:15:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The Copymatic – AI Content Writer & Generator plugin for WordPress is vulnerable to Cross-Site Request Forgery in all versions up to, and including, 2.1. This is due to missing or incorrect nonce validation on the 'copymatic-menu' page. This makes it possible for unauthenticated attackers to update the copymatic_apikey option via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-6053" data-description="the zuppler online ordering plugin for wordpress is vulnerable to cross-site request forgery in all versions up to, and including, 2.1.0. this is due to missing or incorrect nonce validation on the 'zuppler-online-ordering-options' page. this makes it possible for unauthenticated attackers to update settings and inject malicious web scripts via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6053" target="_blank">CVE-2025-6053</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 00:15:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>The Zuppler Online Ordering plugin for WordPress is vulnerable to Cross-Site Request Forgery in all versions up to, and including, 2.1.0. This is due to missing or incorrect nonce validation on the 'zuppler-online-ordering-options' page. This makes it possible for unauthenticated attackers to update settings and inject malicious web scripts via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.</p>
                 </div>
         
             </div>
