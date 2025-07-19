@@ -33,6 +33,88 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-38350" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/sched: always pass notifications when child class becomes empty
+
+certain classful qdiscs may invoke their classes' dequeue handler on an
+enqueue operation. this may unexpectedly empty the child qdisc and thus
+make an in-flight class passive via qlen_notify(). most qdiscs do not
+expect such behaviour at this point in time and may re-activate the
+class eventually anyways which will lead to a use-after-free.
+
+the referenced fix commit attempted to fix this behavior for the hfsc
+case by moving the backlog accounting around, though this turned out to
+be incomplete since the parent's parent may run into the issue too.
+the following reproducer demonstrates this use-after-free:
+
+    tc qdisc add dev lo root handle 1: drr
+    tc filter add dev lo parent 1: basic classid 1:1
+    tc class add dev lo parent 1: classid 1:1 drr
+    tc qdisc add dev lo parent 1:1 handle 2: hfsc def 1
+    tc class add dev lo parent 2: classid 2:1 hfsc rt m1 8 d 1 m2 0
+    tc qdisc add dev lo parent 2:1 handle 3: netem
+    tc qdisc add dev lo parent 3:1 handle 4: blackhole
+
+    echo 1 | socat -u stdin udp4-datagram:127.0.0.1:8888
+    tc class delete dev lo classid 1:1
+    echo 1 | socat -u stdin udp4-datagram:127.0.0.1:8888
+
+since backlog accounting issues leading to a use-after-frees on stale
+class pointers is a recurring pattern at this point, this patch takes
+a different approach. instead of trying to fix the accounting, the patch
+ensures that qdisc_tree_reduce_backlog always calls qlen_notify when
+the child qdisc is empty. this solves the problem because deletion of
+qdiscs always involves a call to qdisc_reset() and / or
+qdisc_purge_queue() which ultimately resets its qlen to 0 thus causing
+the following qdisc_tree_reduce_backlog() to report to the parent. note
+that this may call qlen_notify on passive classes multiple times. this
+is not a problem after the recent patch series that made all the
+classful qdiscs qlen_notify() handlers idempotent.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38350" target="_blank">CVE-2025-38350</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-07-19 02:15:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/sched: Always pass notifications when child class becomes empty
+
+Certain classful qdiscs may invoke their classes' dequeue handler on an
+enqueue operation. This may unexpectedly empty the child qdisc and thus
+make an in-flight class passive via qlen_notify(). Most qdiscs do not
+expect such behaviour at this point in time and may re-activate the
+class eventually anyways which will lead to a use-after-free.
+
+The referenced fix commit attempted to fix this behavior for the HFSC
+case by moving the backlog accounting around, though this turned out to
+be incomplete since the parent's parent may run into the issue too.
+The following reproducer demonstrates this use-after-free:
+
+    tc qdisc add dev lo root handle 1: drr
+    tc filter add dev lo parent 1: basic classid 1:1
+    tc class add dev lo parent 1: classid 1:1 drr
+    tc qdisc add dev lo parent 1:1 handle 2: hfsc def 1
+    tc class add dev lo parent 2: classid 2:1 hfsc rt m1 8 d 1 m2 0
+    tc qdisc add dev lo parent 2:1 handle 3: netem
+    tc qdisc add dev lo parent 3:1 handle 4: blackhole
+
+    echo 1 | socat -u STDIN UDP4-DATAGRAM:127.0.0.1:8888
+    tc class delete dev lo classid 1:1
+    echo 1 | socat -u STDIN UDP4-DATAGRAM:127.0.0.1:8888
+
+Since backlog accounting issues leading to a use-after-frees on stale
+class pointers is a recurring pattern at this point, this patch takes
+a different approach. Instead of trying to fix the accounting, the patch
+ensures that qdisc_tree_reduce_backlog always calls qlen_notify when
+the child qdisc is empty. This solves the problem because deletion of
+qdiscs always involves a call to qdisc_reset() and / or
+qdisc_purge_queue() which ultimately resets its qlen to 0 thus causing
+the following qdisc_tree_reduce_backlog() to report to the parent. Note
+that this may call qlen_notify on passive classes multiple times. This
+is not a problem after the recent patch series that made all the
+classful qdiscs qlen_notify() handlers idempotent.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-6721" data-description="the vchasno kasa plugin for wordpress is vulnerable to unauthorized access of data due to a missing capability check on the mrkv_vchasno_kasa_wc_do_metabox_action() function in all versions up to, and including, 1.0.3. this makes it possible for unauthenticated attackers to generate invoices for arbitrary orders.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6721" target="_blank">CVE-2025-6721</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-07-19 01:15:24 CDT</p>
@@ -195,14 +277,6 @@ This vulnerability affects Windows users of `path.join` API.</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
                     <p>A vulnerability classified as critical was found in Tenda FH451 1.0.0.9. This vulnerability affects the function fromSafeClientFilter of the file /goform/SafeClientFilter. The manipulation of the argument Go/page leads to stack-based buffer overflow. The attack can be initiated remotely. The exploit has been disclosed to the public and may be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-50583" data-description="studentmanage v1.0 was discovered to contain a cross-site scripting (xss) vulnerability via the add a new student module.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-50583" target="_blank">CVE-2025-50583</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-07-18 16:15:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>StudentManage v1.0 was discovered to contain a cross-site scripting (XSS) vulnerability via the Add A New Student module.</p>
                 </div>
         
             </div>
