@@ -33,6 +33,76 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-38502" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: fix oob access in cgroup local storage
+
+lonial reported that an out-of-bounds access in cgroup local storage
+can be crafted via tail calls. given two programs each utilizing a
+cgroup local storage with a different value size, and one program
+doing a tail call into the other. the verifier will validate each of
+the indivial programs just fine. however, in the runtime context
+the bpf_cg_run_ctx holds an bpf_prog_array_item which contains the
+bpf program as well as any cgroup local storage flavor the program
+uses. helpers such as bpf_get_local_storage() pick this up from the
+runtime context:
+
+  ctx = container_of(current->bpf_ctx, struct bpf_cg_run_ctx, run_ctx);
+  storage = ctx->prog_item->cgroup_storage[stype];
+
+  if (stype == bpf_cgroup_storage_shared)
+    ptr = &read_once(storage->buf)->data[0];
+  else
+    ptr = this_cpu_ptr(storage->percpu_buf);
+
+for the second program which was called from the originally attached
+one, this means bpf_get_local_storage() will pick up the former
+program's map, not its own. with mismatching sizes, this can result
+in an unintended out-of-bounds access.
+
+to fix this issue, we need to extend bpf_map_owner with an array of
+storage_cookie[] to match on i) the exact maps from the original
+program if the second program was using bpf_get_local_storage(), or
+ii) allow the tail call combination if the second program was not
+using any of the cgroup local storage maps.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-38502" target="_blank">CVE-2025-38502</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-08-16 05:15:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: Fix oob access in cgroup local storage
+
+Lonial reported that an out-of-bounds access in cgroup local storage
+can be crafted via tail calls. Given two programs each utilizing a
+cgroup local storage with a different value size, and one program
+doing a tail call into the other. The verifier will validate each of
+the indivial programs just fine. However, in the runtime context
+the bpf_cg_run_ctx holds an bpf_prog_array_item which contains the
+BPF program as well as any cgroup local storage flavor the program
+uses. Helpers such as bpf_get_local_storage() pick this up from the
+runtime context:
+
+  ctx = container_of(current->bpf_ctx, struct bpf_cg_run_ctx, run_ctx);
+  storage = ctx->prog_item->cgroup_storage[stype];
+
+  if (stype == BPF_CGROUP_STORAGE_SHARED)
+    ptr = &READ_ONCE(storage->buf)->data[0];
+  else
+    ptr = this_cpu_ptr(storage->percpu_buf);
+
+For the second program which was called from the originally attached
+one, this means bpf_get_local_storage() will pick up the former
+program's map, not its own. With mismatching sizes, this can result
+in an unintended out-of-bounds access.
+
+To fix this issue, we need to extend bpf_map_owner with an array of
+storage_cookie[] to match on i) the exact maps from the original
+program if the second program was using bpf_get_local_storage(), or
+ii) allow the tail call combination if the second program was not
+using any of the cgroup local storage maps.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-8719" data-description="the translate this gtranslate shortcode plugin for wordpress is vulnerable to stored cross-site scripting via the ‘base_lang’ parameter in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-8719" target="_blank">CVE-2025-8719</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-08-16 04:15:26 CDT</p>
@@ -195,14 +265,6 @@ This patch limit repeated connections from clients with the same IP.</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>Anber Elementor Addon plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the $anber_item['button_link']['url']’ parameter in all versions up to, and including, 1.0.1 to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-6221" data-description="the embed bokun plugin for wordpress is vulnerable to stored cross-site scripting via the ‘align’ parameter in all versions up to, and including, 0.23 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-6221" target="_blank">CVE-2025-6221</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-08-15 23:16:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Embed Bokun plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the ‘align’ parameter in all versions up to, and including, 0.23 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
                 </div>
         
             </div>
