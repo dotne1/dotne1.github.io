@@ -33,6 +33,26 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-9962" data-description="a buffer overflow vulnerability in novakon p series allows attackers to gain root permission without prior authentication.this issue affects p series: p – v2001.a.c518o2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-9962" target="_blank">CVE-2025-9962</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-09-23 06:15:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A buffer overflow vulnerability in Novakon P series allows attackers to gain root permission without prior authentication.This issue affects P series: P – V2001.A.C518o2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-4598" data-description="an information disclosure vulnerability exists in multiple wso2 products due to improper implementation of the enrich mediator. authenticated users may be able to view unintended business data from other mediation contexts because the internal state is not properly isolated or cleared between executions.
+
+this vulnerability does not impact user credentials or access tokens but may lead to leakage of sensitive business information handled during message flows.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-4598" target="_blank">CVE-2024-4598</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-09-23 06:15:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>An information disclosure vulnerability exists in multiple WSO2 products due to improper implementation of the enrich mediator. Authenticated users may be able to view unintended business data from other mediation contexts because the internal state is not properly isolated or cleared between executions.
+
+This vulnerability does not impact user credentials or access tokens but may lead to leakage of sensitive business information handled during message flows.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-9342" data-description="authorization bypass through user-controlled key vulnerability in anadolu hayat emeklilik inc. ahe mobile allows privilege abuse.this issue affects ahe mobile: from 1.9.7 before 1.9.9.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-9342" target="_blank">CVE-2025-9342</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-09-23 05:15:35 CDT</p>
@@ -493,236 +513,6 @@ The ip_alloc_sem protects the inode extent list and size.  Release the
 read semphore before calling fiemap_fill_next_extent() in ocfs2_fiemap()
 and ocfs2_fiemap_inline().  This does an unnecessary semaphore lock/unlock
 on the last extent but simplifies the error path.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39884" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-btrfs: fix subvolume deletion lockup caused by inodes xarray race
-
-there is a race condition between inode eviction and inode caching that
-can cause a live struct btrfs_inode to be missing from the root->inodes
-xarray. specifically, there is a window during evict() between the inode
-being unhashed and deleted from the xarray. if btrfs_iget() is called
-for the same inode in that window, it will be recreated and inserted
-into the xarray, but then eviction will delete the new entry, leaving
-nothing in the xarray:
-
-thread 1                          thread 2
----------------------------------------------------------------
-evict()
-  remove_inode_hash()
-                                  btrfs_iget_path()
-                                    btrfs_iget_locked()
-                                    btrfs_read_locked_inode()
-                                      btrfs_add_inode_to_root()
-  destroy_inode()
-    btrfs_destroy_inode()
-      btrfs_del_inode_from_root()
-        __xa_erase
-
-in turn, this can cause issues for subvolume deletion. specifically, if
-an inode is in this lost state, and all other inodes are evicted, then
-btrfs_del_inode_from_root() will call btrfs_add_dead_root() prematurely.
-if the lost inode has a delayed_node attached to it, then when
-btrfs_clean_one_deleted_snapshot() calls btrfs_kill_all_delayed_nodes(),
-it will loop forever because the delayed_nodes xarray will never become
-empty (unless memory pressure forces the inode out). we saw this
-manifest as soft lockups in production.
-
-fix it by only deleting the xarray entry if it matches the given inode
-(using __xa_cmpxchg()).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39884" target="_blank">CVE-2025-39884</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-09-23 01:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-btrfs: fix subvolume deletion lockup caused by inodes xarray race
-
-There is a race condition between inode eviction and inode caching that
-can cause a live struct btrfs_inode to be missing from the root->inodes
-xarray. Specifically, there is a window during evict() between the inode
-being unhashed and deleted from the xarray. If btrfs_iget() is called
-for the same inode in that window, it will be recreated and inserted
-into the xarray, but then eviction will delete the new entry, leaving
-nothing in the xarray:
-
-Thread 1                          Thread 2
----------------------------------------------------------------
-evict()
-  remove_inode_hash()
-                                  btrfs_iget_path()
-                                    btrfs_iget_locked()
-                                    btrfs_read_locked_inode()
-                                      btrfs_add_inode_to_root()
-  destroy_inode()
-    btrfs_destroy_inode()
-      btrfs_del_inode_from_root()
-        __xa_erase
-
-In turn, this can cause issues for subvolume deletion. Specifically, if
-an inode is in this lost state, and all other inodes are evicted, then
-btrfs_del_inode_from_root() will call btrfs_add_dead_root() prematurely.
-If the lost inode has a delayed_node attached to it, then when
-btrfs_clean_one_deleted_snapshot() calls btrfs_kill_all_delayed_nodes(),
-it will loop forever because the delayed_nodes xarray will never become
-empty (unless memory pressure forces the inode out). We saw this
-manifest as soft lockups in production.
-
-Fix it by only deleting the xarray entry if it matches the given inode
-(using __xa_cmpxchg()).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39883" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-mm/memory-failure: fix vm_bug_on_page(pagepoisoned(page)) when unpoison memory
-
-when i did memory failure tests, below panic occurs:
-
-page dumped because: vm_bug_on_page(pagepoisoned(page))
-kernel bug at include/linux/page-flags.h:616!
-oops: invalid opcode: 0000 [#1] preempt smp nopti
-cpu: 3 pid: 720 comm: bash not tainted 6.10.0-rc1-00195-g148743902568 #40
-rip: 0010:unpoison_memory+0x2f3/0x590
-rsp: 0018:ffffa57fc8787d60 eflags: 00000246
-rax: 0000000000000037 rbx: 0000000000000009 rcx: ffff9be25fcdc9c8
-rdx: 0000000000000000 rsi: 0000000000000027 rdi: ffff9be25fcdc9c0
-rbp: 0000000000300000 r08: ffffffffb4956f88 r09: 0000000000009ffb
-r10: 0000000000000284 r11: ffffffffb4926fa0 r12: ffffe6b00c000000
-r13: ffff9bdb453dfd00 r14: 0000000000000000 r15: fffffffffffffffe
-fs:  00007f08f04e4740(0000) gs:ffff9be25fcc0000(0000) knlgs:0000000000000000
-cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
-cr2: 0000564787a30410 cr3: 000000010d4e2000 cr4: 00000000000006f0
-call trace:
- <task>
- unpoison_memory+0x2f3/0x590
- simple_attr_write_xsigned.constprop.0.isra.0+0xb3/0x110
- debugfs_attr_write+0x42/0x60
- full_proxy_write+0x5b/0x80
- vfs_write+0xd5/0x540
- ksys_write+0x64/0xe0
- do_syscall_64+0xb9/0x1d0
- entry_syscall_64_after_hwframe+0x77/0x7f
-rip: 0033:0x7f08f0314887
-rsp: 002b:00007ffece710078 eflags: 00000246 orig_rax: 0000000000000001
-rax: ffffffffffffffda rbx: 0000000000000009 rcx: 00007f08f0314887
-rdx: 0000000000000009 rsi: 0000564787a30410 rdi: 0000000000000001
-rbp: 0000564787a30410 r08: 000000000000fefe r09: 000000007fffffff
-r10: 0000000000000000 r11: 0000000000000246 r12: 0000000000000009
-r13: 00007f08f041b780 r14: 00007f08f0417600 r15: 00007f08f0416a00
- </task>
-modules linked in: hwpoison_inject
----[ end trace 0000000000000000 ]---
-rip: 0010:unpoison_memory+0x2f3/0x590
-rsp: 0018:ffffa57fc8787d60 eflags: 00000246
-rax: 0000000000000037 rbx: 0000000000000009 rcx: ffff9be25fcdc9c8
-rdx: 0000000000000000 rsi: 0000000000000027 rdi: ffff9be25fcdc9c0
-rbp: 0000000000300000 r08: ffffffffb4956f88 r09: 0000000000009ffb
-r10: 0000000000000284 r11: ffffffffb4926fa0 r12: ffffe6b00c000000
-r13: ffff9bdb453dfd00 r14: 0000000000000000 r15: fffffffffffffffe
-fs:  00007f08f04e4740(0000) gs:ffff9be25fcc0000(0000) knlgs:0000000000000000
-cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
-cr2: 0000564787a30410 cr3: 000000010d4e2000 cr4: 00000000000006f0
-kernel panic - not syncing: fatal exception
-kernel offset: 0x31c00000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
----[ end kernel panic - not syncing: fatal exception ]---
-
-the root cause is that unpoison_memory() tries to check the pg_hwpoison
-flags of an uninitialized page.  so vm_bug_on_page(pagepoisoned(page)) is
-triggered.  this can be reproduced by below steps:
-
-1.offline memory block:
-
- echo offline > /sys/devices/system/memory/memory12/state
-
-2.get offlined memory pfn:
-
- page-types -b n -rln
-
-3.write pfn to unpoison-pfn
-
- echo <pfn> > /sys/kernel/debug/hwpoison/unpoison-pfn
-
-this scenario can be identified by pfn_to_online_page() returning null. 
-and zone_device pages are never expected, so we can simply fail if
-pfn_to_online_page() == null to fix the bug.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39883" target="_blank">CVE-2025-39883</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-09-23 01:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-mm/memory-failure: fix VM_BUG_ON_PAGE(PagePoisoned(page)) when unpoison memory
-
-When I did memory failure tests, below panic occurs:
-
-page dumped because: VM_BUG_ON_PAGE(PagePoisoned(page))
-kernel BUG at include/linux/page-flags.h:616!
-Oops: invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
-CPU: 3 PID: 720 Comm: bash Not tainted 6.10.0-rc1-00195-g148743902568 #40
-RIP: 0010:unpoison_memory+0x2f3/0x590
-RSP: 0018:ffffa57fc8787d60 EFLAGS: 00000246
-RAX: 0000000000000037 RBX: 0000000000000009 RCX: ffff9be25fcdc9c8
-RDX: 0000000000000000 RSI: 0000000000000027 RDI: ffff9be25fcdc9c0
-RBP: 0000000000300000 R08: ffffffffb4956f88 R09: 0000000000009ffb
-R10: 0000000000000284 R11: ffffffffb4926fa0 R12: ffffe6b00c000000
-R13: ffff9bdb453dfd00 R14: 0000000000000000 R15: fffffffffffffffe
-FS:  00007f08f04e4740(0000) GS:ffff9be25fcc0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000564787a30410 CR3: 000000010d4e2000 CR4: 00000000000006f0
-Call Trace:
- <TASK>
- unpoison_memory+0x2f3/0x590
- simple_attr_write_xsigned.constprop.0.isra.0+0xb3/0x110
- debugfs_attr_write+0x42/0x60
- full_proxy_write+0x5b/0x80
- vfs_write+0xd5/0x540
- ksys_write+0x64/0xe0
- do_syscall_64+0xb9/0x1d0
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-RIP: 0033:0x7f08f0314887
-RSP: 002b:00007ffece710078 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-RAX: ffffffffffffffda RBX: 0000000000000009 RCX: 00007f08f0314887
-RDX: 0000000000000009 RSI: 0000564787a30410 RDI: 0000000000000001
-RBP: 0000564787a30410 R08: 000000000000fefe R09: 000000007fffffff
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000009
-R13: 00007f08f041b780 R14: 00007f08f0417600 R15: 00007f08f0416a00
- </TASK>
-Modules linked in: hwpoison_inject
----[ end trace 0000000000000000 ]---
-RIP: 0010:unpoison_memory+0x2f3/0x590
-RSP: 0018:ffffa57fc8787d60 EFLAGS: 00000246
-RAX: 0000000000000037 RBX: 0000000000000009 RCX: ffff9be25fcdc9c8
-RDX: 0000000000000000 RSI: 0000000000000027 RDI: ffff9be25fcdc9c0
-RBP: 0000000000300000 R08: ffffffffb4956f88 R09: 0000000000009ffb
-R10: 0000000000000284 R11: ffffffffb4926fa0 R12: ffffe6b00c000000
-R13: ffff9bdb453dfd00 R14: 0000000000000000 R15: fffffffffffffffe
-FS:  00007f08f04e4740(0000) GS:ffff9be25fcc0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000564787a30410 CR3: 000000010d4e2000 CR4: 00000000000006f0
-Kernel panic - not syncing: Fatal exception
-Kernel Offset: 0x31c00000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
----[ end Kernel panic - not syncing: Fatal exception ]---
-
-The root cause is that unpoison_memory() tries to check the PG_HWPoison
-flags of an uninitialized page.  So VM_BUG_ON_PAGE(PagePoisoned(page)) is
-triggered.  This can be reproduced by below steps:
-
-1.Offline memory block:
-
- echo offline > /sys/devices/system/memory/memory12/state
-
-2.Get offlined memory pfn:
-
- page-types -b n -rlN
-
-3.Write pfn to unpoison-pfn
-
- echo <pfn> > /sys/kernel/debug/hwpoison/unpoison-pfn
-
-This scenario can be identified by pfn_to_online_page() returning NULL. 
-And ZONE_DEVICE pages are never expected, so we can simply fail if
-pfn_to_online_page() == NULL to fix the bug.</p>
                 </div>
         
             </div>
