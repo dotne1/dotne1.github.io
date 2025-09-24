@@ -33,6 +33,198 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-39890" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: ath12k: fix memory leak in ath12k_service_ready_ext_event
+
+currently, in ath12k_service_ready_ext_event(), svc_rdy_ext.mac_phy_caps
+is not freed in the failure case, causing a memory leak. the following
+trace is observed in kmemleak:
+
+unreferenced object 0xffff8b3eb5789c00 (size 1024):
+ comm "softirq", pid 0, jiffies 4294942577
+ hex dump (first 32 bytes):
+   00 00 00 00 01 00 00 00 00 00 00 00 7b 00 00 10  ............{...
+   01 00 00 00 00 00 00 00 01 00 00 00 1f 38 00 00  .............8..
+ backtrace (crc 44e1c357):
+   __kmalloc_noprof+0x30b/0x410
+   ath12k_wmi_mac_phy_caps_parse+0x84/0x100 [ath12k]
+   ath12k_wmi_tlv_iter+0x5e/0x140 [ath12k]
+   ath12k_wmi_svc_rdy_ext_parse+0x308/0x4c0 [ath12k]
+   ath12k_wmi_tlv_iter+0x5e/0x140 [ath12k]
+   ath12k_service_ready_ext_event.isra.0+0x44/0xd0 [ath12k]
+   ath12k_wmi_op_rx+0x2eb/0xd70 [ath12k]
+   ath12k_htc_rx_completion_handler+0x1f4/0x330 [ath12k]
+   ath12k_ce_recv_process_cb+0x218/0x300 [ath12k]
+   ath12k_pci_ce_workqueue+0x1b/0x30 [ath12k]
+   process_one_work+0x219/0x680
+   bh_worker+0x198/0x1f0
+   tasklet_action+0x13/0x30
+   handle_softirqs+0xca/0x460
+   __irq_exit_rcu+0xbe/0x110
+   irq_exit_rcu+0x9/0x30
+
+free svc_rdy_ext.mac_phy_caps in the error case to fix this memory leak.
+
+tested-on: qcn9274 hw2.0 pci wlan.wbe.1.4.1-00199-qcahkswpl_siliconz-1">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39890" target="_blank">CVE-2025-39890</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-09-24 06:15:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: ath12k: fix memory leak in ath12k_service_ready_ext_event
+
+Currently, in ath12k_service_ready_ext_event(), svc_rdy_ext.mac_phy_caps
+is not freed in the failure case, causing a memory leak. The following
+trace is observed in kmemleak:
+
+unreferenced object 0xffff8b3eb5789c00 (size 1024):
+ comm "softirq", pid 0, jiffies 4294942577
+ hex dump (first 32 bytes):
+   00 00 00 00 01 00 00 00 00 00 00 00 7b 00 00 10  ............{...
+   01 00 00 00 00 00 00 00 01 00 00 00 1f 38 00 00  .............8..
+ backtrace (crc 44e1c357):
+   __kmalloc_noprof+0x30b/0x410
+   ath12k_wmi_mac_phy_caps_parse+0x84/0x100 [ath12k]
+   ath12k_wmi_tlv_iter+0x5e/0x140 [ath12k]
+   ath12k_wmi_svc_rdy_ext_parse+0x308/0x4c0 [ath12k]
+   ath12k_wmi_tlv_iter+0x5e/0x140 [ath12k]
+   ath12k_service_ready_ext_event.isra.0+0x44/0xd0 [ath12k]
+   ath12k_wmi_op_rx+0x2eb/0xd70 [ath12k]
+   ath12k_htc_rx_completion_handler+0x1f4/0x330 [ath12k]
+   ath12k_ce_recv_process_cb+0x218/0x300 [ath12k]
+   ath12k_pci_ce_workqueue+0x1b/0x30 [ath12k]
+   process_one_work+0x219/0x680
+   bh_worker+0x198/0x1f0
+   tasklet_action+0x13/0x30
+   handle_softirqs+0xca/0x460
+   __irq_exit_rcu+0xbe/0x110
+   irq_exit_rcu+0x9/0x30
+
+Free svc_rdy_ext.mac_phy_caps in the error case to fix this memory leak.
+
+Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-39889" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bluetooth: l2cap: check encryption key size on incoming connection
+
+this is required for passing gap/sec/sem/bi-04-c pts test case:
+  security mode 4 level 4, responder - invalid encryption key size
+  - 128 bit
+
+this tests the security key with size from 1 to 15 bytes while the
+security mode 4 level 4 requests 16 bytes key size.
+
+currently pts fails with the following logs:
+- expected:connection response:
+    code: [3 (0x03)] code
+    identifier: (lt)wildcard: exists(gt)
+    length: [8 (0x0008)]
+    destination cid: (lt)wildcard: exists(gt)
+    source cid: [64 (0x0040)]
+    result: [3 (0x0003)] connection refused - security block
+    status: (lt)wildcard: exists(gt),
+but received:connection response:
+    code: [3 (0x03)] code
+    identifier: [1 (0x01)]
+    length: [8 (0x0008)]
+    destination cid: [64 (0x0040)]
+    source cid: [64 (0x0040)]
+    result: [0 (0x0000)] connection successful
+    status: [0 (0x0000)] no further information available
+
+and hci logs:
+< hci command: read encrypti.. (0x05|0x0008) plen 2
+        handle: 14 address: 00:1b:dc:f2:24:10 (vencer co., ltd.)
+> hci event: command complete (0x0e) plen 7
+      read encryption key size (0x05|0x0008) ncmd 1
+        status: success (0x00)
+        handle: 14 address: 00:1b:dc:f2:24:10 (vencer co., ltd.)
+        key size: 7
+> acl data rx: handle 14 flags 0x02 dlen 12
+      l2cap: connection request (0x02) ident 1 len 4
+        psm: 4097 (0x1001)
+        source cid: 64
+< acl data tx: handle 14 flags 0x00 dlen 16
+      l2cap: connection response (0x03) ident 1 len 8
+        destination cid: 64
+        source cid: 64
+        result: connection successful (0x0000)
+        status: no further information available (0x0000)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39889" target="_blank">CVE-2025-39889</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-09-24 06:15:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Bluetooth: l2cap: Check encryption key size on incoming connection
+
+This is required for passing GAP/SEC/SEM/BI-04-C PTS test case:
+  Security Mode 4 Level 4, Responder - Invalid Encryption Key Size
+  - 128 bit
+
+This tests the security key with size from 1 to 15 bytes while the
+Security Mode 4 Level 4 requests 16 bytes key size.
+
+Currently PTS fails with the following logs:
+- expected:Connection Response:
+    Code: [3 (0x03)] Code
+    Identifier: (lt)WildCard: Exists(gt)
+    Length: [8 (0x0008)]
+    Destination CID: (lt)WildCard: Exists(gt)
+    Source CID: [64 (0x0040)]
+    Result: [3 (0x0003)] Connection refused - Security block
+    Status: (lt)WildCard: Exists(gt),
+but received:Connection Response:
+    Code: [3 (0x03)] Code
+    Identifier: [1 (0x01)]
+    Length: [8 (0x0008)]
+    Destination CID: [64 (0x0040)]
+    Source CID: [64 (0x0040)]
+    Result: [0 (0x0000)] Connection Successful
+    Status: [0 (0x0000)] No further information available
+
+And HCI logs:
+< HCI Command: Read Encrypti.. (0x05|0x0008) plen 2
+        Handle: 14 Address: 00:1B:DC:F2:24:10 (Vencer Co., Ltd.)
+> HCI Event: Command Complete (0x0e) plen 7
+      Read Encryption Key Size (0x05|0x0008) ncmd 1
+        Status: Success (0x00)
+        Handle: 14 Address: 00:1B:DC:F2:24:10 (Vencer Co., Ltd.)
+        Key size: 7
+> ACL Data RX: Handle 14 flags 0x02 dlen 12
+      L2CAP: Connection Request (0x02) ident 1 len 4
+        PSM: 4097 (0x1001)
+        Source CID: 64
+< ACL Data TX: Handle 14 flags 0x00 dlen 16
+      L2CAP: Connection Response (0x03) ident 1 len 8
+        Destination CID: 64
+        Source CID: 64
+        Result: Connection successful (0x0000)
+        Status: No further information available (0x0000)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-58241" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bluetooth: hci_core: disable works on hci_unregister_dev
+
+this make use of disable_work_* on hci_unregister_dev since the hci_dev is
+about to be freed new submissions are not disarable.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-58241" target="_blank">CVE-2024-58241</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-09-24 06:15:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Bluetooth: hci_core: Disable works on hci_unregister_dev
+
+This make use of disable_work_* on hci_unregister_dev since the hci_dev is
+about to be freed new submissions are not disarable.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-58457" data-description="improper permission check in zookeeper adminserver lets authorized clients to run snapshot and restore command with insufficient permissions.
 
 this issue affects apache zookeeper: from 3.9.0 before 3.9.4.
@@ -195,30 +387,6 @@ Users are recommended to upgrade to version 2.0.5, which fixes the issue.</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>A Insufficient Session Expiration vulnerability in the Liferay Portal 7.4.3.121 through 7.3.3.131, and Liferay DXP 2024.Q4.0 through 2024.Q4.3, 2024.Q3.1 through 2024.Q3.13, 2024.Q2.0 through 2024.Q2.13, and 2024.Q1.1 through 2024.Q1.12 is allow an remote non-authenticated attacker to reuse old user session by SLO API</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-43779" data-description="a reflected cross-site scripting (xss) vulnerability in the liferay portal 7.4.0 through 7.4.3.112, and liferay dxp 2024.q1.1 through 2024.q1.18 and 7.4 ga through update 92 allows a remote authenticated attacker to inject javascript code via _com_liferay_commerce_product_definitions_web_internal_portlet_cpdefinitionsportlet_producttypename parameter. this malicious payload is then reflected and executed within the user's browser.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-43779" target="_blank">CVE-2025-43779</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-09-23 20:15:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A reflected cross-site scripting (XSS) vulnerability in the Liferay Portal 7.4.0 through 7.4.3.112, and Liferay DXP 2024.Q1.1 through 2024.Q1.18 and 7.4 GA through update 92 allows a remote authenticated attacker to inject JavaScript code via _com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet_productTypeName parameter. This malicious payload is then reflected and executed within the user's browser.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-58473" data-description="an improper resource shutdown or release vulnerability has been identified in the click plus c2-03cpu-2 device running firmware version 3.60. the vulnerability allows an unauthenticated attacker to perform a denial-of-service attack by exhausting all available device sessions of the click programming software.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-58473" target="_blank">CVE-2025-58473</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-09-23 18:15:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>An improper resource shutdown or release vulnerability has been identified in the Click Plus C2-03CPU-2 device running firmware version 3.60. The vulnerability allows an unauthenticated attacker to perform a denial-of-service attack by exhausting all available device sessions of the Click Programming Software.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-57882" data-description="an improper resource shutdown or release vulnerability has been identified in the click plus c2-03cpu-2 device running firmware version 3.60. the vulnerability allows an unauthenticated attacker to perform a denial-of-service attack by exhausting all available device sessions in the remote plc application.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-57882" target="_blank">CVE-2025-57882</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-09-23 18:15:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>An improper resource shutdown or release vulnerability has been identified in the Click Plus C2-03CPU-2 device running firmware version 3.60. The vulnerability allows an unauthenticated attacker to perform a denial-of-service attack by exhausting all available device sessions in the Remote PLC application.</p>
                 </div>
         
             </div>
