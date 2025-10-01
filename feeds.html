@@ -33,1088 +33,1286 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2025-10847" data-description="dx unified infrastructure management (nimsoft/uim) and below contains an improper acl handling vulnerability in the robot (controller) component. a remote attacker can execute commands, read from, or write to the target system.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-10847" target="_blank">CVE-2025-10847</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 06:15:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>DX Unified Infrastructure Management (Nimsoft/UIM) and below contains an improper ACL handling vulnerability in the robot (controller) component. A remote attacker can execute commands, read from, or write to the target system.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-61622" data-description="deserialization of untrusted data in python in pyfory versions 0.12.0 through 0.12.2, or the legacy pyfury versions from 0.1.0 through 0.10.3: allows arbitrary code execution. an application is vulnerable if it reads pyfory serialized data from untrusted sources. an attacker can craft a data stream that selects pickle-fallback serializer during deserialization, leading to the execution of `pickle.loads`, which is vulnerable to remote code execution.
+                <div class="cve-entry" data-cve-id="CVE-2023-53532" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-users are recommended to upgrade to pyfory version 0.12.3 or later, which has removed pickle fallback serializer and thus fixes this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-61622" target="_blank">CVE-2025-61622</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 05:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Deserialization of untrusted data in python in pyfory versions 0.12.0 through 0.12.2, or the legacy pyfury versions from 0.1.0 through 0.10.3: allows arbitrary code execution. An application is vulnerable if it reads pyfory serialized data from untrusted sources. An attacker can craft a data stream that selects pickle-fallback serializer during deserialization, leading to the execution of `pickle.loads`, which is vulnerable to remote code execution.
+wifi: ath11k: fix deinitialization of firmware resources
 
-Users are recommended to upgrade to pyfory version 0.12.3 or later, which has removed pickle fallback serializer and thus fixes this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39928" data-description="in the linux kernel, the following vulnerability has been resolved:
+currently, in ath11k_ahb_fw_resources_init(), iommu domain
+mapping is done only for the chipsets having fixed firmware
+memory. also, for such chipsets, mapping is done only if it
+does not have trustzone support.
 
-i2c: rtl9300: ensure data length is within supported range
+during deinitialization, only if trustzone support is not there,
+iommu is unmapped back. however, for non fixed firmware memory
+chipsets, trustzone support is not there and this makes the
+condition check to true and it tries to unmap the memory which
+was not mapped during initialization.
 
-add an explicit check for the xfer length to 'rtl9300_i2c_config_xfer'
-to ensure the data length isn't within the supported range. in
-particular a data length of 0 is not supported by the hardware and
-causes unintended or destructive behaviour.
+this leads to the following trace -
 
-this limitation becomes obvious when looking at the register
-documentation [1]. 4 bits are reserved for data_width and the value
-of these 4 bits is used as n + 1, allowing a data length range of
-1 <= len <= 16.
+[   83.198790] unable to handle kernel null pointer dereference at virtual address 0000000000000008
+[   83.259537] modules linked in: ath11k_ahb ath11k qmi_helpers
+.. snip ..
+[   83.280286] pstate: 20000005 (nzcv daif -pan -uao -tco -dit -ssbs btype=--)
+[   83.287228] pc : __iommu_unmap+0x30/0x140
+[   83.293907] lr : iommu_unmap+0x5c/0xa4
+[   83.298072] sp : ffff80000b3abad0
+.. snip ..
+[   83.369175] call trace:
+[   83.376282]  __iommu_unmap+0x30/0x140
+[   83.378541]  iommu_unmap+0x5c/0xa4
+[   83.382360]  ath11k_ahb_fw_resource_deinit.part.12+0x2c/0xac [ath11k_ahb]
+[   83.385666]  ath11k_ahb_free_resources+0x140/0x17c [ath11k_ahb]
+[   83.392521]  ath11k_ahb_shutdown+0x34/0x40 [ath11k_ahb]
+[   83.398248]  platform_shutdown+0x20/0x2c
+[   83.403455]  device_shutdown+0x16c/0x1c4
+[   83.407621]  kernel_restart_prepare+0x34/0x3c
+[   83.411529]  kernel_restart+0x14/0x74
+[   83.415781]  __do_sys_reboot+0x1c4/0x22c
+[   83.419427]  __arm64_sys_reboot+0x1c/0x24
+[   83.423420]  invoke_syscall+0x44/0xfc
+[   83.427326]  el0_svc_common.constprop.3+0xac/0xe8
+[   83.430974]  do_el0_svc+0xa0/0xa8
+[   83.435659]  el0_svc+0x1c/0x44
+[   83.438957]  el0t_64_sync_handler+0x60/0x144
+[   83.441910]  el0t_64_sync+0x15c/0x160
+[   83.446343] code: aa0103f4 f9400001 f90027a1 d2800001 (f94006a0)
+[   83.449903] ---[ end trace 0000000000000000 ]---
 
-affected by this is the smbus quick operation which works with a data
-length of 0. passing 0 as the length causes an underflow of the value
-due to:
+this can be reproduced by probing an ahb chipset which is not
+having a fixed memory region. during reboot (or rmmod) trace
+can be seen.
 
-(len - 1) & 0xf
+fix this issue by adding a condition check on firmware fixed memory
+hw_param as done in the counter initialization function.
 
-and effectively specifying a transfer length of 16 via the registers.
-this causes a 16-byte write operation instead of a quick write. for
-example, on sfp modules without write-protected eeprom this soft-bricks
-them by overwriting some initial bytes.
-
-for completeness, also add a quirk for the zero length.
-
-[1] https://svanheule.net/realtek/longan/register/i2c_mst1_ctrl2">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39928" target="_blank">CVE-2025-39928</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-i2c: rtl9300: ensure data length is within supported range
-
-Add an explicit check for the xfer length to 'rtl9300_i2c_config_xfer'
-to ensure the data length isn't within the supported range. In
-particular a data length of 0 is not supported by the hardware and
-causes unintended or destructive behaviour.
-
-This limitation becomes obvious when looking at the register
-documentation [1]. 4 bits are reserved for DATA_WIDTH and the value
-of these 4 bits is used as N + 1, allowing a data length range of
-1 <= len <= 16.
-
-Affected by this is the SMBus Quick Operation which works with a data
-length of 0. Passing 0 as the length causes an underflow of the value
-due to:
-
-(len - 1) & 0xf
-
-and effectively specifying a transfer length of 16 via the registers.
-This causes a 16-byte write operation instead of a Quick Write. For
-example, on SFP modules without write-protected EEPROM this soft-bricks
-them by overwriting some initial bytes.
-
-For completeness, also add a quirk for the zero length.
-
-[1] https://svanheule.net/realtek/longan/register/i2c_mst1_ctrl2</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39927" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ceph: fix race condition validating r_parent before applying state
-
-add validation to ensure the cached parent directory inode matches the
-directory info in mds replies. this prevents client-side race conditions
-where concurrent operations (e.g. rename) cause r_parent to become stale
-between request initiation and reply processing, which could lead to
-applying state changes to incorrect directory inodes.
-
-[ idryomov: folded a kerneldoc fixup and a follow-up fix from alex to
-  move ceph_cap_pin reference when r_parent is updated:
-
-  when the parent directory lock is not held, req->r_parent can become
-  stale and is updated to point to the correct inode.  however, the
-  associated ceph_cap_pin reference was not being adjusted.  the
-  ceph_cap_pin is a reference on an inode that is tracked for
-  accounting purposes.  moving this pin is important to keep the
-  accounting balanced. when the pin was not moved from the old parent
-  to the new one, it created two problems: the reference on the old,
-  stale parent was never released, causing a reference leak.
-  a reference for the new parent was never acquired, creating the risk
-  of a reference underflow later in ceph_mdsc_release_request().  this
-  patch corrects the logic by releasing the pin from the old parent and
-  acquiring it for the new parent when r_parent is switched.  this
-  ensures reference accounting stays balanced. ]">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39927" target="_blank">CVE-2025-39927</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:36 CDT</p>
+tested-on: ipq8074 hw2.0 ahb wlan.hk.2.7.0.1-01744-qcahkswpl_siliconz-1">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53532" target="_blank">CVE-2023-53532</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ceph: fix race condition validating r_parent before applying state
+wifi: ath11k: fix deinitialization of firmware resources
 
-Add validation to ensure the cached parent directory inode matches the
-directory info in MDS replies. This prevents client-side race conditions
-where concurrent operations (e.g. rename) cause r_parent to become stale
-between request initiation and reply processing, which could lead to
-applying state changes to incorrect directory inodes.
+Currently, in ath11k_ahb_fw_resources_init(), iommu domain
+mapping is done only for the chipsets having fixed firmware
+memory. Also, for such chipsets, mapping is done only if it
+does not have TrustZone support.
 
-[ idryomov: folded a kerneldoc fixup and a follow-up fix from Alex to
-  move CEPH_CAP_PIN reference when r_parent is updated:
+During deinitialization, only if TrustZone support is not there,
+iommu is unmapped back. However, for non fixed firmware memory
+chipsets, TrustZone support is not there and this makes the
+condition check to true and it tries to unmap the memory which
+was not mapped during initialization.
 
-  When the parent directory lock is not held, req->r_parent can become
-  stale and is updated to point to the correct inode.  However, the
-  associated CEPH_CAP_PIN reference was not being adjusted.  The
-  CEPH_CAP_PIN is a reference on an inode that is tracked for
-  accounting purposes.  Moving this pin is important to keep the
-  accounting balanced. When the pin was not moved from the old parent
-  to the new one, it created two problems: The reference on the old,
-  stale parent was never released, causing a reference leak.
-  A reference for the new parent was never acquired, creating the risk
-  of a reference underflow later in ceph_mdsc_release_request().  This
-  patch corrects the logic by releasing the pin from the old parent and
-  acquiring it for the new parent when r_parent is switched.  This
-  ensures reference accounting stays balanced. ]</p>
+This leads to the following trace -
+
+[   83.198790] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000008
+[   83.259537] Modules linked in: ath11k_ahb ath11k qmi_helpers
+.. snip ..
+[   83.280286] pstate: 20000005 (nzCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[   83.287228] pc : __iommu_unmap+0x30/0x140
+[   83.293907] lr : iommu_unmap+0x5c/0xa4
+[   83.298072] sp : ffff80000b3abad0
+.. snip ..
+[   83.369175] Call trace:
+[   83.376282]  __iommu_unmap+0x30/0x140
+[   83.378541]  iommu_unmap+0x5c/0xa4
+[   83.382360]  ath11k_ahb_fw_resource_deinit.part.12+0x2c/0xac [ath11k_ahb]
+[   83.385666]  ath11k_ahb_free_resources+0x140/0x17c [ath11k_ahb]
+[   83.392521]  ath11k_ahb_shutdown+0x34/0x40 [ath11k_ahb]
+[   83.398248]  platform_shutdown+0x20/0x2c
+[   83.403455]  device_shutdown+0x16c/0x1c4
+[   83.407621]  kernel_restart_prepare+0x34/0x3c
+[   83.411529]  kernel_restart+0x14/0x74
+[   83.415781]  __do_sys_reboot+0x1c4/0x22c
+[   83.419427]  __arm64_sys_reboot+0x1c/0x24
+[   83.423420]  invoke_syscall+0x44/0xfc
+[   83.427326]  el0_svc_common.constprop.3+0xac/0xe8
+[   83.430974]  do_el0_svc+0xa0/0xa8
+[   83.435659]  el0_svc+0x1c/0x44
+[   83.438957]  el0t_64_sync_handler+0x60/0x144
+[   83.441910]  el0t_64_sync+0x15c/0x160
+[   83.446343] Code: aa0103f4 f9400001 f90027a1 d2800001 (f94006a0)
+[   83.449903] ---[ end trace 0000000000000000 ]---
+
+This can be reproduced by probing an AHB chipset which is not
+having a fixed memory region. During reboot (or rmmod) trace
+can be seen.
+
+Fix this issue by adding a condition check on firmware fixed memory
+hw_param as done in the counter initialization function.
+
+Tested-on: IPQ8074 hw2.0 AHB WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39926" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53531" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-genetlink: fix genl_bind() invoking bind() after -eperm
+null_blk: fix poll request timeout handling
 
-per family bind/unbind callbacks were introduced to allow families
-to track multicast group consumer presence, e.g. to start or stop
-producing events depending on listeners.
+when doing io_uring benchmark on /dev/nullb0, it's easy to crash the
+kernel if poll requests timeout triggered, as reported by david. [1]
 
-however, in genl_bind() the bind() callback was invoked even if
-capability checks failed and ret was set to -eperm. this means that
-callbacks could run on behalf of unauthorized callers while the
-syscall still returned failure to user space.
-
-fix this by only invoking bind() after "if (ret) break;" check
-i.e. after permission checks have succeeded.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39926" target="_blank">CVE-2025-39926</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-genetlink: fix genl_bind() invoking bind() after -EPERM
-
-Per family bind/unbind callbacks were introduced to allow families
-to track multicast group consumer presence, e.g. to start or stop
-producing events depending on listeners.
-
-However, in genl_bind() the bind() callback was invoked even if
-capability checks failed and ret was set to -EPERM. This means that
-callbacks could run on behalf of unauthorized callers while the
-syscall still returned failure to user space.
-
-Fix this by only invoking bind() after "if (ret) break;" check
-i.e. after permission checks have succeeded.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39925" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-can: j1939: implement netdev_unregister notification handler
-
-syzbot is reporting
-
-  unregister_netdevice: waiting for vcan0 to become free. usage count = 2
-
-problem, for j1939 protocol did not have netdev_unregister notification
-handler for undoing changes made by j1939_sk_bind().
-
-commit 25fe97cb7620 ("can: j1939: move j1939_priv_put() into sk_destruct
-callback") expects that a call to j1939_priv_put() can be unconditionally
-delayed until j1939_sk_sock_destruct() is called. but we need to call
-j1939_priv_put() against an extra ref held by j1939_sk_bind() call
-(as a part of undoing changes made by j1939_sk_bind()) as soon as
-netdev_unregister notification fires (i.e. before j1939_sk_sock_destruct()
-is called via j1939_sk_release()). otherwise, the extra ref on "struct
-j1939_priv" held by j1939_sk_bind() call prevents "struct net_device" from
-dropping the usage count to 1; making it impossible for
-unregister_netdevice() to continue.
-
-[mkl: remove space in front of label]">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39925" target="_blank">CVE-2025-39925</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-can: j1939: implement NETDEV_UNREGISTER notification handler
-
-syzbot is reporting
-
-  unregister_netdevice: waiting for vcan0 to become free. Usage count = 2
-
-problem, for j1939 protocol did not have NETDEV_UNREGISTER notification
-handler for undoing changes made by j1939_sk_bind().
-
-Commit 25fe97cb7620 ("can: j1939: move j1939_priv_put() into sk_destruct
-callback") expects that a call to j1939_priv_put() can be unconditionally
-delayed until j1939_sk_sock_destruct() is called. But we need to call
-j1939_priv_put() against an extra ref held by j1939_sk_bind() call
-(as a part of undoing changes made by j1939_sk_bind()) as soon as
-NETDEV_UNREGISTER notification fires (i.e. before j1939_sk_sock_destruct()
-is called via j1939_sk_release()). Otherwise, the extra ref on "struct
-j1939_priv" held by j1939_sk_bind() call prevents "struct net_device" from
-dropping the usage count to 1; making it impossible for
-unregister_netdevice() to continue.
-
-[mkl: remove space in front of label]</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39924" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-erofs: fix invalid algorithm for encoded extents
-
-the current algorithm sanity checks do not properly apply to new
-encoded extents.
-
-unify the algorithm check with z_erofs_compression(_runtime)_max
-and ensure consistency with sbi->available_compr_algs.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39924" target="_blank">CVE-2025-39924</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-erofs: fix invalid algorithm for encoded extents
-
-The current algorithm sanity checks do not properly apply to new
-encoded extents.
-
-Unify the algorithm check with Z_EROFS_COMPRESSION(_RUNTIME)_MAX
-and ensure consistency with sbi->available_compr_algs.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39923" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-dmaengine: qcom: bam_dma: fix dt error handling for num-channels/ees
-
-when we don't have a clock specified in the device tree, we have no way to
-ensure the bam is on. this is often the case for remotely-controlled or
-remotely-powered bam instances. in this case, we need to read num-channels
-from the dt to have all the necessary information to complete probing.
-
-however, at the moment invalid device trees without clock and without
-num-channels still continue probing, because the error handling is missing
-return statements. the driver will then later try to read the number of
-channels from the registers. this is unsafe, because it relies on boot
-firmware and lucky timing to succeed. unfortunately, the lack of proper
-error handling here has been abused for several qualcomm socs upstream,
-causing early boot crashes in several situations [1, 2].
-
-avoid these early crashes by erroring out when any of the required dt
-properties are missing. note that this will break some of the existing dts
-upstream (mainly bam instances related to the crypto engine). however,
-clearly these dts have never been tested properly, since the error in the
-kernel log was just ignored. it's safer to disable the crypto engine for
-these broken dtbs.
-
-[1]: https://lore.kernel.org/r/cy01ekqvwe36.b9x5tdxarepf@fairphone.com/
-[2]: https://lore.kernel.org/r/20230626145959.646747-1-krzysztof.kozlowski@linaro.org/">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39923" target="_blank">CVE-2025-39923</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-dmaengine: qcom: bam_dma: Fix DT error handling for num-channels/ees
-
-When we don't have a clock specified in the device tree, we have no way to
-ensure the BAM is on. This is often the case for remotely-controlled or
-remotely-powered BAM instances. In this case, we need to read num-channels
-from the DT to have all the necessary information to complete probing.
-
-However, at the moment invalid device trees without clock and without
-num-channels still continue probing, because the error handling is missing
-return statements. The driver will then later try to read the number of
-channels from the registers. This is unsafe, because it relies on boot
-firmware and lucky timing to succeed. Unfortunately, the lack of proper
-error handling here has been abused for several Qualcomm SoCs upstream,
-causing early boot crashes in several situations [1, 2].
-
-Avoid these early crashes by erroring out when any of the required DT
-properties are missing. Note that this will break some of the existing DTs
-upstream (mainly BAM instances related to the crypto engine). However,
-clearly these DTs have never been tested properly, since the error in the
-kernel log was just ignored. It's safer to disable the crypto engine for
-these broken DTBs.
-
-[1]: https://lore.kernel.org/r/CY01EKQVWE36.B9X5TDXAREPF@fairphone.com/
-[2]: https://lore.kernel.org/r/20230626145959.646747-1-krzysztof.kozlowski@linaro.org/</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39922" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ixgbe: fix incorrect map used in eee linkmode
-
-incorrectly used ixgbe_lp_map in loops intended to populate the
-supported and advertised eee linkmode bitmaps based on ixgbe_ls_map.
-this results in incorrect bit setting and potential out-of-bounds
-access, since ixgbe_lp_map and ixgbe_ls_map have different sizes
-and purposes.
-
-ixgbe_lp_map[i] -> ixgbe_ls_map[i]
-
-use ixgbe_ls_map for supported and advertised linkmodes, and keep
-ixgbe_lp_map usage only for link partner (lp_advertised) mapping.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39922" target="_blank">CVE-2025-39922</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ixgbe: fix incorrect map used in eee linkmode
-
-incorrectly used ixgbe_lp_map in loops intended to populate the
-supported and advertised EEE linkmode bitmaps based on ixgbe_ls_map.
-This results in incorrect bit setting and potential out-of-bounds
-access, since ixgbe_lp_map and ixgbe_ls_map have different sizes
-and purposes.
-
-ixgbe_lp_map[i] -> ixgbe_ls_map[i]
-
-Use ixgbe_ls_map for supported and advertised linkmodes, and keep
-ixgbe_lp_map usage only for link partner (lp_advertised) mapping.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39921" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-spi: microchip-core-qspi: stop checking viability of op->max_freq in supports_op callback
-
-in commit 13529647743d9 ("spi: microchip-core-qspi: support per spi-mem
-operation frequency switches") the logic for checking the viability of
-op->max_freq in mchp_coreqspi_setup_clock() was copied into
-mchp_coreqspi_supports_op(). unfortunately, op->max_freq is not valid
-when this function is called during probe but is instead zero.
-accordingly, baud_rate_val is calculated to be int_max due to division
-by zero, causing probe of the attached memory device to fail.
-
-seemingly spi-microchip-core-qspi was the only driver that had such a
-modification made to its supports_op callback when the per_op_freq
-capability was added, so just remove it to restore prior functionality.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39921" target="_blank">CVE-2025-39921</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-spi: microchip-core-qspi: stop checking viability of op->max_freq in supports_op callback
-
-In commit 13529647743d9 ("spi: microchip-core-qspi: Support per spi-mem
-operation frequency switches") the logic for checking the viability of
-op->max_freq in mchp_coreqspi_setup_clock() was copied into
-mchp_coreqspi_supports_op(). Unfortunately, op->max_freq is not valid
-when this function is called during probe but is instead zero.
-Accordingly, baud_rate_val is calculated to be INT_MAX due to division
-by zero, causing probe of the attached memory device to fail.
-
-Seemingly spi-microchip-core-qspi was the only driver that had such a
-modification made to its supports_op callback when the per_op_freq
-capability was added, so just remove it to restore prior functionality.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39920" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-pcmcia: add error handling for add_interval() in do_validate_mem()
-
-in the do_validate_mem(), the call to add_interval() does not
-handle errors. if kmalloc() fails in add_interval(), it could
-result in a null pointer being inserted into the linked list,
-leading to illegal memory access when sub_interval() is called
-next.
-
-this patch adds an error handling for the add_interval(). if
-add_interval() returns an error, the function will return early
-with the error code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39920" target="_blank">CVE-2025-39920</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-pcmcia: Add error handling for add_interval() in do_validate_mem()
-
-In the do_validate_mem(), the call to add_interval() does not
-handle errors. If kmalloc() fails in add_interval(), it could
-result in a null pointer being inserted into the linked list,
-leading to illegal memory access when sub_interval() is called
-next.
-
-This patch adds an error handling for the add_interval(). If
-add_interval() returns an error, the function will return early
-with the error code.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39919" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: mt76: mt7996: add missing check for rx wcid entries
-
-non-station wcid entries must not be passed to the rx functions.
-in case of the global wcid entry, it could even lead to corruption in the wcid
-array due to pointer being casted to struct mt7996_sta_link using container_of.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39919" target="_blank">CVE-2025-39919</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: mt76: mt7996: add missing check for rx wcid entries
-
-Non-station wcid entries must not be passed to the rx functions.
-In case of the global wcid entry, it could even lead to corruption in the wcid
-array due to pointer being casted to struct mt7996_sta_link using container_of.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39918" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: mt76: fix linked list corruption
-
-never leave scheduled wcid entries on the temporary on-stack list">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39918" target="_blank">CVE-2025-39918</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: mt76: fix linked list corruption
-
-Never leave scheduled wcid entries on the temporary on-stack list</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39917" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-bpf: fix out-of-bounds dynptr write in bpf_crypto_crypt
-
-stanislav reported that in bpf_crypto_crypt() the destination dynptr's
-size is not validated to be at least as large as the source dynptr's
-size before calling into the crypto backend with 'len = src_len'. this
-can result in an oob write when the destination is smaller than the
-source.
-
-concretely, in mentioned function, psrc and pdst are both linear
-buffers fetched from each dynptr:
-
-  psrc = __bpf_dynptr_data(src, src_len);
-  [...]
-  pdst = __bpf_dynptr_data_rw(dst, dst_len);
-  [...]
-  err = decrypt ?
-        ctx->type->decrypt(ctx->tfm, psrc, pdst, src_len, piv) :
-        ctx->type->encrypt(ctx->tfm, psrc, pdst, src_len, piv);
-
-the crypto backend expects pdst to be large enough with a src_len length
-that can be written. add an additional src_len > dst_len check and bail
-out if it's the case. note that these kfuncs are accessible under root
-privileges only.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39917" target="_blank">CVE-2025-39917</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-bpf: Fix out-of-bounds dynptr write in bpf_crypto_crypt
-
-Stanislav reported that in bpf_crypto_crypt() the destination dynptr's
-size is not validated to be at least as large as the source dynptr's
-size before calling into the crypto backend with 'len = src_len'. This
-can result in an OOB write when the destination is smaller than the
-source.
-
-Concretely, in mentioned function, psrc and pdst are both linear
-buffers fetched from each dynptr:
-
-  psrc = __bpf_dynptr_data(src, src_len);
-  [...]
-  pdst = __bpf_dynptr_data_rw(dst, dst_len);
-  [...]
-  err = decrypt ?
-        ctx->type->decrypt(ctx->tfm, psrc, pdst, src_len, piv) :
-        ctx->type->encrypt(ctx->tfm, psrc, pdst, src_len, piv);
-
-The crypto backend expects pdst to be large enough with a src_len length
-that can be written. Add an additional src_len > dst_len check and bail
-out if it's the case. Note that these kfuncs are accessible under root
-privileges only.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39916" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-mm/damon/reclaim: avoid divide-by-zero in damon_reclaim_apply_parameters()
-
-when creating a new scheme of damon_reclaim, the calculation of
-'min_age_region' uses 'aggr_interval' as the divisor, which may lead to
-division-by-zero errors.  fix it by directly returning -einval when such a
-case occurs.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39916" target="_blank">CVE-2025-39916</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-mm/damon/reclaim: avoid divide-by-zero in damon_reclaim_apply_parameters()
-
-When creating a new scheme of DAMON_RECLAIM, the calculation of
-'min_age_region' uses 'aggr_interval' as the divisor, which may lead to
-division-by-zero errors.  Fix it by directly returning -EINVAL when such a
-case occurs.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39915" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net: phy: transfer phy_config_inband() locking responsibility to phylink
-
-problem description
-===================
-
-lockdep reports a possible circular locking dependency (ab/ba) between
-&pl->state_mutex and &phy->lock, as follows.
-
-phylink_resolve() // acquires &pl->state_mutex
--> phylink_major_config()
-   -> phy_config_inband() // acquires &pl->phydev->lock
-
-whereas all the other call sites where &pl->state_mutex and
-&pl->phydev->lock have the locking scheme reversed. everywhere else,
-&pl->phydev->lock is acquired at the top level, and &pl->state_mutex at
-the lower level. a clear example is phylink_bringup_phy().
-
-the outlier is the newly introduced phy_config_inband() and the existing
-lock order is the correct one. to understand why it cannot be the other
-way around, it is sufficient to consider phylink_phy_change(), phylink's
-callback from the phy device's phy->phy_link_change() virtual method,
-invoked by the phy state machine.
-
-phy_link_up() and phy_link_down(), the (indirect) callers of
-phylink_phy_change(), are called with &phydev->lock acquired.
-then phylink_phy_change() acquires its own &pl->state_mutex, to
-serialize changes made to its pl->phy_state and pl->link_config.
-so all other instances of &pl->state_mutex and &phydev->lock must be
-consistent with this order.
-
-problem impact
-==============
-
-i think the kernel runs a serious deadlock risk if an existing
-phylink_resolve() thread, which results in a phy_config_inband() call,
-is concurrent with a phy_link_up() or phy_link_down() call, which will
-deadlock on &pl->state_mutex in phylink_phy_change(). practically
-speaking, the impact may be limited by the slow speed of the medium
-auto-negotiation protocol, which makes it unlikely for the current state
-to still be unresolved when a new one is detected, but i think the
-problem is there. nonetheless, the problem was discovered using lockdep.
-
-proposed solution
-=================
-
-practically speaking, the phy_config_inband() requirement of having
-phydev->lock acquired must transfer to the caller (phylink is the only
-caller). there, it must bubble up until immediately before
-&pl->state_mutex is acquired, for the cases where that takes place.
-
-solution details, considerations, notes
-=======================================
-
-this is the phy_config_inband() call graph:
-
-                          sfp_upstream_ops :: connect_phy()
-                          |
-                          v
-                          phylink_sfp_connect_phy()
-                          |
-                          v
-                          phylink_sfp_config_phy()
-                          |
-                          |   sfp_upstream_ops :: module_insert()
-                          |   |
-                          |   v
-                          |   phylink_sfp_module_insert()
-                          |   |
-                          |   |   sfp_upstream_ops :: module_start()
-                          |   |   |
-                          |   |   v
-                          |   |   phylink_sfp_module_start()
-                          |   |   |
-                          |   v   v
-                          |   phylink_sfp_config_optical()
- phylink_start()          |   |
-   |   phylink_resume()   v   v
-   |   |  phylink_sfp_set_config()
-   |   |  |
-   v   v  v
- phylink_mac_initial_config()
-   |   phylink_resolve()
-   |   |  phylink_ethtool_ksettings_set()
-   v   v  v
-   phylink_major_config()
-            |
-            v
-    phy_config_inband()
-
-phylink_major_config() caller #1, phylink_mac_initial_config(), does not
-acquire &pl->state_mutex nor do its callers. it must acquire
-&pl->phydev->lock prior to calling phylink_major_config().
-
-phylink_major_config() caller #2, phylink_resolve() acquires
-&pl->state_mutex, thus also needs to acquire &pl->phydev->lock.
-
-phylink_major_config() caller #3, phylink_ethtool_ksettings_set(), is
-completely uninteresting, because it only call
----truncated---">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39915" target="_blank">CVE-2025-39915</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net: phy: transfer phy_config_inband() locking responsibility to phylink
-
-Problem description
-===================
-
-Lockdep reports a possible circular locking dependency (AB/BA) between
-&pl->state_mutex and &phy->lock, as follows.
-
-phylink_resolve() // acquires &pl->state_mutex
--> phylink_major_config()
-   -> phy_config_inband() // acquires &pl->phydev->lock
-
-whereas all the other call sites where &pl->state_mutex and
-&pl->phydev->lock have the locking scheme reversed. Everywhere else,
-&pl->phydev->lock is acquired at the top level, and &pl->state_mutex at
-the lower level. A clear example is phylink_bringup_phy().
-
-The outlier is the newly introduced phy_config_inband() and the existing
-lock order is the correct one. To understand why it cannot be the other
-way around, it is sufficient to consider phylink_phy_change(), phylink's
-callback from the PHY device's phy->phy_link_change() virtual method,
-invoked by the PHY state machine.
-
-phy_link_up() and phy_link_down(), the (indirect) callers of
-phylink_phy_change(), are called with &phydev->lock acquired.
-Then phylink_phy_change() acquires its own &pl->state_mutex, to
-serialize changes made to its pl->phy_state and pl->link_config.
-So all other instances of &pl->state_mutex and &phydev->lock must be
-consistent with this order.
-
-Problem impact
-==============
-
-I think the kernel runs a serious deadlock risk if an existing
-phylink_resolve() thread, which results in a phy_config_inband() call,
-is concurrent with a phy_link_up() or phy_link_down() call, which will
-deadlock on &pl->state_mutex in phylink_phy_change(). Practically
-speaking, the impact may be limited by the slow speed of the medium
-auto-negotiation protocol, which makes it unlikely for the current state
-to still be unresolved when a new one is detected, but I think the
-problem is there. Nonetheless, the problem was discovered using lockdep.
-
-Proposed solution
-=================
-
-Practically speaking, the phy_config_inband() requirement of having
-phydev->lock acquired must transfer to the caller (phylink is the only
-caller). There, it must bubble up until immediately before
-&pl->state_mutex is acquired, for the cases where that takes place.
-
-Solution details, considerations, notes
-=======================================
-
-This is the phy_config_inband() call graph:
-
-                          sfp_upstream_ops :: connect_phy()
-                          |
-                          v
-                          phylink_sfp_connect_phy()
-                          |
-                          v
-                          phylink_sfp_config_phy()
-                          |
-                          |   sfp_upstream_ops :: module_insert()
-                          |   |
-                          |   v
-                          |   phylink_sfp_module_insert()
-                          |   |
-                          |   |   sfp_upstream_ops :: module_start()
-                          |   |   |
-                          |   |   v
-                          |   |   phylink_sfp_module_start()
-                          |   |   |
-                          |   v   v
-                          |   phylink_sfp_config_optical()
- phylink_start()          |   |
-   |   phylink_resume()   v   v
-   |   |  phylink_sfp_set_config()
-   |   |  |
-   v   v  v
- phylink_mac_initial_config()
-   |   phylink_resolve()
-   |   |  phylink_ethtool_ksettings_set()
-   v   v  v
-   phylink_major_config()
-            |
-            v
-    phy_config_inband()
-
-phylink_major_config() caller #1, phylink_mac_initial_config(), does not
-acquire &pl->state_mutex nor do its callers. It must acquire
-&pl->phydev->lock prior to calling phylink_major_config().
-
-phylink_major_config() caller #2, phylink_resolve() acquires
-&pl->state_mutex, thus also needs to acquire &pl->phydev->lock.
-
-phylink_major_config() caller #3, phylink_ethtool_ksettings_set(), is
-completely uninteresting, because it only call
----truncated---</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39914" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-tracing: silence warning when chunk allocation fails in trace_pid_write
-
-syzkaller trigger a fault injection warning:
-
-warning: cpu: 1 pid: 12326 at tracepoint_add_func+0xbfc/0xeb0
-modules linked in:
-cpu: 1 uid: 0 pid: 12326 comm: syz.6.10325 tainted: g u 6.14.0-rc5-syzkaller #0
-tainted: [u]=user
-hardware name: google compute engine/google compute engine
-rip: 0010:tracepoint_add_func+0xbfc/0xeb0 kernel/tracepoint.c:294
-code: 09 fe ff 90 0f 0b 90 0f b6 74 24 43 31 ff 41 bc ea ff ff ff
-rsp: 0018:ffffc9000414fb48 eflags: 00010283
-rax: 00000000000012a1 rbx: ffffffff8e240ae0 rcx: ffffc90014b78000
-rdx: 0000000000080000 rsi: ffffffff81bbd78b rdi: 0000000000000001
-rbp: 0000000000000000 r08: 0000000000000001 r09: 0000000000000000
-r10: 0000000000000001 r11: 0000000000000001 r12: ffffffffffffffef
-r13: 0000000000000000 r14: dffffc0000000000 r15: ffffffff81c264f0
-fs:  00007f27217f66c0(0000) gs:ffff8880b8700000(0000) knlgs:0000000000000000
-cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
-cr2: 0000001b2e80dff8 cr3: 00000000268f8000 cr4: 00000000003526f0
-dr0: 0000000000000000 dr1: 0000000000000000 dr2: 0000000000000000
-dr3: 0000000000000000 dr6: 00000000fffe0ff0 dr7: 0000000000000400
+bug: kernel null pointer dereference, address: 0000000000000008
+workqueue: kblockd blk_mq_timeout_work
+rip: 0010:null_timeout_rq+0x4e/0x91
 call trace:
- <task>
- tracepoint_probe_register_prio+0xc0/0x110 kernel/tracepoint.c:464
- register_trace_prio_sched_switch include/trace/events/sched.h:222 [inline]
- register_pid_events kernel/trace/trace_events.c:2354 [inline]
- event_pid_write.isra.0+0x439/0x7a0 kernel/trace/trace_events.c:2425
- vfs_write+0x24c/0x1150 fs/read_write.c:677
- ksys_write+0x12b/0x250 fs/read_write.c:731
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
- entry_syscall_64_after_hwframe+0x77/0x7f
+ ? null_timeout_rq+0x4e/0x91
+ blk_mq_handle_expired+0x31/0x4b
+ bt_iter+0x68/0x84
+ ? bt_tags_iter+0x81/0x81
+ __sbitmap_for_each_set.constprop.0+0xb0/0xf2
+ ? __blk_mq_complete_request_remote+0xf/0xf
+ bt_for_each+0x46/0x64
+ ? __blk_mq_complete_request_remote+0xf/0xf
+ ? percpu_ref_get_many+0xc/0x2a
+ blk_mq_queue_tag_busy_iter+0x14d/0x18e
+ blk_mq_timeout_work+0x95/0x127
+ process_one_work+0x185/0x263
+ worker_thread+0x1b5/0x227
 
-we can reproduce the warning by following the steps below:
-1. echo 8 >> set_event_notrace_pid. let tr->filtered_pids owns one pid
-   and register sched_switch tracepoint.
-2. echo ' ' >> set_event_pid, and perform fault injection during chunk
-   allocation of trace_pid_list_alloc. let pid_list with no pid and
-assign to tr->filtered_pids.
-3. echo ' ' >> set_event_pid. let pid_list is null and assign to
-   tr->filtered_pids.
-4. echo 9 >> set_event_pid, will trigger the double register
-   sched_switch tracepoint warning.
+this is indeed a race problem between null_timeout_rq() and null_poll().
 
-the reason is that syzkaller injects a fault into the chunk allocation
-in trace_pid_list_alloc, causing a failure in trace_pid_list_set, which
-may trigger double register of the same tracepoint. this only occurs
-when the system is about to crash, but to suppress this warning, let's
-add failure handling logic to trace_pid_list_set.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39914" target="_blank">CVE-2025-39914</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
+null_poll()				null_timeout_rq()
+  spin_lock(&nq->poll_lock)
+  list_splice_init(&nq->poll_list, &list)
+  spin_unlock(&nq->poll_lock)
+
+  while (!list_empty(&list))
+    req = list_first_entry()
+    list_del_init()
+    ...
+    blk_mq_add_to_batch()
+    // req->rq_next = null
+					spin_lock(&nq->poll_lock)
+
+					// rq->queuelist->next == null
+					list_del_init(&rq->queuelist)
+
+					spin_unlock(&nq->poll_lock)
+
+fix these problems by setting requests state to mq_rq_complete under
+nq->poll_lock protection, in which null_timeout_rq() can safely detect
+this race and early return.
+
+note this patch just fix the kernel panic when request timeout happen.
+
+[1] https://lore.kernel.org/all/3893581.1691785261@warthog.procyon.org.uk/">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53531" target="_blank">CVE-2023-53531</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-tracing: Silence warning when chunk allocation fails in trace_pid_write
+null_blk: fix poll request timeout handling
 
-Syzkaller trigger a fault injection warning:
+When doing io_uring benchmark on /dev/nullb0, it's easy to crash the
+kernel if poll requests timeout triggered, as reported by David. [1]
 
-WARNING: CPU: 1 PID: 12326 at tracepoint_add_func+0xbfc/0xeb0
-Modules linked in:
-CPU: 1 UID: 0 PID: 12326 Comm: syz.6.10325 Tainted: G U 6.14.0-rc5-syzkaller #0
-Tainted: [U]=USER
-Hardware name: Google Compute Engine/Google Compute Engine
-RIP: 0010:tracepoint_add_func+0xbfc/0xeb0 kernel/tracepoint.c:294
-Code: 09 fe ff 90 0f 0b 90 0f b6 74 24 43 31 ff 41 bc ea ff ff ff
-RSP: 0018:ffffc9000414fb48 EFLAGS: 00010283
-RAX: 00000000000012a1 RBX: ffffffff8e240ae0 RCX: ffffc90014b78000
-RDX: 0000000000080000 RSI: ffffffff81bbd78b RDI: 0000000000000001
-RBP: 0000000000000000 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000001 R11: 0000000000000001 R12: ffffffffffffffef
-R13: 0000000000000000 R14: dffffc0000000000 R15: ffffffff81c264f0
-FS:  00007f27217f66c0(0000) GS:ffff8880b8700000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b2e80dff8 CR3: 00000000268f8000 CR4: 00000000003526f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+BUG: kernel NULL pointer dereference, address: 0000000000000008
+Workqueue: kblockd blk_mq_timeout_work
+RIP: 0010:null_timeout_rq+0x4e/0x91
 Call Trace:
- <TASK>
- tracepoint_probe_register_prio+0xc0/0x110 kernel/tracepoint.c:464
- register_trace_prio_sched_switch include/trace/events/sched.h:222 [inline]
- register_pid_events kernel/trace/trace_events.c:2354 [inline]
- event_pid_write.isra.0+0x439/0x7a0 kernel/trace/trace_events.c:2425
- vfs_write+0x24c/0x1150 fs/read_write.c:677
- ksys_write+0x12b/0x250 fs/read_write.c:731
- do_syscall_x64 arch/x86/entry/common.c:52 [inline]
- do_syscall_64+0xcd/0x250 arch/x86/entry/common.c:83
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
+ ? null_timeout_rq+0x4e/0x91
+ blk_mq_handle_expired+0x31/0x4b
+ bt_iter+0x68/0x84
+ ? bt_tags_iter+0x81/0x81
+ __sbitmap_for_each_set.constprop.0+0xb0/0xf2
+ ? __blk_mq_complete_request_remote+0xf/0xf
+ bt_for_each+0x46/0x64
+ ? __blk_mq_complete_request_remote+0xf/0xf
+ ? percpu_ref_get_many+0xc/0x2a
+ blk_mq_queue_tag_busy_iter+0x14d/0x18e
+ blk_mq_timeout_work+0x95/0x127
+ process_one_work+0x185/0x263
+ worker_thread+0x1b5/0x227
 
-We can reproduce the warning by following the steps below:
-1. echo 8 >> set_event_notrace_pid. Let tr->filtered_pids owns one pid
-   and register sched_switch tracepoint.
-2. echo ' ' >> set_event_pid, and perform fault injection during chunk
-   allocation of trace_pid_list_alloc. Let pid_list with no pid and
-assign to tr->filtered_pids.
-3. echo ' ' >> set_event_pid. Let pid_list is NULL and assign to
-   tr->filtered_pids.
-4. echo 9 >> set_event_pid, will trigger the double register
-   sched_switch tracepoint warning.
+This is indeed a race problem between null_timeout_rq() and null_poll().
 
-The reason is that syzkaller injects a fault into the chunk allocation
-in trace_pid_list_alloc, causing a failure in trace_pid_list_set, which
-may trigger double register of the same tracepoint. This only occurs
-when the system is about to crash, but to suppress this warning, let's
-add failure handling logic to trace_pid_list_set.</p>
+null_poll()				null_timeout_rq()
+  spin_lock(&nq->poll_lock)
+  list_splice_init(&nq->poll_list, &list)
+  spin_unlock(&nq->poll_lock)
+
+  while (!list_empty(&list))
+    req = list_first_entry()
+    list_del_init()
+    ...
+    blk_mq_add_to_batch()
+    // req->rq_next = NULL
+					spin_lock(&nq->poll_lock)
+
+					// rq->queuelist->next == NULL
+					list_del_init(&rq->queuelist)
+
+					spin_unlock(&nq->poll_lock)
+
+Fix these problems by setting requests state to MQ_RQ_COMPLETE under
+nq->poll_lock protection, in which null_timeout_rq() can safely detect
+this race and early return.
+
+Note this patch just fix the kernel panic when request timeout happen.
+
+[1] https://lore.kernel.org/all/3893581.1691785261@warthog.procyon.org.uk/</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39913" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53530" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-tcp_bpf: call sk_msg_free() when tcp_bpf_send_verdict() fails to allocate psock->cork.
+scsi: qla2xxx: use raw_smp_processor_id() instead of smp_processor_id()
 
-syzbot reported the splat below. [0]
+the following call trace was observed:
 
-the repro does the following:
+localhost kernel: nvme nvme0: nvme-fc{0}: controller connect complete
+localhost kernel: bug: using smp_processor_id() in preemptible [00000000] code: kworker/u129:4/75092
+localhost kernel: nvme nvme0: nvme-fc{0}: new ctrl: nqn "nqn.1992-08.com.netapp:sn.b42d198afb4d11ecad6d00a098d6abfa:subsystem.pr_channel2022_rh84_subsystem_291"
+localhost kernel: caller is qla_nvme_post_cmd+0x216/0x1380 [qla2xxx]
+localhost kernel: cpu: 6 pid: 75092 comm: kworker/u129:4 kdump: loaded tainted: g    b   w  oe    --------- ---  5.14.0-70.22.1.el9_0.x86_64+debug #1
+localhost kernel: hardware name: hpe proliant xl420 gen10/proliant xl420 gen10, bios u39 01/13/2022
+localhost kernel: workqueue: nvme-wq nvme_async_event_work [nvme_core]
+localhost kernel: call trace:
+localhost kernel: dump_stack_lvl+0x57/0x7d
+localhost kernel: check_preemption_disabled+0xc8/0xd0
+localhost kernel: qla_nvme_post_cmd+0x216/0x1380 [qla2xxx]
 
-  1. load a sk_msg prog that calls bpf_msg_cork_bytes(msg, cork_bytes)
-  2. attach the prog to a sockmap
-  3. add a socket to the sockmap
-  4. activate fault injection
-  5. send data less than cork_bytes
+use raw_smp_processor_id() instead of smp_processor_id().
 
-at 5., the data is carried over to the next sendmsg() as it is
-smaller than the cork_bytes specified by bpf_msg_cork_bytes().
+also use queue_work() across the driver instead of queue_work_on() thus
+avoiding usage of smp_processor_id() when config_debug_preempt is enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53530" target="_blank">CVE-2023-53530</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-then, tcp_bpf_send_verdict() tries to allocate psock->cork to hold
-the data, but this fails silently due to fault injection + __gfp_nowarn.
+scsi: qla2xxx: Use raw_smp_processor_id() instead of smp_processor_id()
 
-if the allocation fails, we need to revert the sk->sk_forward_alloc
-change done by sk_msg_alloc().
+The following call trace was observed:
 
-let's call sk_msg_free() when tcp_bpf_send_verdict fails to allocate
-psock->cork.
+localhost kernel: nvme nvme0: NVME-FC{0}: controller connect complete
+localhost kernel: BUG: using smp_processor_id() in preemptible [00000000] code: kworker/u129:4/75092
+localhost kernel: nvme nvme0: NVME-FC{0}: new ctrl: NQN "nqn.1992-08.com.netapp:sn.b42d198afb4d11ecad6d00a098d6abfa:subsystem.PR_Channel2022_RH84_subsystem_291"
+localhost kernel: caller is qla_nvme_post_cmd+0x216/0x1380 [qla2xxx]
+localhost kernel: CPU: 6 PID: 75092 Comm: kworker/u129:4 Kdump: loaded Tainted: G    B   W  OE    --------- ---  5.14.0-70.22.1.el9_0.x86_64+debug #1
+localhost kernel: Hardware name: HPE ProLiant XL420 Gen10/ProLiant XL420 Gen10, BIOS U39 01/13/2022
+localhost kernel: Workqueue: nvme-wq nvme_async_event_work [nvme_core]
+localhost kernel: Call Trace:
+localhost kernel: dump_stack_lvl+0x57/0x7d
+localhost kernel: check_preemption_disabled+0xc8/0xd0
+localhost kernel: qla_nvme_post_cmd+0x216/0x1380 [qla2xxx]
 
-the "*copied" also needs to be updated such that a proper error can
-be returned to the caller, sendmsg. it fails to allocate psock->cork.
-nothing has been corked so far, so this patch simply sets "*copied"
-to 0.
+Use raw_smp_processor_id() instead of smp_processor_id().
 
-[0]:
-warning: net/ipv4/af_inet.c:156 at inet_sock_destruct+0x623/0x730 net/ipv4/af_inet.c:156, cpu#1: syz-executor/5983
-modules linked in:
-cpu: 1 uid: 0 pid: 5983 comm: syz-executor not tainted syzkaller #0 preempt(full)
-hardware name: google google compute engine/google compute engine, bios google 07/12/2025
-rip: 0010:inet_sock_destruct+0x623/0x730 net/ipv4/af_inet.c:156
-code: 0f 0b 90 e9 62 fe ff ff e8 7a db b5 f7 90 0f 0b 90 e9 95 fe ff ff e8 6c db b5 f7 90 0f 0b 90 e9 bb fe ff ff e8 5e db b5 f7 90 <0f> 0b 90 e9 e1 fe ff ff 89 f9 80 e1 07 80 c1 03 38 c1 0f 8c 9f fc
-rsp: 0018:ffffc90000a08b48 eflags: 00010246
-rax: ffffffff8a09d0b2 rbx: dffffc0000000000 rcx: ffff888024a23c80
-rdx: 0000000000000100 rsi: 0000000000000fff rdi: 0000000000000000
-rbp: 0000000000000fff r08: ffff88807e07c627 r09: 1ffff1100fc0f8c4
-r10: dffffc0000000000 r11: ffffed100fc0f8c5 r12: ffff88807e07c380
-r13: dffffc0000000000 r14: ffff88807e07c60c r15: 1ffff1100fc0f872
-fs:  00005555604c4500(0000) gs:ffff888125af1000(0000) knlgs:0000000000000000
-cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
-cr2: 00005555604df5c8 cr3: 0000000032b06000 cr4: 00000000003526f0
+Also use queue_work() across the driver instead of queue_work_on() thus
+avoiding usage of smp_processor_id() when CONFIG_DEBUG_PREEMPT is enabled.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53529" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: rtw88: fix memory leak in rtw88_usb
+
+kmemleak shows the following leak arising from routine in the usb
+probe routine:
+
+unreferenced object 0xffff895cb29bba00 (size 512):
+  comm "(udev-worker)", pid 534, jiffies 4294903932 (age 102751.088s)
+  hex dump (first 32 bytes):
+    77 30 30 30 00 00 00 00 02 2f 2d 2b 30 00 00 00  w000...../-+0...
+    02 00 2a 28 00 00 00 00 ff 55 ff ff ff 00 00 00  ..*(.....u......
+  backtrace:
+    [<ffffffff9265fa36>] kmalloc_trace+0x26/0x90
+    [<ffffffffc17eec41>] rtw_usb_probe+0x2f1/0x680 [rtw_usb]
+    [<ffffffffc03e19fd>] usb_probe_interface+0xdd/0x2e0 [usbcore]
+    [<ffffffff92b4f2fe>] really_probe+0x18e/0x3d0
+    [<ffffffff92b4f5b8>] __driver_probe_device+0x78/0x160
+    [<ffffffff92b4f6bf>] driver_probe_device+0x1f/0x90
+    [<ffffffff92b4f8df>] __driver_attach+0xbf/0x1b0
+    [<ffffffff92b4d350>] bus_for_each_dev+0x70/0xc0
+    [<ffffffff92b4e51e>] bus_add_driver+0x10e/0x210
+    [<ffffffff92b50935>] driver_register+0x55/0xf0
+    [<ffffffffc03e0708>] usb_register_driver+0x88/0x140 [usbcore]
+    [<ffffffff92401153>] do_one_initcall+0x43/0x210
+    [<ffffffff9254f42a>] do_init_module+0x4a/0x200
+    [<ffffffff92551d1c>] __do_sys_finit_module+0xac/0x120
+    [<ffffffff92ee6626>] do_syscall_64+0x56/0x80
+    [<ffffffff9300006a>] entry_syscall_64_after_hwframe+0x46/0xb0
+
+the leak was verified to be real by unloading the driver, which resulted
+in a dangling pointer to the allocation.
+
+the allocated memory is freed in rtw_usb_intf_deinit().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53529" target="_blank">CVE-2023-53529</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: rtw88: Fix memory leak in rtw88_usb
+
+Kmemleak shows the following leak arising from routine in the usb
+probe routine:
+
+unreferenced object 0xffff895cb29bba00 (size 512):
+  comm "(udev-worker)", pid 534, jiffies 4294903932 (age 102751.088s)
+  hex dump (first 32 bytes):
+    77 30 30 30 00 00 00 00 02 2f 2d 2b 30 00 00 00  w000...../-+0...
+    02 00 2a 28 00 00 00 00 ff 55 ff ff ff 00 00 00  ..*(.....U......
+  backtrace:
+    [<ffffffff9265fa36>] kmalloc_trace+0x26/0x90
+    [<ffffffffc17eec41>] rtw_usb_probe+0x2f1/0x680 [rtw_usb]
+    [<ffffffffc03e19fd>] usb_probe_interface+0xdd/0x2e0 [usbcore]
+    [<ffffffff92b4f2fe>] really_probe+0x18e/0x3d0
+    [<ffffffff92b4f5b8>] __driver_probe_device+0x78/0x160
+    [<ffffffff92b4f6bf>] driver_probe_device+0x1f/0x90
+    [<ffffffff92b4f8df>] __driver_attach+0xbf/0x1b0
+    [<ffffffff92b4d350>] bus_for_each_dev+0x70/0xc0
+    [<ffffffff92b4e51e>] bus_add_driver+0x10e/0x210
+    [<ffffffff92b50935>] driver_register+0x55/0xf0
+    [<ffffffffc03e0708>] usb_register_driver+0x88/0x140 [usbcore]
+    [<ffffffff92401153>] do_one_initcall+0x43/0x210
+    [<ffffffff9254f42a>] do_init_module+0x4a/0x200
+    [<ffffffff92551d1c>] __do_sys_finit_module+0xac/0x120
+    [<ffffffff92ee6626>] do_syscall_64+0x56/0x80
+    [<ffffffff9300006a>] entry_SYSCALL_64_after_hwframe+0x46/0xb0
+
+The leak was verified to be real by unloading the driver, which resulted
+in a dangling pointer to the allocation.
+
+The allocated memory is freed in rtw_usb_intf_deinit().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53528" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/rxe: fix unsafe drain work queue code
+
+if create_qp does not fully succeed it is possible for qp cleanup
+code to attempt to drain the send or recv work queues before the
+queues have been created causing a seg fault. this patch checks
+to see if the queues exist before attempting to drain them.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53528" target="_blank">CVE-2023-53528</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/rxe: Fix unsafe drain work queue code
+
+If create_qp does not fully succeed it is possible for qp cleanup
+code to attempt to drain the send or recv work queues before the
+queues have been created causing a seg fault. This patch checks
+to see if the queues exist before attempting to drain them.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53527" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+thunderbolt: fix memory leak in tb_handle_dp_bandwidth_request()
+
+the memory allocated in tb_queue_dp_bandwidth_request() needs to be
+released once the request is handled to avoid leaking it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53527" target="_blank">CVE-2023-53527</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+thunderbolt: Fix memory leak in tb_handle_dp_bandwidth_request()
+
+The memory allocated in tb_queue_dp_bandwidth_request() needs to be
+released once the request is handled to avoid leaking it.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53526" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+jbd2: check 'jh->b_transaction' before removing it from checkpoint
+
+following process will corrupt ext4 image:
+step 1:
+jbd2_journal_commit_transaction
+ __jbd2_journal_insert_checkpoint(jh, commit_transaction)
+ // put jh into trans1->t_checkpoint_list
+ journal->j_checkpoint_transactions = commit_transaction
+ // put trans1 into journal->j_checkpoint_transactions
+
+step 2:
+do_get_write_access
+ test_clear_buffer_dirty(bh) // clear buffer dirty，set jbd dirty
+ __jbd2_journal_file_buffer(jh, transaction) // jh belongs to trans2
+
+step 3:
+drop_cache
+ journal_shrink_one_cp_list
+  jbd2_journal_try_remove_checkpoint
+   if (!trylock_buffer(bh))  // lock bh, true
+   if (buffer_dirty(bh))     // buffer is not dirty
+   __jbd2_journal_remove_checkpoint(jh)
+   // remove jh from trans1->t_checkpoint_list
+
+step 4:
+jbd2_log_do_checkpoint
+ trans1 = journal->j_checkpoint_transactions
+ // jh is not in trans1->t_checkpoint_list
+ jbd2_cleanup_journal_tail(journal)  // trans1 is done
+
+step 5: power cut, trans2 is not committed, jh is lost in next mounting.
+
+fix it by checking 'jh->b_transaction' before remove it from checkpoint.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53526" target="_blank">CVE-2023-53526</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+jbd2: check 'jh->b_transaction' before removing it from checkpoint
+
+Following process will corrupt ext4 image:
+Step 1:
+jbd2_journal_commit_transaction
+ __jbd2_journal_insert_checkpoint(jh, commit_transaction)
+ // Put jh into trans1->t_checkpoint_list
+ journal->j_checkpoint_transactions = commit_transaction
+ // Put trans1 into journal->j_checkpoint_transactions
+
+Step 2:
+do_get_write_access
+ test_clear_buffer_dirty(bh) // clear buffer dirty，set jbd dirty
+ __jbd2_journal_file_buffer(jh, transaction) // jh belongs to trans2
+
+Step 3:
+drop_cache
+ journal_shrink_one_cp_list
+  jbd2_journal_try_remove_checkpoint
+   if (!trylock_buffer(bh))  // lock bh, true
+   if (buffer_dirty(bh))     // buffer is not dirty
+   __jbd2_journal_remove_checkpoint(jh)
+   // remove jh from trans1->t_checkpoint_list
+
+Step 4:
+jbd2_log_do_checkpoint
+ trans1 = journal->j_checkpoint_transactions
+ // jh is not in trans1->t_checkpoint_list
+ jbd2_cleanup_journal_tail(journal)  // trans1 is done
+
+Step 5: Power cut, trans2 is not committed, jh is lost in next mounting.
+
+Fix it by checking 'jh->b_transaction' before remove it from checkpoint.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53525" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/cma: allow ud qp_type to join multicast only
+
+as for multicast:
+- the sidr is the only mode that makes sense;
+- besides ps_udp, other port spaces like ps_ib is also allowed, as it is
+  ud compatible. in this case qkey also needs to be set [1].
+
+this patch allows only ud qp_type to join multicast, and set qkey to
+default if it's not set, to fix an uninit-value error: the ib->rec.qkey
+field is accessed without being initialized.
+
+=====================================================
+bug: kmsan: uninit-value in cma_set_qkey drivers/infiniband/core/cma.c:510 [inline]
+bug: kmsan: uninit-value in cma_make_mc_event+0xb73/0xe00 drivers/infiniband/core/cma.c:4570
+ cma_set_qkey drivers/infiniband/core/cma.c:510 [inline]
+ cma_make_mc_event+0xb73/0xe00 drivers/infiniband/core/cma.c:4570
+ cma_iboe_join_multicast drivers/infiniband/core/cma.c:4782 [inline]
+ rdma_join_multicast+0x2b83/0x30a0 drivers/infiniband/core/cma.c:4814
+ ucma_process_join+0xa76/0xf60 drivers/infiniband/core/ucma.c:1479
+ ucma_join_multicast+0x1e3/0x250 drivers/infiniband/core/ucma.c:1546
+ ucma_write+0x639/0x6d0 drivers/infiniband/core/ucma.c:1732
+ vfs_write+0x8ce/0x2030 fs/read_write.c:588
+ ksys_write+0x28c/0x520 fs/read_write.c:643
+ __do_sys_write fs/read_write.c:655 [inline]
+ __se_sys_write fs/read_write.c:652 [inline]
+ __ia32_sys_write+0xdb/0x120 fs/read_write.c:652
+ do_syscall_32_irqs_on arch/x86/entry/common.c:114 [inline]
+ __do_fast_syscall_32+0x96/0xf0 arch/x86/entry/common.c:180
+ do_fast_syscall_32+0x34/0x70 arch/x86/entry/common.c:205
+ do_sysenter_32+0x1b/0x20 arch/x86/entry/common.c:248
+ entry_sysenter_compat_after_hwframe+0x4d/0x5c
+
+local variable ib.i created at:
+cma_iboe_join_multicast drivers/infiniband/core/cma.c:4737 [inline]
+rdma_join_multicast+0x586/0x30a0 drivers/infiniband/core/cma.c:4814
+ucma_process_join+0xa76/0xf60 drivers/infiniband/core/ucma.c:1479
+
+cpu: 0 pid: 29874 comm: syz-executor.3 not tainted 5.16.0-rc3-syzkaller #0
+hardware name: google google compute engine/google compute engine, bios google 01/01/2011
+=====================================================
+
+[1] https://lore.kernel.org/linux-rdma/20220117183832.gd84788@nvidia.com/">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53525" target="_blank">CVE-2023-53525</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/cma: Allow UD qp_type to join multicast only
+
+As for multicast:
+- The SIDR is the only mode that makes sense;
+- Besides PS_UDP, other port spaces like PS_IB is also allowed, as it is
+  UD compatible. In this case qkey also needs to be set [1].
+
+This patch allows only UD qp_type to join multicast, and set qkey to
+default if it's not set, to fix an uninit-value error: the ib->rec.qkey
+field is accessed without being initialized.
+
+=====================================================
+BUG: KMSAN: uninit-value in cma_set_qkey drivers/infiniband/core/cma.c:510 [inline]
+BUG: KMSAN: uninit-value in cma_make_mc_event+0xb73/0xe00 drivers/infiniband/core/cma.c:4570
+ cma_set_qkey drivers/infiniband/core/cma.c:510 [inline]
+ cma_make_mc_event+0xb73/0xe00 drivers/infiniband/core/cma.c:4570
+ cma_iboe_join_multicast drivers/infiniband/core/cma.c:4782 [inline]
+ rdma_join_multicast+0x2b83/0x30a0 drivers/infiniband/core/cma.c:4814
+ ucma_process_join+0xa76/0xf60 drivers/infiniband/core/ucma.c:1479
+ ucma_join_multicast+0x1e3/0x250 drivers/infiniband/core/ucma.c:1546
+ ucma_write+0x639/0x6d0 drivers/infiniband/core/ucma.c:1732
+ vfs_write+0x8ce/0x2030 fs/read_write.c:588
+ ksys_write+0x28c/0x520 fs/read_write.c:643
+ __do_sys_write fs/read_write.c:655 [inline]
+ __se_sys_write fs/read_write.c:652 [inline]
+ __ia32_sys_write+0xdb/0x120 fs/read_write.c:652
+ do_syscall_32_irqs_on arch/x86/entry/common.c:114 [inline]
+ __do_fast_syscall_32+0x96/0xf0 arch/x86/entry/common.c:180
+ do_fast_syscall_32+0x34/0x70 arch/x86/entry/common.c:205
+ do_SYSENTER_32+0x1b/0x20 arch/x86/entry/common.c:248
+ entry_SYSENTER_compat_after_hwframe+0x4d/0x5c
+
+Local variable ib.i created at:
+cma_iboe_join_multicast drivers/infiniband/core/cma.c:4737 [inline]
+rdma_join_multicast+0x586/0x30a0 drivers/infiniband/core/cma.c:4814
+ucma_process_join+0xa76/0xf60 drivers/infiniband/core/ucma.c:1479
+
+CPU: 0 PID: 29874 Comm: syz-executor.3 Not tainted 5.16.0-rc3-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+=====================================================
+
+[1] https://lore.kernel.org/linux-rdma/20220117183832.GD84788@nvidia.com/</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53524" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: iwlwifi: pcie: fix integer overflow in iwl_write_to_user_buf
+
+an integer overflow occurs in the iwl_write_to_user_buf() function,
+which is called by the iwl_dbgfs_monitor_data_read() function.
+
+static bool iwl_write_to_user_buf(char __user *user_buf, ssize_t count,
+				  void *buf, ssize_t *size,
+				  ssize_t *bytes_copied)
+{
+	int buf_size_left = count - *bytes_copied;
+
+	buf_size_left = buf_size_left - (buf_size_left % sizeof(u32));
+	if (*size > buf_size_left)
+		*size = buf_size_left;
+
+if the user passes a size_max value to the "ssize_t count" parameter,
+the ssize_t count parameter is assigned to "int buf_size_left".
+then compare "*size" with "buf_size_left" . here, "buf_size_left" is a
+negative number, so "*size" is assigned "buf_size_left" and goes into
+the third argument of the copy_to_user function, causing a heap overflow.
+
+this is not a security vulnerability because iwl_dbgfs_monitor_data_read()
+is a debugfs operation with 0400 privileges.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53524" target="_blank">CVE-2023-53524</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: iwlwifi: pcie: Fix integer overflow in iwl_write_to_user_buf
+
+An integer overflow occurs in the iwl_write_to_user_buf() function,
+which is called by the iwl_dbgfs_monitor_data_read() function.
+
+static bool iwl_write_to_user_buf(char __user *user_buf, ssize_t count,
+				  void *buf, ssize_t *size,
+				  ssize_t *bytes_copied)
+{
+	int buf_size_left = count - *bytes_copied;
+
+	buf_size_left = buf_size_left - (buf_size_left % sizeof(u32));
+	if (*size > buf_size_left)
+		*size = buf_size_left;
+
+If the user passes a SIZE_MAX value to the "ssize_t count" parameter,
+the ssize_t count parameter is assigned to "int buf_size_left".
+Then compare "*size" with "buf_size_left" . Here, "buf_size_left" is a
+negative number, so "*size" is assigned "buf_size_left" and goes into
+the third argument of the copy_to_user function, causing a heap overflow.
+
+This is not a security vulnerability because iwl_dbgfs_monitor_data_read()
+is a debugfs operation with 0400 privileges.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53523" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+can: gs_usb: fix time stamp counter initialization
+
+if the gs_usb device driver is unloaded (or unbound) before the
+interface is shut down, the usb stack first calls the struct
+usb_driver::disconnect and then the struct net_device_ops::ndo_stop
+callback.
+
+in gs_usb_disconnect() all pending bulk urbs are killed, i.e. no more
+rx'ed can frames are send from the usb device to the host. later in
+gs_can_close() a reset control message is send to each can channel to
+remove the controller from the can bus. in this race window the usb
+device can still receive can frames from the bus and internally queue
+them to be send to the host.
+
+at least in the current version of the candlelight firmware, the queue
+of received can frames is not emptied during the reset command. after
+loading (or binding) the gs_usb driver, new urbs are submitted during
+the struct net_device_ops::ndo_open callback and the candlelight
+firmware starts sending its already queued can frames to the host.
+
+however, this scenario was not considered when implementing the
+hardware timestamp function. the cycle counter/time counter
+infrastructure is set up (gs_usb_timestamp_init()) after the usbs are
+submitted, resulting in a null pointer dereference if
+timecounter_cyc2time() (via the call chain:
+gs_usb_receive_bulk_callback() -> gs_usb_set_timestamp() ->
+gs_usb_skb_set_timestamp()) is called too early.
+
+move the gs_usb_timestamp_init() function before the urbs are
+submitted to fix this problem.
+
+for a comprehensive solution, we need to consider gs_usb devices with
+more than 1 channel. the cycle counter/time counter infrastructure is
+setup per channel, but the rx urbs are per device. once gs_can_open()
+of _a_ channel has been called, and urbs have been submitted, the
+gs_usb_receive_bulk_callback() can be called for _all_ available
+channels, even for channels that are not running, yet. as cycle
+counter/time counter has not set up, this will again lead to a null
+pointer dereference.
+
+convert the cycle counter/time counter from a "per channel" to a "per
+device" functionality. also set it up, before submitting any urbs to
+the device.
+
+further in gs_usb_receive_bulk_callback(), don't process any urbs for
+not started can channels, only resubmit the urb.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53523" target="_blank">CVE-2023-53523</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+can: gs_usb: fix time stamp counter initialization
+
+If the gs_usb device driver is unloaded (or unbound) before the
+interface is shut down, the USB stack first calls the struct
+usb_driver::disconnect and then the struct net_device_ops::ndo_stop
+callback.
+
+In gs_usb_disconnect() all pending bulk URBs are killed, i.e. no more
+RX'ed CAN frames are send from the USB device to the host. Later in
+gs_can_close() a reset control message is send to each CAN channel to
+remove the controller from the CAN bus. In this race window the USB
+device can still receive CAN frames from the bus and internally queue
+them to be send to the host.
+
+At least in the current version of the candlelight firmware, the queue
+of received CAN frames is not emptied during the reset command. After
+loading (or binding) the gs_usb driver, new URBs are submitted during
+the struct net_device_ops::ndo_open callback and the candlelight
+firmware starts sending its already queued CAN frames to the host.
+
+However, this scenario was not considered when implementing the
+hardware timestamp function. The cycle counter/time counter
+infrastructure is set up (gs_usb_timestamp_init()) after the USBs are
+submitted, resulting in a NULL pointer dereference if
+timecounter_cyc2time() (via the call chain:
+gs_usb_receive_bulk_callback() -> gs_usb_set_timestamp() ->
+gs_usb_skb_set_timestamp()) is called too early.
+
+Move the gs_usb_timestamp_init() function before the URBs are
+submitted to fix this problem.
+
+For a comprehensive solution, we need to consider gs_usb devices with
+more than 1 channel. The cycle counter/time counter infrastructure is
+setup per channel, but the RX URBs are per device. Once gs_can_open()
+of _a_ channel has been called, and URBs have been submitted, the
+gs_usb_receive_bulk_callback() can be called for _all_ available
+channels, even for channels that are not running, yet. As cycle
+counter/time counter has not set up, this will again lead to a NULL
+pointer dereference.
+
+Convert the cycle counter/time counter from a "per channel" to a "per
+device" functionality. Also set it up, before submitting any URBs to
+the device.
+
+Further in gs_usb_receive_bulk_callback(), don't process any URBs for
+not started CAN channels, only resubmit the URB.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53522" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+cgroup,freezer: hold cpu_hotplug_lock before freezer_mutex
+
+syzbot is reporting circular locking dependency between cpu_hotplug_lock
+and freezer_mutex, for commit f5d39b020809 ("freezer,sched: rewrite core
+freezer logic") replaced atomic_inc() in freezer_apply_state() with
+static_branch_inc() which holds cpu_hotplug_lock.
+
+cpu_hotplug_lock => cgroup_threadgroup_rwsem => freezer_mutex
+
+  cgroup_file_write() {
+    cgroup_procs_write() {
+      __cgroup_procs_write() {
+        cgroup_procs_write_start() {
+          cgroup_attach_lock() {
+            cpus_read_lock() {
+              percpu_down_read(&cpu_hotplug_lock);
+            }
+            percpu_down_write(&cgroup_threadgroup_rwsem);
+          }
+        }
+        cgroup_attach_task() {
+          cgroup_migrate() {
+            cgroup_migrate_execute() {
+              freezer_attach() {
+                mutex_lock(&freezer_mutex);
+                (...snipped...)
+              }
+            }
+          }
+        }
+        (...snipped...)
+      }
+    }
+  }
+
+freezer_mutex => cpu_hotplug_lock
+
+  cgroup_file_write() {
+    freezer_write() {
+      freezer_change_state() {
+        mutex_lock(&freezer_mutex);
+        freezer_apply_state() {
+          static_branch_inc(&freezer_active) {
+            static_key_slow_inc() {
+              cpus_read_lock();
+              static_key_slow_inc_cpuslocked();
+              cpus_read_unlock();
+            }
+          }
+        }
+        mutex_unlock(&freezer_mutex);
+      }
+    }
+  }
+
+swap locking order by moving cpus_read_lock() in freezer_apply_state()
+to before mutex_lock(&freezer_mutex) in freezer_change_state().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53522" target="_blank">CVE-2023-53522</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+cgroup,freezer: hold cpu_hotplug_lock before freezer_mutex
+
+syzbot is reporting circular locking dependency between cpu_hotplug_lock
+and freezer_mutex, for commit f5d39b020809 ("freezer,sched: Rewrite core
+freezer logic") replaced atomic_inc() in freezer_apply_state() with
+static_branch_inc() which holds cpu_hotplug_lock.
+
+cpu_hotplug_lock => cgroup_threadgroup_rwsem => freezer_mutex
+
+  cgroup_file_write() {
+    cgroup_procs_write() {
+      __cgroup_procs_write() {
+        cgroup_procs_write_start() {
+          cgroup_attach_lock() {
+            cpus_read_lock() {
+              percpu_down_read(&cpu_hotplug_lock);
+            }
+            percpu_down_write(&cgroup_threadgroup_rwsem);
+          }
+        }
+        cgroup_attach_task() {
+          cgroup_migrate() {
+            cgroup_migrate_execute() {
+              freezer_attach() {
+                mutex_lock(&freezer_mutex);
+                (...snipped...)
+              }
+            }
+          }
+        }
+        (...snipped...)
+      }
+    }
+  }
+
+freezer_mutex => cpu_hotplug_lock
+
+  cgroup_file_write() {
+    freezer_write() {
+      freezer_change_state() {
+        mutex_lock(&freezer_mutex);
+        freezer_apply_state() {
+          static_branch_inc(&freezer_active) {
+            static_key_slow_inc() {
+              cpus_read_lock();
+              static_key_slow_inc_cpuslocked();
+              cpus_read_unlock();
+            }
+          }
+        }
+        mutex_unlock(&freezer_mutex);
+      }
+    }
+  }
+
+Swap locking order by moving cpus_read_lock() in freezer_apply_state()
+to before mutex_lock(&freezer_mutex) in freezer_change_state().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53521" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+scsi: ses: fix slab-out-of-bounds in ses_intf_remove()
+
+a fix for:
+
+bug: kasan: slab-out-of-bounds in ses_intf_remove+0x23f/0x270 [ses]
+read of size 8 at addr ffff88a10d32e5d8 by task rmmod/12013
+
+when edev->components is zero, accessing edev->component[0] members is
+wrong.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53521" target="_blank">CVE-2023-53521</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+scsi: ses: Fix slab-out-of-bounds in ses_intf_remove()
+
+A fix for:
+
+BUG: KASAN: slab-out-of-bounds in ses_intf_remove+0x23f/0x270 [ses]
+Read of size 8 at addr ffff88a10d32e5d8 by task rmmod/12013
+
+When edev->components is zero, accessing edev->component[0] members is
+wrong.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53520" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bluetooth: fix hci_suspend_sync crash
+
+if hci_unregister_dev() frees the hci_dev object but hci_suspend_notifier
+may still be accessing it, it can cause the program to crash.
+here's the call trace:
+  <4>[102152.653246] call trace:
+  <4>[102152.653254]  hci_suspend_sync+0x109/0x301 [bluetooth]
+  <4>[102152.653259]  hci_suspend_dev+0x78/0xcd [bluetooth]
+  <4>[102152.653263]  hci_suspend_notifier+0x42/0x7a [bluetooth]
+  <4>[102152.653268]  notifier_call_chain+0x43/0x6b
+  <4>[102152.653271]  __blocking_notifier_call_chain+0x48/0x69
+  <4>[102152.653273]  __pm_notifier_call_chain+0x22/0x39
+  <4>[102152.653276]  pm_suspend+0x287/0x57c
+  <4>[102152.653278]  state_store+0xae/0xe5
+  <4>[102152.653281]  kernfs_fop_write+0x109/0x173
+  <4>[102152.653284]  __vfs_write+0x16f/0x1a2
+  <4>[102152.653287]  ? selinux_file_permission+0xca/0x16f
+  <4>[102152.653289]  ? security_file_permission+0x36/0x109
+  <4>[102152.653291]  vfs_write+0x114/0x21d
+  <4>[102152.653293]  __x64_sys_write+0x7b/0xdb
+  <4>[102152.653296]  do_syscall_64+0x59/0x194
+  <4>[102152.653299]  entry_syscall_64_after_hwframe+0x5c/0xc1
+
+this patch holds the reference count of the hci_dev object while
+processing it in hci_suspend_notifier to avoid potential crash
+caused by the race condition.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53520" target="_blank">CVE-2023-53520</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Bluetooth: Fix hci_suspend_sync crash
+
+If hci_unregister_dev() frees the hci_dev object but hci_suspend_notifier
+may still be accessing it, it can cause the program to crash.
+Here's the call trace:
+  <4>[102152.653246] Call Trace:
+  <4>[102152.653254]  hci_suspend_sync+0x109/0x301 [bluetooth]
+  <4>[102152.653259]  hci_suspend_dev+0x78/0xcd [bluetooth]
+  <4>[102152.653263]  hci_suspend_notifier+0x42/0x7a [bluetooth]
+  <4>[102152.653268]  notifier_call_chain+0x43/0x6b
+  <4>[102152.653271]  __blocking_notifier_call_chain+0x48/0x69
+  <4>[102152.653273]  __pm_notifier_call_chain+0x22/0x39
+  <4>[102152.653276]  pm_suspend+0x287/0x57c
+  <4>[102152.653278]  state_store+0xae/0xe5
+  <4>[102152.653281]  kernfs_fop_write+0x109/0x173
+  <4>[102152.653284]  __vfs_write+0x16f/0x1a2
+  <4>[102152.653287]  ? selinux_file_permission+0xca/0x16f
+  <4>[102152.653289]  ? security_file_permission+0x36/0x109
+  <4>[102152.653291]  vfs_write+0x114/0x21d
+  <4>[102152.653293]  __x64_sys_write+0x7b/0xdb
+  <4>[102152.653296]  do_syscall_64+0x59/0x194
+  <4>[102152.653299]  entry_SYSCALL_64_after_hwframe+0x5c/0xc1
+
+This patch holds the reference count of the hci_dev object while
+processing it in hci_suspend_notifier to avoid potential crash
+caused by the race condition.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53519" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+media: v4l2-mem2mem: add lock to protect parameter num_rdy
+
+getting below error when using kcsan to check the driver. adding lock to
+protect parameter num_rdy when getting the value with function:
+v4l2_m2m_num_src_bufs_ready/v4l2_m2m_num_dst_bufs_ready.
+
+kworker/u16:3: [name:report&]bug: kcsan: data-race in v4l2_m2m_buf_queue
+kworker/u16:3: [name:report&]
+
+kworker/u16:3: [name:report&]read-write to 0xffffff8105f35b94 of 1 bytes by task 20865 on cpu 7:
+kworker/u16:3:  v4l2_m2m_buf_queue+0xd8/0x10c">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53519" target="_blank">CVE-2023-53519</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+media: v4l2-mem2mem: add lock to protect parameter num_rdy
+
+Getting below error when using KCSAN to check the driver. Adding lock to
+protect parameter num_rdy when getting the value with function:
+v4l2_m2m_num_src_bufs_ready/v4l2_m2m_num_dst_bufs_ready.
+
+kworker/u16:3: [name:report&]BUG: KCSAN: data-race in v4l2_m2m_buf_queue
+kworker/u16:3: [name:report&]
+
+kworker/u16:3: [name:report&]read-write to 0xffffff8105f35b94 of 1 bytes by task 20865 on cpu 7:
+kworker/u16:3:  v4l2_m2m_buf_queue+0xd8/0x10c</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53518" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+pm / devfreq: fix leak in devfreq_dev_release()
+
+srcu_init_notifier_head() allocates resources that need to be released
+with a srcu_cleanup_notifier_head() call.
+
+reported by kmemleak.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53518" target="_blank">CVE-2023-53518</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+PM / devfreq: Fix leak in devfreq_dev_release()
+
+srcu_init_notifier_head() allocates resources that need to be released
+with a srcu_cleanup_notifier_head() call.
+
+Reported by kmemleak.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53517" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+tipc: do not update mtu if msg_max is too small in mtu negotiation
+
+when doing link mtu negotiation, a malicious peer may send activate msg
+with a very small mtu, e.g. 4 in shuang's testing, without checking for
+the minimum mtu, l->mtu will be set to 4 in tipc_link_proto_rcv(), then
+n->links[bearer_id].mtu is set to 4294967228, which is a overflow of
+'4 - int_h_size - emsg_overhead' in tipc_link_mss().
+
+with tipc_link.mtu = 4, tipc_link_xmit() kept printing the warning:
+
+ tipc: too large msg, purging xmit list 1 5 0 40 4!
+ tipc: too large msg, purging xmit list 1 15 0 60 4!
+
+and with tipc_link_entry.mtu 4294967228, a huge skb was allocated in
+named_distribute(), and when purging it in tipc_link_xmit(), a crash
+was even caused:
+
+  general protection fault, probably for non-canonical address 0x2100001011000dd: 0000 [#1] preempt smp pti
+  cpu: 0 pid: 0 comm: swapper/0 kdump: loaded not tainted 6.3.0.neta #19
+  rip: 0010:kfree_skb_list_reason+0x7e/0x1f0
+  call trace:
+   <irq>
+   skb_release_data+0xf9/0x1d0
+   kfree_skb_reason+0x40/0x100
+   tipc_link_xmit+0x57a/0x740 [tipc]
+   tipc_node_xmit+0x16c/0x5c0 [tipc]
+   tipc_named_node_up+0x27f/0x2c0 [tipc]
+   tipc_node_write_unlock+0x149/0x170 [tipc]
+   tipc_rcv+0x608/0x740 [tipc]
+   tipc_udp_recv+0xdc/0x1f0 [tipc]
+   udp_queue_rcv_one_skb+0x33e/0x620
+   udp_unicast_rcv_skb.isra.72+0x75/0x90
+   __udp4_lib_rcv+0x56d/0xc20
+   ip_protocol_deliver_rcu+0x100/0x2d0
+
+this patch fixes it by checking the new mtu against tipc_bearer_min_mtu(),
+and not updating mtu if it is too small.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53517" target="_blank">CVE-2023-53517</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+tipc: do not update mtu if msg_max is too small in mtu negotiation
+
+When doing link mtu negotiation, a malicious peer may send Activate msg
+with a very small mtu, e.g. 4 in Shuang's testing, without checking for
+the minimum mtu, l->mtu will be set to 4 in tipc_link_proto_rcv(), then
+n->links[bearer_id].mtu is set to 4294967228, which is a overflow of
+'4 - INT_H_SIZE - EMSG_OVERHEAD' in tipc_link_mss().
+
+With tipc_link.mtu = 4, tipc_link_xmit() kept printing the warning:
+
+ tipc: Too large msg, purging xmit list 1 5 0 40 4!
+ tipc: Too large msg, purging xmit list 1 15 0 60 4!
+
+And with tipc_link_entry.mtu 4294967228, a huge skb was allocated in
+named_distribute(), and when purging it in tipc_link_xmit(), a crash
+was even caused:
+
+  general protection fault, probably for non-canonical address 0x2100001011000dd: 0000 [#1] PREEMPT SMP PTI
+  CPU: 0 PID: 0 Comm: swapper/0 Kdump: loaded Not tainted 6.3.0.neta #19
+  RIP: 0010:kfree_skb_list_reason+0x7e/0x1f0
+  Call Trace:
+   <IRQ>
+   skb_release_data+0xf9/0x1d0
+   kfree_skb_reason+0x40/0x100
+   tipc_link_xmit+0x57a/0x740 [tipc]
+   tipc_node_xmit+0x16c/0x5c0 [tipc]
+   tipc_named_node_up+0x27f/0x2c0 [tipc]
+   tipc_node_write_unlock+0x149/0x170 [tipc]
+   tipc_rcv+0x608/0x740 [tipc]
+   tipc_udp_recv+0xdc/0x1f0 [tipc]
+   udp_queue_rcv_one_skb+0x33e/0x620
+   udp_unicast_rcv_skb.isra.72+0x75/0x90
+   __udp4_lib_rcv+0x56d/0xc20
+   ip_protocol_deliver_rcu+0x100/0x2d0
+
+This patch fixes it by checking the new mtu against tipc_bearer_min_mtu(),
+and not updating mtu if it is too small.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53516" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+macvlan: add forgotten nla_policy for ifla_macvlan_bc_cutoff
+
+the previous commit 954d1fa1ac93 ("macvlan: add netlink attribute for
+broadcast cutoff") added one additional attribute named
+ifla_macvlan_bc_cutoff to allow broadcast cutfoff.
+
+however, it forgot to describe the nla_policy at macvlan_policy
+(drivers/net/macvlan.c). hence, this suppose nla_s32 (4 bytes) integer
+can be faked as empty (0 bytes) by a malicious user, which could leads
+to oob in heap just like cve-2023-3773.
+
+to fix it, this commit just completes the nla_policy description for
+ifla_macvlan_bc_cutoff. this enforces the length check and avoids the
+potential oob read.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53516" target="_blank">CVE-2023-53516</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+macvlan: add forgotten nla_policy for IFLA_MACVLAN_BC_CUTOFF
+
+The previous commit 954d1fa1ac93 ("macvlan: Add netlink attribute for
+broadcast cutoff") added one additional attribute named
+IFLA_MACVLAN_BC_CUTOFF to allow broadcast cutfoff.
+
+However, it forgot to describe the nla_policy at macvlan_policy
+(drivers/net/macvlan.c). Hence, this suppose NLA_S32 (4 bytes) integer
+can be faked as empty (0 bytes) by a malicious user, which could leads
+to OOB in heap just like CVE-2023-3773.
+
+To fix it, this commit just completes the nla_policy description for
+IFLA_MACVLAN_BC_CUTOFF. This enforces the length check and avoids the
+potential OOB read.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53515" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+virtio-mmio: don't break lifecycle of vm_dev
+
+vm_dev has a separate lifecycle because it has a 'struct device'
+embedded. thus, having a release callback for it is correct.
+
+allocating the vm_dev struct with devres totally breaks this protection,
+though. instead of waiting for the vm_dev release callback, the memory
+is freed when the platform_device is removed. resulting in a
+use-after-free when finally the callback is to be called.
+
+to easily see the problem, compile the kernel with
+config_debug_kobject_release and unbind with sysfs.
+
+the fix is easy, don't use devres in this case.
+
+found during my research about object lifetime problems.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53515" target="_blank">CVE-2023-53515</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+virtio-mmio: don't break lifecycle of vm_dev
+
+vm_dev has a separate lifecycle because it has a 'struct device'
+embedded. Thus, having a release callback for it is correct.
+
+Allocating the vm_dev struct with devres totally breaks this protection,
+though. Instead of waiting for the vm_dev release callback, the memory
+is freed when the platform_device is removed. Resulting in a
+use-after-free when finally the callback is to be called.
+
+To easily see the problem, compile the kernel with
+CONFIG_DEBUG_KOBJECT_RELEASE and unbind with sysfs.
+
+The fix is easy, don't use devres in this case.
+
+Found during my research about object lifetime problems.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53514" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+gpu: host1x: fix memory leak of device names
+
+the device names allocated by dev_set_name() need be freed
+before module unloading, but they can not be freed because
+the kobject's refcount which was set in device_initialize()
+has not be decreased to 0.
+
+as comment of device_add() says, if it fails, use only
+put_device() drop the refcount, then the name will be
+freed in kobejct_cleanup().
+
+device_del() and put_device() can be replaced with
+device_unregister(), so call it to unregister the added
+successfully devices, and just call put_device() to the
+not added device.
+
+add a release() function to device to avoid null release()
+function warning in device_release(), it's empty, because
+the context devices are freed together in
+host1x_memory_context_list_free().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53514" target="_blank">CVE-2023-53514</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+gpu: host1x: Fix memory leak of device names
+
+The device names allocated by dev_set_name() need be freed
+before module unloading, but they can not be freed because
+the kobject's refcount which was set in device_initialize()
+has not be decreased to 0.
+
+As comment of device_add() says, if it fails, use only
+put_device() drop the refcount, then the name will be
+freed in kobejct_cleanup().
+
+device_del() and put_device() can be replaced with
+device_unregister(), so call it to unregister the added
+successfully devices, and just call put_device() to the
+not added device.
+
+Add a release() function to device to avoid null release()
+function WARNING in device_release(), it's empty, because
+the context devices are freed together in
+host1x_memory_context_list_free().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53513" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nbd: fix incomplete validation of ioctl arg
+
+we tested and found an alarm caused by nbd_ioctl arg without verification.
+the ubsan warning calltrace like below:
+
+ubsan: undefined behaviour in fs/buffer.c:1709:35
+signed integer overflow:
+-9223372036854775808 - 1 cannot be represented in type 'long long int'
+cpu: 3 pid: 2523 comm: syz-executor.0 not tainted 4.19.90 #1
+hardware name: linux,dummy-virt (dt)
 call trace:
- <irq>
- __sk_destruct+0x86/0x660 net/core/sock.c:2339
- rcu_do_batch kernel/rcu/tree.c:2605 [inline]
- rcu_core+0xca8/0x1770 kernel/rcu/tree.c:2861
- handle_softirqs+0x286/0x870 kernel/softirq.c:579
- __do_softirq kernel/softirq.c:613 [inline]
- invoke_softirq kernel/softirq.c:453 [inline]
- __irq_exit_rcu+0xca/0x1f0 kernel/softirq.c:680
- irq_exit_rcu+0x9/0x30 kernel/softirq.c:696
- instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1052 [inline]
- sysvec_apic_timer_interrupt+0xa6/0xc0 arch/x86/kernel/apic/apic.c:1052
- </irq>">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39913" target="_blank">CVE-2025-39913</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
+ dump_backtrace+0x0/0x3f0 arch/arm64/kernel/time.c:78
+ show_stack+0x28/0x38 arch/arm64/kernel/traps.c:158
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0x170/0x1dc lib/dump_stack.c:118
+ ubsan_epilogue+0x18/0xb4 lib/ubsan.c:161
+ handle_overflow+0x188/0x1dc lib/ubsan.c:192
+ __ubsan_handle_sub_overflow+0x34/0x44 lib/ubsan.c:206
+ __block_write_full_page+0x94c/0xa20 fs/buffer.c:1709
+ block_write_full_page+0x1f0/0x280 fs/buffer.c:2934
+ blkdev_writepage+0x34/0x40 fs/block_dev.c:607
+ __writepage+0x68/0xe8 mm/page-writeback.c:2305
+ write_cache_pages+0x44c/0xc70 mm/page-writeback.c:2240
+ generic_writepages+0xdc/0x148 mm/page-writeback.c:2329
+ blkdev_writepages+0x2c/0x38 fs/block_dev.c:2114
+ do_writepages+0xd4/0x250 mm/page-writeback.c:2344
+
+the reason for triggering this warning is __block_write_full_page()
+-> i_size_read(inode) - 1 overflow.
+inode->i_size is assigned in __nbd_ioctl() -> nbd_set_size() -> bytesize.
+we think it is necessary to limit the size of arg to prevent errors.
+
+moreover, __nbd_ioctl() -> nbd_add_socket(), arg will be cast to int.
+assuming the value of arg is 0x80000000000000001) (on a 64-bit machine),
+it will become 1 after the coercion, which will return unexpected results.
+
+fix it by adding checks to prevent passing in too large numbers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53513" target="_blank">CVE-2023-53513</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-01 07:15:55 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-tcp_bpf: Call sk_msg_free() when tcp_bpf_send_verdict() fails to allocate psock->cork.
+nbd: fix incomplete validation of ioctl arg
 
-syzbot reported the splat below. [0]
+We tested and found an alarm caused by nbd_ioctl arg without verification.
+The UBSAN warning calltrace like below:
 
-The repro does the following:
+UBSAN: Undefined behaviour in fs/buffer.c:1709:35
+signed integer overflow:
+-9223372036854775808 - 1 cannot be represented in type 'long long int'
+CPU: 3 PID: 2523 Comm: syz-executor.0 Not tainted 4.19.90 #1
+Hardware name: linux,dummy-virt (DT)
+Call trace:
+ dump_backtrace+0x0/0x3f0 arch/arm64/kernel/time.c:78
+ show_stack+0x28/0x38 arch/arm64/kernel/traps.c:158
+ __dump_stack lib/dump_stack.c:77 [inline]
+ dump_stack+0x170/0x1dc lib/dump_stack.c:118
+ ubsan_epilogue+0x18/0xb4 lib/ubsan.c:161
+ handle_overflow+0x188/0x1dc lib/ubsan.c:192
+ __ubsan_handle_sub_overflow+0x34/0x44 lib/ubsan.c:206
+ __block_write_full_page+0x94c/0xa20 fs/buffer.c:1709
+ block_write_full_page+0x1f0/0x280 fs/buffer.c:2934
+ blkdev_writepage+0x34/0x40 fs/block_dev.c:607
+ __writepage+0x68/0xe8 mm/page-writeback.c:2305
+ write_cache_pages+0x44c/0xc70 mm/page-writeback.c:2240
+ generic_writepages+0xdc/0x148 mm/page-writeback.c:2329
+ blkdev_writepages+0x2c/0x38 fs/block_dev.c:2114
+ do_writepages+0xd4/0x250 mm/page-writeback.c:2344
 
-  1. Load a sk_msg prog that calls bpf_msg_cork_bytes(msg, cork_bytes)
-  2. Attach the prog to a SOCKMAP
-  3. Add a socket to the SOCKMAP
-  4. Activate fault injection
-  5. Send data less than cork_bytes
+The reason for triggering this warning is __block_write_full_page()
+-> i_size_read(inode) - 1 overflow.
+inode->i_size is assigned in __nbd_ioctl() -> nbd_set_size() -> bytesize.
+We think it is necessary to limit the size of arg to prevent errors.
 
-At 5., the data is carried over to the next sendmsg() as it is
-smaller than the cork_bytes specified by bpf_msg_cork_bytes().
+Moreover, __nbd_ioctl() -> nbd_add_socket(), arg will be cast to int.
+Assuming the value of arg is 0x80000000000000001) (on a 64-bit machine),
+it will become 1 after the coercion, which will return unexpected results.
 
-Then, tcp_bpf_send_verdict() tries to allocate psock->cork to hold
-the data, but this fails silently due to fault injection + __GFP_NOWARN.
-
-If the allocation fails, we need to revert the sk->sk_forward_alloc
-change done by sk_msg_alloc().
-
-Let's call sk_msg_free() when tcp_bpf_send_verdict fails to allocate
-psock->cork.
-
-The "*copied" also needs to be updated such that a proper error can
-be returned to the caller, sendmsg. It fails to allocate psock->cork.
-Nothing has been corked so far, so this patch simply sets "*copied"
-to 0.
-
-[0]:
-WARNING: net/ipv4/af_inet.c:156 at inet_sock_destruct+0x623/0x730 net/ipv4/af_inet.c:156, CPU#1: syz-executor/5983
-Modules linked in:
-CPU: 1 UID: 0 PID: 5983 Comm: syz-executor Not tainted syzkaller #0 PREEMPT(full)
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/12/2025
-RIP: 0010:inet_sock_destruct+0x623/0x730 net/ipv4/af_inet.c:156
-Code: 0f 0b 90 e9 62 fe ff ff e8 7a db b5 f7 90 0f 0b 90 e9 95 fe ff ff e8 6c db b5 f7 90 0f 0b 90 e9 bb fe ff ff e8 5e db b5 f7 90 <0f> 0b 90 e9 e1 fe ff ff 89 f9 80 e1 07 80 c1 03 38 c1 0f 8c 9f fc
-RSP: 0018:ffffc90000a08b48 EFLAGS: 00010246
-RAX: ffffffff8a09d0b2 RBX: dffffc0000000000 RCX: ffff888024a23c80
-RDX: 0000000000000100 RSI: 0000000000000fff RDI: 0000000000000000
-RBP: 0000000000000fff R08: ffff88807e07c627 R09: 1ffff1100fc0f8c4
-R10: dffffc0000000000 R11: ffffed100fc0f8c5 R12: ffff88807e07c380
-R13: dffffc0000000000 R14: ffff88807e07c60c R15: 1ffff1100fc0f872
-FS:  00005555604c4500(0000) GS:ffff888125af1000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00005555604df5c8 CR3: 0000000032b06000 CR4: 00000000003526f0
-Call Trace:
- <IRQ>
- __sk_destruct+0x86/0x660 net/core/sock.c:2339
- rcu_do_batch kernel/rcu/tree.c:2605 [inline]
- rcu_core+0xca8/0x1770 kernel/rcu/tree.c:2861
- handle_softirqs+0x286/0x870 kernel/softirq.c:579
- __do_softirq kernel/softirq.c:613 [inline]
- invoke_softirq kernel/softirq.c:453 [inline]
- __irq_exit_rcu+0xca/0x1f0 kernel/softirq.c:680
- irq_exit_rcu+0x9/0x30 kernel/softirq.c:696
- instr_sysvec_apic_timer_interrupt arch/x86/kernel/apic/apic.c:1052 [inline]
- sysvec_apic_timer_interrupt+0xa6/0xc0 arch/x86/kernel/apic/apic.c:1052
- </IRQ></p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39912" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-nfs/localio: restore creds before releasing pageio data
-
-otherwise if the nfsd filecache code releases the nfsd_file
-immediately, it can trigger the bug_on(cred == current->cred) in
-__put_cred() when it puts the nfsd_file->nf_file->f-cred.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39912" target="_blank">CVE-2025-39912</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-nfs/localio: restore creds before releasing pageio data
-
-Otherwise if the nfsd filecache code releases the nfsd_file
-immediately, it can trigger the BUG_ON(cred == current->cred) in
-__put_cred() when it puts the nfsd_file->nf_file->f-cred.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39911" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-i40e: fix irq freeing in i40e_vsi_request_irq_msix error path
-
-if request_irq() in i40e_vsi_request_irq_msix() fails in an iteration
-later than the first, the error path wants to free the irqs requested
-so far. however, it uses the wrong dev_id argument for free_irq(), so
-it does not free the irqs correctly and instead triggers the warning:
-
- trying to free already-free irq 173
- warning: cpu: 25 pid: 1091 at kernel/irq/manage.c:1829 __free_irq+0x192/0x2c0
- modules linked in: i40e(+) [...]
- cpu: 25 uid: 0 pid: 1091 comm: networkmanager not tainted 6.17.0-rc1+ #1 preempt(lazy)
- hardware name: [...]
- rip: 0010:__free_irq+0x192/0x2c0
- [...]
- call trace:
-  <task>
-  free_irq+0x32/0x70
-  i40e_vsi_request_irq_msix.cold+0x63/0x8b [i40e]
-  i40e_vsi_request_irq+0x79/0x80 [i40e]
-  i40e_vsi_open+0x21f/0x2f0 [i40e]
-  i40e_open+0x63/0x130 [i40e]
-  __dev_open+0xfc/0x210
-  __dev_change_flags+0x1fc/0x240
-  netif_change_flags+0x27/0x70
-  do_setlink.isra.0+0x341/0xc70
-  rtnl_newlink+0x468/0x860
-  rtnetlink_rcv_msg+0x375/0x450
-  netlink_rcv_skb+0x5c/0x110
-  netlink_unicast+0x288/0x3c0
-  netlink_sendmsg+0x20d/0x430
-  ____sys_sendmsg+0x3a2/0x3d0
-  ___sys_sendmsg+0x99/0xe0
-  __sys_sendmsg+0x8a/0xf0
-  do_syscall_64+0x82/0x2c0
-  entry_syscall_64_after_hwframe+0x76/0x7e
-  [...]
-  </task>
- ---[ end trace 0000000000000000 ]---
-
-use the same dev_id for free_irq() as for request_irq().
-
-i tested this with inserting code to fail intentionally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39911" target="_blank">CVE-2025-39911</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-01 03:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-i40e: fix IRQ freeing in i40e_vsi_request_irq_msix error path
-
-If request_irq() in i40e_vsi_request_irq_msix() fails in an iteration
-later than the first, the error path wants to free the IRQs requested
-so far. However, it uses the wrong dev_id argument for free_irq(), so
-it does not free the IRQs correctly and instead triggers the warning:
-
- Trying to free already-free IRQ 173
- WARNING: CPU: 25 PID: 1091 at kernel/irq/manage.c:1829 __free_irq+0x192/0x2c0
- Modules linked in: i40e(+) [...]
- CPU: 25 UID: 0 PID: 1091 Comm: NetworkManager Not tainted 6.17.0-rc1+ #1 PREEMPT(lazy)
- Hardware name: [...]
- RIP: 0010:__free_irq+0x192/0x2c0
- [...]
- Call Trace:
-  <TASK>
-  free_irq+0x32/0x70
-  i40e_vsi_request_irq_msix.cold+0x63/0x8b [i40e]
-  i40e_vsi_request_irq+0x79/0x80 [i40e]
-  i40e_vsi_open+0x21f/0x2f0 [i40e]
-  i40e_open+0x63/0x130 [i40e]
-  __dev_open+0xfc/0x210
-  __dev_change_flags+0x1fc/0x240
-  netif_change_flags+0x27/0x70
-  do_setlink.isra.0+0x341/0xc70
-  rtnl_newlink+0x468/0x860
-  rtnetlink_rcv_msg+0x375/0x450
-  netlink_rcv_skb+0x5c/0x110
-  netlink_unicast+0x288/0x3c0
-  netlink_sendmsg+0x20d/0x430
-  ____sys_sendmsg+0x3a2/0x3d0
-  ___sys_sendmsg+0x99/0xe0
-  __sys_sendmsg+0x8a/0xf0
-  do_syscall_64+0x82/0x2c0
-  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-  [...]
-  </TASK>
- ---[ end trace 0000000000000000 ]---
-
-Use the same dev_id for free_irq() as for request_irq().
-
-I tested this with inserting code to fail intentionally.</p>
+Fix it by adding checks to prevent passing in too large numbers.</p>
                 </div>
         
             </div>
