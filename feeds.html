@@ -33,1404 +33,1016 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2025-39953" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53616" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-cgroup: split cgroup_destroy_wq into 3 workqueues
+jfs: fix invalid free of jfs_ip(ipimap)->i_imap in diunmount
 
-a hung task can occur during [1] ltp cgroup testing when repeatedly
-mounting/unmounting perf_event and net_prio controllers with
-systemd.unified_cgroup_hierarchy=1. the hang manifests in
-cgroup_lock_and_drain_offline() during root destruction.
+syzbot found an invalid-free in diunmount:
 
-related case:
-cgroup_fj_function_perf_event cgroup_fj_function.sh perf_event
-cgroup_fj_function_net_prio cgroup_fj_function.sh net_prio
+bug: kasan: double-free in slab_free mm/slub.c:3661 [inline]
+bug: kasan: double-free in __kmem_cache_free+0x71/0x110 mm/slub.c:3674
+free of addr ffff88806f410000 by task syz-executor131/3632
 
-call trace:
-	cgroup_lock_and_drain_offline+0x14c/0x1e8
-	cgroup_destroy_root+0x3c/0x2c0
-	css_free_rwork_fn+0x248/0x338
-	process_one_work+0x16c/0x3b8
-	worker_thread+0x22c/0x3b0
-	kthread+0xec/0x100
-	ret_from_fork+0x10/0x20
-
-root cause:
-
-cpu0                            cpu1
-mount perf_event                umount net_prio
-cgroup1_get_tree                cgroup_kill_sb
-rebind_subsystems               // root destruction enqueues
-				// cgroup_destroy_wq
-// kill all perf_event css
-                                // one perf_event css a is dying
-                                // css a offline enqueues cgroup_destroy_wq
-                                // root destruction will be executed first
-                                css_free_rwork_fn
-                                cgroup_destroy_root
-                                cgroup_lock_and_drain_offline
-                                // some perf descendants are dying
-                                // cgroup_destroy_wq max_active = 1
-                                // waiting for css a to die
-
-problem scenario:
-1. cpu0 mounts perf_event (rebind_subsystems)
-2. cpu1 unmounts net_prio (cgroup_kill_sb), queuing root destruction work
-3. a dying perf_event css gets queued for offline after root destruction
-4. root destruction waits for offline completion, but offline work is
-   blocked behind root destruction in cgroup_destroy_wq (max_active=1)
-
-solution:
-split cgroup_destroy_wq into three dedicated workqueues:
-cgroup_offline_wq – handles css offline operations
-cgroup_release_wq – manages resource release
-cgroup_free_wq – performs final memory deallocation
-
-this separation eliminates blocking in the css free path while waiting for
-offline operations to complete.
-
-[1] https://github.com/linux-test-project/ltp/blob/master/runtest/controllers">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39953" target="_blank">CVE-2025-39953</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-cgroup: split cgroup_destroy_wq into 3 workqueues
-
-A hung task can occur during [1] LTP cgroup testing when repeatedly
-mounting/unmounting perf_event and net_prio controllers with
-systemd.unified_cgroup_hierarchy=1. The hang manifests in
-cgroup_lock_and_drain_offline() during root destruction.
-
-Related case:
-cgroup_fj_function_perf_event cgroup_fj_function.sh perf_event
-cgroup_fj_function_net_prio cgroup_fj_function.sh net_prio
-
-Call Trace:
-	cgroup_lock_and_drain_offline+0x14c/0x1e8
-	cgroup_destroy_root+0x3c/0x2c0
-	css_free_rwork_fn+0x248/0x338
-	process_one_work+0x16c/0x3b8
-	worker_thread+0x22c/0x3b0
-	kthread+0xec/0x100
-	ret_from_fork+0x10/0x20
-
-Root Cause:
-
-CPU0                            CPU1
-mount perf_event                umount net_prio
-cgroup1_get_tree                cgroup_kill_sb
-rebind_subsystems               // root destruction enqueues
-				// cgroup_destroy_wq
-// kill all perf_event css
-                                // one perf_event css A is dying
-                                // css A offline enqueues cgroup_destroy_wq
-                                // root destruction will be executed first
-                                css_free_rwork_fn
-                                cgroup_destroy_root
-                                cgroup_lock_and_drain_offline
-                                // some perf descendants are dying
-                                // cgroup_destroy_wq max_active = 1
-                                // waiting for css A to die
-
-Problem scenario:
-1. CPU0 mounts perf_event (rebind_subsystems)
-2. CPU1 unmounts net_prio (cgroup_kill_sb), queuing root destruction work
-3. A dying perf_event CSS gets queued for offline after root destruction
-4. Root destruction waits for offline completion, but offline work is
-   blocked behind root destruction in cgroup_destroy_wq (max_active=1)
-
-Solution:
-Split cgroup_destroy_wq into three dedicated workqueues:
-cgroup_offline_wq – Handles CSS offline operations
-cgroup_release_wq – Manages resource release
-cgroup_free_wq – Performs final memory deallocation
-
-This separation eliminates blocking in the CSS free path while waiting for
-offline operations to complete.
-
-[1] https://github.com/linux-test-project/ltp/blob/master/runtest/controllers</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39952" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: wilc1000: avoid buffer overflow in wid string configuration
-
-fix the following copy overflow warning identified by smatch checker.
-
- drivers/net/wireless/microchip/wilc1000/wlan_cfg.c:184 wilc_wlan_parse_response_frame()
-        error: '__memcpy()' 'cfg->s[i]->str' copy overflow (512 vs 65537)
-
-this patch introduces size check before accessing the memory buffer.
-the checks are base on the wid type of received data from the firmware.
-for wid string configuration, the size limit is determined by individual
-element size in 'struct wilc_cfg_str_vals' that is maintained in 'len' field
-of 'struct wilc_cfg_str'.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39952" target="_blank">CVE-2025-39952</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: wilc1000: avoid buffer overflow in WID string configuration
-
-Fix the following copy overflow warning identified by Smatch checker.
-
- drivers/net/wireless/microchip/wilc1000/wlan_cfg.c:184 wilc_wlan_parse_response_frame()
-        error: '__memcpy()' 'cfg->s[i]->str' copy overflow (512 vs 65537)
-
-This patch introduces size check before accessing the memory buffer.
-The checks are base on the WID type of received data from the firmware.
-For WID string configuration, the size limit is determined by individual
-element size in 'struct wilc_cfg_str_vals' that is maintained in 'len' field
-of 'struct wilc_cfg_str'.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39951" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-um: virtio_uml: fix use-after-free after put_device in probe
-
-when register_virtio_device() fails in virtio_uml_probe(),
-the code sets vu_dev->registered = 1 even though
-the device was not successfully registered.
-this can lead to use-after-free or other issues.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39951" target="_blank">CVE-2025-39951</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-um: virtio_uml: Fix use-after-free after put_device in probe
-
-When register_virtio_device() fails in virtio_uml_probe(),
-the code sets vu_dev->registered = 1 even though
-the device was not successfully registered.
-This can lead to use-after-free or other issues.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39950" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net/tcp: fix a null pointer dereference when using tcp-ao with tcp_repair
-
-a null pointer dereference can occur in tcp_ao_finish_connect() during a
-connect() system call on a socket with a tcp-ao key added and tcp_repair
-enabled.
-
-the function is called with skb being null and attempts to dereference it
-on tcp_hdr(skb)->seq without a prior skb validation.
-
-fix this by checking if skb is null before dereferencing it.
-
-the commentary is taken from bpf_skops_established(), which is also called
-in the same flow. unlike the function being patched,
-bpf_skops_established() validates the skb before dereferencing it.
-
-int main(void){
-	struct sockaddr_in sockaddr;
-	struct tcp_ao_add tcp_ao;
-	int sk;
-	int one = 1;
-
-	memset(&sockaddr,'\0',sizeof(sockaddr));
-	memset(&tcp_ao,'\0',sizeof(tcp_ao));
-
-	sk = socket(af_inet, sock_stream, ipproto_tcp);
-
-	sockaddr.sin_family = af_inet;
-
-	memcpy(tcp_ao.alg_name,"cmac(aes128)",12);
-	memcpy(tcp_ao.key,"abcdefghabcdefgh",16);
-	tcp_ao.keylen = 16;
-
-	memcpy(&tcp_ao.addr,&sockaddr,sizeof(sockaddr));
-
-	setsockopt(sk, ipproto_tcp, tcp_ao_add_key, &tcp_ao,
-	sizeof(tcp_ao));
-	setsockopt(sk, ipproto_tcp, tcp_repair, &one, sizeof(one));
-
-	sockaddr.sin_family = af_inet;
-	sockaddr.sin_port = htobe16(123);
-
-	inet_aton("127.0.0.1", &sockaddr.sin_addr);
-
-	connect(sk,(struct sockaddr *)&sockaddr,sizeof(sockaddr));
-
-return 0;
-}
-
-$ gcc tcp-ao-nullptr.c -o tcp-ao-nullptr -wall
-$ unshare -urn
-
-bug: kernel null pointer dereference, address: 00000000000000b6
-pgd 1f648d067 p4d 1f648d067 pud 1982e8067 pmd 0
-oops: oops: 0000 [#1] smp nopti
-hardware name: vmware, inc. vmware virtual platform/440bx desktop
-reference platform, bios 6.00 11/12/2020
-rip: 0010:tcp_ao_finish_connect (net/ipv4/tcp_ao.c:1182)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39950" target="_blank">CVE-2025-39950</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net/tcp: Fix a NULL pointer dereference when using TCP-AO with TCP_REPAIR
-
-A NULL pointer dereference can occur in tcp_ao_finish_connect() during a
-connect() system call on a socket with a TCP-AO key added and TCP_REPAIR
-enabled.
-
-The function is called with skb being NULL and attempts to dereference it
-on tcp_hdr(skb)->seq without a prior skb validation.
-
-Fix this by checking if skb is NULL before dereferencing it.
-
-The commentary is taken from bpf_skops_established(), which is also called
-in the same flow. Unlike the function being patched,
-bpf_skops_established() validates the skb before dereferencing it.
-
-int main(void){
-	struct sockaddr_in sockaddr;
-	struct tcp_ao_add tcp_ao;
-	int sk;
-	int one = 1;
-
-	memset(&sockaddr,'\0',sizeof(sockaddr));
-	memset(&tcp_ao,'\0',sizeof(tcp_ao));
-
-	sk = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-	sockaddr.sin_family = AF_INET;
-
-	memcpy(tcp_ao.alg_name,"cmac(aes128)",12);
-	memcpy(tcp_ao.key,"ABCDEFGHABCDEFGH",16);
-	tcp_ao.keylen = 16;
-
-	memcpy(&tcp_ao.addr,&sockaddr,sizeof(sockaddr));
-
-	setsockopt(sk, IPPROTO_TCP, TCP_AO_ADD_KEY, &tcp_ao,
-	sizeof(tcp_ao));
-	setsockopt(sk, IPPROTO_TCP, TCP_REPAIR, &one, sizeof(one));
-
-	sockaddr.sin_family = AF_INET;
-	sockaddr.sin_port = htobe16(123);
-
-	inet_aton("127.0.0.1", &sockaddr.sin_addr);
-
-	connect(sk,(struct sockaddr *)&sockaddr,sizeof(sockaddr));
-
-return 0;
-}
-
-$ gcc tcp-ao-nullptr.c -o tcp-ao-nullptr -Wall
-$ unshare -Urn
-
-BUG: kernel NULL pointer dereference, address: 00000000000000b6
-PGD 1f648d067 P4D 1f648d067 PUD 1982e8067 PMD 0
-Oops: Oops: 0000 [#1] SMP NOPTI
-Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop
-Reference Platform, BIOS 6.00 11/12/2020
-RIP: 0010:tcp_ao_finish_connect (net/ipv4/tcp_ao.c:1182)</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39949" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-qed: don't collect too many protection override grc elements
-
-in the protection override dump path, the firmware can return far too
-many grc elements, resulting in attempting to write past the end of the
-previously-kmalloc'ed dump buffer.
-
-this will result in a kernel panic with reason:
-
- bug: unable to handle kernel paging request at address
-
-where "address" is just past the end of the protection override dump
-buffer. the start address of the buffer is:
- p_hwfn->cdev->dbg_features[dbg_feature_protection_override].dump_buf
-and the size of the buffer is buf_size in the same data structure.
-
-the panic can be arrived at from either the qede ethernet driver path:
-
-    [exception rip: qed_grc_dump_addr_range+0x108]
- qed_protection_override_dump at ffffffffc02662ed [qed]
- qed_dbg_protection_override_dump at ffffffffc0267792 [qed]
- qed_dbg_feature at ffffffffc026aa8f [qed]
- qed_dbg_all_data at ffffffffc026b211 [qed]
- qed_fw_fatal_reporter_dump at ffffffffc027298a [qed]
- devlink_health_do_dump at ffffffff82497f61
- devlink_health_report at ffffffff8249cf29
- qed_report_fatal_error at ffffffffc0272baf [qed]
- qede_sp_task at ffffffffc045ed32 [qede]
- process_one_work at ffffffff81d19783
-
-or the qedf storage driver path:
-
-    [exception rip: qed_grc_dump_addr_range+0x108]
- qed_protection_override_dump at ffffffffc068b2ed [qed]
- qed_dbg_protection_override_dump at ffffffffc068c792 [qed]
- qed_dbg_feature at ffffffffc068fa8f [qed]
- qed_dbg_all_data at ffffffffc0690211 [qed]
- qed_fw_fatal_reporter_dump at ffffffffc069798a [qed]
- devlink_health_do_dump at ffffffff8aa95e51
- devlink_health_report at ffffffff8aa9ae19
- qed_report_fatal_error at ffffffffc0697baf [qed]
- qed_hw_err_notify at ffffffffc06d32d7 [qed]
- qed_spq_post at ffffffffc06b1011 [qed]
- qed_fcoe_destroy_conn at ffffffffc06b2e91 [qed]
- qedf_cleanup_fcport at ffffffffc05e7597 [qedf]
- qedf_rport_event_handler at ffffffffc05e7bf7 [qedf]
- fc_rport_work at ffffffffc02da715 [libfc]
- process_one_work at ffffffff8a319663
-
-resolve this by clamping the firmware's return value to the maximum
-number of legal elements the firmware should return.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39949" target="_blank">CVE-2025-39949</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-qed: Don't collect too many protection override GRC elements
-
-In the protection override dump path, the firmware can return far too
-many GRC elements, resulting in attempting to write past the end of the
-previously-kmalloc'ed dump buffer.
-
-This will result in a kernel panic with reason:
-
- BUG: unable to handle kernel paging request at ADDRESS
-
-where "ADDRESS" is just past the end of the protection override dump
-buffer. The start address of the buffer is:
- p_hwfn->cdev->dbg_features[DBG_FEATURE_PROTECTION_OVERRIDE].dump_buf
-and the size of the buffer is buf_size in the same data structure.
-
-The panic can be arrived at from either the qede Ethernet driver path:
-
-    [exception RIP: qed_grc_dump_addr_range+0x108]
- qed_protection_override_dump at ffffffffc02662ed [qed]
- qed_dbg_protection_override_dump at ffffffffc0267792 [qed]
- qed_dbg_feature at ffffffffc026aa8f [qed]
- qed_dbg_all_data at ffffffffc026b211 [qed]
- qed_fw_fatal_reporter_dump at ffffffffc027298a [qed]
- devlink_health_do_dump at ffffffff82497f61
- devlink_health_report at ffffffff8249cf29
- qed_report_fatal_error at ffffffffc0272baf [qed]
- qede_sp_task at ffffffffc045ed32 [qede]
- process_one_work at ffffffff81d19783
-
-or the qedf storage driver path:
-
-    [exception RIP: qed_grc_dump_addr_range+0x108]
- qed_protection_override_dump at ffffffffc068b2ed [qed]
- qed_dbg_protection_override_dump at ffffffffc068c792 [qed]
- qed_dbg_feature at ffffffffc068fa8f [qed]
- qed_dbg_all_data at ffffffffc0690211 [qed]
- qed_fw_fatal_reporter_dump at ffffffffc069798a [qed]
- devlink_health_do_dump at ffffffff8aa95e51
- devlink_health_report at ffffffff8aa9ae19
- qed_report_fatal_error at ffffffffc0697baf [qed]
- qed_hw_err_notify at ffffffffc06d32d7 [qed]
- qed_spq_post at ffffffffc06b1011 [qed]
- qed_fcoe_destroy_conn at ffffffffc06b2e91 [qed]
- qedf_cleanup_fcport at ffffffffc05e7597 [qedf]
- qedf_rport_event_handler at ffffffffc05e7bf7 [qedf]
- fc_rport_work at ffffffffc02da715 [libfc]
- process_one_work at ffffffff8a319663
-
-Resolve this by clamping the firmware's return value to the maximum
-number of legal elements the firmware should return.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39948" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ice: fix rx page leak on multi-buffer frames
-
-the ice_put_rx_mbuf() function handles calling ice_put_rx_buf() for each
-buffer in the current frame. this function was introduced as part of
-handling multi-buffer xdp support in the ice driver.
-
-it works by iterating over the buffers from first_desc up to 1 plus the
-total number of fragments in the frame, cached from before the xdp program
-was executed.
-
-if the hardware posts a descriptor with a size of 0, the logic used in
-ice_put_rx_mbuf() breaks. such descriptors get skipped and don't get added
-as fragments in ice_add_xdp_frag. since the buffer isn't counted as a
-fragment, we do not iterate over it in ice_put_rx_mbuf(), and thus we don't
-call ice_put_rx_buf().
-
-because we don't call ice_put_rx_buf(), we don't attempt to re-use the
-page or free it. this leaves a stale page in the ring, as we don't
-increment next_to_alloc.
-
-the ice_reuse_rx_page() assumes that the next_to_alloc has been incremented
-properly, and that it always points to a buffer with a null page. since
-this function doesn't check, it will happily recycle a page over the top
-of the next_to_alloc buffer, losing track of the old page.
-
-note that this leak only occurs for multi-buffer frames. the
-ice_put_rx_mbuf() function always handles at least one buffer, so a
-single-buffer frame will always get handled correctly. it is not clear
-precisely why the hardware hands us descriptors with a size of 0 sometimes,
-but it happens somewhat regularly with "jumbo frames" used by 9k mtu.
-
-to fix ice_put_rx_mbuf(), we need to make sure to call ice_put_rx_buf() on
-all buffers between first_desc and next_to_clean. borrow the logic of a
-similar function in i40e used for this same purpose. use the same logic
-also in ice_get_pgcnts().
-
-instead of iterating over just the number of fragments, use a loop which
-iterates until the current index reaches to the next_to_clean element just
-past the current frame. unlike i40e, the ice_put_rx_mbuf() function does
-call ice_put_rx_buf() on the last buffer of the frame indicating the end of
-packet.
-
-for non-linear (multi-buffer) frames, we need to take care when adjusting
-the pagecnt_bias. an xdp program might release fragments from the tail of
-the frame, in which case that fragment page is already released. only
-update the pagecnt_bias for the first descriptor and fragments still
-remaining post-xdp program. take care to only access the shared info for
-fragmented buffers, as this avoids a significant cache miss.
-
-the xdp_xmit value only needs to be updated if an xdp program is run, and
-only once per packet. drop the xdp_xmit pointer argument from
-ice_put_rx_mbuf(). instead, set xdp_xmit in the ice_clean_rx_irq() function
-directly. this avoids needing to pass the argument and avoids an extra
-bit-wise or for each buffer in the frame.
-
-move the increment of the ntc local variable to ensure its updated *before*
-all calls to ice_get_pgcnts() or ice_put_rx_mbuf(), as the loop logic
-requires the index of the element just after the current frame.
-
-now that we use an index pointer in the ring to identify the packet, we no
-longer need to track or cache the number of fragments in the rx_ring.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39948" target="_blank">CVE-2025-39948</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ice: fix Rx page leak on multi-buffer frames
-
-The ice_put_rx_mbuf() function handles calling ice_put_rx_buf() for each
-buffer in the current frame. This function was introduced as part of
-handling multi-buffer XDP support in the ice driver.
-
-It works by iterating over the buffers from first_desc up to 1 plus the
-total number of fragments in the frame, cached from before the XDP program
-was executed.
-
-If the hardware posts a descriptor with a size of 0, the logic used in
-ice_put_rx_mbuf() breaks. Such descriptors get skipped and don't get added
-as fragments in ice_add_xdp_frag. Since the buffer isn't counted as a
-fragment, we do not iterate over it in ice_put_rx_mbuf(), and thus we don't
-call ice_put_rx_buf().
-
-Because we don't call ice_put_rx_buf(), we don't attempt to re-use the
-page or free it. This leaves a stale page in the ring, as we don't
-increment next_to_alloc.
-
-The ice_reuse_rx_page() assumes that the next_to_alloc has been incremented
-properly, and that it always points to a buffer with a NULL page. Since
-this function doesn't check, it will happily recycle a page over the top
-of the next_to_alloc buffer, losing track of the old page.
-
-Note that this leak only occurs for multi-buffer frames. The
-ice_put_rx_mbuf() function always handles at least one buffer, so a
-single-buffer frame will always get handled correctly. It is not clear
-precisely why the hardware hands us descriptors with a size of 0 sometimes,
-but it happens somewhat regularly with "jumbo frames" used by 9K MTU.
-
-To fix ice_put_rx_mbuf(), we need to make sure to call ice_put_rx_buf() on
-all buffers between first_desc and next_to_clean. Borrow the logic of a
-similar function in i40e used for this same purpose. Use the same logic
-also in ice_get_pgcnts().
-
-Instead of iterating over just the number of fragments, use a loop which
-iterates until the current index reaches to the next_to_clean element just
-past the current frame. Unlike i40e, the ice_put_rx_mbuf() function does
-call ice_put_rx_buf() on the last buffer of the frame indicating the end of
-packet.
-
-For non-linear (multi-buffer) frames, we need to take care when adjusting
-the pagecnt_bias. An XDP program might release fragments from the tail of
-the frame, in which case that fragment page is already released. Only
-update the pagecnt_bias for the first descriptor and fragments still
-remaining post-XDP program. Take care to only access the shared info for
-fragmented buffers, as this avoids a significant cache miss.
-
-The xdp_xmit value only needs to be updated if an XDP program is run, and
-only once per packet. Drop the xdp_xmit pointer argument from
-ice_put_rx_mbuf(). Instead, set xdp_xmit in the ice_clean_rx_irq() function
-directly. This avoids needing to pass the argument and avoids an extra
-bit-wise OR for each buffer in the frame.
-
-Move the increment of the ntc local variable to ensure its updated *before*
-all calls to ice_get_pgcnts() or ice_put_rx_mbuf(), as the loop logic
-requires the index of the element just after the current frame.
-
-Now that we use an index pointer in the ring to identify the packet, we no
-longer need to track or cache the number of fragments in the rx_ring.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39947" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net/mlx5e: harden uplink netdev access against device unbind
-
-the function mlx5_uplink_netdev_get() gets the uplink netdevice
-pointer from mdev->mlx5e_res.uplink_netdev. however, the netdevice can
-be removed and its pointer cleared when unbound from the mlx5_core.eth
-driver. this results in a null pointer, causing a kernel panic.
-
- bug: unable to handle page fault for address: 0000000000001300
- at rip: 0010:mlx5e_vport_rep_load+0x22a/0x270 [mlx5_core]
+ cpu: 0 pid: 3632 comm: syz-executor131 not tainted 6.1.0-rc7-syzkaller-00012-gca57f02295f1 #0
+ hardware name: google google compute engine/google compute engine, bios google 10/26/2022
  call trace:
   <task>
-  mlx5_esw_offloads_rep_load+0x68/0xe0 [mlx5_core]
-  esw_offloads_enable+0x593/0x910 [mlx5_core]
-  mlx5_eswitch_enable_locked+0x341/0x420 [mlx5_core]
-  mlx5_devlink_eswitch_mode_set+0x17e/0x3a0 [mlx5_core]
-  devlink_nl_eswitch_set_doit+0x60/0xd0
-  genl_family_rcv_msg_doit+0xe0/0x130
-  genl_rcv_msg+0x183/0x290
-  netlink_rcv_skb+0x4b/0xf0
-  genl_rcv+0x24/0x40
-  netlink_unicast+0x255/0x380
-  netlink_sendmsg+0x1f3/0x420
-  __sock_sendmsg+0x38/0x60
-  __sys_sendto+0x119/0x180
-  do_syscall_64+0x53/0x1d0
-  entry_syscall_64_after_hwframe+0x4b/0x53
+  __dump_stack lib/dump_stack.c:88 [inline]
+  dump_stack_lvl+0x1b1/0x28e lib/dump_stack.c:106
+  print_address_description+0x74/0x340 mm/kasan/report.c:284
+  print_report+0x107/0x1f0 mm/kasan/report.c:395
+  kasan_report_invalid_free+0xac/0xd0 mm/kasan/report.c:460
+  ____kasan_slab_free+0xfb/0x120
+  kasan_slab_free include/linux/kasan.h:177 [inline]
+  slab_free_hook mm/slub.c:1724 [inline]
+  slab_free_freelist_hook+0x12e/0x1a0 mm/slub.c:1750
+  slab_free mm/slub.c:3661 [inline]
+  __kmem_cache_free+0x71/0x110 mm/slub.c:3674
+  diunmount+0xef/0x100 fs/jfs/jfs_imap.c:195
+  jfs_umount+0x108/0x370 fs/jfs/jfs_umount.c:63
+  jfs_put_super+0x86/0x190 fs/jfs/super.c:194
+  generic_shutdown_super+0x130/0x310 fs/super.c:492
+  kill_block_super+0x79/0xd0 fs/super.c:1428
+  deactivate_locked_super+0xa7/0xf0 fs/super.c:332
+  cleanup_mnt+0x494/0x520 fs/namespace.c:1186
+  task_work_run+0x243/0x300 kernel/task_work.c:179
+  exit_task_work include/linux/task_work.h:38 [inline]
+  do_exit+0x664/0x2070 kernel/exit.c:820
+  do_group_exit+0x1fd/0x2b0 kernel/exit.c:950
+  __do_sys_exit_group kernel/exit.c:961 [inline]
+  __se_sys_exit_group kernel/exit.c:959 [inline]
+  __x64_sys_exit_group+0x3b/0x40 kernel/exit.c:959
+  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
+  entry_syscall_64_after_hwframe+0x63/0xcd
+[...]
 
-ensure the pointer is valid before use by checking it for null. if it
-is valid, immediately call netdev_hold() to take a reference, and
-preventing the netdevice from being freed while it is in use.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39947" target="_blank">CVE-2025-39947</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+jfs_ip(ipimap)->i_imap is not setting to null after free in diunmount.
+if jfs_remount() free jfs_ip(ipimap)->i_imap but then failed at dimount().
+jfs_ip(ipimap)->i_imap will be freed once again.
+fix this problem by setting jfs_ip(ipimap)->i_imap to null after free.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53616" target="_blank">CVE-2023-53616</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:58 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net/mlx5e: Harden uplink netdev access against device unbind
+jfs: fix invalid free of JFS_IP(ipimap)->i_imap in diUnmount
 
-The function mlx5_uplink_netdev_get() gets the uplink netdevice
-pointer from mdev->mlx5e_res.uplink_netdev. However, the netdevice can
-be removed and its pointer cleared when unbound from the mlx5_core.eth
-driver. This results in a NULL pointer, causing a kernel panic.
+syzbot found an invalid-free in diUnmount:
 
- BUG: unable to handle page fault for address: 0000000000001300
- at RIP: 0010:mlx5e_vport_rep_load+0x22a/0x270 [mlx5_core]
+BUG: KASAN: double-free in slab_free mm/slub.c:3661 [inline]
+BUG: KASAN: double-free in __kmem_cache_free+0x71/0x110 mm/slub.c:3674
+Free of addr ffff88806f410000 by task syz-executor131/3632
+
+ CPU: 0 PID: 3632 Comm: syz-executor131 Not tainted 6.1.0-rc7-syzkaller-00012-gca57f02295f1 #0
+ Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/26/2022
  Call Trace:
   <TASK>
-  mlx5_esw_offloads_rep_load+0x68/0xe0 [mlx5_core]
-  esw_offloads_enable+0x593/0x910 [mlx5_core]
-  mlx5_eswitch_enable_locked+0x341/0x420 [mlx5_core]
-  mlx5_devlink_eswitch_mode_set+0x17e/0x3a0 [mlx5_core]
-  devlink_nl_eswitch_set_doit+0x60/0xd0
-  genl_family_rcv_msg_doit+0xe0/0x130
-  genl_rcv_msg+0x183/0x290
-  netlink_rcv_skb+0x4b/0xf0
-  genl_rcv+0x24/0x40
-  netlink_unicast+0x255/0x380
-  netlink_sendmsg+0x1f3/0x420
-  __sock_sendmsg+0x38/0x60
-  __sys_sendto+0x119/0x180
-  do_syscall_64+0x53/0x1d0
-  entry_SYSCALL_64_after_hwframe+0x4b/0x53
+  __dump_stack lib/dump_stack.c:88 [inline]
+  dump_stack_lvl+0x1b1/0x28e lib/dump_stack.c:106
+  print_address_description+0x74/0x340 mm/kasan/report.c:284
+  print_report+0x107/0x1f0 mm/kasan/report.c:395
+  kasan_report_invalid_free+0xac/0xd0 mm/kasan/report.c:460
+  ____kasan_slab_free+0xfb/0x120
+  kasan_slab_free include/linux/kasan.h:177 [inline]
+  slab_free_hook mm/slub.c:1724 [inline]
+  slab_free_freelist_hook+0x12e/0x1a0 mm/slub.c:1750
+  slab_free mm/slub.c:3661 [inline]
+  __kmem_cache_free+0x71/0x110 mm/slub.c:3674
+  diUnmount+0xef/0x100 fs/jfs/jfs_imap.c:195
+  jfs_umount+0x108/0x370 fs/jfs/jfs_umount.c:63
+  jfs_put_super+0x86/0x190 fs/jfs/super.c:194
+  generic_shutdown_super+0x130/0x310 fs/super.c:492
+  kill_block_super+0x79/0xd0 fs/super.c:1428
+  deactivate_locked_super+0xa7/0xf0 fs/super.c:332
+  cleanup_mnt+0x494/0x520 fs/namespace.c:1186
+  task_work_run+0x243/0x300 kernel/task_work.c:179
+  exit_task_work include/linux/task_work.h:38 [inline]
+  do_exit+0x664/0x2070 kernel/exit.c:820
+  do_group_exit+0x1fd/0x2b0 kernel/exit.c:950
+  __do_sys_exit_group kernel/exit.c:961 [inline]
+  __se_sys_exit_group kernel/exit.c:959 [inline]
+  __x64_sys_exit_group+0x3b/0x40 kernel/exit.c:959
+  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+  do_syscall_64+0x3d/0xb0 arch/x86/entry/common.c:80
+  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+[...]
 
-Ensure the pointer is valid before use by checking it for NULL. If it
-is valid, immediately call netdev_hold() to take a reference, and
-preventing the netdevice from being freed while it is in use.</p>
+JFS_IP(ipimap)->i_imap is not setting to NULL after free in diUnmount.
+If jfs_remount() free JFS_IP(ipimap)->i_imap but then failed at diMount().
+JFS_IP(ipimap)->i_imap will be freed once again.
+Fix this problem by setting JFS_IP(ipimap)->i_imap to NULL after free.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39946" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53615" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-tls: make sure to abort the stream if headers are bogus
+scsi: qla2xxx: fix deletion race condition
 
-normally we wait for the socket to buffer up the whole record
-before we service it. if the socket has a tiny buffer, however,
-we read out the data sooner, to prevent connection stalls.
-make sure that we abort the connection when we find out late
-that the record is actually invalid. retrying the parsing is
-fine in itself but since we copy some more data each time
-before we parse we can overflow the allocated skb space.
+system crash when using debug kernel due to link list corruption. the cause
+of the link list corruption is due to session deletion was allowed to queue
+up twice.  here's the internal trace that show the same port was allowed to
+double queue for deletion on different cpu.
 
-constructing a scenario in which we're under pressure without
-enough data in the socket to parse the length upfront is quite
-hard. syzbot figured out a way to do this by serving us the header
-in small oob sends, and then filling in the recvbuf with a large
-normal send.
+20808683956 015 qla2xxx [0000:13:00.1]-e801:4: scheduling sess ffff93ebf9306800 for deletion 50:06:0e:80:12:48:ff:50 fc4_type 1
+20808683957 027 qla2xxx [0000:13:00.1]-e801:4: scheduling sess ffff93ebf9306800 for deletion 50:06:0e:80:12:48:ff:50 fc4_type 1
 
-make sure that tls_rx_msg_size() aborts strp, if we reach
-an invalid record there's really no way to recover.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39946" target="_blank">CVE-2025-39946</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+move the clearing/setting of deleted flag lock.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53615" target="_blank">CVE-2023-53615</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:58 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-tls: make sure to abort the stream if headers are bogus
+scsi: qla2xxx: Fix deletion race condition
 
-Normally we wait for the socket to buffer up the whole record
-before we service it. If the socket has a tiny buffer, however,
-we read out the data sooner, to prevent connection stalls.
-Make sure that we abort the connection when we find out late
-that the record is actually invalid. Retrying the parsing is
-fine in itself but since we copy some more data each time
-before we parse we can overflow the allocated skb space.
+System crash when using debug kernel due to link list corruption. The cause
+of the link list corruption is due to session deletion was allowed to queue
+up twice.  Here's the internal trace that show the same port was allowed to
+double queue for deletion on different cpu.
 
-Constructing a scenario in which we're under pressure without
-enough data in the socket to parse the length upfront is quite
-hard. syzbot figured out a way to do this by serving us the header
-in small OOB sends, and then filling in the recvbuf with a large
-normal send.
+20808683956 015 qla2xxx [0000:13:00.1]-e801:4: Scheduling sess ffff93ebf9306800 for deletion 50:06:0e:80:12:48:ff:50 fc4_type 1
+20808683957 027 qla2xxx [0000:13:00.1]-e801:4: Scheduling sess ffff93ebf9306800 for deletion 50:06:0e:80:12:48:ff:50 fc4_type 1
 
-Make sure that tls_rx_msg_size() aborts strp, if we reach
-an invalid record there's really no way to recover.</p>
+Move the clearing/setting of deleted flag lock.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39945" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53614" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-cnic: fix use-after-free bugs in cnic_delete_task
+mm/ksm: fix race with vma iteration and mm_struct teardown
 
-the original code uses cancel_delayed_work() in cnic_cm_stop_bnx2x_hw(),
-which does not guarantee that the delayed work item 'delete_task' has
-fully completed if it was already running. additionally, the delayed work
-item is cyclic, the flush_workqueue() in cnic_cm_stop_bnx2x_hw() only
-blocks and waits for work items that were already queued to the
-workqueue prior to its invocation. any work items submitted after
-flush_workqueue() is called are not included in the set of tasks that the
-flush operation awaits. this means that after the cyclic work items have
-finished executing, a delayed work item may still exist in the workqueue.
-this leads to use-after-free scenarios where the cnic_dev is deallocated
-by cnic_free_dev(), while delete_task remains active and attempt to
-dereference cnic_dev in cnic_delete_task().
+exit_mmap() will tear down the vmas and maple tree with the mmap_lock held
+in write mode.  ensure that the maple tree is still valid by checking
+ksm_test_exit() after taking the mmap_lock in read mode, but before the
+for_each_vma() iterator dereferences a destroyed maple tree.
 
-a typical race condition is illustrated below:
-
-cpu 0 (cleanup)              | cpu 1 (delayed work callback)
-cnic_netdev_event()          |
-  cnic_stop_hw()             | cnic_delete_task()
-    cnic_cm_stop_bnx2x_hw()  | ...
-      cancel_delayed_work()  | /* the queue_delayed_work()
-      flush_workqueue()      |    executes after flush_workqueue()*/
-                             | queue_delayed_work()
-  cnic_free_dev(dev)//free   | cnic_delete_task() //new instance
-                             |   dev = cp->dev; //use
-
-replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
-that the cyclic delayed work item is properly canceled and that any
-ongoing execution of the work item completes before the cnic_dev is
-deallocated. furthermore, since cancel_delayed_work_sync() uses
-__flush_work(work, true) to synchronously wait for any currently
-executing instance of the work item to finish, the flush_workqueue()
-becomes redundant and should be removed.
-
-this bug was identified through static analysis. to reproduce the issue
-and validate the fix, i simulated the cnic pci device in qemu and
-introduced intentional delays — such as inserting calls to ssleep()
-within the cnic_delete_task() function — to increase the likelihood
-of triggering the bug.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39945" target="_blank">CVE-2025-39945</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+since the maple tree is destroyed, the flags telling lockdep to check an
+external lock has been cleared.  skip the for_each_vma() iterator to avoid
+dereferencing a maple tree without the external lock flag, which would
+create a lockdep warning.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53614" target="_blank">CVE-2023-53614</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:58 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-cnic: Fix use-after-free bugs in cnic_delete_task
+mm/ksm: fix race with VMA iteration and mm_struct teardown
 
-The original code uses cancel_delayed_work() in cnic_cm_stop_bnx2x_hw(),
-which does not guarantee that the delayed work item 'delete_task' has
-fully completed if it was already running. Additionally, the delayed work
-item is cyclic, the flush_workqueue() in cnic_cm_stop_bnx2x_hw() only
-blocks and waits for work items that were already queued to the
-workqueue prior to its invocation. Any work items submitted after
-flush_workqueue() is called are not included in the set of tasks that the
-flush operation awaits. This means that after the cyclic work items have
-finished executing, a delayed work item may still exist in the workqueue.
-This leads to use-after-free scenarios where the cnic_dev is deallocated
-by cnic_free_dev(), while delete_task remains active and attempt to
-dereference cnic_dev in cnic_delete_task().
+exit_mmap() will tear down the VMAs and maple tree with the mmap_lock held
+in write mode.  Ensure that the maple tree is still valid by checking
+ksm_test_exit() after taking the mmap_lock in read mode, but before the
+for_each_vma() iterator dereferences a destroyed maple tree.
 
-A typical race condition is illustrated below:
-
-CPU 0 (cleanup)              | CPU 1 (delayed work callback)
-cnic_netdev_event()          |
-  cnic_stop_hw()             | cnic_delete_task()
-    cnic_cm_stop_bnx2x_hw()  | ...
-      cancel_delayed_work()  | /* the queue_delayed_work()
-      flush_workqueue()      |    executes after flush_workqueue()*/
-                             | queue_delayed_work()
-  cnic_free_dev(dev)//free   | cnic_delete_task() //new instance
-                             |   dev = cp->dev; //use
-
-Replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
-that the cyclic delayed work item is properly canceled and that any
-ongoing execution of the work item completes before the cnic_dev is
-deallocated. Furthermore, since cancel_delayed_work_sync() uses
-__flush_work(work, true) to synchronously wait for any currently
-executing instance of the work item to finish, the flush_workqueue()
-becomes redundant and should be removed.
-
-This bug was identified through static analysis. To reproduce the issue
-and validate the fix, I simulated the cnic PCI device in QEMU and
-introduced intentional delays — such as inserting calls to ssleep()
-within the cnic_delete_task() function — to increase the likelihood
-of triggering the bug.</p>
+Since the maple tree is destroyed, the flags telling lockdep to check an
+external lock has been cleared.  Skip the for_each_vma() iterator to avoid
+dereferencing a maple tree without the external lock flag, which would
+create a lockdep warning.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39944" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53613" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-octeontx2-pf: fix use-after-free bugs in otx2_sync_tstamp()
+dax: fix dax_mapping_release() use after free
 
-the original code relies on cancel_delayed_work() in otx2_ptp_destroy(),
-which does not ensure that the delayed work item synctstamp_work has fully
-completed if it was already running. this leads to use-after-free scenarios
-where otx2_ptp is deallocated by otx2_ptp_destroy(), while synctstamp_work
-remains active and attempts to dereference otx2_ptp in otx2_sync_tstamp().
-furthermore, the synctstamp_work is cyclic, the likelihood of triggering
-the bug is nonnegligible.
+a config_debug_kobject_release test of removing a device-dax region
+provider (like modprobe -r dax_hmem) yields:
 
-a typical race condition is illustrated below:
+ kobject: 'mapping0' (ffff93eb460e8800): kobject_release, parent 0000000000000000 (delayed 2000)
+ [..]
+ debug_locks_warn_on(1)
+ warning: cpu: 23 pid: 282 at kernel/locking/lockdep.c:232 __lock_acquire+0x9fc/0x2260
+ [..]
+ rip: 0010:__lock_acquire+0x9fc/0x2260
+ [..]
+ call trace:
+  <task>
+ [..]
+  lock_acquire+0xd4/0x2c0
+  ? ida_free+0x62/0x130
+  _raw_spin_lock_irqsave+0x47/0x70
+  ? ida_free+0x62/0x130
+  ida_free+0x62/0x130
+  dax_mapping_release+0x1f/0x30
+  device_release+0x36/0x90
+  kobject_delayed_cleanup+0x46/0x150
 
-cpu 0 (cleanup)           | cpu 1 (delayed work callback)
-otx2_remove()             |
-  otx2_ptp_destroy()      | otx2_sync_tstamp()
-    cancel_delayed_work() |
-    kfree(ptp)            |
-                          |   ptp = container_of(...); //uaf
-                          |   ptp-> //uaf
+due to attempting ida_free() on an ida object that has already been
+freed. devices typically only hold a reference on their parent while
+registered. if a child needs a parent object to complete its release it
+needs to hold a reference that it drops from its release callback.
+arrange for a dax_mapping to pin its parent dev_dax instance until
+dax_mapping_release().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53613" target="_blank">CVE-2023-53613</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-this is confirmed by a kasan report:
+dax: Fix dax_mapping_release() use after free
 
-bug: kasan: slab-use-after-free in __run_timer_base.part.0+0x7d7/0x8c0
-write of size 8 at addr ffff88800aa09a18 by task bash/136
-...
+A CONFIG_DEBUG_KOBJECT_RELEASE test of removing a device-dax region
+provider (like modprobe -r dax_hmem) yields:
+
+ kobject: 'mapping0' (ffff93eb460e8800): kobject_release, parent 0000000000000000 (delayed 2000)
+ [..]
+ DEBUG_LOCKS_WARN_ON(1)
+ WARNING: CPU: 23 PID: 282 at kernel/locking/lockdep.c:232 __lock_acquire+0x9fc/0x2260
+ [..]
+ RIP: 0010:__lock_acquire+0x9fc/0x2260
+ [..]
+ Call Trace:
+  <TASK>
+ [..]
+  lock_acquire+0xd4/0x2c0
+  ? ida_free+0x62/0x130
+  _raw_spin_lock_irqsave+0x47/0x70
+  ? ida_free+0x62/0x130
+  ida_free+0x62/0x130
+  dax_mapping_release+0x1f/0x30
+  device_release+0x36/0x90
+  kobject_delayed_cleanup+0x46/0x150
+
+Due to attempting ida_free() on an ida object that has already been
+freed. Devices typically only hold a reference on their parent while
+registered. If a child needs a parent object to complete its release it
+needs to hold a reference that it drops from its release callback.
+Arrange for a dax_mapping to pin its parent dev_dax instance until
+dax_mapping_release().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53612" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+hwmon: (coretemp) simplify platform device handling
+
+coretemp's platform driver is unconventional. all the real work is done
+globally by the initcall and cpu hotplug notifiers, while the "driver"
+effectively just wraps an allocation and the registration of the hwmon
+interface in a long-winded round-trip through the driver core.  the whole
+logic of dynamically creating and destroying platform devices to bring
+the interfaces up and down is error prone, since it assumes
+platform_device_add() will synchronously bind the driver and set drvdata
+before it returns, thus results in a null dereference if drivers_autoprobe
+is turned off for the platform bus. furthermore, the unusual approach of
+doing that from within a cpu hotplug notifier, already commented in the
+code that it deadlocks suspend, also causes lockdep issues for other
+drivers or subsystems which may want to legitimately register a cpu
+hotplug notifier from a platform bus notifier.
+
+all of these issues can be solved by ripping this unusual behaviour out
+completely, simply tying the platform devices to the lifetime of the
+module itself, and directly managing the hwmon interfaces from the
+hotplug notifiers. there is a slight user-visible change in that
+/sys/bus/platform/drivers/coretemp will no longer appear, and
+/sys/devices/platform/coretemp.n will remain present if package n is
+hotplugged off, but hwmon users should really only be looking for the
+presence of the hwmon interfaces, whose behaviour remains unchanged.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53612" target="_blank">CVE-2023-53612</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+hwmon: (coretemp) Simplify platform device handling
+
+Coretemp's platform driver is unconventional. All the real work is done
+globally by the initcall and CPU hotplug notifiers, while the "driver"
+effectively just wraps an allocation and the registration of the hwmon
+interface in a long-winded round-trip through the driver core.  The whole
+logic of dynamically creating and destroying platform devices to bring
+the interfaces up and down is error prone, since it assumes
+platform_device_add() will synchronously bind the driver and set drvdata
+before it returns, thus results in a NULL dereference if drivers_autoprobe
+is turned off for the platform bus. Furthermore, the unusual approach of
+doing that from within a CPU hotplug notifier, already commented in the
+code that it deadlocks suspend, also causes lockdep issues for other
+drivers or subsystems which may want to legitimately register a CPU
+hotplug notifier from a platform bus notifier.
+
+All of these issues can be solved by ripping this unusual behaviour out
+completely, simply tying the platform devices to the lifetime of the
+module itself, and directly managing the hwmon interfaces from the
+hotplug notifiers. There is a slight user-visible change in that
+/sys/bus/platform/drivers/coretemp will no longer appear, and
+/sys/devices/platform/coretemp.n will remain present if package n is
+hotplugged off, but hwmon users should really only be looking for the
+presence of the hwmon interfaces, whose behaviour remains unchanged.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53611" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ipmi_si: fix a memleak in try_smi_init()
+
+kmemleak reported the following leak info in try_smi_init():
+
+unreferenced object 0xffff00018ecf9400 (size 1024):
+  comm "modprobe", pid 2707763, jiffies 4300851415 (age 773.308s)
+  backtrace:
+    [<000000004ca5b312>] __kmalloc+0x4b8/0x7b0
+    [<00000000953b1072>] try_smi_init+0x148/0x5dc [ipmi_si]
+    [<000000006460d325>] 0xffff800081b10148
+    [<0000000039206ea5>] do_one_initcall+0x64/0x2a4
+    [<00000000601399ce>] do_init_module+0x50/0x300
+    [<000000003c12ba3c>] load_module+0x7a8/0x9e0
+    [<00000000c246fffe>] __se_sys_init_module+0x104/0x180
+    [<00000000eea99093>] __arm64_sys_init_module+0x24/0x30
+    [<0000000021b1ef87>] el0_svc_common.constprop.0+0x94/0x250
+    [<0000000070f4f8b7>] do_el0_svc+0x48/0xe0
+    [<000000005a05337f>] el0_svc+0x24/0x3c
+    [<000000005eb248d6>] el0_sync_handler+0x160/0x164
+    [<0000000030a59039>] el0_sync+0x160/0x180
+
+the problem was that when an error occurred before handlers registration
+and after allocating `new_smi->si_sm`, the variable wouldn't be freed in
+the error handling afterwards since `shutdown_smi()` hadn't been
+registered yet. fix it by adding a `kfree()` in the error handling path
+in `try_smi_init()`.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53611" target="_blank">CVE-2023-53611</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ipmi_si: fix a memleak in try_smi_init()
+
+Kmemleak reported the following leak info in try_smi_init():
+
+unreferenced object 0xffff00018ecf9400 (size 1024):
+  comm "modprobe", pid 2707763, jiffies 4300851415 (age 773.308s)
+  backtrace:
+    [<000000004ca5b312>] __kmalloc+0x4b8/0x7b0
+    [<00000000953b1072>] try_smi_init+0x148/0x5dc [ipmi_si]
+    [<000000006460d325>] 0xffff800081b10148
+    [<0000000039206ea5>] do_one_initcall+0x64/0x2a4
+    [<00000000601399ce>] do_init_module+0x50/0x300
+    [<000000003c12ba3c>] load_module+0x7a8/0x9e0
+    [<00000000c246fffe>] __se_sys_init_module+0x104/0x180
+    [<00000000eea99093>] __arm64_sys_init_module+0x24/0x30
+    [<0000000021b1ef87>] el0_svc_common.constprop.0+0x94/0x250
+    [<0000000070f4f8b7>] do_el0_svc+0x48/0xe0
+    [<000000005a05337f>] el0_svc+0x24/0x3c
+    [<000000005eb248d6>] el0_sync_handler+0x160/0x164
+    [<0000000030a59039>] el0_sync+0x160/0x180
+
+The problem was that when an error occurred before handlers registration
+and after allocating `new_smi->si_sm`, the variable wouldn't be freed in
+the error handling afterwards since `shutdown_smi()` hadn't been
+registered yet. Fix it by adding a `kfree()` in the error handling path
+in `try_smi_init()`.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53610" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+irqchip: fix refcount leak in platform_irqchip_probe
+
+of_irq_find_parent() returns a node pointer with refcount incremented,
+we should use of_node_put() on it when not needed anymore.
+add missing of_node_put() to avoid refcount leak.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53610" target="_blank">CVE-2023-53610</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+irqchip: Fix refcount leak in platform_irqchip_probe
+
+of_irq_find_parent() returns a node pointer with refcount incremented,
+We should use of_node_put() on it when not needed anymore.
+Add missing of_node_put() to avoid refcount leak.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53609" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+scsi: revert "scsi: core: do not increase scsi_device's iorequest_cnt if dispatch failed"
+
+the "atomic_inc(&cmd->device->iorequest_cnt)" in scsi_queue_rq() would
+cause kernel panic because cmd->device may be freed after returning from
+scsi_dispatch_cmd().
+
+this reverts commit cfee29ffb45b1c9798011b19d454637d1b0fe87d.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53609" target="_blank">CVE-2023-53609</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+scsi: Revert "scsi: core: Do not increase scsi_device's iorequest_cnt if dispatch failed"
+
+The "atomic_inc(&cmd->device->iorequest_cnt)" in scsi_queue_rq() would
+cause kernel panic because cmd->device may be freed after returning from
+scsi_dispatch_cmd().
+
+This reverts commit cfee29ffb45b1c9798011b19d454637d1b0fe87d.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53608" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nilfs2: fix potential uaf of struct nilfs_sc_info in nilfs_segctor_thread()
+
+the finalization of nilfs_segctor_thread() can race with
+nilfs_segctor_kill_thread() which terminates that thread, potentially
+causing a use-after-free bug as kasan detected.
+
+at the end of nilfs_segctor_thread(), it assigns null to "sc_task" member
+of "struct nilfs_sc_info" to indicate the thread has finished, and then
+notifies nilfs_segctor_kill_thread() of this using waitqueue
+"sc_wait_task" on the struct nilfs_sc_info.
+
+however, here, immediately after the null assignment to "sc_task", it is
+possible that nilfs_segctor_kill_thread() will detect it and return to
+continue the deallocation, freeing the nilfs_sc_info structure before the
+thread does the notification.
+
+this fixes the issue by protecting the null assignment to "sc_task" and
+its notification, with spinlock "sc_state_lock" of the struct
+nilfs_sc_info.  since nilfs_segctor_kill_thread() does a final check to
+see if "sc_task" is null with "sc_state_lock" locked, this can eliminate
+the race.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53608" target="_blank">CVE-2023-53608</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nilfs2: fix potential UAF of struct nilfs_sc_info in nilfs_segctor_thread()
+
+The finalization of nilfs_segctor_thread() can race with
+nilfs_segctor_kill_thread() which terminates that thread, potentially
+causing a use-after-free BUG as KASAN detected.
+
+At the end of nilfs_segctor_thread(), it assigns NULL to "sc_task" member
+of "struct nilfs_sc_info" to indicate the thread has finished, and then
+notifies nilfs_segctor_kill_thread() of this using waitqueue
+"sc_wait_task" on the struct nilfs_sc_info.
+
+However, here, immediately after the NULL assignment to "sc_task", it is
+possible that nilfs_segctor_kill_thread() will detect it and return to
+continue the deallocation, freeing the nilfs_sc_info structure before the
+thread does the notification.
+
+This fixes the issue by protecting the NULL assignment to "sc_task" and
+its notification, with spinlock "sc_state_lock" of the struct
+nilfs_sc_info.  Since nilfs_segctor_kill_thread() does a final check to
+see if "sc_task" is NULL with "sc_state_lock" locked, this can eliminate
+the race.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53607" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: ymfpci: fix bug_on in probe function
+
+the snd_dma_buffer.bytes field now contains the aligned size, which this
+snd_bug_on() did not account for, resulting in the following:
+
+[    9.625915] ------------[ cut here ]------------
+[    9.633440] warning: cpu: 0 pid: 126 at sound/pci/ymfpci/ymfpci_main.c:2168 snd_ymfpci_create+0x681/0x698 [snd_ymfpci]
+[    9.648926] modules linked in: snd_ymfpci(+) snd_intel_dspcfg kvm(+) snd_intel_sdw_acpi snd_ac97_codec snd_mpu401_uart snd_opl3_lib irqbypass snd_hda_codec gameport snd_rawmidi crct10dif_pclmul crc32_pclmul cfg80211 snd_hda_core polyval_clmulni polyval_generic gf128mul snd_seq_device ghash_clmulni_intel snd_hwdep ac97_bus sha512_ssse3 rfkill snd_pcm aesni_intel tg3 snd_timer crypto_simd snd mxm_wmi libphy cryptd k10temp fam15h_power pcspkr soundcore sp5100_tco wmi acpi_cpufreq mac_hid dm_multipath sg loop fuse dm_mod bpf_preload ip_tables x_tables ext4 crc32c_generic crc16 mbcache jbd2 sr_mod cdrom ata_generic pata_acpi firewire_ohci crc32c_intel firewire_core xhci_pci crc_itu_t pata_via xhci_pci_renesas floppy
+[    9.711849] cpu: 0 pid: 126 comm: kworker/0:2 not tainted 6.1.21-1-lts #1 08d2e5ece03136efa7c6aeea9a9c40916b1bd8da
+[    9.722200] hardware name: to be filled by o.e.m. to be filled by o.e.m./990fx extreme4, bios p2.70 06/05/2014
+[    9.732204] workqueue: events work_for_cpu_fn
+[    9.736580] rip: 0010:snd_ymfpci_create+0x681/0x698 [snd_ymfpci]
+[    9.742594] code: 8c c0 4c 89 e2 48 89 df 48 c7 c6 92 c6 8c c0 e8 15 d0 e9 ff 48 83 c4 08 44 89 e8 5b 5d 41 5c 41 5d 41 5e 41 5f e9 d3 7a 33 e3 <0f> 0b e9 cb fd ff ff 41 bd fb ff ff ff eb db 41 bd f4 ff ff ff eb
+[    9.761358] rsp: 0018:ffffab64804e7da0 eflags: 00010287
+[    9.766594] rax: ffff8fa2df06c400 rbx: ffff8fa3073a8000 rcx: ffff8fa303fbc4a8
+[    9.773734] rdx: ffff8fa2df06d000 rsi: 0000000000000010 rdi: 0000000000000020
+[    9.780876] rbp: ffff8fa300b5d0d0 r08: ffff8fa3073a8e50 r09: 00000000df06bf00
+[    9.788018] r10: ffff8fa2df06bf00 r11: 00000000df068200 r12: ffff8fa3073a8918
+[    9.795159] r13: 0000000000000000 r14: 0000000000000080 r15: ffff8fa2df068200
+[    9.802317] fs:  0000000000000000(0000) gs:ffff8fa9fec00000(0000) knlgs:0000000000000000
+[    9.810414] cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+[    9.816158] cr2: 000055febaf66500 cr3: 0000000101a2e000 cr4: 00000000000406f0
+[    9.823301] call trace:
+[    9.825747]  <task>
+[    9.827889]  snd_card_ymfpci_probe+0x194/0x950 [snd_ymfpci b78a5fe64b5663a6390a909c67808567e3e73615]
+[    9.837030]  ? finish_task_switch.isra.0+0x90/0x2d0
+[    9.841918]  local_pci_probe+0x45/0x80
+[    9.845680]  work_for_cpu_fn+0x1a/0x30
+[    9.849431]  process_one_work+0x1c7/0x380
+[    9.853464]  worker_thread+0x1af/0x390
+[    9.857225]  ? rescuer_thread+0x3b0/0x3b0
+[    9.861254]  kthread+0xde/0x110
+[    9.864414]  ? kthread_complete_and_exit+0x20/0x20
+[    9.869210]  ret_from_fork+0x22/0x30
+[    9.872792]  </task>
+[    9.874985] ---[ end trace 0000000000000000 ]---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53607" target="_blank">CVE-2023-53607</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: ymfpci: Fix BUG_ON in probe function
+
+The snd_dma_buffer.bytes field now contains the aligned size, which this
+snd_BUG_ON() did not account for, resulting in the following:
+
+[    9.625915] ------------[ cut here ]------------
+[    9.633440] WARNING: CPU: 0 PID: 126 at sound/pci/ymfpci/ymfpci_main.c:2168 snd_ymfpci_create+0x681/0x698 [snd_ymfpci]
+[    9.648926] Modules linked in: snd_ymfpci(+) snd_intel_dspcfg kvm(+) snd_intel_sdw_acpi snd_ac97_codec snd_mpu401_uart snd_opl3_lib irqbypass snd_hda_codec gameport snd_rawmidi crct10dif_pclmul crc32_pclmul cfg80211 snd_hda_core polyval_clmulni polyval_generic gf128mul snd_seq_device ghash_clmulni_intel snd_hwdep ac97_bus sha512_ssse3 rfkill snd_pcm aesni_intel tg3 snd_timer crypto_simd snd mxm_wmi libphy cryptd k10temp fam15h_power pcspkr soundcore sp5100_tco wmi acpi_cpufreq mac_hid dm_multipath sg loop fuse dm_mod bpf_preload ip_tables x_tables ext4 crc32c_generic crc16 mbcache jbd2 sr_mod cdrom ata_generic pata_acpi firewire_ohci crc32c_intel firewire_core xhci_pci crc_itu_t pata_via xhci_pci_renesas floppy
+[    9.711849] CPU: 0 PID: 126 Comm: kworker/0:2 Not tainted 6.1.21-1-lts #1 08d2e5ece03136efa7c6aeea9a9c40916b1bd8da
+[    9.722200] Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./990FX Extreme4, BIOS P2.70 06/05/2014
+[    9.732204] Workqueue: events work_for_cpu_fn
+[    9.736580] RIP: 0010:snd_ymfpci_create+0x681/0x698 [snd_ymfpci]
+[    9.742594] Code: 8c c0 4c 89 e2 48 89 df 48 c7 c6 92 c6 8c c0 e8 15 d0 e9 ff 48 83 c4 08 44 89 e8 5b 5d 41 5c 41 5d 41 5e 41 5f e9 d3 7a 33 e3 <0f> 0b e9 cb fd ff ff 41 bd fb ff ff ff eb db 41 bd f4 ff ff ff eb
+[    9.761358] RSP: 0018:ffffab64804e7da0 EFLAGS: 00010287
+[    9.766594] RAX: ffff8fa2df06c400 RBX: ffff8fa3073a8000 RCX: ffff8fa303fbc4a8
+[    9.773734] RDX: ffff8fa2df06d000 RSI: 0000000000000010 RDI: 0000000000000020
+[    9.780876] RBP: ffff8fa300b5d0d0 R08: ffff8fa3073a8e50 R09: 00000000df06bf00
+[    9.788018] R10: ffff8fa2df06bf00 R11: 00000000df068200 R12: ffff8fa3073a8918
+[    9.795159] R13: 0000000000000000 R14: 0000000000000080 R15: ffff8fa2df068200
+[    9.802317] FS:  0000000000000000(0000) GS:ffff8fa9fec00000(0000) knlGS:0000000000000000
+[    9.810414] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    9.816158] CR2: 000055febaf66500 CR3: 0000000101a2e000 CR4: 00000000000406f0
+[    9.823301] Call Trace:
+[    9.825747]  <TASK>
+[    9.827889]  snd_card_ymfpci_probe+0x194/0x950 [snd_ymfpci b78a5fe64b5663a6390a909c67808567e3e73615]
+[    9.837030]  ? finish_task_switch.isra.0+0x90/0x2d0
+[    9.841918]  local_pci_probe+0x45/0x80
+[    9.845680]  work_for_cpu_fn+0x1a/0x30
+[    9.849431]  process_one_work+0x1c7/0x380
+[    9.853464]  worker_thread+0x1af/0x390
+[    9.857225]  ? rescuer_thread+0x3b0/0x3b0
+[    9.861254]  kthread+0xde/0x110
+[    9.864414]  ? kthread_complete_and_exit+0x20/0x20
+[    9.869210]  ret_from_fork+0x22/0x30
+[    9.872792]  </TASK>
+[    9.874985] ---[ end trace 0000000000000000 ]---</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53606" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nfsd: clean up potential nfsd_file refcount leaks in copy codepath
+
+there are two different flavors of the nfsd4_copy struct. one is
+embedded in the compound and is used directly in synchronous copies. the
+other is dynamically allocated, refcounted and tracked in the client
+struture. for the embedded one, the cleanup just involves releasing any
+nfsd_files held on its behalf. for the async one, the cleanup is a bit
+more involved, and we need to dequeue it from lists, unhash it, etc.
+
+there is at least one potential refcount leak in this code now. if the
+kthread_create call fails, then both the src and dst nfsd_files in the
+original nfsd4_copy object are leaked.
+
+the cleanup in this codepath is also sort of weird. in the async copy
+case, we'll have up to four nfsd_file references (src and dst for both
+flavors of copy structure). they are both put at the end of
+nfsd4_do_async_copy, even though the ones held on behalf of the embedded
+one outlive that structure.
+
+change it so that we always clean up the nfsd_file refs held by the
+embedded copy structure before nfsd4_copy returns. rework
+cleanup_async_copy to handle both inter and intra copies. eliminate
+nfsd4_cleanup_intra_ssc since it now becomes a no-op.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53606" target="_blank">CVE-2023-53606</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nfsd: clean up potential nfsd_file refcount leaks in COPY codepath
+
+There are two different flavors of the nfsd4_copy struct. One is
+embedded in the compound and is used directly in synchronous copies. The
+other is dynamically allocated, refcounted and tracked in the client
+struture. For the embedded one, the cleanup just involves releasing any
+nfsd_files held on its behalf. For the async one, the cleanup is a bit
+more involved, and we need to dequeue it from lists, unhash it, etc.
+
+There is at least one potential refcount leak in this code now. If the
+kthread_create call fails, then both the src and dst nfsd_files in the
+original nfsd4_copy object are leaked.
+
+The cleanup in this codepath is also sort of weird. In the async copy
+case, we'll have up to four nfsd_file references (src and dst for both
+flavors of copy structure). They are both put at the end of
+nfsd4_do_async_copy, even though the ones held on behalf of the embedded
+one outlive that structure.
+
+Change it so that we always clean up the nfsd_file refs held by the
+embedded copy structure before nfsd4_copy returns. Rework
+cleanup_async_copy to handle both inter and intra copies. Eliminate
+nfsd4_cleanup_intra_ssc since it now becomes a no-op.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53605" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm: amd: display: fix memory leakage
+
+this commit fixes memory leakage in dc_construct_ctx() function.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53605" target="_blank">CVE-2023-53605</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm: amd: display: Fix memory leakage
+
+This commit fixes memory leakage in dc_construct_ctx() function.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53604" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+dm integrity: call kmem_cache_destroy() in dm_integrity_init() error path
+
+otherwise the journal_io_cache will leak if dm_register_target() fails.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53604" target="_blank">CVE-2023-53604</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+dm integrity: call kmem_cache_destroy() in dm_integrity_init() error path
+
+Otherwise the journal_io_cache will leak if dm_register_target() fails.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53603" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+scsi: qla2xxx: avoid fcport pointer dereference
+
+klocwork reported warning of null pointer may be dereferenced.  the routine
+exits when sa_ctl is null and fcport is allocated after the exit call thus
+causing null fcport pointer to dereference at the time of exit.
+
+to avoid fcport pointer dereference, exit the routine when sa_ctl is null.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53603" target="_blank">CVE-2023-53603</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+scsi: qla2xxx: Avoid fcport pointer dereference
+
+Klocwork reported warning of NULL pointer may be dereferenced.  The routine
+exits when sa_ctl is NULL and fcport is allocated after the exit call thus
+causing NULL fcport pointer to dereference at the time of exit.
+
+To avoid fcport pointer dereference, exit the routine when sa_ctl is NULL.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53602" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: ath11k: fix memory leak in wmi firmware stats
+
+memory allocated for firmware pdev, vdev and beacon statistics
+are not released during rmmod.
+
+fix it by calling ath11k_fw_stats_free() function before hardware
+unregister.
+
+while at it, avoid calling ath11k_fw_stats_free() while processing
+the firmware stats received in the wmi event because the local list
+is getting spliced and reinitialised and hence there are no elements
+in the list after splicing.
+
+tested-on: qcn9074 hw1.0 pci wlan.hk.2.7.0.1-01744-qcahkswpl_siliconz-1">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53602" target="_blank">CVE-2023-53602</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: ath11k: fix memory leak in WMI firmware stats
+
+Memory allocated for firmware pdev, vdev and beacon statistics
+are not released during rmmod.
+
+Fix it by calling ath11k_fw_stats_free() function before hardware
+unregister.
+
+While at it, avoid calling ath11k_fw_stats_free() while processing
+the firmware stats received in the WMI event because the local list
+is getting spliced and reinitialised and hence there are no elements
+in the list after splicing.
+
+Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.7.0.1-01744-QCAHKSWPL_SILICONZ-1</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-53601" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bonding: do not assume skb mac_header is set
+
+drivers must not assume in their ndo_start_xmit() that
+skbs have their mac_header set. skb->data is all what is needed.
+
+bonding seems to be one of the last offender as caught by syzbot:
+
+warning: cpu: 1 pid: 12155 at include/linux/skbuff.h:2907 skb_mac_offset include/linux/skbuff.h:2913 [inline]
+warning: cpu: 1 pid: 12155 at include/linux/skbuff.h:2907 bond_xmit_hash drivers/net/bonding/bond_main.c:4170 [inline]
+warning: cpu: 1 pid: 12155 at include/linux/skbuff.h:2907 bond_xmit_3ad_xor_slave_get drivers/net/bonding/bond_main.c:5149 [inline]
+warning: cpu: 1 pid: 12155 at include/linux/skbuff.h:2907 bond_3ad_xor_xmit drivers/net/bonding/bond_main.c:5186 [inline]
+warning: cpu: 1 pid: 12155 at include/linux/skbuff.h:2907 __bond_start_xmit drivers/net/bonding/bond_main.c:5442 [inline]
+warning: cpu: 1 pid: 12155 at include/linux/skbuff.h:2907 bond_start_xmit+0x14ab/0x19d0 drivers/net/bonding/bond_main.c:5470
+modules linked in:
+cpu: 1 pid: 12155 comm: syz-executor.3 not tainted 6.1.30-syzkaller #0
+hardware name: google google compute engine/google compute engine, bios google 05/25/2023
+rip: 0010:skb_mac_header include/linux/skbuff.h:2907 [inline]
+rip: 0010:skb_mac_offset include/linux/skbuff.h:2913 [inline]
+rip: 0010:bond_xmit_hash drivers/net/bonding/bond_main.c:4170 [inline]
+rip: 0010:bond_xmit_3ad_xor_slave_get drivers/net/bonding/bond_main.c:5149 [inline]
+rip: 0010:bond_3ad_xor_xmit drivers/net/bonding/bond_main.c:5186 [inline]
+rip: 0010:__bond_start_xmit drivers/net/bonding/bond_main.c:5442 [inline]
+rip: 0010:bond_start_xmit+0x14ab/0x19d0 drivers/net/bonding/bond_main.c:5470
+code: 8b 7c 24 30 e8 76 dd 1a 01 48 85 c0 74 0d 48 89 c3 e8 29 67 2e fe e9 15 ef ff ff e8 1f 67 2e fe e9 10 ef ff ff e8 15 67 2e fe <0f> 0b e9 45 f8 ff ff e8 09 67 2e fe e9 dc fa ff ff e8 ff 66 2e fe
+rsp: 0018:ffffc90002fff6e0 eflags: 00010283
+rax: ffffffff835874db rbx: 000000000000ffff rcx: 0000000000040000
+rdx: ffffc90004dcf000 rsi: 00000000000000b5 rdi: 00000000000000b6
+rbp: ffffc90002fff8b8 r08: ffffffff83586d16 r09: ffffffff83586584
+r10: 0000000000000007 r11: ffff8881599fc780 r12: ffff88811b6a7b7e
+r13: 1ffff110236d4f6f r14: ffff88811b6a7ac0 r15: 1ffff110236d4f76
+fs: 00007f2e9eb47700(0000) gs:ffff8881f6b00000(0000) knlgs:0000000000000000
+cs: 0010 ds: 0000 es: 0000 cr0: 0000000080050033
+cr2: 0000001b2e421000 cr3: 000000010e6d4000 cr4: 00000000003526e0
+dr0: 0000000000000000 dr1: 0000000000000000 dr2: 0000000000000000
+dr3: 0000000000000000 dr6: 00000000fffe0ff0 dr7: 0000000000000400
 call trace:
- <irq>
- dump_stack_lvl+0x55/0x70
- print_report+0xcf/0x610
- ? __run_timer_base.part.0+0x7d7/0x8c0
- kasan_report+0xb8/0xf0
- ? __run_timer_base.part.0+0x7d7/0x8c0
- __run_timer_base.part.0+0x7d7/0x8c0
- ? __pfx___run_timer_base.part.0+0x10/0x10
- ? __pfx_read_tsc+0x10/0x10
- ? ktime_get+0x60/0x140
- ? lapic_next_event+0x11/0x20
- ? clockevents_program_event+0x1d4/0x2a0
- run_timer_softirq+0xd1/0x190
- handle_softirqs+0x16a/0x550
- irq_exit_rcu+0xaf/0xe0
- sysvec_apic_timer_interrupt+0x70/0x80
- </irq>
-...
-allocated by task 1:
- kasan_save_stack+0x24/0x50
- kasan_save_track+0x14/0x30
- __kasan_kmalloc+0x7f/0x90
- otx2_ptp_init+0xb1/0x860
- otx2_probe+0x4eb/0xc30
- local_pci_probe+0xdc/0x190
- pci_device_probe+0x2fe/0x470
- really_probe+0x1ca/0x5c0
- __driver_probe_device+0x248/0x310
- driver_probe_device+0x44/0x120
- __driver_attach+0xd2/0x310
- bus_for_each_dev+0xed/0x170
- bus_add_driver+0x208/0x500
- driver_register+0x132/0x460
- do_one_initcall+0x89/0x300
- kernel_init_freeable+0x40d/0x720
- kernel_init+0x1a/0x150
- ret_from_fork+0x10c/0x1a0
- ret_from_fork_asm+0x1a/0x30
-
-freed by task 136:
- kasan_save_stack+0x24/0x50
- kasan_save_track+0x14/0x30
- kasan_save_free_info+0x3a/0x60
- __kasan_slab_free+0x3f/0x50
- kfree+0x137/0x370
- otx2_ptp_destroy+0x38/0x80
- otx2_remove+0x10d/0x4c0
- pci_device_remove+0xa6/0x1d0
- device_release_driver_internal+0xf8/0x210
- pci_stop_bus_device+0x105/0x150
- pci_stop_and_remove_bus_device_locked+0x15/0x30
- remove_store+0xcc/0xe0
- kernfs_fop_write_iter+0x2c3/0x440
- vfs_write+0x871/0xd70
- ksys_write+0xee/0x1c0
- do_syscall_64+0xac/0x280
- entry_syscall_64_after_hwframe+0x77/0x7f
-...
-
-replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
-that the delayed work item is properly canceled before the otx2_ptp is
-deallocated.
-
-this bug was initially identified through static analysis. to reproduce
-and test it, i simulated the octeontx2 pci device in qemu and introduced
-artificial delays within the otx2_sync_tstamp() function to increase the
-likelihood of triggering the bug.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39944" target="_blank">CVE-2025-39944</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+<task>
+[<ffffffff8471a49f>] netdev_start_xmit include/linux/netdevice.h:4925 [inline]
+[<ffffffff8471a49f>] __dev_direct_xmit+0x4ef/0x850 net/core/dev.c:4380
+[<ffffffff851d845b>] dev_direct_xmit include/linux/netdevice.h:3043 [inline]
+[<ffffffff851d845b>] packet_direct_xmit+0x18b/0x300 net/packet/af_packet.c:284
+[<ffffffff851c7472>] packet_snd net/packet/af_packet.c:3112 [inline]
+[<ffffffff851c7472>] packet_sendmsg+0x4a22/0x64d0 net/packet/af_packet.c:3143
+[<ffffffff8467a4b2>] sock_sendmsg_nosec net/socket.c:716 [inline]
+[<ffffffff8467a4b2>] sock_sendmsg net/socket.c:736 [inline]
+[<ffffffff8467a4b2>] __sys_sendto+0x472/0x5f0 net/socket.c:2139
+[<ffffffff8467a715>] __do_sys_sendto net/socket.c:2151 [inline]
+[<ffffffff8467a715>] __se_sys_sendto net/socket.c:2147 [inline]
+[<ffffffff8467a715>] __x64_sys_sendto+0xe5/0x100 net/socket.c:2147
+[<ffffffff8553071f>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+[<ffffffff8553071f>] do_syscall_64+0x2f/0x50 arch/x86/entry/common.c:80
+[<ffffffff85600087>] entry_syscall_64_after_hwframe+0x63/0xcd">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53601" target="_blank">CVE-2023-53601</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-octeontx2-pf: Fix use-after-free bugs in otx2_sync_tstamp()
+bonding: do not assume skb mac_header is set
 
-The original code relies on cancel_delayed_work() in otx2_ptp_destroy(),
-which does not ensure that the delayed work item synctstamp_work has fully
-completed if it was already running. This leads to use-after-free scenarios
-where otx2_ptp is deallocated by otx2_ptp_destroy(), while synctstamp_work
-remains active and attempts to dereference otx2_ptp in otx2_sync_tstamp().
-Furthermore, the synctstamp_work is cyclic, the likelihood of triggering
-the bug is nonnegligible.
+Drivers must not assume in their ndo_start_xmit() that
+skbs have their mac_header set. skb->data is all what is needed.
 
-A typical race condition is illustrated below:
+bonding seems to be one of the last offender as caught by syzbot:
 
-CPU 0 (cleanup)           | CPU 1 (delayed work callback)
-otx2_remove()             |
-  otx2_ptp_destroy()      | otx2_sync_tstamp()
-    cancel_delayed_work() |
-    kfree(ptp)            |
-                          |   ptp = container_of(...); //UAF
-                          |   ptp-> //UAF
-
-This is confirmed by a KASAN report:
-
-BUG: KASAN: slab-use-after-free in __run_timer_base.part.0+0x7d7/0x8c0
-Write of size 8 at addr ffff88800aa09a18 by task bash/136
-...
+WARNING: CPU: 1 PID: 12155 at include/linux/skbuff.h:2907 skb_mac_offset include/linux/skbuff.h:2913 [inline]
+WARNING: CPU: 1 PID: 12155 at include/linux/skbuff.h:2907 bond_xmit_hash drivers/net/bonding/bond_main.c:4170 [inline]
+WARNING: CPU: 1 PID: 12155 at include/linux/skbuff.h:2907 bond_xmit_3ad_xor_slave_get drivers/net/bonding/bond_main.c:5149 [inline]
+WARNING: CPU: 1 PID: 12155 at include/linux/skbuff.h:2907 bond_3ad_xor_xmit drivers/net/bonding/bond_main.c:5186 [inline]
+WARNING: CPU: 1 PID: 12155 at include/linux/skbuff.h:2907 __bond_start_xmit drivers/net/bonding/bond_main.c:5442 [inline]
+WARNING: CPU: 1 PID: 12155 at include/linux/skbuff.h:2907 bond_start_xmit+0x14ab/0x19d0 drivers/net/bonding/bond_main.c:5470
+Modules linked in:
+CPU: 1 PID: 12155 Comm: syz-executor.3 Not tainted 6.1.30-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/25/2023
+RIP: 0010:skb_mac_header include/linux/skbuff.h:2907 [inline]
+RIP: 0010:skb_mac_offset include/linux/skbuff.h:2913 [inline]
+RIP: 0010:bond_xmit_hash drivers/net/bonding/bond_main.c:4170 [inline]
+RIP: 0010:bond_xmit_3ad_xor_slave_get drivers/net/bonding/bond_main.c:5149 [inline]
+RIP: 0010:bond_3ad_xor_xmit drivers/net/bonding/bond_main.c:5186 [inline]
+RIP: 0010:__bond_start_xmit drivers/net/bonding/bond_main.c:5442 [inline]
+RIP: 0010:bond_start_xmit+0x14ab/0x19d0 drivers/net/bonding/bond_main.c:5470
+Code: 8b 7c 24 30 e8 76 dd 1a 01 48 85 c0 74 0d 48 89 c3 e8 29 67 2e fe e9 15 ef ff ff e8 1f 67 2e fe e9 10 ef ff ff e8 15 67 2e fe <0f> 0b e9 45 f8 ff ff e8 09 67 2e fe e9 dc fa ff ff e8 ff 66 2e fe
+RSP: 0018:ffffc90002fff6e0 EFLAGS: 00010283
+RAX: ffffffff835874db RBX: 000000000000ffff RCX: 0000000000040000
+RDX: ffffc90004dcf000 RSI: 00000000000000b5 RDI: 00000000000000b6
+RBP: ffffc90002fff8b8 R08: ffffffff83586d16 R09: ffffffff83586584
+R10: 0000000000000007 R11: ffff8881599fc780 R12: ffff88811b6a7b7e
+R13: 1ffff110236d4f6f R14: ffff88811b6a7ac0 R15: 1ffff110236d4f76
+FS: 00007f2e9eb47700(0000) GS:ffff8881f6b00000(0000) knlGS:0000000000000000
+CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000001b2e421000 CR3: 000000010e6d4000 CR4: 00000000003526e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 Call Trace:
- <IRQ>
- dump_stack_lvl+0x55/0x70
- print_report+0xcf/0x610
- ? __run_timer_base.part.0+0x7d7/0x8c0
- kasan_report+0xb8/0xf0
- ? __run_timer_base.part.0+0x7d7/0x8c0
- __run_timer_base.part.0+0x7d7/0x8c0
- ? __pfx___run_timer_base.part.0+0x10/0x10
- ? __pfx_read_tsc+0x10/0x10
- ? ktime_get+0x60/0x140
- ? lapic_next_event+0x11/0x20
- ? clockevents_program_event+0x1d4/0x2a0
- run_timer_softirq+0xd1/0x190
- handle_softirqs+0x16a/0x550
- irq_exit_rcu+0xaf/0xe0
- sysvec_apic_timer_interrupt+0x70/0x80
- </IRQ>
-...
-Allocated by task 1:
- kasan_save_stack+0x24/0x50
- kasan_save_track+0x14/0x30
- __kasan_kmalloc+0x7f/0x90
- otx2_ptp_init+0xb1/0x860
- otx2_probe+0x4eb/0xc30
- local_pci_probe+0xdc/0x190
- pci_device_probe+0x2fe/0x470
- really_probe+0x1ca/0x5c0
- __driver_probe_device+0x248/0x310
- driver_probe_device+0x44/0x120
- __driver_attach+0xd2/0x310
- bus_for_each_dev+0xed/0x170
- bus_add_driver+0x208/0x500
- driver_register+0x132/0x460
- do_one_initcall+0x89/0x300
- kernel_init_freeable+0x40d/0x720
- kernel_init+0x1a/0x150
- ret_from_fork+0x10c/0x1a0
- ret_from_fork_asm+0x1a/0x30
-
-Freed by task 136:
- kasan_save_stack+0x24/0x50
- kasan_save_track+0x14/0x30
- kasan_save_free_info+0x3a/0x60
- __kasan_slab_free+0x3f/0x50
- kfree+0x137/0x370
- otx2_ptp_destroy+0x38/0x80
- otx2_remove+0x10d/0x4c0
- pci_device_remove+0xa6/0x1d0
- device_release_driver_internal+0xf8/0x210
- pci_stop_bus_device+0x105/0x150
- pci_stop_and_remove_bus_device_locked+0x15/0x30
- remove_store+0xcc/0xe0
- kernfs_fop_write_iter+0x2c3/0x440
- vfs_write+0x871/0xd70
- ksys_write+0xee/0x1c0
- do_syscall_64+0xac/0x280
- entry_SYSCALL_64_after_hwframe+0x77/0x7f
-...
-
-Replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
-that the delayed work item is properly canceled before the otx2_ptp is
-deallocated.
-
-This bug was initially identified through static analysis. To reproduce
-and test it, I simulated the OcteonTX2 PCI device in QEMU and introduced
-artificial delays within the otx2_sync_tstamp() function to increase the
-likelihood of triggering the bug.</p>
+<TASK>
+[<ffffffff8471a49f>] netdev_start_xmit include/linux/netdevice.h:4925 [inline]
+[<ffffffff8471a49f>] __dev_direct_xmit+0x4ef/0x850 net/core/dev.c:4380
+[<ffffffff851d845b>] dev_direct_xmit include/linux/netdevice.h:3043 [inline]
+[<ffffffff851d845b>] packet_direct_xmit+0x18b/0x300 net/packet/af_packet.c:284
+[<ffffffff851c7472>] packet_snd net/packet/af_packet.c:3112 [inline]
+[<ffffffff851c7472>] packet_sendmsg+0x4a22/0x64d0 net/packet/af_packet.c:3143
+[<ffffffff8467a4b2>] sock_sendmsg_nosec net/socket.c:716 [inline]
+[<ffffffff8467a4b2>] sock_sendmsg net/socket.c:736 [inline]
+[<ffffffff8467a4b2>] __sys_sendto+0x472/0x5f0 net/socket.c:2139
+[<ffffffff8467a715>] __do_sys_sendto net/socket.c:2151 [inline]
+[<ffffffff8467a715>] __se_sys_sendto net/socket.c:2147 [inline]
+[<ffffffff8467a715>] __x64_sys_sendto+0xe5/0x100 net/socket.c:2147
+[<ffffffff8553071f>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+[<ffffffff8553071f>] do_syscall_64+0x2f/0x50 arch/x86/entry/common.c:80
+[<ffffffff85600087>] entry_SYSCALL_64_after_hwframe+0x63/0xcd</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39943" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53600" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-ksmbd: smbdirect: validate data_offset and data_length field of smb_direct_data_transfer
+tunnels: fix kasan splat when generating ipv4 pmtu error
 
-if data_offset and data_length of smb_direct_data_transfer struct are
-invalid, out of bounds issue could happen.
-this patch validate data_offset and data_length field in recv_done.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39943" target="_blank">CVE-2025-39943</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+if we try to emit an icmp error in response to a nonliner skb, we get
+
+bug: kasan: slab-out-of-bounds in ip_compute_csum+0x134/0x220
+read of size 4 at addr ffff88811c50db00 by task iperf3/1691
+cpu: 2 pid: 1691 comm: iperf3 not tainted 6.5.0-rc3+ #309
+[..]
+ kasan_report+0x105/0x140
+ ip_compute_csum+0x134/0x220
+ iptunnel_pmtud_build_icmp+0x554/0x1020
+ skb_tunnel_check_pmtu+0x513/0xb80
+ vxlan_xmit_one+0x139e/0x2ef0
+ vxlan_xmit+0x1867/0x2760
+ dev_hard_start_xmit+0x1ee/0x4f0
+ br_dev_queue_push_xmit+0x4d1/0x660
+ [..]
+
+ip_compute_csum() cannot deal with nonlinear skbs, so avoid it.
+after this change, splat is gone and iperf3 is no longer stuck.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53600" target="_blank">CVE-2023-53600</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ksmbd: smbdirect: validate data_offset and data_length field of smb_direct_data_transfer
+tunnels: fix kasan splat when generating ipv4 pmtu error
 
-If data_offset and data_length of smb_direct_data_transfer struct are
-invalid, out of bounds issue could happen.
-This patch validate data_offset and data_length field in recv_done.</p>
+If we try to emit an icmp error in response to a nonliner skb, we get
+
+BUG: KASAN: slab-out-of-bounds in ip_compute_csum+0x134/0x220
+Read of size 4 at addr ffff88811c50db00 by task iperf3/1691
+CPU: 2 PID: 1691 Comm: iperf3 Not tainted 6.5.0-rc3+ #309
+[..]
+ kasan_report+0x105/0x140
+ ip_compute_csum+0x134/0x220
+ iptunnel_pmtud_build_icmp+0x554/0x1020
+ skb_tunnel_check_pmtu+0x513/0xb80
+ vxlan_xmit_one+0x139e/0x2ef0
+ vxlan_xmit+0x1867/0x2760
+ dev_hard_start_xmit+0x1ee/0x4f0
+ br_dev_queue_push_xmit+0x4d1/0x660
+ [..]
+
+ip_compute_csum() cannot deal with nonlinear skbs, so avoid it.
+After this change, splat is gone and iperf3 is no longer stuck.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39942" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53599" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-ksmbd: smbdirect: verify remaining_data_length respects max_fragmented_recv_size
+crypto: af_alg - fix missing initialisation affecting gcm-aes-s390
 
-this is inspired by the check for data_offset + data_length.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39942" target="_blank">CVE-2025-39942</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+fix af_alg_alloc_areq() to initialise areq->first_rsgl.sgl.sgt.sgl to point
+to the scatterlist array in areq->first_rsgl.sgl.sgl.
+
+without this, the gcm-aes-s390 driver will oops when it tries to do
+gcm_walk_start() on req->dst because req->dst is set to the value of
+areq->first_rsgl.sgl.sgl by _aead_recvmsg() calling
+aead_request_set_crypt().
+
+the problem comes if an empty ciphertext is passed: the loop in
+af_alg_get_rsgl() just passes straight out and doesn't set areq->first_rsgl
+up.
+
+this isn't a problem on x86_64 using gcmaes_crypt_by_sg() because, as far
+as i can tell, that ignores req->dst and only uses req->src[*].
+
+[*] is this a bug in aesni-intel_glue.c?
+
+the s390x oops looks something like:
+
+ unable to handle kernel pointer dereference in virtual kernel address space
+ failing address: 0000000a00000000 teid: 0000000a00000803
+ fault in home space mode while using kernel asce.
+ as:00000000a43a0007 r3:0000000000000024
+ oops: 003b ilc:2 [#1] smp
+ ...
+ call trace:
+  [<000003ff7fc3d47e>] gcm_walk_start+0x16/0x28 [aes_s390]
+  [<00000000a2a342f2>] crypto_aead_decrypt+0x9a/0xb8
+  [<00000000a2a60888>] aead_recvmsg+0x478/0x698
+  [<00000000a2e519a0>] sock_recvmsg+0x70/0xb0
+  [<00000000a2e51a56>] sock_read_iter+0x76/0xa0
+  [<00000000a273e066>] vfs_read+0x26e/0x2a8
+  [<00000000a273e8c4>] ksys_read+0xbc/0x100
+  [<00000000a311d808>] __do_syscall+0x1d0/0x1f8
+  [<00000000a312ff30>] system_call+0x70/0x98
+ last breaking-event-address:
+  [<000003ff7fc3e6b4>] gcm_aes_crypt+0x104/0xa68 [aes_s390]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53599" target="_blank">CVE-2023-53599</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ksmbd: smbdirect: verify remaining_data_length respects max_fragmented_recv_size
+crypto: af_alg - Fix missing initialisation affecting gcm-aes-s390
 
-This is inspired by the check for data_offset + data_length.</p>
+Fix af_alg_alloc_areq() to initialise areq->first_rsgl.sgl.sgt.sgl to point
+to the scatterlist array in areq->first_rsgl.sgl.sgl.
+
+Without this, the gcm-aes-s390 driver will oops when it tries to do
+gcm_walk_start() on req->dst because req->dst is set to the value of
+areq->first_rsgl.sgl.sgl by _aead_recvmsg() calling
+aead_request_set_crypt().
+
+The problem comes if an empty ciphertext is passed: the loop in
+af_alg_get_rsgl() just passes straight out and doesn't set areq->first_rsgl
+up.
+
+This isn't a problem on x86_64 using gcmaes_crypt_by_sg() because, as far
+as I can tell, that ignores req->dst and only uses req->src[*].
+
+[*] Is this a bug in aesni-intel_glue.c?
+
+The s390x oops looks something like:
+
+ Unable to handle kernel pointer dereference in virtual kernel address space
+ Failing address: 0000000a00000000 TEID: 0000000a00000803
+ Fault in home space mode while using kernel ASCE.
+ AS:00000000a43a0007 R3:0000000000000024
+ Oops: 003b ilc:2 [#1] SMP
+ ...
+ Call Trace:
+  [<000003ff7fc3d47e>] gcm_walk_start+0x16/0x28 [aes_s390]
+  [<00000000a2a342f2>] crypto_aead_decrypt+0x9a/0xb8
+  [<00000000a2a60888>] aead_recvmsg+0x478/0x698
+  [<00000000a2e519a0>] sock_recvmsg+0x70/0xb0
+  [<00000000a2e51a56>] sock_read_iter+0x76/0xa0
+  [<00000000a273e066>] vfs_read+0x26e/0x2a8
+  [<00000000a273e8c4>] ksys_read+0xbc/0x100
+  [<00000000a311d808>] __do_syscall+0x1d0/0x1f8
+  [<00000000a312ff30>] system_call+0x70/0x98
+ Last Breaking-Event-Address:
+  [<000003ff7fc3e6b4>] gcm_aes_crypt+0x104/0xa68 [aes_s390]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39941" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53598" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-zram: fix slot write race condition
+bus: mhi: host: range check chdboff and erdboff
 
-parallel concurrent writes to the same zram index result in leaked
-zsmalloc handles.  schematically we can have something like this:
-
-cpu0                              cpu1
-zram_slot_lock()
-zs_free(handle)
-zram_slot_lock()
-				zram_slot_lock()
-				zs_free(handle)
-				zram_slot_lock()
-
-compress			compress
-handle = zs_malloc()		handle = zs_malloc()
-zram_slot_lock
-zram_set_handle(handle)
-zram_slot_lock
-				zram_slot_lock
-				zram_set_handle(handle)
-				zram_slot_lock
-
-either cpu0 or cpu1 zsmalloc handle will leak because zs_free() is done
-too early.  in fact, we need to reset zram entry right before we set its
-new handle, all under the same slot lock scope.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39941" target="_blank">CVE-2025-39941</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:47 CDT</p>
+if the value read from the chdboff and erdboff registers is outside the
+range of the mhi register space then an invalid address might be computed
+which later causes a kernel panic.  range check the read value to prevent
+a crash due to bad data from the device.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53598" target="_blank">CVE-2023-53598</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-zram: fix slot write race condition
+bus: mhi: host: Range check CHDBOFF and ERDBOFF
 
-Parallel concurrent writes to the same zram index result in leaked
-zsmalloc handles.  Schematically we can have something like this:
-
-CPU0                              CPU1
-zram_slot_lock()
-zs_free(handle)
-zram_slot_lock()
-				zram_slot_lock()
-				zs_free(handle)
-				zram_slot_lock()
-
-compress			compress
-handle = zs_malloc()		handle = zs_malloc()
-zram_slot_lock
-zram_set_handle(handle)
-zram_slot_lock
-				zram_slot_lock
-				zram_set_handle(handle)
-				zram_slot_lock
-
-Either CPU0 or CPU1 zsmalloc handle will leak because zs_free() is done
-too early.  In fact, we need to reset zram entry right before we set its
-new handle, all under the same slot lock scope.</p>
+If the value read from the CHDBOFF and ERDBOFF registers is outside the
+range of the MHI register space then an invalid address might be computed
+which later causes a kernel panic.  Range check the read value to prevent
+a crash due to bad data from the device.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-39940" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2023-53597" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-dm-stripe: fix a possible integer overflow
+cifs: fix mid leak during reconnection after timeout threshold
 
-there's a possible integer overflow in stripe_io_hints if we have too
-large chunk size. test if the overflow happened, and if it did, don't set
-limits->io_min and limits->io_opt;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39940" target="_blank">CVE-2025-39940</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
+when the number of responses with status of status_io_timeout
+exceeds a specified threshold (num_status_io_timeout), we reconnect
+the connection. but we do not return the mid, or the credits
+returned for the mid, or reduce the number of in-flight requests.
+
+this bug could result in the server->in_flight count to go bad,
+and also cause a leak in the mids.
+
+this change moves the check to a few lines below where the
+response is decrypted, even of the response is read from the
+transform header. this way, the code for returning the mids
+can be reused.
+
+also, the cifs_reconnect was reconnecting just the transport
+connection before. in case of multi-channel, this may not be
+what we want to do after several timeouts. changed that to
+reconnect the session and the tree too.
+
+also renamed num_status_io_timeout to a more appropriate name
+max_status_io_timeout.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-53597" target="_blank">CVE-2023-53597</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-04 11:15:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-dm-stripe: fix a possible integer overflow
-
-There's a possible integer overflow in stripe_io_hints if we have too
-large chunk size. Test if the overflow happened, and if it did, don't set
-limits->io_min and limits->io_opt;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39939" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-iommu/s390: fix memory corruption when using identity domain
-
-zpci_get_iommu_ctrs() returns counter information to be reported as part
-of device statistics; these counters are stored as part of the s390_domain.
-the problem, however, is that the identity domain is not backed by an
-s390_domain and so the conversion via to_s390_domain() yields a bad address
-that is zero'd initially and read on-demand later via a sysfs read.
-these counters aren't necessary for the identity domain; just return null
-in this case.
-
-this issue was discovered via kasan with reports that look like:
-bug: kasan: global-out-of-bounds in zpci_fmb_enable_device
-when using the identity domain for a device on s390.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39939" target="_blank">CVE-2025-39939</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-iommu/s390: Fix memory corruption when using identity domain
-
-zpci_get_iommu_ctrs() returns counter information to be reported as part
-of device statistics; these counters are stored as part of the s390_domain.
-The problem, however, is that the identity domain is not backed by an
-s390_domain and so the conversion via to_s390_domain() yields a bad address
-that is zero'd initially and read on-demand later via a sysfs read.
-These counters aren't necessary for the identity domain; just return NULL
-in this case.
-
-This issue was discovered via KASAN with reports that look like:
-BUG: KASAN: global-out-of-bounds in zpci_fmb_enable_device
-when using the identity domain for a device on s390.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39938" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-asoc: qcom: q6apm-lpass-dais: fix null pointer dereference if source graph failed
-
-if earlier opening of source graph fails (e.g. adsp rejects due to
-incorrect audioreach topology), the graph is closed and
-"dai_data->graph[dai->id]" is assigned null.  preparing the dai for sink
-graph continues though and next call to q6apm_lpass_dai_prepare()
-receives dai_data->graph[dai->id]=null leading to null pointer
-exception:
-
-  qcom-apm gprsvc:service:2:1: error (1) processing 0x01001002 cmd
-  qcom-apm gprsvc:service:2:1: dsp returned error[1001002] 1
-  q6apm-lpass-dais 30000000.remoteproc:glink-edge:gpr:service@1:bedais: fail to start apm port 78
-  q6apm-lpass-dais 30000000.remoteproc:glink-edge:gpr:service@1:bedais: asoc: error at snd_soc_pcm_dai_prepare on tx_codec_dma_tx_3: -22
-  unable to handle kernel null pointer dereference at virtual address 00000000000000a8
-  ...
-  call trace:
-   q6apm_graph_media_format_pcm+0x48/0x120 (p)
-   q6apm_lpass_dai_prepare+0x110/0x1b4
-   snd_soc_pcm_dai_prepare+0x74/0x108
-   __soc_pcm_prepare+0x44/0x160
-   dpcm_be_dai_prepare+0x124/0x1c0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39938" target="_blank">CVE-2025-39938</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ASoC: qcom: q6apm-lpass-dais: Fix NULL pointer dereference if source graph failed
-
-If earlier opening of source graph fails (e.g. ADSP rejects due to
-incorrect audioreach topology), the graph is closed and
-"dai_data->graph[dai->id]" is assigned NULL.  Preparing the DAI for sink
-graph continues though and next call to q6apm_lpass_dai_prepare()
-receives dai_data->graph[dai->id]=NULL leading to NULL pointer
-exception:
-
-  qcom-apm gprsvc:service:2:1: Error (1) Processing 0x01001002 cmd
-  qcom-apm gprsvc:service:2:1: DSP returned error[1001002] 1
-  q6apm-lpass-dais 30000000.remoteproc:glink-edge:gpr:service@1:bedais: fail to start APM port 78
-  q6apm-lpass-dais 30000000.remoteproc:glink-edge:gpr:service@1:bedais: ASoC: error at snd_soc_pcm_dai_prepare on TX_CODEC_DMA_TX_3: -22
-  Unable to handle kernel NULL pointer dereference at virtual address 00000000000000a8
-  ...
-  Call trace:
-   q6apm_graph_media_format_pcm+0x48/0x120 (P)
-   q6apm_lpass_dai_prepare+0x110/0x1b4
-   snd_soc_pcm_dai_prepare+0x74/0x108
-   __soc_pcm_prepare+0x44/0x160
-   dpcm_be_dai_prepare+0x124/0x1c0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39937" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net: rfkill: gpio: fix crash due to dereferencering uninitialized pointer
-
-since commit 7d5e9737efda ("net: rfkill: gpio: get the name and type from
-device property") rfkill_find_type() gets called with the possibly
-uninitialized "const char *type_name;" local variable.
-
-on x86 systems when rfkill-gpio binds to a "bcm4752" or "lnv4752"
-acpi_device, the rfkill->type is set based on the acpi acpi_device_id:
-
-        rfkill->type = (unsigned)id->driver_data;
-
-and there is no "type" property so device_property_read_string() will fail
-and leave type_name uninitialized, leading to a potential crash.
-
-rfkill_find_type() does accept a null pointer, fix the potential crash
-by initializing type_name to null.
-
-note likely sofar this has not been caught because:
-
-1. not many x86 machines actually have a "bcm4752"/"lnv4752" acpi_device
-2. the stack happened to contain null where type_name is stored">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39937" target="_blank">CVE-2025-39937</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net: rfkill: gpio: Fix crash due to dereferencering uninitialized pointer
-
-Since commit 7d5e9737efda ("net: rfkill: gpio: get the name and type from
-device property") rfkill_find_type() gets called with the possibly
-uninitialized "const char *type_name;" local variable.
-
-On x86 systems when rfkill-gpio binds to a "BCM4752" or "LNV4752"
-acpi_device, the rfkill->type is set based on the ACPI acpi_device_id:
-
-        rfkill->type = (unsigned)id->driver_data;
-
-and there is no "type" property so device_property_read_string() will fail
-and leave type_name uninitialized, leading to a potential crash.
-
-rfkill_find_type() does accept a NULL pointer, fix the potential crash
-by initializing type_name to NULL.
-
-Note likely sofar this has not been caught because:
-
-1. Not many x86 machines actually have a "BCM4752"/"LNV4752" acpi_device
-2. The stack happened to contain NULL where type_name is stored</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39936" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-crypto: ccp - always pass in an error pointer to __sev_platform_shutdown_locked()
-
-when
-
-  9770b428b1a2 ("crypto: ccp - move dev_info/err messages for sev/snp init and shutdown")
-
-moved the error messages dumping so that they don't need to be issued by
-the callers, it missed the case where __sev_firmware_shutdown() calls
-__sev_platform_shutdown_locked() with a null argument which leads to
-a null ptr deref on the shutdown path, during suspend to disk:
-
-  #pf: supervisor read access in kernel mode
-  #pf: error_code(0x0000) - not-present page
-  pgd 0 p4d 0
-  oops: oops: 0000 [#1] smp nopti
-  cpu: 0 uid: 0 pid: 983 comm: hib.sh not tainted 6.17.0-rc4+ #1 preempt(voluntary)
-  hardware name: supermicro super server/h12ssl-i, bios 2.5 09/08/2022
-  rip: 0010:__sev_platform_shutdown_locked.cold+0x0/0x21 [ccp]
-
-that rip is:
-
-  00000000000006fd <__sev_platform_shutdown_locked.cold>:
-   6fd:   8b 13                   mov    (%rbx),%edx
-   6ff:   48 8b 7d 00             mov    0x0(%rbp),%rdi
-   703:   89 c1                   mov    %eax,%ecx
-
-  code: 74 05 31 ff 41 89 3f 49 8b 3e 89 ea 48 c7 c6 a0 8e 54 a0 41 bf 92 ff ff ff e8 e5 2e 09 e1 c6 05 2a d4 38 00 01 e9 26 af ff ff <8b> 13 48 8b 7d 00 89 c1 48 c7 c6 18 90 54 a0 89 44 24 04 e8 c1 2e
-  rsp: 0018:ffffc90005467d00 eflags: 00010282
-  rax: 00000000ffffff92 rbx: 0000000000000000 rcx: 0000000000000000
-  			     ^^^^^^^^^^^^^^^^
-and %rbx is nice and clean.
-
-  call trace:
-   <task>
-   __sev_firmware_shutdown.isra.0
-   sev_dev_destroy
-   psp_dev_destroy
-   sp_destroy
-   pci_device_shutdown
-   device_shutdown
-   kernel_power_off
-   hibernate.cold
-   state_store
-   kernfs_fop_write_iter
-   vfs_write
-   ksys_write
-   do_syscall_64
-   entry_syscall_64_after_hwframe
-
-pass in a pointer to the function-local error var in the caller.
-
-with that addressed, suspending the ccp shows the error properly at
-least:
-
-  ccp 0000:47:00.1: sev command 0x2 timed out, disabling psp
-  ccp 0000:47:00.1: sev: failed to shutdown error 0x0, rc -110
-  sev-snp: leaking pfn range 0x146800-0x146a00
-  sev-snp: pfn 0x146800 unassigned, dumping non-zero entries in 2m pfn region: [0x146800 - 0x146a00]
-  ...
-  ccp 0000:47:00.1: sev-snp firmware shutdown failed, rc -16, error 0x0
-  acpi: pm: preparing to enter system sleep state s5
-  kvm: exiting hardware virtualization
-  reboot: power down
-
-btw, this driver is crying to be cleaned up to pass in a proper i/o
-struct which can be used to store information between the different
-functions, otherwise stuff like that will happen in the future again.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39936" target="_blank">CVE-2025-39936</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-crypto: ccp - Always pass in an error pointer to __sev_platform_shutdown_locked()
-
-When
-
-  9770b428b1a2 ("crypto: ccp - Move dev_info/err messages for SEV/SNP init and shutdown")
-
-moved the error messages dumping so that they don't need to be issued by
-the callers, it missed the case where __sev_firmware_shutdown() calls
-__sev_platform_shutdown_locked() with a NULL argument which leads to
-a NULL ptr deref on the shutdown path, during suspend to disk:
-
-  #PF: supervisor read access in kernel mode
-  #PF: error_code(0x0000) - not-present page
-  PGD 0 P4D 0
-  Oops: Oops: 0000 [#1] SMP NOPTI
-  CPU: 0 UID: 0 PID: 983 Comm: hib.sh Not tainted 6.17.0-rc4+ #1 PREEMPT(voluntary)
-  Hardware name: Supermicro Super Server/H12SSL-i, BIOS 2.5 09/08/2022
-  RIP: 0010:__sev_platform_shutdown_locked.cold+0x0/0x21 [ccp]
-
-That rIP is:
-
-  00000000000006fd <__sev_platform_shutdown_locked.cold>:
-   6fd:   8b 13                   mov    (%rbx),%edx
-   6ff:   48 8b 7d 00             mov    0x0(%rbp),%rdi
-   703:   89 c1                   mov    %eax,%ecx
-
-  Code: 74 05 31 ff 41 89 3f 49 8b 3e 89 ea 48 c7 c6 a0 8e 54 a0 41 bf 92 ff ff ff e8 e5 2e 09 e1 c6 05 2a d4 38 00 01 e9 26 af ff ff <8b> 13 48 8b 7d 00 89 c1 48 c7 c6 18 90 54 a0 89 44 24 04 e8 c1 2e
-  RSP: 0018:ffffc90005467d00 EFLAGS: 00010282
-  RAX: 00000000ffffff92 RBX: 0000000000000000 RCX: 0000000000000000
-  			     ^^^^^^^^^^^^^^^^
-and %rbx is nice and clean.
-
-  Call Trace:
-   <TASK>
-   __sev_firmware_shutdown.isra.0
-   sev_dev_destroy
-   psp_dev_destroy
-   sp_destroy
-   pci_device_shutdown
-   device_shutdown
-   kernel_power_off
-   hibernate.cold
-   state_store
-   kernfs_fop_write_iter
-   vfs_write
-   ksys_write
-   do_syscall_64
-   entry_SYSCALL_64_after_hwframe
-
-Pass in a pointer to the function-local error var in the caller.
-
-With that addressed, suspending the ccp shows the error properly at
-least:
-
-  ccp 0000:47:00.1: sev command 0x2 timed out, disabling PSP
-  ccp 0000:47:00.1: SEV: failed to SHUTDOWN error 0x0, rc -110
-  SEV-SNP: Leaking PFN range 0x146800-0x146a00
-  SEV-SNP: PFN 0x146800 unassigned, dumping non-zero entries in 2M PFN region: [0x146800 - 0x146a00]
-  ...
-  ccp 0000:47:00.1: SEV-SNP firmware shutdown failed, rc -16, error 0x0
-  ACPI: PM: Preparing to enter system sleep state S5
-  kvm: exiting hardware virtualization
-  reboot: Power down
-
-Btw, this driver is crying to be cleaned up to pass in a proper I/O
-struct which can be used to store information between the different
-functions, otherwise stuff like that will happen in the future again.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39935" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-asoc: codec: sma1307: fix memory corruption in sma1307_setting_loaded()
-
-the sma1307->set.header_size is how many integers are in the header
-(there are 8 of them) but instead of allocating space of 8 integers
-we allocate 8 bytes.  this leads to memory corruption when we copy data
-it on the next line:
-
-        memcpy(sma1307->set.header, data,
-               sma1307->set.header_size * sizeof(int));
-
-also since we're immediately copying over the memory in ->set.header,
-there is no need to zero it in the allocator.  use devm_kmalloc_array()
-to allocate the memory instead.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39935" target="_blank">CVE-2025-39935</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ASoC: codec: sma1307: Fix memory corruption in sma1307_setting_loaded()
-
-The sma1307->set.header_size is how many integers are in the header
-(there are 8 of them) but instead of allocating space of 8 integers
-we allocate 8 bytes.  This leads to memory corruption when we copy data
-it on the next line:
-
-        memcpy(sma1307->set.header, data,
-               sma1307->set.header_size * sizeof(int));
-
-Also since we're immediately copying over the memory in ->set.header,
-there is no need to zero it in the allocator.  Use devm_kmalloc_array()
-to allocate the memory instead.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-39934" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-drm: bridge: anx7625: fix null pointer dereference with early irq
-
-if the interrupt occurs before resource initialization is complete, the
-interrupt handler/worker may access uninitialized data such as the i2c
-tcpc_client device, potentially leading to null pointer dereference.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-39934" target="_blank">CVE-2025-39934</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-04 03:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-drm: bridge: anx7625: Fix NULL pointer dereference with early IRQ
-
-If the interrupt occurs before resource initialization is complete, the
-interrupt handler/worker may access uninitialized data such as the I2C
-tcpc_client device, potentially leading to NULL pointer dereference.</p>
+cifs: fix mid leak during reconnection after timeout threshold
+
+When the number of responses with status of STATUS_IO_TIMEOUT
+exceeds a specified threshold (NUM_STATUS_IO_TIMEOUT), we reconnect
+the connection. But we do not return the mid, or the credits
+returned for the mid, or reduce the number of in-flight requests.
+
+This bug could result in the server->in_flight count to go bad,
+and also cause a leak in the mids.
+
+This change moves the check to a few lines below where the
+response is decrypted, even of the response is read from the
+transform header. This way, the code for returning the mids
+can be reused.
+
+Also, the cifs_reconnect was reconnecting just the transport
+connection before. In case of multi-channel, this may not be
+what we want to do after several timeouts. Changed that to
+reconnect the session and the tree too.
+
+Also renamed NUM_STATUS_IO_TIMEOUT to a more appropriate name
+MAX_STATUS_IO_TIMEOUT.</p>
                 </div>
         
             </div>
