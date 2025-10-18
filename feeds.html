@@ -33,6 +33,370 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-5555" data-description="a vulnerability has been found in nixdorf wincor port io driver up to 1.0.0.1. this affects the function sub_11100 in the library wnport.sys of the component ioctl handler. such manipulation leads to stack-based buffer overflow. local access is required to approach this attack. the exploit has been disclosed to the public and may be used. upgrading to version 3.0.0.1 is able to mitigate this issue. upgrading the affected component is recommended. the vendor was contacted beforehand and was able to provide a patch very early.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-5555" target="_blank">CVE-2025-5555</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>A vulnerability has been found in Nixdorf Wincor PORT IO Driver up to 1.0.0.1. This affects the function sub_11100 in the library wnport.sys of the component IOCTL Handler. Such manipulation leads to stack-based buffer overflow. Local access is required to approach this attack. The exploit has been disclosed to the public and may be used. Upgrading to version 3.0.0.1 is able to mitigate this issue. Upgrading the affected component is recommended. The vendor was contacted beforehand and was able to provide a patch very early.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-40003" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: mscc: ocelot: fix use-after-free caused by cyclic delayed work
+
+the origin code calls cancel_delayed_work() in ocelot_stats_deinit()
+to cancel the cyclic delayed work item ocelot->stats_work. however,
+cancel_delayed_work() may fail to cancel the work item if it is already
+executing. while destroy_workqueue() does wait for all pending work items
+in the work queue to complete before destroying the work queue, it cannot
+prevent the delayed work item from being rescheduled within the
+ocelot_check_stats_work() function. this limitation exists because the
+delayed work item is only enqueued into the work queue after its timer
+expires. before the timer expiration, destroy_workqueue() has no visibility
+of this pending work item. once the work queue appears empty,
+destroy_workqueue() proceeds with destruction. when the timer eventually
+expires, the delayed work item gets queued again, leading to the following
+warning:
+
+workqueue: cannot queue ocelot_check_stats_work on wq ocelot-switch-stats
+warning: cpu: 2 pid: 0 at kernel/workqueue.c:2255 __queue_work+0x875/0xaf0
+...
+rip: 0010:__queue_work+0x875/0xaf0
+...
+rsp: 0018:ffff88806d108b10 eflags: 00010086
+rax: 0000000000000000 rbx: 0000000000000101 rcx: 0000000000000027
+rdx: 0000000000000027 rsi: 0000000000000004 rdi: ffff88806d123e88
+rbp: ffffffff813c3170 r08: 0000000000000000 r09: ffffed100da247d2
+r10: ffffed100da247d1 r11: ffff88806d123e8b r12: ffff88800c00f000
+r13: ffff88800d7285c0 r14: ffff88806d0a5580 r15: ffff88800d7285a0
+fs:  0000000000000000(0000) gs:ffff8880e5725000(0000) knlgs:0000000000000000
+cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+cr2: 00007fe18e45ea10 cr3: 0000000005e6c000 cr4: 00000000000006f0
+call trace:
+ <irq>
+ ? kasan_report+0xc6/0xf0
+ ? __pfx_delayed_work_timer_fn+0x10/0x10
+ ? __pfx_delayed_work_timer_fn+0x10/0x10
+ call_timer_fn+0x25/0x1c0
+ __run_timer_base.part.0+0x3be/0x8c0
+ ? __pfx_delayed_work_timer_fn+0x10/0x10
+ ? rcu_sched_clock_irq+0xb06/0x27d0
+ ? __pfx___run_timer_base.part.0+0x10/0x10
+ ? try_to_wake_up+0xb15/0x1960
+ ? _raw_spin_lock_irq+0x80/0xe0
+ ? __pfx__raw_spin_lock_irq+0x10/0x10
+ tmigr_handle_remote_up+0x603/0x7e0
+ ? __pfx_tmigr_handle_remote_up+0x10/0x10
+ ? sched_balance_trigger+0x1c0/0x9f0
+ ? sched_tick+0x221/0x5a0
+ ? _raw_spin_lock_irq+0x80/0xe0
+ ? __pfx__raw_spin_lock_irq+0x10/0x10
+ ? tick_nohz_handler+0x339/0x440
+ ? __pfx_tmigr_handle_remote_up+0x10/0x10
+ __walk_groups.isra.0+0x42/0x150
+ tmigr_handle_remote+0x1f4/0x2e0
+ ? __pfx_tmigr_handle_remote+0x10/0x10
+ ? ktime_get+0x60/0x140
+ ? lapic_next_event+0x11/0x20
+ ? clockevents_program_event+0x1d4/0x2a0
+ ? hrtimer_interrupt+0x322/0x780
+ handle_softirqs+0x16a/0x550
+ irq_exit_rcu+0xaf/0xe0
+ sysvec_apic_timer_interrupt+0x70/0x80
+ </irq>
+...
+
+the following diagram reveals the cause of the above warning:
+
+cpu 0 (remove)             | cpu 1 (delayed work callback)
+mscc_ocelot_remove()       |
+  ocelot_deinit()          | ocelot_check_stats_work()
+    ocelot_stats_deinit()  |
+      cancel_delayed_work()|   ...
+                           |   queue_delayed_work()
+      destroy_workqueue()  | (wait a time)
+                           | __queue_work() //uaf
+
+the above scenario actually constitutes a uaf vulnerability.
+
+the ocelot_stats_deinit() is only invoked when initialization
+failure or resource destruction, so we must ensure that any
+delayed work items cannot be rescheduled.
+
+replace cancel_delayed_work() with disable_delayed_work_sync()
+to guarantee proper cancellation of the delayed work item and
+ensure completion of any currently executing work before the
+workqueue is deallocated.
+
+a deadlock concern was considered: ocelot_stats_deinit() is called
+in a process context and is not holding any locks that the delayed
+work item might also need. therefore, the use of the _sync() variant
+is safe here.
+
+this bug was identified through static analysis. to reproduce the
+issue and validate the fix, i simulated ocelot-swit
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40003" target="_blank">CVE-2025-40003</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: mscc: ocelot: Fix use-after-free caused by cyclic delayed work
+
+The origin code calls cancel_delayed_work() in ocelot_stats_deinit()
+to cancel the cyclic delayed work item ocelot->stats_work. However,
+cancel_delayed_work() may fail to cancel the work item if it is already
+executing. While destroy_workqueue() does wait for all pending work items
+in the work queue to complete before destroying the work queue, it cannot
+prevent the delayed work item from being rescheduled within the
+ocelot_check_stats_work() function. This limitation exists because the
+delayed work item is only enqueued into the work queue after its timer
+expires. Before the timer expiration, destroy_workqueue() has no visibility
+of this pending work item. Once the work queue appears empty,
+destroy_workqueue() proceeds with destruction. When the timer eventually
+expires, the delayed work item gets queued again, leading to the following
+warning:
+
+workqueue: cannot queue ocelot_check_stats_work on wq ocelot-switch-stats
+WARNING: CPU: 2 PID: 0 at kernel/workqueue.c:2255 __queue_work+0x875/0xaf0
+...
+RIP: 0010:__queue_work+0x875/0xaf0
+...
+RSP: 0018:ffff88806d108b10 EFLAGS: 00010086
+RAX: 0000000000000000 RBX: 0000000000000101 RCX: 0000000000000027
+RDX: 0000000000000027 RSI: 0000000000000004 RDI: ffff88806d123e88
+RBP: ffffffff813c3170 R08: 0000000000000000 R09: ffffed100da247d2
+R10: ffffed100da247d1 R11: ffff88806d123e8b R12: ffff88800c00f000
+R13: ffff88800d7285c0 R14: ffff88806d0a5580 R15: ffff88800d7285a0
+FS:  0000000000000000(0000) GS:ffff8880e5725000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007fe18e45ea10 CR3: 0000000005e6c000 CR4: 00000000000006f0
+Call Trace:
+ <IRQ>
+ ? kasan_report+0xc6/0xf0
+ ? __pfx_delayed_work_timer_fn+0x10/0x10
+ ? __pfx_delayed_work_timer_fn+0x10/0x10
+ call_timer_fn+0x25/0x1c0
+ __run_timer_base.part.0+0x3be/0x8c0
+ ? __pfx_delayed_work_timer_fn+0x10/0x10
+ ? rcu_sched_clock_irq+0xb06/0x27d0
+ ? __pfx___run_timer_base.part.0+0x10/0x10
+ ? try_to_wake_up+0xb15/0x1960
+ ? _raw_spin_lock_irq+0x80/0xe0
+ ? __pfx__raw_spin_lock_irq+0x10/0x10
+ tmigr_handle_remote_up+0x603/0x7e0
+ ? __pfx_tmigr_handle_remote_up+0x10/0x10
+ ? sched_balance_trigger+0x1c0/0x9f0
+ ? sched_tick+0x221/0x5a0
+ ? _raw_spin_lock_irq+0x80/0xe0
+ ? __pfx__raw_spin_lock_irq+0x10/0x10
+ ? tick_nohz_handler+0x339/0x440
+ ? __pfx_tmigr_handle_remote_up+0x10/0x10
+ __walk_groups.isra.0+0x42/0x150
+ tmigr_handle_remote+0x1f4/0x2e0
+ ? __pfx_tmigr_handle_remote+0x10/0x10
+ ? ktime_get+0x60/0x140
+ ? lapic_next_event+0x11/0x20
+ ? clockevents_program_event+0x1d4/0x2a0
+ ? hrtimer_interrupt+0x322/0x780
+ handle_softirqs+0x16a/0x550
+ irq_exit_rcu+0xaf/0xe0
+ sysvec_apic_timer_interrupt+0x70/0x80
+ </IRQ>
+...
+
+The following diagram reveals the cause of the above warning:
+
+CPU 0 (remove)             | CPU 1 (delayed work callback)
+mscc_ocelot_remove()       |
+  ocelot_deinit()          | ocelot_check_stats_work()
+    ocelot_stats_deinit()  |
+      cancel_delayed_work()|   ...
+                           |   queue_delayed_work()
+      destroy_workqueue()  | (wait a time)
+                           | __queue_work() //UAF
+
+The above scenario actually constitutes a UAF vulnerability.
+
+The ocelot_stats_deinit() is only invoked when initialization
+failure or resource destruction, so we must ensure that any
+delayed work items cannot be rescheduled.
+
+Replace cancel_delayed_work() with disable_delayed_work_sync()
+to guarantee proper cancellation of the delayed work item and
+ensure completion of any currently executing work before the
+workqueue is deallocated.
+
+A deadlock concern was considered: ocelot_stats_deinit() is called
+in a process context and is not holding any locks that the delayed
+work item might also need. Therefore, the use of the _sync() variant
+is safe here.
+
+This bug was identified through static analysis. To reproduce the
+issue and validate the fix, I simulated ocelot-swit
+---truncated---</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-40002" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+thunderbolt: fix use-after-free in tb_dp_dprx_work
+
+the original code relies on cancel_delayed_work() in tb_dp_dprx_stop(),
+which does not ensure that the delayed work item tunnel->dprx_work has
+fully completed if it was already running. this leads to use-after-free
+scenarios where tb_tunnel is deallocated by tb_tunnel_put(), while
+tunnel->dprx_work remains active and attempts to dereference tb_tunnel
+in tb_dp_dprx_work().
+
+a typical race condition is illustrated below:
+
+cpu 0                            | cpu 1
+tb_dp_tunnel_active()            |
+  tb_deactivate_and_free_tunnel()| tb_dp_dprx_start()
+    tb_tunnel_deactivate()       |   queue_delayed_work()
+      tb_dp_activate()           |
+        tb_dp_dprx_stop()        | tb_dp_dprx_work() //delayed worker
+          cancel_delayed_work()  |
+    tb_tunnel_put(tunnel);       |
+                                 |   tunnel = container_of(...); //uaf
+                                 |   tunnel-> //uaf
+
+replacing cancel_delayed_work() with cancel_delayed_work_sync() is
+not feasible as it would introduce a deadlock: both tb_dp_dprx_work()
+and the cleanup path acquire tb->lock, and cancel_delayed_work_sync()
+would wait indefinitely for the work item that cannot proceed.
+
+instead, implement proper reference counting:
+- if cancel_delayed_work() returns true (work is pending), we release
+  the reference in the stop function.
+- if it returns false (work is executing or already completed), the
+  reference is released in delayed work function itself.
+
+this ensures the tb_tunnel remains valid during work item execution
+while preventing memory leaks.
+
+this bug was found by static analysis.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40002" target="_blank">CVE-2025-40002</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+thunderbolt: Fix use-after-free in tb_dp_dprx_work
+
+The original code relies on cancel_delayed_work() in tb_dp_dprx_stop(),
+which does not ensure that the delayed work item tunnel->dprx_work has
+fully completed if it was already running. This leads to use-after-free
+scenarios where tb_tunnel is deallocated by tb_tunnel_put(), while
+tunnel->dprx_work remains active and attempts to dereference tb_tunnel
+in tb_dp_dprx_work().
+
+A typical race condition is illustrated below:
+
+CPU 0                            | CPU 1
+tb_dp_tunnel_active()            |
+  tb_deactivate_and_free_tunnel()| tb_dp_dprx_start()
+    tb_tunnel_deactivate()       |   queue_delayed_work()
+      tb_dp_activate()           |
+        tb_dp_dprx_stop()        | tb_dp_dprx_work() //delayed worker
+          cancel_delayed_work()  |
+    tb_tunnel_put(tunnel);       |
+                                 |   tunnel = container_of(...); //UAF
+                                 |   tunnel-> //UAF
+
+Replacing cancel_delayed_work() with cancel_delayed_work_sync() is
+not feasible as it would introduce a deadlock: both tb_dp_dprx_work()
+and the cleanup path acquire tb->lock, and cancel_delayed_work_sync()
+would wait indefinitely for the work item that cannot proceed.
+
+Instead, implement proper reference counting:
+- If cancel_delayed_work() returns true (work is pending), we release
+  the reference in the stop function.
+- If it returns false (work is executing or already completed), the
+  reference is released in delayed work function itself.
+
+This ensures the tb_tunnel remains valid during work item execution
+while preventing memory leaks.
+
+This bug was found by static analysis.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-40001" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+scsi: mvsas: fix use-after-free bugs in mvs_work_queue
+
+during the detaching of marvell's sas/sata controller, the original code
+calls cancel_delayed_work() in mvs_free() to cancel the delayed work
+item mwq->work_q. however, if mwq->work_q is already running, the
+cancel_delayed_work() may fail to cancel it. this can lead to
+use-after-free scenarios where mvs_free() frees the mvs_info while
+mvs_work_queue() is still executing and attempts to access the
+already-freed mvs_info.
+
+a typical race condition is illustrated below:
+
+cpu 0 (remove)            | cpu 1 (delayed work callback)
+mvs_pci_remove()          |
+  mvs_free()              | mvs_work_queue()
+    cancel_delayed_work() |
+      kfree(mvi)          |
+                          |   mvi-> // uaf
+
+replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
+that the delayed work item is properly canceled and any executing
+delayed work item completes before the mvs_info is deallocated.
+
+this bug was found by static analysis.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40001" target="_blank">CVE-2025-40001</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+scsi: mvsas: Fix use-after-free bugs in mvs_work_queue
+
+During the detaching of Marvell's SAS/SATA controller, the original code
+calls cancel_delayed_work() in mvs_free() to cancel the delayed work
+item mwq->work_q. However, if mwq->work_q is already running, the
+cancel_delayed_work() may fail to cancel it. This can lead to
+use-after-free scenarios where mvs_free() frees the mvs_info while
+mvs_work_queue() is still executing and attempts to access the
+already-freed mvs_info.
+
+A typical race condition is illustrated below:
+
+CPU 0 (remove)            | CPU 1 (delayed work callback)
+mvs_pci_remove()          |
+  mvs_free()              | mvs_work_queue()
+    cancel_delayed_work() |
+      kfree(mvi)          |
+                          |   mvi-> // UAF
+
+Replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
+that the delayed work item is properly canceled and any executing
+delayed work item completes before the mvs_info is deallocated.
+
+This bug was found by static analysis.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-11256" data-description="the kognetiks chatbot plugin for wordpress is vulnerable to unauthorized modification of data due to a missing capability check on several functions in all versions up to, and including, 2.3.5. this makes it possible for unauthenticated attackers to upload limited safe files and erase conversations.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11256" target="_blank">CVE-2025-11256</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The Kognetiks Chatbot plugin for WordPress is vulnerable to unauthorized modification of data due to a missing capability check on several functions in all versions up to, and including, 2.3.5. This makes it possible for unauthenticated attackers to upload limited safe files and erase conversations.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-10750" data-description="the powerbi embed reports plugin for wordpress is vulnerable to sensitive information disclosure in all versions up to, and including, 1.2.0. this is due to missing capability checks and authentication verification on the 'testuser' endpoint accessible via the mo_epbr_admin_observer() function hooked on 'init'. this makes it possible for unauthenticated attackers to access sensitive azure ad user information including personal identifiable information (pii) such as displayname, mail, phones, department, or detailed oauth error data including azure ad application/client ids, error codes, trace ids, and correlation ids.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-10750" target="_blank">CVE-2025-10750</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The PowerBI Embed Reports plugin for WordPress is vulnerable to Sensitive Information Disclosure in all versions up to, and including, 1.2.0. This is due to missing capability checks and authentication verification on the 'testUser' endpoint accessible via the mo_epbr_admin_observer() function hooked on 'init'. This makes it possible for unauthenticated attackers to access sensitive Azure AD user information including personal identifiable information (PII) such as displayName, mail, phones, department, or detailed OAuth error data including Azure AD Application/Client IDs, error codes, trace IDs, and correlation IDs.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-9562" data-description="the redirection for contact form 7 plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's qs_date shortcode in all versions up to, and including, 3.2.6 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-9562" target="_blank">CVE-2025-9562</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-10-18 02:15:36 CDT</p>
@@ -143,54 +507,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>The XX2WP Integration Tools plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'mxp_fb2wp_display_embed' shortcode in all versions up to, and including, 1.9.9. This is due to the plugin not properly sanitizing user input and output of the 'post_id' parameter. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-11742" data-description="the wpc smart wishlist for woocommerce plugin for wordpress is vulnerable to unauthorized access of data due to a missing capability check on the 'wishlist_quickview' ajax action in all versions up to, and including, 5.0.4. this makes it possible for authenticated attackers, with subscriber-level access and above, to view other user's wishlist data and information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11742" target="_blank">CVE-2025-11742</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 01:15:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The WPC Smart Wishlist for WooCommerce plugin for WordPress is vulnerable to unauthorized access of data due to a missing capability check on the 'wishlist_quickview' AJAX action in all versions up to, and including, 5.0.4. This makes it possible for authenticated attackers, with Subscriber-level access and above, to view other user's wishlist data and information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-11738" data-description="the media library assistant plugin for wordpress is vulnerable to limited file reading in all versions up to, and including, 3.29 via the mla-stream-image.php file. this makes it possible for unauthenticated attackers to read the contents of arbitrary ai/eps/pdf/ps files on the server, which can contain sensitive information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11738" target="_blank">CVE-2025-11738</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 01:15:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Media Library Assistant plugin for WordPress is vulnerable to limited file reading in all versions up to, and including, 3.29 via the mla-stream-image.php file. This makes it possible for unauthenticated attackers to read the contents of arbitrary ai/eps/pdf/ps files on the server, which can contain sensitive information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62671" data-description="improper neutralization of input during web page generation (xss or 'cross-site scripting') vulnerability in the wikimedia foundation mediawiki - cargo extension allows stored xss.this issue affects mediawiki - cargo extension: master.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62671" target="_blank">CVE-2025-62671</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 00:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Input During Web Page Generation (XSS or 'Cross-site Scripting') vulnerability in The Wikimedia Foundation Mediawiki - Cargo Extension allows Stored XSS.This issue affects Mediawiki - Cargo Extension: master.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62670" data-description="improper neutralization of input during web page generation (xss or 'cross-site scripting') vulnerability in the wikimedia foundation mediawiki - flexdiagrams extension allows stored xss.this issue affects mediawiki - flexdiagrams extension: master.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62670" target="_blank">CVE-2025-62670</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 00:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Input During Web Page Generation (XSS or 'Cross-site Scripting') vulnerability in The Wikimedia Foundation Mediawiki - FlexDiagrams Extension allows Stored XSS.This issue affects Mediawiki - FlexDiagrams Extension: master.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62669" data-description="exposure of sensitive information to an unauthorized actor vulnerability in the wikimedia foundation mediawiki - centralauth extension allows resource leak exposure.this issue affects mediawiki - centralauth extension: from master before 1.39.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62669" target="_blank">CVE-2025-62669</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 00:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposure of Sensitive Information to an Unauthorized Actor vulnerability in The Wikimedia Foundation Mediawiki - CentralAuth Extension allows Resource Leak Exposure.This issue affects Mediawiki - CentralAuth Extension: from master before 1.39.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62668" data-description="incorrect default permissions vulnerability in the wikimedia foundation mediawiki - growthexperiments extension allows resource leak exposure.this issue affects mediawiki - growthexperiments extension: from master before 1.39.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62668" target="_blank">CVE-2025-62668</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 00:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Incorrect Default Permissions vulnerability in The Wikimedia Foundation Mediawiki - GrowthExperiments Extension allows Resource Leak Exposure.This issue affects Mediawiki - GrowthExperiments Extension: from master before 1.39.</p>
                 </div>
         
             </div>
