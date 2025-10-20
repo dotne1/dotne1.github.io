@@ -33,6 +33,58 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-62577" data-description="eternus sf provided by fsas technologies inc. contains an incorrect default permissions vulnerability. a low-privileged user with access to the management server may obtain database credentials, potentially allowing execution of os commands with administrator privileges.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62577" target="_blank">CVE-2025-62577</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-20 01:15:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>ETERNUS SF provided by Fsas Technologies Inc. contains an incorrect default permissions vulnerability. A low-privileged user with access to the management server may obtain database credentials, potentially allowing execution of OS commands with administrator privileges.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-40004" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/9p: fix buffer overflow in usb transport layer
+
+a buffer overflow vulnerability exists in the usb 9pfs transport layer
+where inconsistent size validation between packet header parsing and
+actual data copying allows a malicious usb host to overflow heap buffers.
+
+the issue occurs because:
+- usb9pfs_rx_header() validates only the declared size in packet header
+- usb9pfs_rx_complete() uses req->actual (actual received bytes) for
+memcpy
+
+this allows an attacker to craft packets with small declared size
+(bypassing validation) but large actual payload (triggering overflow
+in memcpy).
+
+add validation in usb9pfs_rx_complete() to ensure req->actual does not
+exceed the buffer capacity before copying data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40004" target="_blank">CVE-2025-40004</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-20 01:15:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/9p: Fix buffer overflow in USB transport layer
+
+A buffer overflow vulnerability exists in the USB 9pfs transport layer
+where inconsistent size validation between packet header parsing and
+actual data copying allows a malicious USB host to overflow heap buffers.
+
+The issue occurs because:
+- usb9pfs_rx_header() validates only the declared size in packet header
+- usb9pfs_rx_complete() uses req->actual (actual received bytes) for
+memcpy
+
+This allows an attacker to craft packets with small declared size
+(bypassing validation) but large actual payload (triggering overflow
+in memcpy).
+
+Add validation in usb9pfs_rx_complete() to ensure req->actual does not
+exceed the buffer capacity before copying data.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-11948" data-description="document management system developed by excellent infotek has an arbitrary file upload vulnerability, allowing unauthenticated remote attackers to upload and execute web shell backdoors, thereby enabling arbitrary code execution on the server.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11948" target="_blank">CVE-2025-11948</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-10-19 23:15:36 CDT</p>
@@ -451,72 +503,6 @@ This ensures the tb_tunnel remains valid during work item execution
 while preventing memory leaks.
 
 This bug was found by static analysis.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-40001" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-scsi: mvsas: fix use-after-free bugs in mvs_work_queue
-
-during the detaching of marvell's sas/sata controller, the original code
-calls cancel_delayed_work() in mvs_free() to cancel the delayed work
-item mwq->work_q. however, if mwq->work_q is already running, the
-cancel_delayed_work() may fail to cancel it. this can lead to
-use-after-free scenarios where mvs_free() frees the mvs_info while
-mvs_work_queue() is still executing and attempts to access the
-already-freed mvs_info.
-
-a typical race condition is illustrated below:
-
-cpu 0 (remove)            | cpu 1 (delayed work callback)
-mvs_pci_remove()          |
-  mvs_free()              | mvs_work_queue()
-    cancel_delayed_work() |
-      kfree(mvi)          |
-                          |   mvi-> // uaf
-
-replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
-that the delayed work item is properly canceled and any executing
-delayed work item completes before the mvs_info is deallocated.
-
-this bug was found by static analysis.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40001" target="_blank">CVE-2025-40001</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-scsi: mvsas: Fix use-after-free bugs in mvs_work_queue
-
-During the detaching of Marvell's SAS/SATA controller, the original code
-calls cancel_delayed_work() in mvs_free() to cancel the delayed work
-item mwq->work_q. However, if mwq->work_q is already running, the
-cancel_delayed_work() may fail to cancel it. This can lead to
-use-after-free scenarios where mvs_free() frees the mvs_info while
-mvs_work_queue() is still executing and attempts to access the
-already-freed mvs_info.
-
-A typical race condition is illustrated below:
-
-CPU 0 (remove)            | CPU 1 (delayed work callback)
-mvs_pci_remove()          |
-  mvs_free()              | mvs_work_queue()
-    cancel_delayed_work() |
-      kfree(mvi)          |
-                          |   mvi-> // UAF
-
-Replace cancel_delayed_work() with cancel_delayed_work_sync() to ensure
-that the delayed work item is properly canceled and any executing
-delayed work item completes before the mvs_info is deallocated.
-
-This bug was found by static analysis.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-11256" data-description="the kognetiks chatbot plugin for wordpress is vulnerable to unauthorized modification of data due to a missing capability check on several functions in all versions up to, and including, 2.3.5. this makes it possible for unauthenticated attackers to upload limited safe files and erase conversations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11256" target="_blank">CVE-2025-11256</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-18 03:15:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Kognetiks Chatbot plugin for WordPress is vulnerable to unauthorized modification of data due to a missing capability check on several functions in all versions up to, and including, 2.3.5. This makes it possible for unauthenticated attackers to upload limited safe files and erase conversations.</p>
                 </div>
         
             </div>
