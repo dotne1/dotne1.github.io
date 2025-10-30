@@ -33,6 +33,26 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-63608" data-description="a sql injection vulnerability exists in csz-cms <=1.3.0 in the form builder view functionality. the vulnerability is located in the field parameter of the form viewing feature, allowing authenticated administrators to execute arbitrary sql queries.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-63608" target="_blank">CVE-2025-63608</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-30 08:15:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A SQL injection vulnerability exists in CSZ-CMS <=1.3.0 in the Form Builder view functionality. The vulnerability is located in the field parameter of the form viewing feature, allowing authenticated administrators to execute arbitrary SQL queries.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-10348" data-description="urve smart office is vulnerable to stored xss in report problem functionality. an attacker with a low-privileged account can upload an svg file containing a malicious payload, which will be executed when a victim visits the url of the uploaded resource. the resource is available to anyone without any form of authentication.
+
+this issue was fixed in version 1.1.24.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-10348" target="_blank">CVE-2025-10348</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-10-30 08:15:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>URVE Smart Office is vulnerable to Stored XSS in report problem functionality. An attacker with a low-privileged account can upload an SVG file containing a malicious payload, which will be executed when a victim visits the URL of the uploaded resource. The resource is available to anyone without any form of authentication.
+
+This issue was fixed in version 1.1.24.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-10317" data-description="quick.cart is vulnerable to cross-site request forgery in product creation functionality. malicious attacker can craft special website, which when visited by the admin, will automatically send a post request creating a malicious product with content defined by the attacker.
 this software does not implement any protection against this type of attack. all forms available in this software are potentially vulnerable.
 
@@ -677,152 +697,6 @@ acpi_evaluate_dsm() may return NULL, when acpi_evaluate_object() returns
 acpi_status other than ACPI_SUCCESS, so add a check to prevent the crach.
 
 Found by Linux Verification Center (linuxtesting.org) with SVACE.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-40097" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-alsa: hda: fix missing pointer check in hda_component_manager_init function
-
-the __component_match_add function may assign the 'matchptr' pointer
-the value err_ptr(-enomem), which will subsequently be dereferenced.
-
-the call stack leading to the error looks like this:
-
-hda_component_manager_init
-|-> component_match_add
-    |-> component_match_add_release
-        |-> __component_match_add ( ... ,**matchptr, ... )
-            |-> *matchptr = err_ptr(-enomem);       // assign
-|-> component_master_add_with_match( ...  match)
-    |-> component_match_realloc(match, match->num); // dereference
-
-add is_err() check to prevent the crash.
-
-found by linux verification center (linuxtesting.org) with svace.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40097" target="_blank">CVE-2025-40097</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-30 05:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ALSA: hda: Fix missing pointer check in hda_component_manager_init function
-
-The __component_match_add function may assign the 'matchptr' pointer
-the value ERR_PTR(-ENOMEM), which will subsequently be dereferenced.
-
-The call stack leading to the error looks like this:
-
-hda_component_manager_init
-|-> component_match_add
-    |-> component_match_add_release
-        |-> __component_match_add ( ... ,**matchptr, ... )
-            |-> *matchptr = ERR_PTR(-ENOMEM);       // assign
-|-> component_master_add_with_match( ...  match)
-    |-> component_match_realloc(match, match->num); // dereference
-
-Add IS_ERR() check to prevent the crash.
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-40096" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-drm/sched: fix potential double free in drm_sched_job_add_resv_dependencies
-
-when adding dependencies with drm_sched_job_add_dependency(), that
-function consumes the fence reference both on success and failure, so in
-the latter case the dma_fence_put() on the error path (xarray failed to
-expand) is a double free.
-
-interestingly this bug appears to have been present ever since
-commit ebd5f74255b9 ("drm/sched: add dependency tracking"), since the code
-back then looked like this:
-
-drm_sched_job_add_implicit_dependencies():
-...
-       for (i = 0; i < fence_count; i++) {
-               ret = drm_sched_job_add_dependency(job, fences[i]);
-               if (ret)
-                       break;
-       }
-
-       for (; i < fence_count; i++)
-               dma_fence_put(fences[i]);
-
-which means for the failing 'i' the dma_fence_put was already a double
-free. possibly there were no users at that time, or the test cases were
-insufficient to hit it.
-
-the bug was then only noticed and fixed after
-commit 9c2ba265352a ("drm/scheduler: use new iterator in drm_sched_job_add_implicit_dependencies v2")
-landed, with its fixup of
-commit 4eaf02d6076c ("drm/scheduler: fix drm_sched_job_add_implicit_dependencies").
-
-at that point it was a slightly different flavour of a double free, which
-commit 963d0b356935 ("drm/scheduler: fix drm_sched_job_add_implicit_dependencies harder")
-noticed and attempted to fix.
-
-but it only moved the double free from happening inside the
-drm_sched_job_add_dependency(), when releasing the reference not yet
-obtained, to the caller, when releasing the reference already released by
-the former in the failure case.
-
-as such it is not easy to identify the right target for the fixes tag so
-lets keep it simple and just continue the chain.
-
-while fixing we also improve the comment and explain the reason for taking
-the reference and not dropping it.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40096" target="_blank">CVE-2025-40096</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-10-30 05:15:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-drm/sched: Fix potential double free in drm_sched_job_add_resv_dependencies
-
-When adding dependencies with drm_sched_job_add_dependency(), that
-function consumes the fence reference both on success and failure, so in
-the latter case the dma_fence_put() on the error path (xarray failed to
-expand) is a double free.
-
-Interestingly this bug appears to have been present ever since
-commit ebd5f74255b9 ("drm/sched: Add dependency tracking"), since the code
-back then looked like this:
-
-drm_sched_job_add_implicit_dependencies():
-...
-       for (i = 0; i < fence_count; i++) {
-               ret = drm_sched_job_add_dependency(job, fences[i]);
-               if (ret)
-                       break;
-       }
-
-       for (; i < fence_count; i++)
-               dma_fence_put(fences[i]);
-
-Which means for the failing 'i' the dma_fence_put was already a double
-free. Possibly there were no users at that time, or the test cases were
-insufficient to hit it.
-
-The bug was then only noticed and fixed after
-commit 9c2ba265352a ("drm/scheduler: use new iterator in drm_sched_job_add_implicit_dependencies v2")
-landed, with its fixup of
-commit 4eaf02d6076c ("drm/scheduler: fix drm_sched_job_add_implicit_dependencies").
-
-At that point it was a slightly different flavour of a double free, which
-commit 963d0b356935 ("drm/scheduler: fix drm_sched_job_add_implicit_dependencies harder")
-noticed and attempted to fix.
-
-But it only moved the double free from happening inside the
-drm_sched_job_add_dependency(), when releasing the reference not yet
-obtained, to the caller, when releasing the reference already released by
-the former in the failure case.
-
-As such it is not easy to identify the right target for the fixes tag so
-lets keep it simple and just continue the chain.
-
-While fixing we also improve the comment and explain the reason for taking
-the reference and not dropping it.</p>
                 </div>
         
             </div>
