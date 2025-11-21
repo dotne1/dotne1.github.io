@@ -33,6 +33,168 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-40211" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+acpi: video: fix use-after-free in acpi_video_switch_brightness()
+
+the switch_brightness_work delayed work accesses device->brightness
+and device->backlight, freed by acpi_video_dev_unregister_backlight()
+during device removal.
+
+if the work executes after acpi_video_bus_unregister_backlight()
+frees these resources, it causes a use-after-free when
+acpi_video_switch_brightness() dereferences device->brightness or
+device->backlight.
+
+fix this by calling cancel_delayed_work_sync() for each device's
+switch_brightness_work in acpi_video_bus_remove_notify_handler()
+after removing the notify handler that queues the work. this ensures
+the work completes before the memory is freed.
+
+[ rjw: changelog edit ]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40211" target="_blank">CVE-2025-40211</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-11-21 05:15:49 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ACPI: video: Fix use-after-free in acpi_video_switch_brightness()
+
+The switch_brightness_work delayed work accesses device->brightness
+and device->backlight, freed by acpi_video_dev_unregister_backlight()
+during device removal.
+
+If the work executes after acpi_video_bus_unregister_backlight()
+frees these resources, it causes a use-after-free when
+acpi_video_switch_brightness() dereferences device->brightness or
+device->backlight.
+
+Fix this by calling cancel_delayed_work_sync() for each device's
+switch_brightness_work in acpi_video_bus_remove_notify_handler()
+after removing the notify handler that queues the work. This ensures
+the work completes before the memory is freed.
+
+[ rjw: Changelog edit ]</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-40210" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+revert "nfsd: remove the cap on number of operations per nfsv4 compound"
+
+i've found that pynfs comp6 now leaves the connection or lease in a
+strange state, which causes close9 to hang indefinitely. i've dug
+into it a little, but i haven't been able to root-cause it yet.
+however, i bisected to commit 48aab1606fa8 ("nfsd: remove the cap on
+number of operations per nfsv4 compound").
+
+tianshuo han also reports a potential vulnerability when decoding
+an nfsv4 compound. an attacker can place an arbitrarily large op
+count in the compound header, which results in:
+
+[   51.410584] nfsd: vmalloc error: size 1209533382144, exceeds total
+pages, mode:0xdc0(gfp_kernel|__gfp_zero),
+nodemask=(null),cpuset=/,mems_allowed=0
+
+when nfsd attempts to allocate the compound op array.
+
+let's restore the operation-per-compound limit, but increased to 200
+for now.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40210" target="_blank">CVE-2025-40210</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-11-21 05:15:49 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Revert "NFSD: Remove the cap on number of operations per NFSv4 COMPOUND"
+
+I've found that pynfs COMP6 now leaves the connection or lease in a
+strange state, which causes CLOSE9 to hang indefinitely. I've dug
+into it a little, but I haven't been able to root-cause it yet.
+However, I bisected to commit 48aab1606fa8 ("NFSD: Remove the cap on
+number of operations per NFSv4 COMPOUND").
+
+Tianshuo Han also reports a potential vulnerability when decoding
+an NFSv4 COMPOUND. An attacker can place an arbitrarily large op
+count in the COMPOUND header, which results in:
+
+[   51.410584] nfsd: vmalloc error: size 1209533382144, exceeds total
+pages, mode:0xdc0(GFP_KERNEL|__GFP_ZERO),
+nodemask=(null),cpuset=/,mems_allowed=0
+
+when NFSD attempts to allocate the COMPOUND op array.
+
+Let's restore the operation-per-COMPOUND limit, but increased to 200
+for now.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-40209" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+btrfs: fix memory leak of qgroup_list in btrfs_add_qgroup_relation
+
+when btrfs_add_qgroup_relation() is called with invalid qgroup levels
+(src >= dst), the function returns -einval directly without freeing the
+preallocated qgroup_list structure passed by the caller. this causes a
+memory leak because the caller unconditionally sets the pointer to null
+after the call, preventing any cleanup.
+
+the issue occurs because the level validation check happens before the
+mutex is acquired and before any error handling path that would free
+the prealloc pointer. on this early return, the cleanup code at the
+'out' label (which includes kfree(prealloc)) is never reached.
+
+in btrfs_ioctl_qgroup_assign(), the code pattern is:
+
+    prealloc = kzalloc(sizeof(*prealloc), gfp_kernel);
+    ret = btrfs_add_qgroup_relation(trans, sa->src, sa->dst, prealloc);
+    prealloc = null;  // always set to null regardless of return value
+    ...
+    kfree(prealloc);  // this becomes kfree(null), does nothing
+
+when the level check fails, 'prealloc' is never freed by either the
+callee or the caller, resulting in a 64-byte memory leak per failed
+operation. this can be triggered repeatedly by an unprivileged user
+with access to a writable btrfs mount, potentially exhausting kernel
+memory.
+
+fix this by freeing prealloc before the early return, ensuring prealloc
+is always freed on all error paths.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-40209" target="_blank">CVE-2025-40209</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-11-21 05:15:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+btrfs: fix memory leak of qgroup_list in btrfs_add_qgroup_relation
+
+When btrfs_add_qgroup_relation() is called with invalid qgroup levels
+(src >= dst), the function returns -EINVAL directly without freeing the
+preallocated qgroup_list structure passed by the caller. This causes a
+memory leak because the caller unconditionally sets the pointer to NULL
+after the call, preventing any cleanup.
+
+The issue occurs because the level validation check happens before the
+mutex is acquired and before any error handling path that would free
+the prealloc pointer. On this early return, the cleanup code at the
+'out' label (which includes kfree(prealloc)) is never reached.
+
+In btrfs_ioctl_qgroup_assign(), the code pattern is:
+
+    prealloc = kzalloc(sizeof(*prealloc), GFP_KERNEL);
+    ret = btrfs_add_qgroup_relation(trans, sa->src, sa->dst, prealloc);
+    prealloc = NULL;  // Always set to NULL regardless of return value
+    ...
+    kfree(prealloc);  // This becomes kfree(NULL), does nothing
+
+When the level check fails, 'prealloc' is never freed by either the
+callee or the caller, resulting in a 64-byte memory leak per failed
+operation. This can be triggered repeatedly by an unprivileged user
+with access to a writable btrfs mount, potentially exhausting kernel
+memory.
+
+Fix this by freeing prealloc before the early return, ensuring prealloc
+is always freed on all error paths.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-13138" data-description="the wp directory kit plugin for wordpress is vulnerable to sql injection via the 'columns_search' parameter of the select_2_ajax() function in all versions up to, and including, 1.4.3 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query.  this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-13138" target="_blank">CVE-2025-13138</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-11-21 04:15:48 CDT</p>
@@ -167,30 +329,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>The HotelRunner Booking Widget plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's 'hotelrunner' shortcode in all versions up to, and including, 5.2.4 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-13134" data-description="the authorsure plugin for wordpress is vulnerable to cross-site request forgery in all versions up to, and including, 2.3. this is due to missing or incorrect nonce validation on the 'authorsure' page. this makes it possible for unauthenticated attackers to update settings and inject malicious web scripts via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-13134" target="_blank">CVE-2025-13134</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-11-21 02:15:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>The AuthorSure plugin for WordPress is vulnerable to Cross-Site Request Forgery in all versions up to, and including, 2.3. This is due to missing or incorrect nonce validation on the 'authorsure' page. This makes it possible for unauthenticated attackers to update settings and inject malicious web scripts via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-12894" data-description="the import wp – export and import csv and xml files to wordpress plugin for wordpress is vulnerable to sensitive information exposure in all versions up to, and including, 2.14.17 via the import/export functionality and a lack of .htaccess protection. this makes it possible for unauthenticated attackers to extract sensitive data from exports stored in /exportwp and import data stored in /importwp.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-12894" target="_blank">CVE-2025-12894</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-11-21 02:15:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Import WP – Export and Import CSV and XML files to WordPress plugin for WordPress is vulnerable to Sensitive Information Exposure in all versions up to, and including, 2.14.17 via the import/export functionality and a lack of .htaccess protection. This makes it possible for unauthenticated attackers to extract sensitive data from exports stored in /exportwp and import data stored in /importwp.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-12881" data-description="the return refund and exchange for woocommerce plugin for wordpress is vulnerable to insecure direct object reference in all versions up to, and including, 4.5.5 via the wps_rma_fetch_order_msgs() due to missing validation on a user controlled key. this makes it possible for authenticated attackers, with subscriber-level access and above, to read other user's order messages.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-12881" target="_blank">CVE-2025-12881</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-11-21 02:15:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>The Return Refund and Exchange For WooCommerce plugin for WordPress is vulnerable to Insecure Direct Object Reference in all versions up to, and including, 4.5.5 via the wps_rma_fetch_order_msgs() due to missing validation on a user controlled key. This makes it possible for authenticated attackers, with Subscriber-level access and above, to read other user's order messages.</p>
                 </div>
         
             </div>
