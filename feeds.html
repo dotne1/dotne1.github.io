@@ -33,6 +33,918 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-68337" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+jbd2: avoid bug_on in jbd2_journal_get_create_access() when file system corrupted
+
+there's issue when file system corrupted:
+------------[ cut here ]------------
+kernel bug at fs/jbd2/transaction.c:1289!
+oops: invalid opcode: 0000 [#1] smp kasan pti
+cpu: 5 uid: 0 pid: 2031 comm: mkdir not tainted 6.18.0-rc1-next
+rip: 0010:jbd2_journal_get_create_access+0x3b6/0x4d0
+rsp: 0018:ffff888117aafa30 eflags: 00010202
+rax: 0000000000000000 rbx: ffff88811a86b000 rcx: ffffffff89a63534
+rdx: 1ffff110200ec602 rsi: 0000000000000004 rdi: ffff888100763010
+rbp: ffff888100763000 r08: 0000000000000001 r09: ffff888100763028
+r10: 0000000000000003 r11: 0000000000000000 r12: 0000000000000000
+r13: ffff88812c432000 r14: ffff88812c608000 r15: ffff888120bfc000
+cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+cr2: 00007f91d6970c99 cr3: 00000001159c4000 cr4: 00000000000006f0
+call trace:
+ <task>
+ __ext4_journal_get_create_access+0x42/0x170
+ ext4_getblk+0x319/0x6f0
+ ext4_bread+0x11/0x100
+ ext4_append+0x1e6/0x4a0
+ ext4_init_new_dir+0x145/0x1d0
+ ext4_mkdir+0x326/0x920
+ vfs_mkdir+0x45c/0x740
+ do_mkdirat+0x234/0x2f0
+ __x64_sys_mkdir+0xd6/0x120
+ do_syscall_64+0x5f/0xfa0
+ entry_syscall_64_after_hwframe+0x76/0x7e
+
+the above issue occurs with us in errors=continue mode when accompanied by
+storage failures. there have been many inconsistencies in the file system
+data.
+in the case of file system data inconsistency, for example, if the block
+bitmap of a referenced block is not set, it can lead to the situation where
+a block being committed is allocated and used again. as a result, the
+following condition will not be satisfied then trigger bug_on. of course,
+it is entirely possible to construct a problematic image that can trigger
+this bug_on through specific operations. in fact, i have constructed such
+an image and easily reproduced this issue.
+therefore, j_assert() holds true only under ideal conditions, but it may
+not necessarily be satisfied in exceptional scenarios. using j_assert()
+directly in abnormal situations would cause the system to crash, which is
+clearly not what we want. so here we directly trigger a jbd abort instead
+of immediately invoking bug_on.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68337" target="_blank">CVE-2025-68337</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+jbd2: avoid bug_on in jbd2_journal_get_create_access() when file system corrupted
+
+There's issue when file system corrupted:
+------------[ cut here ]------------
+kernel BUG at fs/jbd2/transaction.c:1289!
+Oops: invalid opcode: 0000 [#1] SMP KASAN PTI
+CPU: 5 UID: 0 PID: 2031 Comm: mkdir Not tainted 6.18.0-rc1-next
+RIP: 0010:jbd2_journal_get_create_access+0x3b6/0x4d0
+RSP: 0018:ffff888117aafa30 EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff88811a86b000 RCX: ffffffff89a63534
+RDX: 1ffff110200ec602 RSI: 0000000000000004 RDI: ffff888100763010
+RBP: ffff888100763000 R08: 0000000000000001 R09: ffff888100763028
+R10: 0000000000000003 R11: 0000000000000000 R12: 0000000000000000
+R13: ffff88812c432000 R14: ffff88812c608000 R15: ffff888120bfc000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f91d6970c99 CR3: 00000001159c4000 CR4: 00000000000006f0
+Call Trace:
+ <TASK>
+ __ext4_journal_get_create_access+0x42/0x170
+ ext4_getblk+0x319/0x6f0
+ ext4_bread+0x11/0x100
+ ext4_append+0x1e6/0x4a0
+ ext4_init_new_dir+0x145/0x1d0
+ ext4_mkdir+0x326/0x920
+ vfs_mkdir+0x45c/0x740
+ do_mkdirat+0x234/0x2f0
+ __x64_sys_mkdir+0xd6/0x120
+ do_syscall_64+0x5f/0xfa0
+ entry_SYSCALL_64_after_hwframe+0x76/0x7e
+
+The above issue occurs with us in errors=continue mode when accompanied by
+storage failures. There have been many inconsistencies in the file system
+data.
+In the case of file system data inconsistency, for example, if the block
+bitmap of a referenced block is not set, it can lead to the situation where
+a block being committed is allocated and used again. As a result, the
+following condition will not be satisfied then trigger BUG_ON. Of course,
+it is entirely possible to construct a problematic image that can trigger
+this BUG_ON through specific operations. In fact, I have constructed such
+an image and easily reproduced this issue.
+Therefore, J_ASSERT() holds true only under ideal conditions, but it may
+not necessarily be satisfied in exceptional scenarios. Using J_ASSERT()
+directly in abnormal situations would cause the system to crash, which is
+clearly not what we want. So here we directly trigger a JBD abort instead
+of immediately invoking BUG_ON.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68336" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+locking/spinlock/debug: fix data-race in do_raw_write_lock
+
+kcsan reports:
+
+bug: kcsan: data-race in do_raw_write_lock / do_raw_write_lock
+
+write (marked) to 0xffff800009cf504c of 4 bytes by task 1102 on cpu 1:
+ do_raw_write_lock+0x120/0x204
+ _raw_write_lock_irq
+ do_exit
+ call_usermodehelper_exec_async
+ ret_from_fork
+
+read to 0xffff800009cf504c of 4 bytes by task 1103 on cpu 0:
+ do_raw_write_lock+0x88/0x204
+ _raw_write_lock_irq
+ do_exit
+ call_usermodehelper_exec_async
+ ret_from_fork
+
+value changed: 0xffffffff -> 0x00000001
+
+reported by kernel concurrency sanitizer on:
+cpu: 0 pid: 1103 comm: kworker/u4:1 6.1.111
+
+commit 1a365e822372 ("locking/spinlock/debug: fix various data races") has
+adressed most of these races, but seems to be not consistent/not complete.
+
+>from do_raw_write_lock() only debug_write_lock_after() part has been
+converted to write_once(), but not debug_write_lock_before() part.
+do it now.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68336" target="_blank">CVE-2025-68336</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+locking/spinlock/debug: Fix data-race in do_raw_write_lock
+
+KCSAN reports:
+
+BUG: KCSAN: data-race in do_raw_write_lock / do_raw_write_lock
+
+write (marked) to 0xffff800009cf504c of 4 bytes by task 1102 on cpu 1:
+ do_raw_write_lock+0x120/0x204
+ _raw_write_lock_irq
+ do_exit
+ call_usermodehelper_exec_async
+ ret_from_fork
+
+read to 0xffff800009cf504c of 4 bytes by task 1103 on cpu 0:
+ do_raw_write_lock+0x88/0x204
+ _raw_write_lock_irq
+ do_exit
+ call_usermodehelper_exec_async
+ ret_from_fork
+
+value changed: 0xffffffff -> 0x00000001
+
+Reported by Kernel Concurrency Sanitizer on:
+CPU: 0 PID: 1103 Comm: kworker/u4:1 6.1.111
+
+Commit 1a365e822372 ("locking/spinlock/debug: Fix various data races") has
+adressed most of these races, but seems to be not consistent/not complete.
+
+>From do_raw_write_lock() only debug_write_lock_after() part has been
+converted to WRITE_ONCE(), but not debug_write_lock_before() part.
+Do it now.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68335" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+comedi: pcl818: fix null-ptr-deref in pcl818_ai_cancel()
+
+syzbot identified an issue [1] in pcl818_ai_cancel(), which stems from
+the fact that in case of early device detach via pcl818_detach(),
+subdevice dev->read_subdev may not have initialized its pointer to
+&struct comedi_async as intended. thus, any such dereferencing of
+&s->async->cmd will lead to general protection fault and kernel crash.
+
+mitigate this problem by removing a call to pcl818_ai_cancel() from
+pcl818_detach() altogether. this way, if the subdevice setups its
+support for async commands, everything async-related will be
+handled via subdevice's own ->cancel() function in
+comedi_device_detach_locked() even before pcl818_detach(). if no
+support for asynchronous commands is provided, there is no need
+to cancel anything either.
+
+[1] syzbot crash:
+oops: general protection fault, probably for non-canonical address 0xdffffc0000000005: 0000 [#1] smp kasan pti
+kasan: null-ptr-deref in range [0x0000000000000028-0x000000000000002f]
+cpu: 1 uid: 0 pid: 6050 comm: syz.0.18 not tainted syzkaller #0 preempt(full)
+hardware name: google google compute engine/google compute engine, bios google 08/18/2025
+rip: 0010:pcl818_ai_cancel+0x69/0x3f0 drivers/comedi/drivers/pcl818.c:762
+...
+call trace:
+ <task>
+ pcl818_detach+0x66/0xd0 drivers/comedi/drivers/pcl818.c:1115
+ comedi_device_detach_locked+0x178/0x750 drivers/comedi/drivers.c:207
+ do_devconfig_ioctl drivers/comedi/comedi_fops.c:848 [inline]
+ comedi_unlocked_ioctl+0xcde/0x1020 drivers/comedi/comedi_fops.c:2178
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+...">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68335" target="_blank">CVE-2025-68335</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+comedi: pcl818: fix null-ptr-deref in pcl818_ai_cancel()
+
+Syzbot identified an issue [1] in pcl818_ai_cancel(), which stems from
+the fact that in case of early device detach via pcl818_detach(),
+subdevice dev->read_subdev may not have initialized its pointer to
+&struct comedi_async as intended. Thus, any such dereferencing of
+&s->async->cmd will lead to general protection fault and kernel crash.
+
+Mitigate this problem by removing a call to pcl818_ai_cancel() from
+pcl818_detach() altogether. This way, if the subdevice setups its
+support for async commands, everything async-related will be
+handled via subdevice's own ->cancel() function in
+comedi_device_detach_locked() even before pcl818_detach(). If no
+support for asynchronous commands is provided, there is no need
+to cancel anything either.
+
+[1] Syzbot crash:
+Oops: general protection fault, probably for non-canonical address 0xdffffc0000000005: 0000 [#1] SMP KASAN PTI
+KASAN: null-ptr-deref in range [0x0000000000000028-0x000000000000002f]
+CPU: 1 UID: 0 PID: 6050 Comm: syz.0.18 Not tainted syzkaller #0 PREEMPT(full)
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/18/2025
+RIP: 0010:pcl818_ai_cancel+0x69/0x3f0 drivers/comedi/drivers/pcl818.c:762
+...
+Call Trace:
+ <TASK>
+ pcl818_detach+0x66/0xd0 drivers/comedi/drivers/pcl818.c:1115
+ comedi_device_detach_locked+0x178/0x750 drivers/comedi/drivers.c:207
+ do_devconfig_ioctl drivers/comedi/comedi_fops.c:848 [inline]
+ comedi_unlocked_ioctl+0xcde/0x1020 drivers/comedi/comedi_fops.c:2178
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+...</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68334" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+platform/x86/amd/pmc: add support for van gogh soc
+
+the rog xbox ally (non-x) soc features a similar architecture to the
+steam deck. while the steam deck supports s3 (s2idle causes a crash),
+this support was dropped by the xbox ally which only s0ix suspend.
+
+since the handler is missing here, this causes the device to not suspend
+and the amd gpu driver to crash while trying to resume afterwards due to
+a power hang.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68334" target="_blank">CVE-2025-68334</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+platform/x86/amd/pmc: Add support for Van Gogh SoC
+
+The ROG Xbox Ally (non-X) SoC features a similar architecture to the
+Steam Deck. While the Steam Deck supports S3 (s2idle causes a crash),
+this support was dropped by the Xbox Ally which only S0ix suspend.
+
+Since the handler is missing here, this causes the device to not suspend
+and the AMD GPU driver to crash while trying to resume afterwards due to
+a power hang.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68333" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+sched_ext: fix possible deadlock in the deferred_irq_workfn()
+
+for preempt_rt=y kernels, the deferred_irq_workfn() is executed in
+the per-cpu irq_work/* task context and not disable-irq, if the rq
+returned by container_of() is current cpu's rq, the following scenarios
+may occur:
+
+lock(&rq->__lock);
+<interrupt>
+  lock(&rq->__lock);
+
+this commit use irq_work_init_hard() to replace init_irq_work() to
+initialize rq->scx.deferred_irq_work, make the deferred_irq_workfn()
+is always invoked in hard-irq context.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68333" target="_blank">CVE-2025-68333</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+sched_ext: Fix possible deadlock in the deferred_irq_workfn()
+
+For PREEMPT_RT=y kernels, the deferred_irq_workfn() is executed in
+the per-cpu irq_work/* task context and not disable-irq, if the rq
+returned by container_of() is current CPU's rq, the following scenarios
+may occur:
+
+lock(&rq->__lock);
+<Interrupt>
+  lock(&rq->__lock);
+
+This commit use IRQ_WORK_INIT_HARD() to replace init_irq_work() to
+initialize rq->scx.deferred_irq_work, make the deferred_irq_workfn()
+is always invoked in hard-irq context.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68332" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+comedi: c6xdigio: fix invalid pnp driver unregistration
+
+the comedi low-level driver "c6xdigio" seems to be for a parallel port
+connected device.  when the comedi core calls the driver's comedi
+"attach" handler `c6xdigio_attach()` to configure a comedi to use this
+driver, it tries to enable the parallel port pnp resources by
+registering a pnp driver with `pnp_register_driver()`, but ignores the
+return value.  (the `struct pnp_driver` it uses has only the `name` and
+`id_table` members filled in.)  the driver's comedi "detach" handler
+`c6xdigio_detach()` unconditionally unregisters the pnp driver with
+`pnp_unregister_driver()`.
+
+it is possible for `c6xdigio_attach()` to return an error before it
+calls `pnp_register_driver()` and it is possible for the call to
+`pnp_register_driver()` to return an error (that is ignored).  in both
+cases, the driver should not be calling `pnp_unregister_driver()` as it
+does in `c6xdigio_detach()`.  (note that `c6xdigio_detach()` will be
+called by the comedi core if `c6xdigio_attach()` returns an error, or if
+the comedi core decides to detach the comedi device from the driver for
+some other reason.)
+
+the unconditional call to `pnp_unregister_driver()` without a previous
+successful call to `pnp_register_driver()` will cause
+`driver_unregister()` to issue a warning "unexpected driver
+unregister!".  this was detected by syzbot [1].
+
+also, the pnp driver registration and unregistration should be done at
+module init and exit time, respectively, not when attaching or detaching
+comedi devices to the driver.  (there might be more than one comedi
+device being attached to the driver, although that is unlikely.)
+
+change the driver to do the pnp driver registration at module init time,
+and the unregistration at module exit time.  since `c6xdigio_detach()`
+now only calls `comedi_legacy_detach()`, remove the function and change
+the comedi driver "detach" handler to `comedi_legacy_detach`.
+
+-------------------------------------------
+[1] syzbot sample crash report:
+unexpected driver unregister!
+warning: cpu: 0 pid: 5970 at drivers/base/driver.c:273 driver_unregister drivers/base/driver.c:273 [inline]
+warning: cpu: 0 pid: 5970 at drivers/base/driver.c:273 driver_unregister+0x90/0xb0 drivers/base/driver.c:270
+modules linked in:
+cpu: 0 uid: 0 pid: 5970 comm: syz.0.17 not tainted syzkaller #0 preempt(full)
+hardware name: google google compute engine/google compute engine, bios google 10/02/2025
+rip: 0010:driver_unregister drivers/base/driver.c:273 [inline]
+rip: 0010:driver_unregister+0x90/0xb0 drivers/base/driver.c:270
+code: 48 89 ef e8 c2 e6 82 fc 48 89 df e8 3a 93 ff ff 5b 5d e9 c3 6d d9 fb e8 be 6d d9 fb 90 48 c7 c7 e0 f8 1f 8c e8 51 a2 97 fb 90 <0f> 0b 90 90 5b 5d e9 a5 6d d9 fb e8 e0 f4 41 fc eb 94 e8 d9 f4 41
+rsp: 0018:ffffc9000373f9a0 eflags: 00010282
+rax: 0000000000000000 rbx: ffffffff8ff24720 rcx: ffffffff817b6ee8
+rdx: ffff88807c932480 rsi: ffffffff817b6ef5 rdi: 0000000000000001
+rbp: 0000000000000000 r08: 0000000000000001 r09: 0000000000000000
+r10: 0000000000000001 r11: 0000000000000001 r12: ffffffff8ff24660
+r13: dffffc0000000000 r14: 0000000000000000 r15: ffff88814cca0000
+fs:  000055556dab1500(0000) gs:ffff8881249d9000(0000) knlgs:0000000000000000
+cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+cr2: 000055f77f285cd0 cr3: 000000007d871000 cr4: 00000000003526f0
+call trace:
+ <task>
+ comedi_device_detach_locked+0x12f/0xa50 drivers/comedi/drivers.c:207
+ comedi_device_detach+0x67/0xb0 drivers/comedi/drivers.c:215
+ comedi_device_attach+0x43d/0x900 drivers/comedi/drivers.c:1011
+ do_devconfig_ioctl+0x1b1/0x710 drivers/comedi/comedi_fops.c:872
+ comedi_unlocked_ioctl+0x165d/0x2f00 drivers/comedi/comedi_fops.c:2178
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_sys
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68332" target="_blank">CVE-2025-68332</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+comedi: c6xdigio: Fix invalid PNP driver unregistration
+
+The Comedi low-level driver "c6xdigio" seems to be for a parallel port
+connected device.  When the Comedi core calls the driver's Comedi
+"attach" handler `c6xdigio_attach()` to configure a Comedi to use this
+driver, it tries to enable the parallel port PNP resources by
+registering a PNP driver with `pnp_register_driver()`, but ignores the
+return value.  (The `struct pnp_driver` it uses has only the `name` and
+`id_table` members filled in.)  The driver's Comedi "detach" handler
+`c6xdigio_detach()` unconditionally unregisters the PNP driver with
+`pnp_unregister_driver()`.
+
+It is possible for `c6xdigio_attach()` to return an error before it
+calls `pnp_register_driver()` and it is possible for the call to
+`pnp_register_driver()` to return an error (that is ignored).  In both
+cases, the driver should not be calling `pnp_unregister_driver()` as it
+does in `c6xdigio_detach()`.  (Note that `c6xdigio_detach()` will be
+called by the Comedi core if `c6xdigio_attach()` returns an error, or if
+the Comedi core decides to detach the Comedi device from the driver for
+some other reason.)
+
+The unconditional call to `pnp_unregister_driver()` without a previous
+successful call to `pnp_register_driver()` will cause
+`driver_unregister()` to issue a warning "Unexpected driver
+unregister!".  This was detected by Syzbot [1].
+
+Also, the PNP driver registration and unregistration should be done at
+module init and exit time, respectively, not when attaching or detaching
+Comedi devices to the driver.  (There might be more than one Comedi
+device being attached to the driver, although that is unlikely.)
+
+Change the driver to do the PNP driver registration at module init time,
+and the unregistration at module exit time.  Since `c6xdigio_detach()`
+now only calls `comedi_legacy_detach()`, remove the function and change
+the Comedi driver "detach" handler to `comedi_legacy_detach`.
+
+-------------------------------------------
+[1] Syzbot sample crash report:
+Unexpected driver unregister!
+WARNING: CPU: 0 PID: 5970 at drivers/base/driver.c:273 driver_unregister drivers/base/driver.c:273 [inline]
+WARNING: CPU: 0 PID: 5970 at drivers/base/driver.c:273 driver_unregister+0x90/0xb0 drivers/base/driver.c:270
+Modules linked in:
+CPU: 0 UID: 0 PID: 5970 Comm: syz.0.17 Not tainted syzkaller #0 PREEMPT(full)
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/02/2025
+RIP: 0010:driver_unregister drivers/base/driver.c:273 [inline]
+RIP: 0010:driver_unregister+0x90/0xb0 drivers/base/driver.c:270
+Code: 48 89 ef e8 c2 e6 82 fc 48 89 df e8 3a 93 ff ff 5b 5d e9 c3 6d d9 fb e8 be 6d d9 fb 90 48 c7 c7 e0 f8 1f 8c e8 51 a2 97 fb 90 <0f> 0b 90 90 5b 5d e9 a5 6d d9 fb e8 e0 f4 41 fc eb 94 e8 d9 f4 41
+RSP: 0018:ffffc9000373f9a0 EFLAGS: 00010282
+RAX: 0000000000000000 RBX: ffffffff8ff24720 RCX: ffffffff817b6ee8
+RDX: ffff88807c932480 RSI: ffffffff817b6ef5 RDI: 0000000000000001
+RBP: 0000000000000000 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000001 R12: ffffffff8ff24660
+R13: dffffc0000000000 R14: 0000000000000000 R15: ffff88814cca0000
+FS:  000055556dab1500(0000) GS:ffff8881249d9000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055f77f285cd0 CR3: 000000007d871000 CR4: 00000000003526f0
+Call Trace:
+ <TASK>
+ comedi_device_detach_locked+0x12f/0xa50 drivers/comedi/drivers.c:207
+ comedi_device_detach+0x67/0xb0 drivers/comedi/drivers.c:215
+ comedi_device_attach+0x43d/0x900 drivers/comedi/drivers.c:1011
+ do_devconfig_ioctl+0x1b1/0x710 drivers/comedi/comedi_fops.c:872
+ comedi_unlocked_ioctl+0x165d/0x2f00 drivers/comedi/comedi_fops.c:2178
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x18e/0x210 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_sys
+---truncated---</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68331" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+usb: uas: fix urb unmapping issue when the uas device is remove during ongoing data transfer
+
+when a uas device is unplugged during data transfer, there is
+a probability of a system panic occurring. the root cause is
+an access to an invalid memory address during urb callback handling.
+specifically, this happens when the dma_direct_unmap_sg() function
+is called within the usb_hcd_unmap_urb_for_dma() interface, but the
+sg->dma_address field is 0 and the sg data structure has already been
+freed.
+
+the scsi driver sends transfer commands by invoking uas_queuecommand_lck()
+in uas.c, using the uas_submit_urbs() function to submit requests to usb.
+within the uas_submit_urbs() implementation, three urbs (sense_urb,
+data_urb, and cmd_urb) are sequentially submitted. device removal may
+occur at any point during uas_submit_urbs execution, which may result
+in urb submission failure. however, some urbs might have been successfully
+submitted before the failure, and uas_submit_urbs will return the -enodev
+error code in this case. the current error handling directly calls
+scsi_done(). in the scsi driver, this eventually triggers scsi_complete()
+to invoke scsi_end_request() for releasing the sgtable. the successfully
+submitted urbs, when being unlinked to giveback, call
+usb_hcd_unmap_urb_for_dma() in hcd.c, leading to exceptions during sg
+unmapping operations since the sg data structure has already been freed.
+
+this patch modifies the error condition check in the uas_submit_urbs()
+function. when a uas device is removed but one or more urbs have already
+been successfully submitted to usb, it avoids immediately invoking
+scsi_done() and save the cmnd to devinfo->cmnd array. if the successfully
+submitted urbs is completed before devinfo->resetting being set, then
+the scsi_done() function will be called within uas_try_complete() after
+all pending urb operations are finalized. otherwise, the scsi_done()
+function will be called within uas_zap_pending(), which is executed after
+usb_kill_anchored_urbs().
+
+the error handling only takes effect when uas_queuecommand_lck() calls
+uas_submit_urbs() and returns the error value -enodev . in this case,
+the device is disconnected, and the flow proceeds to uas_disconnect(),
+where uas_zap_pending() is invoked to call uas_try_complete().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68331" target="_blank">CVE-2025-68331</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+usb: uas: fix urb unmapping issue when the uas device is remove during ongoing data transfer
+
+When a UAS device is unplugged during data transfer, there is
+a probability of a system panic occurring. The root cause is
+an access to an invalid memory address during URB callback handling.
+Specifically, this happens when the dma_direct_unmap_sg() function
+is called within the usb_hcd_unmap_urb_for_dma() interface, but the
+sg->dma_address field is 0 and the sg data structure has already been
+freed.
+
+The SCSI driver sends transfer commands by invoking uas_queuecommand_lck()
+in uas.c, using the uas_submit_urbs() function to submit requests to USB.
+Within the uas_submit_urbs() implementation, three URBs (sense_urb,
+data_urb, and cmd_urb) are sequentially submitted. Device removal may
+occur at any point during uas_submit_urbs execution, which may result
+in URB submission failure. However, some URBs might have been successfully
+submitted before the failure, and uas_submit_urbs will return the -ENODEV
+error code in this case. The current error handling directly calls
+scsi_done(). In the SCSI driver, this eventually triggers scsi_complete()
+to invoke scsi_end_request() for releasing the sgtable. The successfully
+submitted URBs, when being unlinked to giveback, call
+usb_hcd_unmap_urb_for_dma() in hcd.c, leading to exceptions during sg
+unmapping operations since the sg data structure has already been freed.
+
+This patch modifies the error condition check in the uas_submit_urbs()
+function. When a UAS device is removed but one or more URBs have already
+been successfully submitted to USB, it avoids immediately invoking
+scsi_done() and save the cmnd to devinfo->cmnd array. If the successfully
+submitted URBs is completed before devinfo->resetting being set, then
+the scsi_done() function will be called within uas_try_complete() after
+all pending URB operations are finalized. Otherwise, the scsi_done()
+function will be called within uas_zap_pending(), which is executed after
+usb_kill_anchored_urbs().
+
+The error handling only takes effect when uas_queuecommand_lck() calls
+uas_submit_urbs() and returns the error value -ENODEV . In this case,
+the device is disconnected, and the flow proceeds to uas_disconnect(),
+where uas_zap_pending() is invoked to call uas_try_complete().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68330" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+iio: accel: bmc150: fix irq assumption regression
+
+the code in bmc150-accel-core.c unconditionally calls
+bmc150_accel_set_interrupt() in the iio_buffer_setup_ops,
+such as on the runtime pm resume path giving a kernel
+splat like this if the device has no interrupts:
+
+unable to handle kernel null pointer dereference at virtual
+  address 00000001 when read
+
+pc is at bmc150_accel_set_interrupt+0x98/0x194
+lr is at __pm_runtime_resume+0x5c/0x64
+(...)
+call trace:
+bmc150_accel_set_interrupt from bmc150_accel_buffer_postenable+0x40/0x108
+bmc150_accel_buffer_postenable from __iio_update_buffers+0xbe0/0xcbc
+__iio_update_buffers from enable_store+0x84/0xc8
+enable_store from kernfs_fop_write_iter+0x154/0x1b4
+
+this bug seems to have been in the driver since the beginning,
+but it only manifests recently, i do not know why.
+
+store the irq number in the state struct, as this is a common
+pattern in other drivers, then use this to determine if we have
+irq support or not.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68330" target="_blank">CVE-2025-68330</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+iio: accel: bmc150: Fix irq assumption regression
+
+The code in bmc150-accel-core.c unconditionally calls
+bmc150_accel_set_interrupt() in the iio_buffer_setup_ops,
+such as on the runtime PM resume path giving a kernel
+splat like this if the device has no interrupts:
+
+Unable to handle kernel NULL pointer dereference at virtual
+  address 00000001 when read
+
+PC is at bmc150_accel_set_interrupt+0x98/0x194
+LR is at __pm_runtime_resume+0x5c/0x64
+(...)
+Call trace:
+bmc150_accel_set_interrupt from bmc150_accel_buffer_postenable+0x40/0x108
+bmc150_accel_buffer_postenable from __iio_update_buffers+0xbe0/0xcbc
+__iio_update_buffers from enable_store+0x84/0xc8
+enable_store from kernfs_fop_write_iter+0x154/0x1b4
+
+This bug seems to have been in the driver since the beginning,
+but it only manifests recently, I do not know why.
+
+Store the IRQ number in the state struct, as this is a common
+pattern in other drivers, then use this to determine if we have
+IRQ support or not.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68329" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+tracing: fix warn_on in tracing_buffers_mmap_close for split vmas
+
+when a vma is split (e.g., by partial munmap or map_fixed), the kernel
+calls vm_ops->close on each portion. for trace buffer mappings, this
+results in ring_buffer_unmap() being called multiple times while
+ring_buffer_map() was only called once.
+
+this causes ring_buffer_unmap() to return -enodev on subsequent calls
+because user_mapped is already 0, triggering a warn_on.
+
+trace buffer mappings cannot support partial mappings because the ring
+buffer structure requires the complete buffer including the meta page.
+
+fix this by adding a may_split callback that returns -einval to prevent
+vma splits entirely.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68329" target="_blank">CVE-2025-68329</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+tracing: Fix WARN_ON in tracing_buffers_mmap_close for split VMAs
+
+When a VMA is split (e.g., by partial munmap or MAP_FIXED), the kernel
+calls vm_ops->close on each portion. For trace buffer mappings, this
+results in ring_buffer_unmap() being called multiple times while
+ring_buffer_map() was only called once.
+
+This causes ring_buffer_unmap() to return -ENODEV on subsequent calls
+because user_mapped is already 0, triggering a WARN_ON.
+
+Trace buffer mappings cannot support partial mappings because the ring
+buffer structure requires the complete buffer including the meta page.
+
+Fix this by adding a may_split callback that returns -EINVAL to prevent
+VMA splits entirely.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68328" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+firmware: stratix10-svc: fix bug in saving controller data
+
+fix the incorrect usage of platform_set_drvdata and dev_set_drvdata. they
+both are of the same data and overrides each other. this resulted in the
+rmmod of the svc driver to fail and throw a kernel panic for kthread_stop
+and fifo free.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68328" target="_blank">CVE-2025-68328</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+firmware: stratix10-svc: fix bug in saving controller data
+
+Fix the incorrect usage of platform_set_drvdata and dev_set_drvdata. They
+both are of the same data and overrides each other. This resulted in the
+rmmod of the svc driver to fail and throw a kernel panic for kthread_stop
+and fifo free.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68327" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+usb: renesas_usbhs: fix synchronous external abort on unbind
+
+a synchronous external abort occurs on the renesas rz/g3s soc if unbind is
+executed after the configuration sequence described above:
+
+modprobe usb_f_ecm
+modprobe libcomposite
+modprobe configfs
+cd /sys/kernel/config/usb_gadget
+mkdir -p g1
+cd g1
+echo "0x1d6b" > idvendor
+echo "0x0104" > idproduct
+mkdir -p strings/0x409
+echo "0123456789" > strings/0x409/serialnumber
+echo "renesas." > strings/0x409/manufacturer
+echo "ethernet gadget" > strings/0x409/product
+mkdir -p functions/ecm.usb0
+mkdir -p configs/c.1
+mkdir -p configs/c.1/strings/0x409
+echo "ecm" > configs/c.1/strings/0x409/configuration
+
+if [ ! -l configs/c.1/ecm.usb0 ]; then
+        ln -s functions/ecm.usb0 configs/c.1
+fi
+
+echo 11e20000.usb > udc
+echo 11e20000.usb > /sys/bus/platform/drivers/renesas_usbhs/unbind
+
+the displayed trace is as follows:
+
+ internal error: synchronous external abort: 0000000096000010 [#1] smp
+ cpu: 0 uid: 0 pid: 188 comm: sh tainted: g m 6.17.0-rc7-next-20250922-00010-g41050493b2bd #55 preempt
+ tainted: [m]=machine_check
+ hardware name: renesas smarc evk version 2 based on r9a08g045s33 (dt)
+ pstate: 604000c5 (nzcv daif +pan -uao -tco -dit -ssbs btype=--)
+ pc : usbhs_sys_function_pullup+0x10/0x40 [renesas_usbhs]
+ lr : usbhsg_update_pullup+0x3c/0x68 [renesas_usbhs]
+ sp : ffff8000838b3920
+ x29: ffff8000838b3920 x28: ffff00000d585780 x27: 0000000000000000
+ x26: 0000000000000000 x25: 0000000000000000 x24: ffff00000c3e3810
+ x23: ffff00000d5e5c80 x22: ffff00000d5e5d40 x21: 0000000000000000
+ x20: 0000000000000000 x19: ffff00000d5e5c80 x18: 0000000000000020
+ x17: 2e30303230316531 x16: 312d7968703a7968 x15: 3d454d414e5f4344
+ x14: 000000000000002c x13: 0000000000000000 x12: 0000000000000000
+ x11: ffff00000f358f38 x10: ffff00000f358db0 x9 : ffff00000b41f418
+ x8 : 0101010101010101 x7 : 7f7f7f7f7f7f7f7f x6 : fefefeff6364626d
+ x5 : 8080808000000000 x4 : 000000004b5ccb9d x3 : 0000000000000000
+ x2 : 0000000000000000 x1 : ffff800083790000 x0 : ffff00000d5e5c80
+ call trace:
+ usbhs_sys_function_pullup+0x10/0x40 [renesas_usbhs] (p)
+ usbhsg_pullup+0x4c/0x7c [renesas_usbhs]
+ usb_gadget_disconnect_locked+0x48/0xd4
+ gadget_unbind_driver+0x44/0x114
+ device_remove+0x4c/0x80
+ device_release_driver_internal+0x1c8/0x224
+ device_release_driver+0x18/0x24
+ bus_remove_device+0xcc/0x10c
+ device_del+0x14c/0x404
+ usb_del_gadget+0x88/0xc0
+ usb_del_gadget_udc+0x18/0x30
+ usbhs_mod_gadget_remove+0x24/0x44 [renesas_usbhs]
+ usbhs_mod_remove+0x20/0x30 [renesas_usbhs]
+ usbhs_remove+0x98/0xdc [renesas_usbhs]
+ platform_remove+0x20/0x30
+ device_remove+0x4c/0x80
+ device_release_driver_internal+0x1c8/0x224
+ device_driver_detach+0x18/0x24
+ unbind_store+0xb4/0xb8
+ drv_attr_store+0x24/0x38
+ sysfs_kf_write+0x7c/0x94
+ kernfs_fop_write_iter+0x128/0x1b8
+ vfs_write+0x2ac/0x350
+ ksys_write+0x68/0xfc
+ __arm64_sys_write+0x1c/0x28
+ invoke_syscall+0x48/0x110
+ el0_svc_common.constprop.0+0xc0/0xe0
+ do_el0_svc+0x1c/0x28
+ el0_svc+0x34/0xf0
+ el0t_64_sync_handler+0xa0/0xe4
+ el0t_64_sync+0x198/0x19c
+ code: 7100003f 1a9f07e1 531c6c22 f9400001 (79400021)
+ ---[ end trace 0000000000000000 ]---
+ note: sh[188] exited with irqs disabled
+ note: sh[188] exited with preempt_count 1
+
+the issue occurs because usbhs_sys_function_pullup(), which accesses the ip
+registers, is executed after the usbhs clocks have been disabled. the
+problem is reproducible on the renesas rz/g3s soc starting with the
+addition of module stop in the clock enable/disable apis. with module stop
+functionality enabled, a bus error is expected if a master accesses a
+module whose clock has been stopped and module stop activated.
+
+disable the ip clocks at the end of remove.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68327" target="_blank">CVE-2025-68327</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+usb: renesas_usbhs: Fix synchronous external abort on unbind
+
+A synchronous external abort occurs on the Renesas RZ/G3S SoC if unbind is
+executed after the configuration sequence described above:
+
+modprobe usb_f_ecm
+modprobe libcomposite
+modprobe configfs
+cd /sys/kernel/config/usb_gadget
+mkdir -p g1
+cd g1
+echo "0x1d6b" > idVendor
+echo "0x0104" > idProduct
+mkdir -p strings/0x409
+echo "0123456789" > strings/0x409/serialnumber
+echo "Renesas." > strings/0x409/manufacturer
+echo "Ethernet Gadget" > strings/0x409/product
+mkdir -p functions/ecm.usb0
+mkdir -p configs/c.1
+mkdir -p configs/c.1/strings/0x409
+echo "ECM" > configs/c.1/strings/0x409/configuration
+
+if [ ! -L configs/c.1/ecm.usb0 ]; then
+        ln -s functions/ecm.usb0 configs/c.1
+fi
+
+echo 11e20000.usb > UDC
+echo 11e20000.usb > /sys/bus/platform/drivers/renesas_usbhs/unbind
+
+The displayed trace is as follows:
+
+ Internal error: synchronous external abort: 0000000096000010 [#1] SMP
+ CPU: 0 UID: 0 PID: 188 Comm: sh Tainted: G M 6.17.0-rc7-next-20250922-00010-g41050493b2bd #55 PREEMPT
+ Tainted: [M]=MACHINE_CHECK
+ Hardware name: Renesas SMARC EVK version 2 based on r9a08g045s33 (DT)
+ pstate: 604000c5 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+ pc : usbhs_sys_function_pullup+0x10/0x40 [renesas_usbhs]
+ lr : usbhsg_update_pullup+0x3c/0x68 [renesas_usbhs]
+ sp : ffff8000838b3920
+ x29: ffff8000838b3920 x28: ffff00000d585780 x27: 0000000000000000
+ x26: 0000000000000000 x25: 0000000000000000 x24: ffff00000c3e3810
+ x23: ffff00000d5e5c80 x22: ffff00000d5e5d40 x21: 0000000000000000
+ x20: 0000000000000000 x19: ffff00000d5e5c80 x18: 0000000000000020
+ x17: 2e30303230316531 x16: 312d7968703a7968 x15: 3d454d414e5f4344
+ x14: 000000000000002c x13: 0000000000000000 x12: 0000000000000000
+ x11: ffff00000f358f38 x10: ffff00000f358db0 x9 : ffff00000b41f418
+ x8 : 0101010101010101 x7 : 7f7f7f7f7f7f7f7f x6 : fefefeff6364626d
+ x5 : 8080808000000000 x4 : 000000004b5ccb9d x3 : 0000000000000000
+ x2 : 0000000000000000 x1 : ffff800083790000 x0 : ffff00000d5e5c80
+ Call trace:
+ usbhs_sys_function_pullup+0x10/0x40 [renesas_usbhs] (P)
+ usbhsg_pullup+0x4c/0x7c [renesas_usbhs]
+ usb_gadget_disconnect_locked+0x48/0xd4
+ gadget_unbind_driver+0x44/0x114
+ device_remove+0x4c/0x80
+ device_release_driver_internal+0x1c8/0x224
+ device_release_driver+0x18/0x24
+ bus_remove_device+0xcc/0x10c
+ device_del+0x14c/0x404
+ usb_del_gadget+0x88/0xc0
+ usb_del_gadget_udc+0x18/0x30
+ usbhs_mod_gadget_remove+0x24/0x44 [renesas_usbhs]
+ usbhs_mod_remove+0x20/0x30 [renesas_usbhs]
+ usbhs_remove+0x98/0xdc [renesas_usbhs]
+ platform_remove+0x20/0x30
+ device_remove+0x4c/0x80
+ device_release_driver_internal+0x1c8/0x224
+ device_driver_detach+0x18/0x24
+ unbind_store+0xb4/0xb8
+ drv_attr_store+0x24/0x38
+ sysfs_kf_write+0x7c/0x94
+ kernfs_fop_write_iter+0x128/0x1b8
+ vfs_write+0x2ac/0x350
+ ksys_write+0x68/0xfc
+ __arm64_sys_write+0x1c/0x28
+ invoke_syscall+0x48/0x110
+ el0_svc_common.constprop.0+0xc0/0xe0
+ do_el0_svc+0x1c/0x28
+ el0_svc+0x34/0xf0
+ el0t_64_sync_handler+0xa0/0xe4
+ el0t_64_sync+0x198/0x19c
+ Code: 7100003f 1a9f07e1 531c6c22 f9400001 (79400021)
+ ---[ end trace 0000000000000000 ]---
+ note: sh[188] exited with irqs disabled
+ note: sh[188] exited with preempt_count 1
+
+The issue occurs because usbhs_sys_function_pullup(), which accesses the IP
+registers, is executed after the USBHS clocks have been disabled. The
+problem is reproducible on the Renesas RZ/G3S SoC starting with the
+addition of module stop in the clock enable/disable APIs. With module stop
+functionality enabled, a bus error is expected if a master accesses a
+module whose clock has been stopped and module stop activated.
+
+Disable the IP clocks at the end of remove.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68326" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/xe/guc: fix stack_depot usage
+
+add missing stack_depot_init() call when config_drm_xe_debug_guc is
+enabled to fix the following call stack:
+
+	[] bug: kernel null pointer dereference, address: 0000000000000000
+	[] workqueue:  drm_sched_run_job_work [gpu_sched]
+	[] rip: 0010:stack_depot_save_flags+0x172/0x870
+	[] call trace:
+	[]  <task>
+	[]  fast_req_track+0x58/0xb0 [xe]
+
+(cherry picked from commit 64fdf496a6929a0a194387d2bb5efaf5da2b542f)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68326" target="_blank">CVE-2025-68326</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:16:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/xe/guc: Fix stack_depot usage
+
+Add missing stack_depot_init() call when CONFIG_DRM_XE_DEBUG_GUC is
+enabled to fix the following call stack:
+
+	[] BUG: kernel NULL pointer dereference, address: 0000000000000000
+	[] Workqueue:  drm_sched_run_job_work [gpu_sched]
+	[] RIP: 0010:stack_depot_save_flags+0x172/0x870
+	[] Call Trace:
+	[]  <TASK>
+	[]  fast_req_track+0x58/0xb0 [xe]
+
+(cherry picked from commit 64fdf496a6929a0a194387d2bb5efaf5da2b542f)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-67443" data-description="schlix cms before v2.2.9-5 is vulnerable to cross site scripting (xss). due to lack of javascript sanitization in the login form, incorrect login attempts in logs are triggered as xss in the admin panel.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-67443" target="_blank">CVE-2025-67443</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-22 11:15:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>Schlix CMS before v2.2.9-5 is vulnerable to Cross Site Scripting (XSS). Due to lack of javascript sanitization in the login form, incorrect login attempts in logs are triggered as XSS in the admin panel.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-10021" data-description="a use of uninitialized variable vulnerability exists in open design alliance drawings sdk static versions (mt) before 2026.12. static object `codamfcappapp theapp` may access `odstring::kempty` before its initialization. due to undefined initialization order of static objects across translation units (static initialization order fiasco), the application accesses uninitialized memory. this results in application crash on startup, causing denial of service. due to undefined behavior,  memory corruption and potential arbitrary code execution cannot be ruled out in specific exploitation scenarios.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-10021" target="_blank">CVE-2025-10021</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-12-22 10:15:43 CDT</p>
@@ -44,8 +956,8 @@
                 <div class="cve-entry" data-cve-id="CVE-2025-67826" data-description="an issue was discovered in k7 ultimate security 17.0.2045. a local privilege escalation (lpe) vulnerability in the k7 ultimate security antivirus can be exploited by a local unprivileged user on default installations of the product. insecure access to a named pipe allows unprivileged users to edit any registry key, leading to a full compromise as system.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-67826" target="_blank">CVE-2025-67826</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-12-22 09:16:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
                     <p>An issue was discovered in K7 Ultimate Security 17.0.2045. A Local Privilege Escalation (LPE) vulnerability in the K7 Ultimate Security antivirus can be exploited by a local unprivileged user on default installations of the product. Insecure access to a named pipe allows unprivileged users to edit any registry key, leading to a full compromise as SYSTEM.</p>
                 </div>
         
@@ -95,118 +1007,6 @@ xss by users with elevated privileges.this issue affects infra monitoring: from 
 allows Stored 
 
 XSS by users with elevated privileges.This issue affects Infra Monitoring: from 24.10.0 before 24.10.5, from 24.04.0 before 24.04.5, from 23.10.0 before 23.10.4.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-61739" data-description="due to nonce reuse, attackers can perform reply attack or decrypt captured packets.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-61739" target="_blank">CVE-2025-61739</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 05:15:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Due to Nonce reuse, attackers can perform reply attack or decrypt captured packets.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-61738" data-description="under certain circumstances, attacker can capture the network key, read or write encrypted packets on the powerg network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-61738" target="_blank">CVE-2025-61738</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 05:15:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Under certain circumstances, attacker can capture the network key, read or write encrypted packets on the PowerG network.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-54890" data-description="improper neutralization of input during web page generation (xss or 'cross-site scripting') vulnerability in centreon infra monitoring (hostgroup configuration page) allows stored 
-
-xss by users with elevated privileges.this issue affects infra monitoring: from 24.10.0 before 24.10.15, from 24.04.0 before 24.04.19, from 23.10.0 before 23.10.29.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-54890" target="_blank">CVE-2025-54890</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 05:15:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>Improper Neutralization of Input During Web Page Generation (XSS or 'Cross-site Scripting') vulnerability in Centreon Infra Monitoring (Hostgroup configuration page) allows Stored 
-
-XSS by users with elevated privileges.This issue affects Infra Monitoring: from 24.10.0 before 24.10.15, from 24.04.0 before 24.04.19, from 23.10.0 before 23.10.29.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-12514" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in centreon infra monitoring - open-tickets (notification rules configuration parameters, open tickets modules) allows 
-
-sql injection to user with elevated privileges.this issue affects infra monitoring - open-tickets: from 24.10.0 before 24.10.5, from 24.04.0 before 24.04.5, from 23.10.0 before 23.10.4.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-12514" target="_blank">CVE-2025-12514</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 05:15:56 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in Centreon Infra Monitoring - Open-tickets (Notification rules configuration parameters, Open tickets modules) allows 
-
-SQL Injection to user with elevated privileges.This issue affects Infra Monitoring - Open-tickets: from 24.10.0 before 24.10.5, from 24.04.0 before 24.04.5, from 23.10.0 before 23.10.4.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62880" data-description="cross-site request forgery (csrf) vulnerability in kunal nagar custom 404 pro allows cross site request forgery.this issue affects custom 404 pro: from n/a through 3.12.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62880" target="_blank">CVE-2025-62880</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 04:16:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in Kunal Nagar Custom 404 Pro allows Cross Site Request Forgery.This issue affects Custom 404 Pro: from n/a through 3.12.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62107" data-description="cross-site request forgery (csrf) vulnerability in pluginops feather login page allows cross site request forgery.this issue affects feather login page: from n/a through 1.1.7.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62107" target="_blank">CVE-2025-62107</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 04:16:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Cross-Site Request Forgery (CSRF) vulnerability in PluginOps Feather Login Page allows Cross Site Request Forgery.This issue affects Feather Login Page: from n/a through 1.1.7.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-62094" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in voidthemes void elementor whmcs elements for elementor page builder.this issue affects void elementor whmcs elements for elementor page builder: from n/a through 2.0.1.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62094" target="_blank">CVE-2025-62094</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 04:16:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Voidthemes Void Elementor WHMCS Elements For Elementor Page Builder.This issue affects Void Elementor WHMCS Elements For Elementor Page Builder: from n/a through 2.0.1.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-8305" data-description="an authenticated local user can obtain information that allows claiming security policy rules of another user due to sensitive information being printed in plaintext in identity agent for terminal services debug files.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-8305" target="_blank">CVE-2025-8305</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 02:15:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>An authenticated local user can obtain information that allows claiming security policy rules of another user due to sensitive information being printed in plaintext in Identity Agent for Terminal Services debug files.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-8304" data-description="an authenticated local user can obtain information that allows claiming security policy rules of another user due to sensitive information being accessible in the windows registry keys for check point identity agent running on a terminal server.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-8304" target="_blank">CVE-2025-8304</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 02:15:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>An authenticated local user can obtain information that allows claiming security policy rules of another user due to sensitive information being accessible in the Windows Registry keys for Check Point Identity Agent running on a Terminal Server.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-11545" data-description="exposure of sensitive system information to an unauthorized control sphere vulnerability in sharp display solutions projectors allows a attacker may improperly access the http server and execute arbitrary actions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11545" target="_blank">CVE-2025-11545</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 00:15:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposure of Sensitive System Information to an Unauthorized Control Sphere vulnerability in Sharp Display Solutions projectors allows a attacker may improperly access the HTTP server and execute arbitrary actions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-11544" data-description="improper validation of integrity check value vulnerability in sharp display solutions projectors allows a attacker may create and run unauthorized firmware.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-11544" target="_blank">CVE-2025-11544</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-22 00:15:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Validation of Integrity Check Value vulnerability in Sharp Display Solutions projectors allows a attacker may create and run unauthorized firmware.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-15014" data-description="a security flaw has been discovered in loganhong php logansite up to c035fb5c3edd0b2a5e32fd4051cbbc9e61a31426. this affects an unknown function of the file /includes/article_detail.php of the component article handler. performing manipulation of the argument id results in sql injection. it is possible to initiate the attack remotely. this product is using a rolling release to provide continious delivery. therefore, no version details for affected nor updated releases are available.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15014" target="_blank">CVE-2025-15014</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-21 23:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security flaw has been discovered in loganhong php loganSite up to c035fb5c3edd0b2a5e32fd4051cbbc9e61a31426. This affects an unknown function of the file /includes/article_detail.php of the component Article Handler. Performing manipulation of the argument ID results in sql injection. It is possible to initiate the attack remotely. This product is using a rolling release to provide continious delivery. Therefore, no version details for affected nor updated releases are available.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-15013" data-description="a vulnerability was identified in floooh sokol up to 5d11344150973f15e16d3ec4ee7550a73fb995e0. the impacted element is the function _sg_validate_pipeline_desc in the library sokol_gfx.h. such manipulation leads to stack-based buffer overflow. the attack must be carried out locally. the exploit is publicly available and might be used. this product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. the name of the patch is b95c5245ba357967220c9a860c7578a7487937b0. it is best practice to apply a patch to resolve this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15013" target="_blank">CVE-2025-15013</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-21 23:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability was identified in floooh sokol up to 5d11344150973f15e16d3ec4ee7550a73fb995e0. The impacted element is the function _sg_validate_pipeline_desc in the library sokol_gfx.h. Such manipulation leads to stack-based buffer overflow. The attack must be carried out locally. The exploit is publicly available and might be used. This product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. The name of the patch is b95c5245ba357967220c9a860c7578a7487937b0. It is best practice to apply a patch to resolve this issue.</p>
                 </div>
         
             </div>
