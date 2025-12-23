@@ -33,6 +33,346 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2025-68343" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+can: gs_usb: gs_usb_receive_bulk_callback(): check actual_length before accessing header
+
+the driver expects to receive a struct gs_host_frame in
+gs_usb_receive_bulk_callback().
+
+use struct_group to describe the header of the struct gs_host_frame and
+check that we have at least received the header before accessing any
+members of it.
+
+to resubmit the urb, do not dereference the pointer chain
+"dev->parent->hf_size_rx" but use "parent->hf_size_rx" instead. since
+"urb->context" contains "parent", it is always defined, while "dev" is not
+defined if the urb it too short.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68343" target="_blank">CVE-2025-68343</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+can: gs_usb: gs_usb_receive_bulk_callback(): check actual_length before accessing header
+
+The driver expects to receive a struct gs_host_frame in
+gs_usb_receive_bulk_callback().
+
+Use struct_group to describe the header of the struct gs_host_frame and
+check that we have at least received the header before accessing any
+members of it.
+
+To resubmit the URB, do not dereference the pointer chain
+"dev->parent->hf_size_rx" but use "parent->hf_size_rx" instead. Since
+"urb->context" contains "parent", it is always defined, while "dev" is not
+defined if the URB it too short.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68342" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+can: gs_usb: gs_usb_receive_bulk_callback(): check actual_length before accessing data
+
+the urb received in gs_usb_receive_bulk_callback() contains a struct
+gs_host_frame. the length of the data after the header depends on the
+gs_host_frame hf::flags and the active device features (e.g. time
+stamping).
+
+introduce a new function gs_usb_get_minimum_length() and check that we have
+at least received the required amount of data before accessing it. only
+copy the data to that skb that has actually been received.
+
+[mkl: rename gs_usb_get_minimum_length() -> +gs_usb_get_minimum_rx_length()]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68342" target="_blank">CVE-2025-68342</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+can: gs_usb: gs_usb_receive_bulk_callback(): check actual_length before accessing data
+
+The URB received in gs_usb_receive_bulk_callback() contains a struct
+gs_host_frame. The length of the data after the header depends on the
+gs_host_frame hf::flags and the active device features (e.g. time
+stamping).
+
+Introduce a new function gs_usb_get_minimum_length() and check that we have
+at least received the required amount of data before accessing it. Only
+copy the data to that skb that has actually been received.
+
+[mkl: rename gs_usb_get_minimum_length() -> +gs_usb_get_minimum_rx_length()]</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68341" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+veth: reduce xdp no_direct return section to fix race
+
+as explain in commit fa349e396e48 ("veth: fix race with af_xdp exposing
+old or uninitialized descriptors") for veth there is a chance after
+napi_complete_done() that another cpu can manage start another napi
+instance running veth_pool(). for napi this is correctly handled as the
+napi_schedule_prep() check will prevent multiple instances from getting
+scheduled, but for the remaining code in veth_pool() this can run
+concurrent with the newly started napi instance.
+
+the problem/race is that xdp_clear_return_frame_no_direct() isn't
+designed to be nested.
+
+prior to commit 401cb7dae813 ("net: reference bpf_redirect_info via
+task_struct on preempt_rt.") the temporary bpf net context
+bpf_redirect_info was stored per cpu, where this wasn't an issue. since
+this commit the bpf context is stored in 'current' task_struct. when
+running veth in threaded-napi mode, then the kthread becomes the storage
+area. now a race exists between two concurrent veth_pool() function calls
+one exiting napi and one running new napi, both using the same bpf net
+context.
+
+race is when another cpu gets within the xdp_set_return_frame_no_direct()
+section before exiting veth_pool() calls the clear-function
+xdp_clear_return_frame_no_direct().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68341" target="_blank">CVE-2025-68341</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+veth: reduce XDP no_direct return section to fix race
+
+As explain in commit fa349e396e48 ("veth: Fix race with AF_XDP exposing
+old or uninitialized descriptors") for veth there is a chance after
+napi_complete_done() that another CPU can manage start another NAPI
+instance running veth_pool(). For NAPI this is correctly handled as the
+napi_schedule_prep() check will prevent multiple instances from getting
+scheduled, but for the remaining code in veth_pool() this can run
+concurrent with the newly started NAPI instance.
+
+The problem/race is that xdp_clear_return_frame_no_direct() isn't
+designed to be nested.
+
+Prior to commit 401cb7dae813 ("net: Reference bpf_redirect_info via
+task_struct on PREEMPT_RT.") the temporary BPF net context
+bpf_redirect_info was stored per CPU, where this wasn't an issue. Since
+this commit the BPF context is stored in 'current' task_struct. When
+running veth in threaded-NAPI mode, then the kthread becomes the storage
+area. Now a race exists between two concurrent veth_pool() function calls
+one exiting NAPI and one running new NAPI, both using the same BPF net
+context.
+
+Race is when another CPU gets within the xdp_set_return_frame_no_direct()
+section before exiting veth_pool() calls the clear-function
+xdp_clear_return_frame_no_direct().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68340" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+team: move team device type change at the end of team_port_add
+
+attempting to add a port device that is already up will expectedly fail,
+but not before modifying the team device header_ops.
+
+in the case of the syzbot reproducer the gre0 device is
+already in state up when it attempts to add it as a
+port device of team0, this fails but before that
+header_ops->create of team0 is changed from eth_header to ipgre_header
+in the call to team_dev_type_check_change.
+
+later when we end up in ipgre_header() struct ip_tunnel* points to nonsense
+as the private data of the device still holds a struct team.
+
+example sequence of iproute2 commands to reproduce the hang/bug():
+ip link add dev team0 type team
+ip link add dev gre0 type gre
+ip link set dev gre0 up
+ip link set dev gre0 master team0
+ip link set dev team0 up
+ping -i team0 1.1.1.1
+
+move team_dev_type_check_change down where all other checks have passed
+as it changes the dev type with no way to restore it in case
+one of the checks that follow it fail.
+
+also make sure to preserve the origial mtu assignment:
+  - if port_dev is not the same type as dev, dev takes mtu from port_dev
+  - if port_dev is the same type as dev, port_dev takes mtu from dev
+
+this is done by adding a conditional before the call to dev_set_mtu
+to prevent it from assigning port_dev->mtu = dev->mtu and instead
+letting team_dev_type_check_change assign dev->mtu = port_dev->mtu.
+the conditional is needed because the patch moves the call to
+team_dev_type_check_change past dev_set_mtu.
+
+testing:
+  - team device driver in-tree selftests
+  - add/remove various devices as slaves of team device
+  - syzbot">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68340" target="_blank">CVE-2025-68340</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+team: Move team device type change at the end of team_port_add
+
+Attempting to add a port device that is already up will expectedly fail,
+but not before modifying the team device header_ops.
+
+In the case of the syzbot reproducer the gre0 device is
+already in state UP when it attempts to add it as a
+port device of team0, this fails but before that
+header_ops->create of team0 is changed from eth_header to ipgre_header
+in the call to team_dev_type_check_change.
+
+Later when we end up in ipgre_header() struct ip_tunnel* points to nonsense
+as the private data of the device still holds a struct team.
+
+Example sequence of iproute2 commands to reproduce the hang/BUG():
+ip link add dev team0 type team
+ip link add dev gre0 type gre
+ip link set dev gre0 up
+ip link set dev gre0 master team0
+ip link set dev team0 up
+ping -I team0 1.1.1.1
+
+Move team_dev_type_check_change down where all other checks have passed
+as it changes the dev type with no way to restore it in case
+one of the checks that follow it fail.
+
+Also make sure to preserve the origial mtu assignment:
+  - If port_dev is not the same type as dev, dev takes mtu from port_dev
+  - If port_dev is the same type as dev, port_dev takes mtu from dev
+
+This is done by adding a conditional before the call to dev_set_mtu
+to prevent it from assigning port_dev->mtu = dev->mtu and instead
+letting team_dev_type_check_change assign dev->mtu = port_dev->mtu.
+The conditional is needed because the patch moves the call to
+team_dev_type_check_change past dev_set_mtu.
+
+Testing:
+  - team device driver in-tree selftests
+  - Add/remove various devices as slaves of team device
+  - syzbot</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68339" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+atm/fore200e: fix possible data race in fore200e_open()
+
+protect access to fore200e->available_cell_rate with rate_mtx lock in the
+error handling path of fore200e_open() to prevent a data race.
+
+the field fore200e->available_cell_rate is a shared resource used to track
+available bandwidth. it is concurrently accessed by fore200e_open(),
+fore200e_close(), and fore200e_change_qos().
+
+in fore200e_open(), the lock rate_mtx is correctly held when subtracting
+vcc->qos.txtp.max_pcr from available_cell_rate to reserve bandwidth.
+however, if the subsequent call to fore200e_activate_vcin() fails, the
+function restores the reserved bandwidth by adding back to
+available_cell_rate without holding the lock.
+
+this introduces a race condition because available_cell_rate is a global
+device resource shared across all vccs. if the error path in
+fore200e_open() executes concurrently with operations like
+fore200e_close() or fore200e_change_qos() on other vccs, a
+read-modify-write race occurs.
+
+specifically, the error path reads the rate without the lock. if another
+cpu acquires the lock and modifies the rate (e.g., releasing bandwidth in
+fore200e_close()) between this read and the subsequent write, the error
+path will overwrite the concurrent update with a stale value. this results
+in incorrect bandwidth accounting.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68339" target="_blank">CVE-2025-68339</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+atm/fore200e: Fix possible data race in fore200e_open()
+
+Protect access to fore200e->available_cell_rate with rate_mtx lock in the
+error handling path of fore200e_open() to prevent a data race.
+
+The field fore200e->available_cell_rate is a shared resource used to track
+available bandwidth. It is concurrently accessed by fore200e_open(),
+fore200e_close(), and fore200e_change_qos().
+
+In fore200e_open(), the lock rate_mtx is correctly held when subtracting
+vcc->qos.txtp.max_pcr from available_cell_rate to reserve bandwidth.
+However, if the subsequent call to fore200e_activate_vcin() fails, the
+function restores the reserved bandwidth by adding back to
+available_cell_rate without holding the lock.
+
+This introduces a race condition because available_cell_rate is a global
+device resource shared across all VCCs. If the error path in
+fore200e_open() executes concurrently with operations like
+fore200e_close() or fore200e_change_qos() on other VCCs, a
+read-modify-write race occurs.
+
+Specifically, the error path reads the rate without the lock. If another
+CPU acquires the lock and modifies the rate (e.g., releasing bandwidth in
+fore200e_close()) between this read and the subsequent write, the error
+path will overwrite the concurrent update with a stale value. This results
+in incorrect bandwidth accounting.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-68338" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: dsa: microchip: don't free uninitialized ksz_irq
+
+if something goes wrong at setup, ksz_irq_free() can be called on
+uninitialized ksz_irq (for example when ksz_ptp_irq_setup() fails). it
+leads to freeing uninitialized irq numbers and/or domains.
+
+use dsa_switch_for_each_user_port_continue_reverse() in the error path
+to iterate only over the fully initialized ports.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68338" target="_blank">CVE-2025-68338</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: dsa: microchip: Don't free uninitialized ksz_irq
+
+If something goes wrong at setup, ksz_irq_free() can be called on
+uninitialized ksz_irq (for example when ksz_ptp_irq_setup() fails). It
+leads to freeing uninitialized IRQ numbers and/or domains.
+
+Use dsa_switch_for_each_user_port_continue_reverse() in the error path
+to iterate only over the fully initialized ports.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-66845" data-description="a reflected cross-site scripting (xss) vulnerability has been identified in techstore version 1.0. the user_name endpoint reflects the id query parameter directly into the html response without output encoding or sanitization, allowing execution of arbitrary javascript code in a victim’s browser.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-66845" target="_blank">CVE-2025-66845</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A reflected Cross-Site Scripting (XSS) vulnerability has been identified in TechStore version 1.0. The user_name endpoint reflects the id query parameter directly into the HTML response without output encoding or sanitization, allowing execution of arbitrary JavaScript code in a victim’s browser.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-5094" data-description="rejected reason: this cve id was assigned to an issue which was later deemed not security relevant.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-5094" target="_blank">CVE-2023-5094</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE id was assigned to an issue which was later deemed not security relevant.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-5093" data-description="rejected reason: this cve id was assigned to an issue which was later deemed not security relevant.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-5093" target="_blank">CVE-2023-5093</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE id was assigned to an issue which was later deemed not security relevant.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2023-5092" data-description="rejected reason: this cve id was assigned to an issue which was later deemed not security relevant.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-5092" target="_blank">CVE-2023-5092</a></h2>
+                    <p><span class="feed-label">Published:</span> 2025-12-23 08:16:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE id was assigned to an issue which was later deemed not security relevant.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-13183" data-description="improper neutralization of input during web page generation (xss or 'cross-site scripting') vulnerability in hotech software inc. otello allows stored xss.this issue affects otello: from 2.4.0 before 2.4.4.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-13183" target="_blank">CVE-2025-13183</a></h2>
                     <p><span class="feed-label">Published:</span> 2025-12-23 07:15:42 CDT</p>
@@ -111,96 +451,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
                     <p>Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion') vulnerability in Thembay Nika allows PHP Local File Inclusion.This issue affects Nika: from n/a through 1.2.14.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-68544" data-description="improper control of filename for include/require statement in php program ('php remote file inclusion') vulnerability in thembay diza allows php local file inclusion.this issue affects diza: from n/a through 1.3.15.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-68544" target="_blank">CVE-2025-68544</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 06:15:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion') vulnerability in Thembay Diza allows PHP Local File Inclusion.This issue affects Diza: from n/a through 1.3.15.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-59886" data-description="improper input validation at one of the endpoints of eaton xcomfort eci's 
-
-web interface, could lead into an attacker with network access to the device executing privileged user commands. as cybersecurity
-standards continue to evolve and to meet our requirements today, eaton has decided to discontinue the
-product. upon retirement or end of support, there will be no new security updates, non-security
-updates, or paid assisted support options, or online technical content updates.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-59886" target="_blank">CVE-2025-59886</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 06:15:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Improper input validation at one of the endpoints of Eaton xComfort ECI's 
-
-web interface, could lead into an attacker with network access to the device executing privileged user commands. As cybersecurity
-standards continue to evolve and to meet our requirements today, Eaton has decided to discontinue the
-product. Upon retirement or end of support, there will be no new security updates, non-security
-updates, or paid assisted support options, or online technical content updates.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-14635" data-description="the happy addons for elementor plugin for wordpress is vulnerable to stored cross-site scripting via the 'ha_page_custom_js' parameter in all versions up to, and including, 3.20.3 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page, despite the intended role restriction of custom js to administrators.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14635" target="_blank">CVE-2025-14635</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 06:15:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Happy Addons for Elementor plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'ha_page_custom_js' parameter in all versions up to, and including, 3.20.3 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page, despite the intended role restriction of Custom JS to Administrators.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-14000" data-description="the membership plugin – restrict content plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's 'register_form' and 'restrict' shortcodes in all versions up to, and including, 3.2.15 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14000" target="_blank">CVE-2025-14000</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 06:15:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Membership Plugin – Restrict Content plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's 'register_form' and 'restrict' shortcodes in all versions up to, and including, 3.2.15 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2024-24844" data-description="missing authorization vulnerability in ideabox creations powerpack pro for elementor allows exploiting incorrectly configured access control security levels.this issue affects powerpack pro for elementor: from n/a through 2.10.6.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-24844" target="_blank">CVE-2024-24844</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 06:15:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Missing Authorization vulnerability in IdeaBox Creations PowerPack Pro for Elementor allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects PowerPack Pro for Elementor: from n/a through 2.10.6.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2023-52210" data-description="vulnerability in tyche softwares product delivery date for woocommerce – lite.this issue affects product delivery date for woocommerce – lite: from n/a through 2.7.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2023-52210" target="_blank">CVE-2023-52210</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 06:15:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Vulnerability in Tyche softwares Product Delivery Date for WooCommerce – Lite.This issue affects Product Delivery Date for WooCommerce – Lite: from n/a through 2.7.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-14548" data-description="the calendar plugin for wordpress is vulnerable to stored cross-site scripting via the 'event_desc' parameter in all versions up to, and including, 1.3.16 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page, granted they can convince an administrator to enable lower privilege users to manage calendar events via the plugin settings.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14548" target="_blank">CVE-2025-14548</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 04:15:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Calendar plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'event_desc' parameter in all versions up to, and including, 1.3.16 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page, granted they can convince an administrator to enable lower privilege users to manage calendar events via the plugin settings.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-14388" data-description="the phastpress plugin for wordpress is vulnerable to unauthenticated arbitrary file read via null byte injection in all versions up to, and including, 3.7. this is due to a discrepancy between the extension validation in `getextensionforurl()` which operates on url-decoded paths, and `appendnormalized()` which strips everything after a null byte before constructing the filesystem path. this makes it possible for unauthenticated attackers to read arbitrary files from the webroot, including wp-config.php, by appending a double url-encoded null byte (%2500) followed by an allowed extension (.txt) to the file path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14388" target="_blank">CVE-2025-14388</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 04:15:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>The PhastPress plugin for WordPress is vulnerable to Unauthenticated Arbitrary File Read via null byte injection in all versions up to, and including, 3.7. This is due to a discrepancy between the extension validation in `getExtensionForURL()` which operates on URL-decoded paths, and `appendNormalized()` which strips everything after a null byte before constructing the filesystem path. This makes it possible for unauthenticated attackers to read arbitrary files from the webroot, including wp-config.php, by appending a double URL-encoded null byte (%2500) followed by an allowed extension (.txt) to the file path.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-14163" data-description="the premium addons for elementor plugin for wordpress is vulnerable to cross-site request forgery in all versions up to, and including, 4.11.53. this is due to missing nonce validation in the 'insert_inner_template' function. this makes it possible for unauthenticated attackers to create arbitrary elementor templates via a forged request granted they can trick a site administrator or other user with the edit_posts capability into performing an action such as clicking on a link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14163" target="_blank">CVE-2025-14163</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 04:15:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The Premium Addons for Elementor plugin for WordPress is vulnerable to Cross-Site Request Forgery in all versions up to, and including, 4.11.53. This is due to missing nonce validation in the 'insert_inner_template' function. This makes it possible for unauthenticated attackers to create arbitrary Elementor templates via a forged request granted they can trick a site administrator or other user with the edit_posts capability into performing an action such as clicking on a link.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-14155" data-description="the premium addons for elementor – powerful elementor templates & widgets plugin for wordpress is vulnerable to unauthorized access of data due to a missing capability check on the 'get_template_content' function in all versions up to, and including, 4.11.53. this makes it possible for unauthenticated attackers to view the content of private, draft, and pending templates.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14155" target="_blank">CVE-2025-14155</a></h2>
-                    <p><span class="feed-label">Published:</span> 2025-12-23 04:15:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Premium Addons for Elementor – Powerful Elementor Templates & Widgets plugin for WordPress is vulnerable to unauthorized access of data due to a missing capability check on the 'get_template_content' function in all versions up to, and including, 4.11.53. This makes it possible for unauthenticated attackers to view the content of private, draft, and pending templates.</p>
                 </div>
         
             </div>
