@@ -33,6 +33,196 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-22977" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: sock: fix hardened usercopy panic in sock_recv_errqueue
+
+skbuff_fclone_cache was created without defining a usercopy region,
+[1] unlike skbuff_head_cache which properly whitelists the cb[] field.
+[2] this causes a usercopy bug() when config_hardened_usercopy is
+enabled and the kernel attempts to copy sk_buff.cb data to userspace
+via sock_recv_errqueue() -> put_cmsg().
+
+the crash occurs when: 1. tcp allocates an skb using alloc_skb_fclone()
+   (from skbuff_fclone_cache) [1]
+2. the skb is cloned via skb_clone() using the pre-allocated fclone
+[3] 3. the cloned skb is queued to sk_error_queue for timestamp
+reporting 4. userspace reads the error queue via recvmsg(msg_errqueue)
+5. sock_recv_errqueue() calls put_cmsg() to copy serr->ee from skb->cb
+[4] 6. __check_heap_object() fails because skbuff_fclone_cache has no
+   usercopy whitelist [5]
+
+when cloned skbs allocated from skbuff_fclone_cache are used in the
+socket error queue, accessing the sock_exterr_skb structure in skb->cb
+via put_cmsg() triggers a usercopy hardening violation:
+
+[    5.379589] usercopy: kernel memory exposure attempt detected from slub object 'skbuff_fclone_cache' (offset 296, size 16)!
+[    5.382796] kernel bug at mm/usercopy.c:102!
+[    5.383923] oops: invalid opcode: 0000 [#1] smp kasan nopti
+[    5.384903] cpu: 1 uid: 0 pid: 138 comm: poc_put_cmsg not tainted 6.12.57 #7
+[    5.384903] hardware name: qemu standard pc (i440fx + piix, 1996), bios rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+[    5.384903] rip: 0010:usercopy_abort+0x6c/0x80
+[    5.384903] code: 1a 86 51 48 c7 c2 40 15 1a 86 41 52 48 c7 c7 c0 15 1a 86 48 0f 45 d6 48 c7 c6 80 15 1a 86 48 89 c1 49 0f 45 f3 e8 84 27 88 ff <0f> 0b 490
+[    5.384903] rsp: 0018:ffffc900006f77a8 eflags: 00010246
+[    5.384903] rax: 000000000000006f rbx: ffff88800f0ad2a8 rcx: 1ffffffff0f72e74
+[    5.384903] rdx: 0000000000000000 rsi: 0000000000000004 rdi: ffffffff87b973a0
+[    5.384903] rbp: 0000000000000010 r08: 0000000000000000 r09: fffffbfff0f72e74
+[    5.384903] r10: 0000000000000003 r11: 79706f6372657375 r12: 0000000000000001
+[    5.384903] r13: ffff88800f0ad2b8 r14: ffffea00003c2b40 r15: ffffea00003c2b00
+[    5.384903] fs:  0000000011bc4380(0000) gs:ffff8880bf100000(0000) knlgs:0000000000000000
+[    5.384903] cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+[    5.384903] cr2: 000056aa3b8e5fe4 cr3: 000000000ea26004 cr4: 0000000000770ef0
+[    5.384903] pkru: 55555554
+[    5.384903] call trace:
+[    5.384903]  <task>
+[    5.384903]  __check_heap_object+0x9a/0xd0
+[    5.384903]  __check_object_size+0x46c/0x690
+[    5.384903]  put_cmsg+0x129/0x5e0
+[    5.384903]  sock_recv_errqueue+0x22f/0x380
+[    5.384903]  tls_sw_recvmsg+0x7ed/0x1960
+[    5.384903]  ? srso_alias_return_thunk+0x5/0xfbef5
+[    5.384903]  ? schedule+0x6d/0x270
+[    5.384903]  ? srso_alias_return_thunk+0x5/0xfbef5
+[    5.384903]  ? mutex_unlock+0x81/0xd0
+[    5.384903]  ? __pfx_mutex_unlock+0x10/0x10
+[    5.384903]  ? __pfx_tls_sw_recvmsg+0x10/0x10
+[    5.384903]  ? _raw_spin_lock_irqsave+0x8f/0xf0
+[    5.384903]  ? _raw_read_unlock_irqrestore+0x20/0x40
+[    5.384903]  ? srso_alias_return_thunk+0x5/0xfbef5
+
+the crash offset 296 corresponds to skb2->cb within skbuff_fclones:
+  - sizeof(struct sk_buff) = 232 - offsetof(struct sk_buff, cb) = 40 -
+  offset of skb2.cb in fclones = 232 + 40 = 272 - crash offset 296 =
+  272 + 24 (inside sock_exterr_skb.ee)
+
+this patch uses a local stack variable as a bounce buffer to avoid the hardened usercopy check failure.
+
+[1] https://elixir.bootlin.com/linux/v6.12.62/source/net/ipv4/tcp.c#l885
+[2] https://elixir.bootlin.com/linux/v6.12.62/source/net/core/skbuff.c#l5104
+[3] https://elixir.bootlin.com/linux/v6.12.62/source/net/core/skbuff.c#l5566
+[4] https://elixir.bootlin.com/linux/v6.12.62/source/net/core/skbuff.c#l5491
+[5] https://elixir.bootlin.com/linux/v6.12.62/source/mm/slub.c#l5719">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-22977" target="_blank">CVE-2026-22977</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-01-21 08:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: sock: fix hardened usercopy panic in sock_recv_errqueue
+
+skbuff_fclone_cache was created without defining a usercopy region,
+[1] unlike skbuff_head_cache which properly whitelists the cb[] field.
+[2] This causes a usercopy BUG() when CONFIG_HARDENED_USERCOPY is
+enabled and the kernel attempts to copy sk_buff.cb data to userspace
+via sock_recv_errqueue() -> put_cmsg().
+
+The crash occurs when: 1. TCP allocates an skb using alloc_skb_fclone()
+   (from skbuff_fclone_cache) [1]
+2. The skb is cloned via skb_clone() using the pre-allocated fclone
+[3] 3. The cloned skb is queued to sk_error_queue for timestamp
+reporting 4. Userspace reads the error queue via recvmsg(MSG_ERRQUEUE)
+5. sock_recv_errqueue() calls put_cmsg() to copy serr->ee from skb->cb
+[4] 6. __check_heap_object() fails because skbuff_fclone_cache has no
+   usercopy whitelist [5]
+
+When cloned skbs allocated from skbuff_fclone_cache are used in the
+socket error queue, accessing the sock_exterr_skb structure in skb->cb
+via put_cmsg() triggers a usercopy hardening violation:
+
+[    5.379589] usercopy: Kernel memory exposure attempt detected from SLUB object 'skbuff_fclone_cache' (offset 296, size 16)!
+[    5.382796] kernel BUG at mm/usercopy.c:102!
+[    5.383923] Oops: invalid opcode: 0000 [#1] SMP KASAN NOPTI
+[    5.384903] CPU: 1 UID: 0 PID: 138 Comm: poc_put_cmsg Not tainted 6.12.57 #7
+[    5.384903] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+[    5.384903] RIP: 0010:usercopy_abort+0x6c/0x80
+[    5.384903] Code: 1a 86 51 48 c7 c2 40 15 1a 86 41 52 48 c7 c7 c0 15 1a 86 48 0f 45 d6 48 c7 c6 80 15 1a 86 48 89 c1 49 0f 45 f3 e8 84 27 88 ff <0f> 0b 490
+[    5.384903] RSP: 0018:ffffc900006f77a8 EFLAGS: 00010246
+[    5.384903] RAX: 000000000000006f RBX: ffff88800f0ad2a8 RCX: 1ffffffff0f72e74
+[    5.384903] RDX: 0000000000000000 RSI: 0000000000000004 RDI: ffffffff87b973a0
+[    5.384903] RBP: 0000000000000010 R08: 0000000000000000 R09: fffffbfff0f72e74
+[    5.384903] R10: 0000000000000003 R11: 79706f6372657375 R12: 0000000000000001
+[    5.384903] R13: ffff88800f0ad2b8 R14: ffffea00003c2b40 R15: ffffea00003c2b00
+[    5.384903] FS:  0000000011bc4380(0000) GS:ffff8880bf100000(0000) knlGS:0000000000000000
+[    5.384903] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    5.384903] CR2: 000056aa3b8e5fe4 CR3: 000000000ea26004 CR4: 0000000000770ef0
+[    5.384903] PKRU: 55555554
+[    5.384903] Call Trace:
+[    5.384903]  <TASK>
+[    5.384903]  __check_heap_object+0x9a/0xd0
+[    5.384903]  __check_object_size+0x46c/0x690
+[    5.384903]  put_cmsg+0x129/0x5e0
+[    5.384903]  sock_recv_errqueue+0x22f/0x380
+[    5.384903]  tls_sw_recvmsg+0x7ed/0x1960
+[    5.384903]  ? srso_alias_return_thunk+0x5/0xfbef5
+[    5.384903]  ? schedule+0x6d/0x270
+[    5.384903]  ? srso_alias_return_thunk+0x5/0xfbef5
+[    5.384903]  ? mutex_unlock+0x81/0xd0
+[    5.384903]  ? __pfx_mutex_unlock+0x10/0x10
+[    5.384903]  ? __pfx_tls_sw_recvmsg+0x10/0x10
+[    5.384903]  ? _raw_spin_lock_irqsave+0x8f/0xf0
+[    5.384903]  ? _raw_read_unlock_irqrestore+0x20/0x40
+[    5.384903]  ? srso_alias_return_thunk+0x5/0xfbef5
+
+The crash offset 296 corresponds to skb2->cb within skbuff_fclones:
+  - sizeof(struct sk_buff) = 232 - offsetof(struct sk_buff, cb) = 40 -
+  offset of skb2.cb in fclones = 232 + 40 = 272 - crash offset 296 =
+  272 + 24 (inside sock_exterr_skb.ee)
+
+This patch uses a local stack variable as a bounce buffer to avoid the hardened usercopy check failure.
+
+[1] https://elixir.bootlin.com/linux/v6.12.62/source/net/ipv4/tcp.c#L885
+[2] https://elixir.bootlin.com/linux/v6.12.62/source/net/core/skbuff.c#L5104
+[3] https://elixir.bootlin.com/linux/v6.12.62/source/net/core/skbuff.c#L5566
+[4] https://elixir.bootlin.com/linux/v6.12.62/source/net/core/skbuff.c#L5491
+[5] https://elixir.bootlin.com/linux/v6.12.62/source/mm/slub.c#L5719</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-22444" data-description="the "create core" api of apache solr 8.6 through 9.10.0 lacks sufficient input validation on some api parameters, which can cause solr to check the existence of and attempt to read file-system paths that should be disallowed by solr's  "allowpaths" security setting https://https://solr.apache.org/guide/solr/latest/configuration-guide/configuring-solr-xml.html#the-solr-element .  these read-only accesses can allow users to create cores using unexpected configsets if any are accessible via the filesystem.  on windows systems configured to allow unc paths this can additionally cause disclosure of ntlm "user" hashes. 
+
+solr deployments are subject to this vulnerability if they meet the following criteria:
+  *  solr is running in its "standalone" mode.
+  *  solr's "allowpath" setting is being used to restrict file access to certain directories.
+  *  solr's "create core" api is exposed and accessible to untrusted users.  this can happen if solr's  rulebasedauthorizationplugin https://solr.apache.org/guide/solr/latest/deployment-guide/rule-based-authorization-plugin.html  is disabled, or if it is enabled but the "core-admin-edit" predefined permission (or an equivalent custom permission) is given to low-trust (i.e. non-admin) user roles.
+
+users can mitigate this by enabling solr's rulebasedauthorizationplugin (if disabled) and configuring a permission-list that prevents untrusted users from creating new solr cores.  users should also upgrade to apache solr 9.10.1 or greater, which contain fixes for this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-22444" target="_blank">CVE-2026-22444</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-01-21 08:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The "create core" API of Apache Solr 8.6 through 9.10.0 lacks sufficient input validation on some API parameters, which can cause Solr to check the existence of and attempt to read file-system paths that should be disallowed by Solr's  "allowPaths" security setting https://https://solr.apache.org/guide/solr/latest/configuration-guide/configuring-solr-xml.html#the-solr-element .  These read-only accesses can allow users to create cores using unexpected configsets if any are accessible via the filesystem.  On Windows systems configured to allow UNC paths this can additionally cause disclosure of NTLM "user" hashes. 
+
+Solr deployments are subject to this vulnerability if they meet the following criteria:
+  *  Solr is running in its "standalone" mode.
+  *  Solr's "allowPath" setting is being used to restrict file access to certain directories.
+  *  Solr's "create core" API is exposed and accessible to untrusted users.  This can happen if Solr's  RuleBasedAuthorizationPlugin https://solr.apache.org/guide/solr/latest/deployment-guide/rule-based-authorization-plugin.html  is disabled, or if it is enabled but the "core-admin-edit" predefined permission (or an equivalent custom permission) is given to low-trust (i.e. non-admin) user roles.
+
+Users can mitigate this by enabling Solr's RuleBasedAuthorizationPlugin (if disabled) and configuring a permission-list that prevents untrusted users from creating new Solr cores.  Users should also upgrade to Apache Solr 9.10.1 or greater, which contain fixes for this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-22022" data-description="deployments of apache solr 5.3.0 through 9.10.0 that rely on solr's "rule based authorization plugin" are vulnerable to allowing unauthorized access to certain solr apis, due to insufficiently strict input validation in those components.  only deployments that meet all of the following criteria are impacted by this vulnerability:
+
+  *  use of solr's "rulebasedauthorizationplugin"
+  *  a rulebasedauthorizationplugin config (see security.json) that specifies multiple "roles"
+  *  a rulebasedauthorizationplugin permission list (see security.json) that uses one or more of the following pre-defined permission rules: "config-read", "config-edit", "schema-read", "metrics-read", or "security-read".
+  *  a rulebasedauthorizationplugin permission list that doesn't define the "all" pre-defined permission
+  *  a networking setup that allows clients to make unfiltered network requests to solr. (i.e. user-submitted http/https requests reach solr as-is, unmodified or restricted by any intervening proxy or gateway)
+
+users can mitigate this vulnerability by ensuring that their rulebasedauthorizationplugin configuration specifies the "all" pre-defined permission and associates the permission with an "admin" or other privileged role.  users can also upgrade to a solr version outside of the impacted range, such as the recently released solr 9.10.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-22022" target="_blank">CVE-2026-22022</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-01-21 08:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Deployments of Apache Solr 5.3.0 through 9.10.0 that rely on Solr's "Rule Based Authorization Plugin" are vulnerable to allowing unauthorized access to certain Solr APIs, due to insufficiently strict input validation in those components.  Only deployments that meet all of the following criteria are impacted by this vulnerability:
+
+  *  Use of Solr's "RuleBasedAuthorizationPlugin"
+  *  A RuleBasedAuthorizationPlugin config (see security.json) that specifies multiple "roles"
+  *  A RuleBasedAuthorizationPlugin permission list (see security.json) that uses one or more of the following pre-defined permission rules: "config-read", "config-edit", "schema-read", "metrics-read", or "security-read".
+  *  A RuleBasedAuthorizationPlugin permission list that doesn't define the "all" pre-defined permission
+  *  A networking setup that allows clients to make unfiltered network requests to Solr. (i.e. user-submitted HTTP/HTTPS requests reach Solr as-is, unmodified or restricted by any intervening proxy or gateway)
+
+Users can mitigate this vulnerability by ensuring that their RuleBasedAuthorizationPlugin configuration specifies the "all" pre-defined permission and associates the permission with an "admin" or other privileged role.  Users can also upgrade to a Solr version outside of the impacted range, such as the recently released Solr 9.10.1.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-14083" data-description="a flaw was found in the keycloak admin rest api. this vulnerability allows the exposure of backend schema and rules, potentially leading to targeted attacks or privilege escalation via improper access control.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14083" target="_blank">CVE-2025-14083</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-01-21 07:16:02 CDT</p>
@@ -305,86 +495,6 @@ Code starting with the faulting instruction
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
                     <p>The Academy LMS – WordPress LMS Plugin for Complete eLearning Solution plugin for WordPress is vulnerable to privilege escalation via account takeover in all versions up to, and including, 3.5.0. This is due to the plugin not properly validating a user's identity prior to updating their password and relying solely on a publicly-exposed nonce for authorization. This makes it possible for unauthenticated attackers to change arbitrary user's password, including administrators, and gain access to their account.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-0933" data-description="summarya command injection vulnerability (cwe-78) has been found to exist in the `wrangler pages deploy` command. the issue occurs because the `--commit-hash` parameter is passed directly to a shell command without proper validation or sanitization, allowing an attacker with control of `--commit-hash` to execute arbitrary commands on the system running wrangler.
-
-
-
-
-root causethe commithash variable, derived from user input via the --commit-hash cli argument, is interpolated directly into a shell command using template literals (e.g.,  execsync(`git show -s --format=%b ${commithash}`)). shell metacharacters are interpreted by the shell, enabling command execution.
-
-
-
-
-impactthis vulnerability is generally hard to exploit, as it requires --commit-hash to be attacker controlled. the vulnerability primarily affects ci/cd environments where `wrangler pages deploy` is used in automated pipelines and the 
-
---commit-hash parameter is populated from external, potentially untrusted sources. an attacker could exploit this to:
-
-  *  run any shell command.
-  *  exfiltrate environment variables.
-  *  compromise the ci runner to install backdoors or modify build artifacts.
-
-
-
-credits disclosed responsibly by kny4hacker.
-
-
-
-
-mitigation
-  *  wrangler v4 users are requested to upgrade to wrangler v4.59.1 or higher.
-  *  wrangler v3 users are requested to upgrade to wrangler v3.114.17 or higher.
-  *  users on wrangler v2 (eol) should upgrade to a supported major version.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-0933" target="_blank">CVE-2026-0933</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-01-20 17:16:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>SummaryA command injection vulnerability (CWE-78) has been found to exist in the `wrangler pages deploy` command. The issue occurs because the `--commit-hash` parameter is passed directly to a shell command without proper validation or sanitization, allowing an attacker with control of `--commit-hash` to execute arbitrary commands on the system running Wrangler.
-
-
-
-
-Root causeThe commitHash variable, derived from user input via the --commit-hash CLI argument, is interpolated directly into a shell command using template literals (e.g.,  execSync(`git show -s --format=%B ${commitHash}`)). Shell metacharacters are interpreted by the shell, enabling command execution.
-
-
-
-
-ImpactThis vulnerability is generally hard to exploit, as it requires --commit-hash to be attacker controlled. The vulnerability primarily affects CI/CD environments where `wrangler pages deploy` is used in automated pipelines and the 
-
---commit-hash parameter is populated from external, potentially untrusted sources. An attacker could exploit this to:
-
-  *  Run any shell command.
-  *  Exfiltrate environment variables.
-  *  Compromise the CI runner to install backdoors or modify build artifacts.
-
-
-
-Credits Disclosed responsibly by kny4hacker.
-
-
-
-
-Mitigation
-  *  Wrangler v4 users are requested to upgrade to Wrangler v4.59.1 or higher.
-  *  Wrangler v3 users are requested to upgrade to Wrangler v3.114.17 or higher.
-  *  Users on Wrangler v2 (EOL) should upgrade to a supported major version.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21990" data-description="vulnerability in the oracle vm virtualbox product of oracle virtualization (component: core).  supported versions that are affected are 7.1.14 and  7.2.4. easily exploitable vulnerability allows high privileged attacker with logon to the infrastructure where oracle vm virtualbox executes to compromise oracle vm virtualbox.  while the vulnerability is in oracle vm virtualbox, attacks may significantly impact additional products (scope change).  successful attacks of this vulnerability can result in takeover of oracle vm virtualbox. cvss 3.1 base score 8.2 (confidentiality, integrity and availability impacts).  cvss vector: (cvss:3.1/av:l/ac:l/pr:h/ui:n/s:c/c:h/i:h/a:h).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21990" target="_blank">CVE-2026-21990</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-01-20 16:16:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>Vulnerability in the Oracle VM VirtualBox product of Oracle Virtualization (component: Core).  Supported versions that are affected are 7.1.14 and  7.2.4. Easily exploitable vulnerability allows high privileged attacker with logon to the infrastructure where Oracle VM VirtualBox executes to compromise Oracle VM VirtualBox.  While the vulnerability is in Oracle VM VirtualBox, attacks may significantly impact additional products (scope change).  Successful attacks of this vulnerability can result in takeover of Oracle VM VirtualBox. CVSS 3.1 Base Score 8.2 (Confidentiality, Integrity and Availability impacts).  CVSS Vector: (CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21989" data-description="vulnerability in the oracle vm virtualbox product of oracle virtualization (component: core).  supported versions that are affected are 7.1.14 and  7.2.4. easily exploitable vulnerability allows high privileged attacker with logon to the infrastructure where oracle vm virtualbox executes to compromise oracle vm virtualbox.  while the vulnerability is in oracle vm virtualbox, attacks may significantly impact additional products (scope change).  successful attacks of this vulnerability can result in  unauthorized creation, deletion or modification access to critical data or all oracle vm virtualbox accessible data as well as  unauthorized access to critical data or complete access to all oracle vm virtualbox accessible data and unauthorized ability to cause a partial denial of service (partial dos) of oracle vm virtualbox. cvss 3.1 base score 8.1 (confidentiality, integrity and availability impacts).  cvss vector: (cvss:3.1/av:l/ac:l/pr:h/ui:n/s:c/c:h/i:h/a:l).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21989" target="_blank">CVE-2026-21989</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-01-20 16:16:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Vulnerability in the Oracle VM VirtualBox product of Oracle Virtualization (component: Core).  Supported versions that are affected are 7.1.14 and  7.2.4. Easily exploitable vulnerability allows high privileged attacker with logon to the infrastructure where Oracle VM VirtualBox executes to compromise Oracle VM VirtualBox.  While the vulnerability is in Oracle VM VirtualBox, attacks may significantly impact additional products (scope change).  Successful attacks of this vulnerability can result in  unauthorized creation, deletion or modification access to critical data or all Oracle VM VirtualBox accessible data as well as  unauthorized access to critical data or complete access to all Oracle VM VirtualBox accessible data and unauthorized ability to cause a partial denial of service (partial DOS) of Oracle VM VirtualBox. CVSS 3.1 Base Score 8.1 (Confidentiality, Integrity and Availability impacts).  CVSS Vector: (CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:L).</p>
                 </div>
         
             </div>
