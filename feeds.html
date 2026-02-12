@@ -33,6 +33,184 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-2391" data-description="### summary
+the `arraylimit` option in qs does not enforce limits for comma-separated values when `comma: true` is enabled, allowing attackers to cause denial-of-service via memory exhaustion. this is a bypass of the array limit enforcement, similar to the bracket notation bypass addressed in ghsa-6rw7-vpxm-498p (cve-2025-15284).
+
+### details
+when the `comma` option is set to `true` (not the default, but configurable in applications), qs allows parsing comma-separated strings as arrays (e.g., `?param=a,b,c` becomes `['a', 'b', 'c']`). however, the limit check for `arraylimit` (default: 20) and the optional throwonlimitexceeded occur after the comma-handling logic in `parsearrayvalue`, enabling a bypass. this permits creation of arbitrarily large arrays from a single parameter, leading to excessive memory allocation.
+
+**vulnerable code** (lib/parse.js: lines ~40-50):
+```js
+if (val && typeof val === 'string' && options.comma && val.indexof(',') > -1) {
+    return val.split(',');
+}
+
+if (options.throwonlimitexceeded && currentarraylength >= options.arraylimit) {
+    throw new rangeerror('array limit exceeded. only ' + options.arraylimit + ' element' + (options.arraylimit === 1 ? '' : 's') + ' allowed in an array.');
+}
+
+return val;
+```
+the `split(',')` returns the array immediately, skipping the subsequent limit check. downstream merging via `utils.combine` does not prevent allocation, even if it marks overflows for sparse arrays.this discrepancy allows attackers to send a single parameter with millions of commas (e.g., `?param=,,,,,,,,...`), allocating massive arrays in memory without triggering limits. it bypasses the intent of `arraylimit`, which is enforced correctly for indexed (`a[0]=`) and bracket (`a[]=`) notations (the latter fixed in v6.14.1 per ghsa-6rw7-vpxm-498p).
+
+### poc
+**test 1 - basic bypass:**
+```
+npm install qs
+```
+
+```js
+const qs = require('qs');
+
+const payload = 'a=' + ','.repeat(25);  // 26 elements after split (bypasses arraylimit: 5)
+const options = { comma: true, arraylimit: 5, throwonlimitexceeded: true };
+
+try {
+  const result = qs.parse(payload, options);
+  console.log(result.a.length);  // outputs: 26 (bypass successful)
+} catch (e) {
+  console.log('limit enforced:', e.message);  // not thrown
+}
+```
+**configuration:**
+- `comma: true`
+- `arraylimit: 5`
+- `throwonlimitexceeded: true`
+
+expected: throws "array limit exceeded" error.
+actual: parses successfully, creating an array of length 26.
+
+
+### impact
+denial of service (dos) via memory exhaustion.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2391" target="_blank">CVE-2026-2391</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>### Summary
+The `arrayLimit` option in qs does not enforce limits for comma-separated values when `comma: true` is enabled, allowing attackers to cause denial-of-service via memory exhaustion. This is a bypass of the array limit enforcement, similar to the bracket notation bypass addressed in GHSA-6rw7-vpxm-498p (CVE-2025-15284).
+
+### Details
+When the `comma` option is set to `true` (not the default, but configurable in applications), qs allows parsing comma-separated strings as arrays (e.g., `?param=a,b,c` becomes `['a', 'b', 'c']`). However, the limit check for `arrayLimit` (default: 20) and the optional throwOnLimitExceeded occur after the comma-handling logic in `parseArrayValue`, enabling a bypass. This permits creation of arbitrarily large arrays from a single parameter, leading to excessive memory allocation.
+
+**Vulnerable code** (lib/parse.js: lines ~40-50):
+```js
+if (val && typeof val === 'string' && options.comma && val.indexOf(',') > -1) {
+    return val.split(',');
+}
+
+if (options.throwOnLimitExceeded && currentArrayLength >= options.arrayLimit) {
+    throw new RangeError('Array limit exceeded. Only ' + options.arrayLimit + ' element' + (options.arrayLimit === 1 ? '' : 's') + ' allowed in an array.');
+}
+
+return val;
+```
+The `split(',')` returns the array immediately, skipping the subsequent limit check. Downstream merging via `utils.combine` does not prevent allocation, even if it marks overflows for sparse arrays.This discrepancy allows attackers to send a single parameter with millions of commas (e.g., `?param=,,,,,,,,...`), allocating massive arrays in memory without triggering limits. It bypasses the intent of `arrayLimit`, which is enforced correctly for indexed (`a[0]=`) and bracket (`a[]=`) notations (the latter fixed in v6.14.1 per GHSA-6rw7-vpxm-498p).
+
+### PoC
+**Test 1 - Basic bypass:**
+```
+npm install qs
+```
+
+```js
+const qs = require('qs');
+
+const payload = 'a=' + ','.repeat(25);  // 26 elements after split (bypasses arrayLimit: 5)
+const options = { comma: true, arrayLimit: 5, throwOnLimitExceeded: true };
+
+try {
+  const result = qs.parse(payload, options);
+  console.log(result.a.length);  // Outputs: 26 (bypass successful)
+} catch (e) {
+  console.log('Limit enforced:', e.message);  // Not thrown
+}
+```
+**Configuration:**
+- `comma: true`
+- `arrayLimit: 5`
+- `throwOnLimitExceeded: true`
+
+Expected: Throws "Array limit exceeded" error.
+Actual: Parses successfully, creating an array of length 26.
+
+
+### Impact
+Denial of Service (DoS) via memory exhaustion.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26092" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26092" target="_blank">CVE-2026-26092</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26091" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26091" target="_blank">CVE-2026-26091</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26090" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26090" target="_blank">CVE-2026-26090</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26089" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26089" target="_blank">CVE-2026-26089</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26088" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26088" target="_blank">CVE-2026-26088</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26087" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26087" target="_blank">CVE-2026-26087</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26086" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26086" target="_blank">CVE-2026-26086</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-26085" data-description="rejected reason: not used">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26085" target="_blank">CVE-2026-26085</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: Not used</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-25676" data-description="the installer of m-track duo hd version 1.0.0 contains an issue with the dll search path, which may lead to insecurely loading dynamic link libraries. as a result, arbitrary code may be executed with administrator privileges.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25676" target="_blank">CVE-2026-25676</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-11 23:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>The installer of M-Track Duo HD version 1.0.0 contains an issue with the DLL search path, which may lead to insecurely loading Dynamic Link Libraries. As a result, arbitrary code may be executed with administrator privileges.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-26235" data-description="jung smart visu server 1.1.1050 contains a denial of service vulnerability that allows unauthenticated attackers to remotely shutdown or reboot the server. attackers can send a single post request to trigger the server reboot without requiring any authentication.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26235" target="_blank">CVE-2026-26235</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-02-11 22:15:47 CDT</p>
@@ -111,86 +289,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>A logic issue was addressed with improved state management. This issue is fixed in iOS 26.3 and iPadOS 26.3, iOS 18.7.5 and iPadOS 18.7.5. An attacker may be able to discover a user’s deleted notes.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20681" data-description="a privacy issue was addressed with improved private data redaction for log entries. this issue is fixed in macos tahoe 26.3. an app may be able to access information about a user's contacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20681" target="_blank">CVE-2026-20681</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A privacy issue was addressed with improved private data redaction for log entries. This issue is fixed in macOS Tahoe 26.3. An app may be able to access information about a user's contacts.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20680" data-description="the issue was addressed with additional restrictions on the observability of app states. this issue is fixed in macos tahoe 26.3, macos sonoma 14.8.4, macos sequoia 15.7.4, ios 18.7.5 and ipados 18.7.5, ios 26.3 and ipados 26.3. a sandboxed app may be able to access sensitive user data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20680" target="_blank">CVE-2026-20680</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The issue was addressed with additional restrictions on the observability of app states. This issue is fixed in macOS Tahoe 26.3, macOS Sonoma 14.8.4, macOS Sequoia 15.7.4, iOS 18.7.5 and iPadOS 18.7.5, iOS 26.3 and iPadOS 26.3. A sandboxed app may be able to access sensitive user data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20678" data-description="an authorization issue was addressed with improved state management. this issue is fixed in ios 26.3 and ipados 26.3, ios 18.7.5 and ipados 18.7.5. an app may be able to access sensitive user data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20678" target="_blank">CVE-2026-20678</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authorization issue was addressed with improved state management. This issue is fixed in iOS 26.3 and iPadOS 26.3, iOS 18.7.5 and iPadOS 18.7.5. An app may be able to access sensitive user data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20677" data-description="a race condition was addressed with improved handling of symbolic links. this issue is fixed in macos tahoe 26.3, macos sonoma 14.8.4, ios 18.7.5 and ipados 18.7.5, visionos 26.3, ios 26.3 and ipados 26.3. a shortcut may be able to bypass sandbox restrictions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20677" target="_blank">CVE-2026-20677</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A race condition was addressed with improved handling of symbolic links. This issue is fixed in macOS Tahoe 26.3, macOS Sonoma 14.8.4, iOS 18.7.5 and iPadOS 18.7.5, visionOS 26.3, iOS 26.3 and iPadOS 26.3. A shortcut may be able to bypass sandbox restrictions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20676" data-description="this issue was addressed through improved state management. this issue is fixed in ios 26.3 and ipados 26.3, safari 26.3, macos tahoe 26.3, visionos 26.3. a website may be able to track users through safari web extensions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20676" target="_blank">CVE-2026-20676</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>This issue was addressed through improved state management. This issue is fixed in iOS 26.3 and iPadOS 26.3, Safari 26.3, macOS Tahoe 26.3, visionOS 26.3. A website may be able to track users through Safari web extensions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20675" data-description="the issue was addressed with improved bounds checks. this issue is fixed in watchos 26.3, tvos 26.3, macos tahoe 26.3, macos sonoma 14.8.4, macos sequoia 15.7.4, ios 18.7.5 and ipados 18.7.5, visionos 26.3, ios 26.3 and ipados 26.3. processing a maliciously crafted image may lead to disclosure of user information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20675" target="_blank">CVE-2026-20675</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The issue was addressed with improved bounds checks. This issue is fixed in watchOS 26.3, tvOS 26.3, macOS Tahoe 26.3, macOS Sonoma 14.8.4, macOS Sequoia 15.7.4, iOS 18.7.5 and iPadOS 18.7.5, visionOS 26.3, iOS 26.3 and iPadOS 26.3. Processing a maliciously crafted image may lead to disclosure of user information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20674" data-description="a privacy issue was addressed by removing sensitive data. this issue is fixed in ios 26.3 and ipados 26.3. an attacker with physical access to a locked device may be able to view sensitive user information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20674" target="_blank">CVE-2026-20674</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A privacy issue was addressed by removing sensitive data. This issue is fixed in iOS 26.3 and iPadOS 26.3. An attacker with physical access to a locked device may be able to view sensitive user information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20673" data-description="a logic issue was addressed with improved checks. this issue is fixed in macos sequoia 15.7.4, ios 18.7.5 and ipados 18.7.5, macos tahoe 26.3, macos sonoma 14.8.4. turning off "load remote content in messages” may not apply to all mail previews.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20673" target="_blank">CVE-2026-20673</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A logic issue was addressed with improved checks. This issue is fixed in macOS Sequoia 15.7.4, iOS 18.7.5 and iPadOS 18.7.5, macOS Tahoe 26.3, macOS Sonoma 14.8.4. Turning off "Load remote content in messages” may not apply to all mail previews.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20671" data-description="a logic issue was addressed with improved checks. this issue is fixed in watchos 26.3, tvos 26.3, macos tahoe 26.3, macos sonoma 14.8.4, macos sequoia 15.7.4, ios 18.7.5 and ipados 18.7.5, visionos 26.3, ios 26.3 and ipados 26.3. an attacker in a privileged network position may be able to intercept network traffic.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20671" target="_blank">CVE-2026-20671</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A logic issue was addressed with improved checks. This issue is fixed in watchOS 26.3, tvOS 26.3, macOS Tahoe 26.3, macOS Sonoma 14.8.4, macOS Sequoia 15.7.4, iOS 18.7.5 and iPadOS 18.7.5, visionOS 26.3, iOS 26.3 and iPadOS 26.3. An attacker in a privileged network position may be able to intercept network traffic.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-20669" data-description="a parsing issue in the handling of directory paths was addressed with improved path validation. this issue is fixed in macos tahoe 26.3. an app may be able to access sensitive user data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20669" target="_blank">CVE-2026-20669</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-11 17:16:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A parsing issue in the handling of directory paths was addressed with improved path validation. This issue is fixed in macOS Tahoe 26.3. An app may be able to access sensitive user data.</p>
                 </div>
         
             </div>
