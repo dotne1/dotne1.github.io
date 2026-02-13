@@ -33,6 +33,140 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-23112" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nvmet-tcp: add bounds checks in nvmet_tcp_build_pdu_iovec
+
+nvmet_tcp_build_pdu_iovec() could walk past cmd->req.sg when a pdu
+length or offset exceeds sg_cnt and then use bogus sg->length/offset
+values, leading to _copy_to_iter() gpf/kasan. guard sg_idx, remaining
+entries, and sg->length/offset before building the bvec.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23112" target="_blank">CVE-2026-23112</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-13 08:16:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nvmet-tcp: add bounds checks in nvmet_tcp_build_pdu_iovec
+
+nvmet_tcp_build_pdu_iovec() could walk past cmd->req.sg when a PDU
+length or offset exceeds sg_cnt and then use bogus sg->length/offset
+values, leading to _copy_to_iter() GPF/KASAN. Guard sg_idx, remaining
+entries, and sg->length/offset before building the bvec.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23111" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+netfilter: nf_tables: fix inverted genmask check in nft_map_catchall_activate()
+
+nft_map_catchall_activate() has an inverted element activity check
+compared to its non-catchall counterpart nft_mapelem_activate() and
+compared to what is logically required.
+
+nft_map_catchall_activate() is called from the abort path to re-activate
+catchall map elements that were deactivated during a failed transaction.
+it should skip elements that are already active (they don't need
+re-activation) and process elements that are inactive (they need to be
+restored). instead, the current code does the opposite: it skips inactive
+elements and processes active ones.
+
+compare the non-catchall activate callback, which is correct:
+
+  nft_mapelem_activate():
+    if (nft_set_elem_active(ext, iter->genmask))
+        return 0;   /* skip active, process inactive */
+
+with the buggy catchall version:
+
+  nft_map_catchall_activate():
+    if (!nft_set_elem_active(ext, genmask))
+        continue;   /* skip inactive, process active */
+
+the consequence is that when a delset operation is aborted,
+nft_setelem_data_activate() is never called for the catchall element.
+for nft_goto verdict elements, this means nft_data_hold() is never
+called to restore the chain->use reference count. each abort cycle
+permanently decrements chain->use. once chain->use reaches zero,
+delchain succeeds and frees the chain while catchall verdict elements
+still reference it, resulting in a use-after-free.
+
+this is exploitable for local privilege escalation from an unprivileged
+user via user namespaces + nftables on distributions that enable
+config_user_ns and config_nf_tables.
+
+fix by removing the negation so the check matches nft_mapelem_activate():
+skip active elements, process inactive ones.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23111" target="_blank">CVE-2026-23111</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-13 08:16:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+netfilter: nf_tables: fix inverted genmask check in nft_map_catchall_activate()
+
+nft_map_catchall_activate() has an inverted element activity check
+compared to its non-catchall counterpart nft_mapelem_activate() and
+compared to what is logically required.
+
+nft_map_catchall_activate() is called from the abort path to re-activate
+catchall map elements that were deactivated during a failed transaction.
+It should skip elements that are already active (they don't need
+re-activation) and process elements that are inactive (they need to be
+restored). Instead, the current code does the opposite: it skips inactive
+elements and processes active ones.
+
+Compare the non-catchall activate callback, which is correct:
+
+  nft_mapelem_activate():
+    if (nft_set_elem_active(ext, iter->genmask))
+        return 0;   /* skip active, process inactive */
+
+With the buggy catchall version:
+
+  nft_map_catchall_activate():
+    if (!nft_set_elem_active(ext, genmask))
+        continue;   /* skip inactive, process active */
+
+The consequence is that when a DELSET operation is aborted,
+nft_setelem_data_activate() is never called for the catchall element.
+For NFT_GOTO verdict elements, this means nft_data_hold() is never
+called to restore the chain->use reference count. Each abort cycle
+permanently decrements chain->use. Once chain->use reaches zero,
+DELCHAIN succeeds and frees the chain while catchall verdict elements
+still reference it, resulting in a use-after-free.
+
+This is exploitable for local privilege escalation from an unprivileged
+user via user namespaces + nftables on distributions that enable
+CONFIG_USER_NS and CONFIG_NF_TABLES.
+
+Fix by removing the negation so the check matches nft_mapelem_activate():
+skip active elements, process inactive ones.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-1619" data-description="authorization bypass through user-controlled key vulnerability in universal software inc. flexcity/kiosk allows exploitation of trusted identifiers.this issue affects flexcity/kiosk: from 1.0 before 1.0.36.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1619" target="_blank">CVE-2026-1619</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-13 08:16:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
+                    <p>Authorization Bypass Through User-Controlled Key vulnerability in Universal Software Inc. FlexCity/Kiosk allows Exploitation of Trusted Identifiers.This issue affects FlexCity/Kiosk: from 1.0 before 1.0.36.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-1618" data-description="authentication bypass using an alternate path or channel vulnerability in universal software inc. flexcity/kiosk allows privilege escalation.this issue affects flexcity/kiosk: from 1.0 before 1.0.36.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1618" target="_blank">CVE-2026-1618</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-13 08:16:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Authentication Bypass Using an Alternate Path or Channel vulnerability in Universal Software Inc. FlexCity/Kiosk allows Privilege Escalation.This issue affects FlexCity/Kiosk: from 1.0 before 1.0.36.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-14349" data-description="privilege defined with unsafe actions, missing authentication for critical function vulnerability in universal software inc. flexcity/kiosk allows accessing functionality not properly constrained by acls, privilege escalation.this issue affects flexcity/kiosk: from 1.0 before 1.0.36.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-14349" target="_blank">CVE-2025-14349</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-13 08:16:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Privilege Defined With Unsafe Actions, Missing Authentication for Critical Function vulnerability in Universal Software Inc. FlexCity/Kiosk allows Accessing Functionality Not Properly Constrained by ACLs, Privilege Escalation.This issue affects FlexCity/Kiosk: from 1.0 before 1.0.36.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-2443" data-description="a flaw was identified in libsoup, a widely used http library in gnome-based systems. when processing specially crafted http range headers, the library may improperly validate requested byte ranges. in certain build configurations, this could allow a remote attacker to access portions of server memory beyond the intended response. exploitation requires a vulnerable configuration and access to a server using the embedded soupserver component.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2443" target="_blank">CVE-2026-2443</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-02-13 06:16:09 CDT</p>
@@ -180,46 +314,6 @@ The affected products and versions are as follows: Vnet/IP Interface Package (fo
                 <div class="cve-entry" data-cve-id="CVE-2026-26255" data-description="rejected reason: not used">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26255" target="_blank">CVE-2026-26255</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-02-12 22:15:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: Not used</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-26254" data-description="rejected reason: not used">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26254" target="_blank">CVE-2026-26254</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-12 22:15:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: Not used</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-26253" data-description="rejected reason: not used">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26253" target="_blank">CVE-2026-26253</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-12 22:15:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: Not used</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-26252" data-description="rejected reason: not used">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26252" target="_blank">CVE-2026-26252</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-12 22:15:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: Not used</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-26251" data-description="rejected reason: not used">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26251" target="_blank">CVE-2026-26251</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-12 22:15:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: Not used</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-26250" data-description="rejected reason: not used">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-26250" target="_blank">CVE-2026-26250</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-12 22:15:53 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>Rejected reason: Not used</p>
