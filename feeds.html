@@ -33,164 +33,1466 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-2312" data-description="the media library folders plugin for wordpress is vulnerable to insecure direct object reference in all versions up to, and including, 8.3.6 via the delete_maxgalleria_media() and maxgalleria_rename_image() functions due to missing validation on a user controlled key. this makes it possible for authenticated attackers, with author-level access and above, to delete or rename attachments owned by other users (including administrators). the rename flow also deletes all postmeta for the target attachment, causing data loss.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2312" target="_blank">CVE-2026-2312</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 06:15:56 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The Media Library Folders plugin for WordPress is vulnerable to Insecure Direct Object Reference in all versions up to, and including, 8.3.6 via the delete_maxgalleria_media() and maxgalleria_rename_image() functions due to missing validation on a user controlled key. This makes it possible for authenticated attackers, with Author-level access and above, to delete or rename attachments owned by other users (including administrators). The rename flow also deletes all postmeta for the target attachment, causing data loss.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23131" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+platform/x86: hp-bioscfg: fix kobject warnings for empty attribute names
+
+the hp-bioscfg driver attempts to register kobjects with empty names when
+the hp bios returns attributes with empty name strings. this causes
+multiple kernel warnings:
+
+  kobject: (00000000135fb5e6): attempted to be registered with empty name!
+  warning: cpu: 14 pid: 3336 at lib/kobject.c:219 kobject_add_internal+0x2eb/0x310
+
+add validation in hp_init_bios_buffer_attribute() to check if the
+attribute name is empty after parsing it from the wmi buffer. if empty,
+log a debug message and skip registration of that attribute, allowing the
+module to continue processing other valid attributes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23131" target="_blank">CVE-2026-23131</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+platform/x86: hp-bioscfg: Fix kobject warnings for empty attribute names
+
+The hp-bioscfg driver attempts to register kobjects with empty names when
+the HP BIOS returns attributes with empty name strings. This causes
+multiple kernel warnings:
+
+  kobject: (00000000135fb5e6): attempted to be registered with empty name!
+  WARNING: CPU: 14 PID: 3336 at lib/kobject.c:219 kobject_add_internal+0x2eb/0x310
+
+Add validation in hp_init_bios_buffer_attribute() to check if the
+attribute name is empty after parsing it from the WMI buffer. If empty,
+log a debug message and skip registration of that attribute, allowing the
+module to continue processing other valid attributes.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1512" data-description="the essential addons for elementor – popular elementor templates & widgets plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's info box widget in all versions up to, and including, 6.5.9 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1512" target="_blank">CVE-2026-1512</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 04:16:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Essential Addons for Elementor – Popular Elementor Templates & Widgets plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's Info Box widget in all versions up to, and including, 6.5.9 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23130" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: ath12k: fix dead lock while flushing management frames
+
+commit [1] converted the management transmission work item into a
+wiphy work. since a wiphy work can only run under wiphy lock
+protection, a race condition happens in below scenario:
+
+1. a management frame is queued for transmission.
+2. ath12k_mac_op_flush() gets called to flush pending frames associated
+   with the hardware (i.e, vif being null). then in ath12k_mac_flush()
+   the process waits for the transmission done.
+3. since wiphy lock has been taken by the flush process, the transmission
+   work item has no chance to run, hence the dead lock.
+
+>from user view, this dead lock results in below issue:
+
+ wlp8s0: authenticate with xxxxxx (local address=xxxxxx)
+ wlp8s0: send auth to xxxxxx (try 1/3)
+ wlp8s0: authenticate with xxxxxx (local address=xxxxxx)
+ wlp8s0: send auth to xxxxxx (try 1/3)
+ wlp8s0: authenticated
+ wlp8s0: associate with xxxxxx (try 1/3)
+ wlp8s0: aborting association with xxxxxx by local choice (reason: 3=deauth_leaving)
+ ath12k_pci 0000:08:00.0: failed to flush mgmt transmit queue, mgmt pkts pending 1
+
+the dead lock can be avoided by invoking wiphy_work_flush() to proactively
+run the queued work item. note actually it is already present in
+ath12k_mac_op_flush(), however it does not protect the case where vif
+being null. hence move it ahead to cover this case as well.
+
+tested-on: wcn7850 hw2.0 pci wlan.hmt.1.1.c5-00302-qcahmtswpl_v1.0_v2.0_siliconz-1.115823.3">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23130" target="_blank">CVE-2026-23130</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: ath12k: fix dead lock while flushing management frames
+
+Commit [1] converted the management transmission work item into a
+wiphy work. Since a wiphy work can only run under wiphy lock
+protection, a race condition happens in below scenario:
+
+1. a management frame is queued for transmission.
+2. ath12k_mac_op_flush() gets called to flush pending frames associated
+   with the hardware (i.e, vif being NULL). Then in ath12k_mac_flush()
+   the process waits for the transmission done.
+3. Since wiphy lock has been taken by the flush process, the transmission
+   work item has no chance to run, hence the dead lock.
+
+>From user view, this dead lock results in below issue:
+
+ wlp8s0: authenticate with xxxxxx (local address=xxxxxx)
+ wlp8s0: send auth to xxxxxx (try 1/3)
+ wlp8s0: authenticate with xxxxxx (local address=xxxxxx)
+ wlp8s0: send auth to xxxxxx (try 1/3)
+ wlp8s0: authenticated
+ wlp8s0: associate with xxxxxx (try 1/3)
+ wlp8s0: aborting association with xxxxxx by local choice (Reason: 3=DEAUTH_LEAVING)
+ ath12k_pci 0000:08:00.0: failed to flush mgmt transmit queue, mgmt pkts pending 1
+
+The dead lock can be avoided by invoking wiphy_work_flush() to proactively
+run the queued work item. Note actually it is already present in
+ath12k_mac_op_flush(), however it does not protect the case where vif
+being NULL. Hence move it ahead to cover this case as well.
+
+Tested-on: WCN7850 hw2.0 PCI WLAN.HMT.1.1.c5-00302-QCAHMTSWPL_V1.0_V2.0_SILICONZ-1.115823.3</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1843" data-description="the super page cache plugin for wordpress is vulnerable to stored cross-site scripting via the activity log in all versions up to, and including, 5.2.2 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1843" target="_blank">CVE-2026-1843</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 03:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Super Page Cache plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the Activity Log in all versions up to, and including, 5.2.2 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23129" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+dpll: prevent duplicate registrations
+
+modify the internal registration helpers dpll_xa_ref_{dpll,pin}_add()
+to reject duplicate registration attempts.
+
+previously, if a caller attempted to register the same pin multiple
+times (with the same ops, priv, and cookie) on the same device, the core
+silently increments the reference count and return success. this behavior
+is incorrect because if the caller makes these duplicate registrations
+then for the first one dpll_pin_registration is allocated and for others
+the associated dpll_pin_ref.refcount is incremented. during the first
+unregistration the associated dpll_pin_registration is freed and for
+others warn is fired.
+
+fix this by updating the logic to return `-eexist` if a matching
+registration is found to enforce a strict "register once" policy.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23129" target="_blank">CVE-2026-23129</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+dpll: Prevent duplicate registrations
+
+Modify the internal registration helpers dpll_xa_ref_{dpll,pin}_add()
+to reject duplicate registration attempts.
+
+Previously, if a caller attempted to register the same pin multiple
+times (with the same ops, priv, and cookie) on the same device, the core
+silently increments the reference count and return success. This behavior
+is incorrect because if the caller makes these duplicate registrations
+then for the first one dpll_pin_registration is allocated and for others
+the associated dpll_pin_ref.refcount is incremented. During the first
+unregistration the associated dpll_pin_registration is freed and for
+others WARN is fired.
+
+Fix this by updating the logic to return `-EEXIST` if a matching
+registration is found to enforce a strict "register once" policy.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1258" data-description="the mail mint plugin for wordpress is vulnerable to blind sql injection via the 'forms', 'automation', 'email/templates', and 'contacts/import/tutorlms/map' api endpoints in all versions up to, and including, 1.19.2 . this is due to insufficient escaping on the user supplied 'order-by', 'order-type', and 'selectedcourses' parameters and lack of sufficient preparation on the existing sql queries. this makes it possible for authenticated attackers, with administrator level access and above, to append additional sql queries into already existing queries.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1258" target="_blank">CVE-2026-1258</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 03:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>The Mail Mint plugin for WordPress is vulnerable to blind SQL Injection via the 'forms', 'automation', 'email/templates', and 'contacts/import/tutorlms/map' API endpoints in all versions up to, and including, 1.19.2 . This is due to insufficient escaping on the user supplied 'order-by', 'order-type', and 'selectedCourses' parameters and lack of sufficient preparation on the existing SQL queries. This makes it possible for authenticated attackers, with administrator level access and above, to append additional SQL queries into already existing queries.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23128" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+arm64: set __nocfi on swsusp_arch_resume()
+
+a dabt is reported[1] on an android based system when resume from hiberate.
+this happens because swsusp_arch_suspend_exit() is marked with sym_code_*()
+and does not have a cfi hash, but swsusp_arch_resume() will attempt to
+verify the cfi hash when calling a copy of swsusp_arch_suspend_exit().
+
+given that there's an existing requirement that the entrypoint to
+swsusp_arch_suspend_exit() is the first byte of the .hibernate_exit.text
+section, we cannot fix this by marking swsusp_arch_suspend_exit() with
+sym_func_*(). the simplest fix for now is to disable the cfi check in
+swsusp_arch_resume().
+
+mark swsusp_arch_resume() as __nocfi to disable the cfi check.
+
+[1]
+[   22.991934][    t1] unable to handle kernel paging request at virtual address 0000000109170ffc
+[   22.991934][    t1] mem abort info:
+[   22.991934][    t1]   esr = 0x0000000096000007
+[   22.991934][    t1]   ec = 0x25: dabt (current el), il = 32 bits
+[   22.991934][    t1]   set = 0, fnv = 0
+[   22.991934][    t1]   ea = 0, s1ptw = 0
+[   22.991934][    t1]   fsc = 0x07: level 3 translation fault
+[   22.991934][    t1] data abort info:
+[   22.991934][    t1]   isv = 0, iss = 0x00000007, iss2 = 0x00000000
+[   22.991934][    t1]   cm = 0, wnr = 0, tnd = 0, tagaccess = 0
+[   22.991934][    t1]   gcs = 0, overlay = 0, dirtybit = 0, xs = 0
+[   22.991934][    t1] [0000000109170ffc] user address but active_mm is swapper
+[   22.991934][    t1] internal error: oops: 0000000096000007 [#1] preempt smp
+[   22.991934][    t1] dumping ftrace buffer:
+[   22.991934][    t1]    (ftrace buffer empty)
+[   22.991934][    t1] modules linked in:
+[   22.991934][    t1] cpu: 0 pid: 1 comm: swapper/0 not tainted 6.6.98-android15-8-g0b1d2aee7fc3-dirty-4k #1 688c7060a825a3ac418fe53881730b355915a419
+[   22.991934][    t1] hardware name: unisoc ums9360-base board (dt)
+[   22.991934][    t1] pstate: 804000c5 (nzcv daif +pan -uao -tco -dit -ssbs btype=--)
+[   22.991934][    t1] pc : swsusp_arch_resume+0x2ac/0x344
+[   22.991934][    t1] lr : swsusp_arch_resume+0x294/0x344
+[   22.991934][    t1] sp : ffffffc08006b960
+[   22.991934][    t1] x29: ffffffc08006b9c0 x28: 0000000000000000 x27: 0000000000000000
+[   22.991934][    t1] x26: 0000000000000000 x25: 0000000000000000 x24: 0000000000000820
+[   22.991934][    t1] x23: ffffffd0817e3000 x22: ffffffd0817e3000 x21: 0000000000000000
+[   22.991934][    t1] x20: ffffff8089171000 x19: ffffffd08252c8c8 x18: ffffffc080061058
+[   22.991934][    t1] x17: 00000000529c6ef0 x16: 00000000529c6ef0 x15: 0000000000000004
+[   22.991934][    t1] x14: ffffff8178c88000 x13: 0000000000000006 x12: 0000000000000000
+[   22.991934][    t1] x11: 0000000000000015 x10: 0000000000000001 x9 : ffffffd082533000
+[   22.991934][    t1] x8 : 0000000109171000 x7 : 205b5d3433393139 x6 : 392e32322020205b
+[   22.991934][    t1] x5 : 000000010916f000 x4 : 000000008164b000 x3 : ffffff808a4e0530
+[   22.991934][    t1] x2 : ffffffd08058e784 x1 : 0000000082326000 x0 : 000000010a283000
+[   22.991934][    t1] call trace:
+[   22.991934][    t1]  swsusp_arch_resume+0x2ac/0x344
+[   22.991934][    t1]  hibernation_restore+0x158/0x18c
+[   22.991934][    t1]  load_image_and_restore+0xb0/0xec
+[   22.991934][    t1]  software_resume+0xf4/0x19c
+[   22.991934][    t1]  software_resume_initcall+0x34/0x78
+[   22.991934][    t1]  do_one_initcall+0xe8/0x370
+[   22.991934][    t1]  do_initcall_level+0xc8/0x19c
+[   22.991934][    t1]  do_initcalls+0x70/0xc0
+[   22.991934][    t1]  do_basic_setup+0x1c/0x28
+[   22.991934][    t1]  kernel_init_freeable+0xe0/0x148
+[   22.991934][    t1]  kernel_init+0x20/0x1a8
+[   22.991934][    t1]  ret_from_fork+0x10/0x20
+[   22.991934][    t1] code: a9400a61 f94013e0 f9438923 f9400a64 (b85fc110)
+
+[catalin.marinas@arm.com: commit log updated by mark rutland]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23128" target="_blank">CVE-2026-23128</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+arm64: Set __nocfi on swsusp_arch_resume()
+
+A DABT is reported[1] on an android based system when resume from hiberate.
+This happens because swsusp_arch_suspend_exit() is marked with SYM_CODE_*()
+and does not have a CFI hash, but swsusp_arch_resume() will attempt to
+verify the CFI hash when calling a copy of swsusp_arch_suspend_exit().
+
+Given that there's an existing requirement that the entrypoint to
+swsusp_arch_suspend_exit() is the first byte of the .hibernate_exit.text
+section, we cannot fix this by marking swsusp_arch_suspend_exit() with
+SYM_FUNC_*(). The simplest fix for now is to disable the CFI check in
+swsusp_arch_resume().
+
+Mark swsusp_arch_resume() as __nocfi to disable the CFI check.
+
+[1]
+[   22.991934][    T1] Unable to handle kernel paging request at virtual address 0000000109170ffc
+[   22.991934][    T1] Mem abort info:
+[   22.991934][    T1]   ESR = 0x0000000096000007
+[   22.991934][    T1]   EC = 0x25: DABT (current EL), IL = 32 bits
+[   22.991934][    T1]   SET = 0, FnV = 0
+[   22.991934][    T1]   EA = 0, S1PTW = 0
+[   22.991934][    T1]   FSC = 0x07: level 3 translation fault
+[   22.991934][    T1] Data abort info:
+[   22.991934][    T1]   ISV = 0, ISS = 0x00000007, ISS2 = 0x00000000
+[   22.991934][    T1]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+[   22.991934][    T1]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+[   22.991934][    T1] [0000000109170ffc] user address but active_mm is swapper
+[   22.991934][    T1] Internal error: Oops: 0000000096000007 [#1] PREEMPT SMP
+[   22.991934][    T1] Dumping ftrace buffer:
+[   22.991934][    T1]    (ftrace buffer empty)
+[   22.991934][    T1] Modules linked in:
+[   22.991934][    T1] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 6.6.98-android15-8-g0b1d2aee7fc3-dirty-4k #1 688c7060a825a3ac418fe53881730b355915a419
+[   22.991934][    T1] Hardware name: Unisoc UMS9360-base Board (DT)
+[   22.991934][    T1] pstate: 804000c5 (Nzcv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[   22.991934][    T1] pc : swsusp_arch_resume+0x2ac/0x344
+[   22.991934][    T1] lr : swsusp_arch_resume+0x294/0x344
+[   22.991934][    T1] sp : ffffffc08006b960
+[   22.991934][    T1] x29: ffffffc08006b9c0 x28: 0000000000000000 x27: 0000000000000000
+[   22.991934][    T1] x26: 0000000000000000 x25: 0000000000000000 x24: 0000000000000820
+[   22.991934][    T1] x23: ffffffd0817e3000 x22: ffffffd0817e3000 x21: 0000000000000000
+[   22.991934][    T1] x20: ffffff8089171000 x19: ffffffd08252c8c8 x18: ffffffc080061058
+[   22.991934][    T1] x17: 00000000529c6ef0 x16: 00000000529c6ef0 x15: 0000000000000004
+[   22.991934][    T1] x14: ffffff8178c88000 x13: 0000000000000006 x12: 0000000000000000
+[   22.991934][    T1] x11: 0000000000000015 x10: 0000000000000001 x9 : ffffffd082533000
+[   22.991934][    T1] x8 : 0000000109171000 x7 : 205b5d3433393139 x6 : 392e32322020205b
+[   22.991934][    T1] x5 : 000000010916f000 x4 : 000000008164b000 x3 : ffffff808a4e0530
+[   22.991934][    T1] x2 : ffffffd08058e784 x1 : 0000000082326000 x0 : 000000010a283000
+[   22.991934][    T1] Call trace:
+[   22.991934][    T1]  swsusp_arch_resume+0x2ac/0x344
+[   22.991934][    T1]  hibernation_restore+0x158/0x18c
+[   22.991934][    T1]  load_image_and_restore+0xb0/0xec
+[   22.991934][    T1]  software_resume+0xf4/0x19c
+[   22.991934][    T1]  software_resume_initcall+0x34/0x78
+[   22.991934][    T1]  do_one_initcall+0xe8/0x370
+[   22.991934][    T1]  do_initcall_level+0xc8/0x19c
+[   22.991934][    T1]  do_initcalls+0x70/0xc0
+[   22.991934][    T1]  do_basic_setup+0x1c/0x28
+[   22.991934][    T1]  kernel_init_freeable+0xe0/0x148
+[   22.991934][    T1]  kernel_init+0x20/0x1a8
+[   22.991934][    T1]  ret_from_fork+0x10/0x20
+[   22.991934][    T1] Code: a9400a61 f94013e0 f9438923 f9400a64 (b85fc110)
+
+[catalin.marinas@arm.com: commit log updated by Mark Rutland]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1254" data-description="the modula image gallery – photo grid & video gallery plugin for wordpress is vulnerable to authorization bypass in all versions up to, and including, 2.13.6. this is due to the plugin not properly verifying that a user is authorized to modify specific posts before updating them via the rest api. this makes it possible for authenticated attackers, with contributor level access and above, to update the title, excerpt, and content of arbitrary posts by passing post ids in the modulaimages field when editing a gallery.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1254" target="_blank">CVE-2026-1254</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 03:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The Modula Image Gallery – Photo Grid & Video Gallery plugin for WordPress is vulnerable to authorization bypass in all versions up to, and including, 2.13.6. This is due to the plugin not properly verifying that a user is authorized to modify specific posts before updating them via the REST API. This makes it possible for authenticated attackers, with contributor level access and above, to update the title, excerpt, and content of arbitrary posts by passing post IDs in the modulaImages field when editing a gallery.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23127" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+perf: fix refcount warning on event->mmap_count increment
+
+when calling refcount_inc(&event->mmap_count) inside perf_mmap_rb(), the
+following warning is triggered:
+
+        refcount_t: addition on 0; use-after-free.
+        warning: lib/refcount.c:25
+
+poc:
+
+    struct perf_event_attr attr = {0};
+    int fd = syscall(__nr_perf_event_open, &attr, 0, -1, -1, 0);
+    mmap(null, 0x3000, prot_read | prot_write, map_shared, fd, 0);
+    int victim = syscall(__nr_perf_event_open, &attr, 0, -1, fd,
+                         perf_flag_fd_output);
+    mmap(null, 0x3000, prot_read | prot_write, map_shared, victim, 0);
+
+this occurs when creating a group member event with the flag
+perf_flag_fd_output. the group leader should be mmap-ed and then mmap-ing
+the event triggers the warning.
+
+since the event has copied the output_event in perf_event_set_output(),
+event->rb is set. as a result, perf_mmap_rb() calls
+refcount_inc(&event->mmap_count) when event->mmap_count = 0.
+
+disallow the case when event->mmap_count = 0. this also prevents two
+events from updating the same user_page.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23127" target="_blank">CVE-2026-23127</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+perf: Fix refcount warning on event->mmap_count increment
+
+When calling refcount_inc(&event->mmap_count) inside perf_mmap_rb(), the
+following warning is triggered:
+
+        refcount_t: addition on 0; use-after-free.
+        WARNING: lib/refcount.c:25
+
+PoC:
+
+    struct perf_event_attr attr = {0};
+    int fd = syscall(__NR_perf_event_open, &attr, 0, -1, -1, 0);
+    mmap(NULL, 0x3000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    int victim = syscall(__NR_perf_event_open, &attr, 0, -1, fd,
+                         PERF_FLAG_FD_OUTPUT);
+    mmap(NULL, 0x3000, PROT_READ | PROT_WRITE, MAP_SHARED, victim, 0);
+
+This occurs when creating a group member event with the flag
+PERF_FLAG_FD_OUTPUT. The group leader should be mmap-ed and then mmap-ing
+the event triggers the warning.
+
+Since the event has copied the output_event in perf_event_set_output(),
+event->rb is set. As a result, perf_mmap_rb() calls
+refcount_inc(&event->mmap_count) when event->mmap_count = 0.
+
+Disallow the case when event->mmap_count = 0. This also prevents two
+events from updating the same user_page.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1249" data-description="the mp3 audio player – music player, podcast player & radio by sonaar plugin for wordpress is vulnerable to server-side request forgery in versions 5.3 to 5.10 via the 'load_lyrics_ajax_callback' function. this makes it possible for authenticated attackers, with author level access and above, to make web requests to arbitrary locations originating from the web application and can be used to query and modify information from internal services.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1249" target="_blank">CVE-2026-1249</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 03:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
-                    <p>The MP3 Audio Player – Music Player, Podcast Player & Radio by Sonaar plugin for WordPress is vulnerable to Server-Side Request Forgery in versions 5.3 to 5.10 via the 'load_lyrics_ajax_callback' function. This makes it possible for authenticated attackers, with author level access and above, to make web requests to arbitrary locations originating from the web application and can be used to query and modify information from internal services.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23126" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+netdevsim: fix a race issue related to the operation on bpf_bound_progs list
+
+the netdevsim driver lacks a protection mechanism for operations on the
+bpf_bound_progs list. when the nsim_bpf_create_prog() performs
+list_add_tail, it is possible that nsim_bpf_destroy_prog() is
+simultaneously performs list_del. concurrent operations on the list may
+lead to list corruption and trigger a kernel crash as follows:
+
+[  417.290971] kernel bug at lib/list_debug.c:62!
+[  417.290983] invalid opcode: 0000 [#1] preempt smp nopti
+[  417.290992] cpu: 10 pid: 168 comm: kworker/10:1 kdump: loaded not tainted 6.19.0-rc5 #1
+[  417.291003] hardware name: qemu standard pc (q35 + ich9, 2009), bios 1.16.3-debian-1.16.3-2 04/01/2014
+[  417.291007] workqueue: events bpf_prog_free_deferred
+[  417.291021] rip: 0010:__list_del_entry_valid_or_report+0xa7/0xc0
+[  417.291034] code: a8 ff 0f 0b 48 89 fe 48 89 ca 48 c7 c7 48 a1 eb ae e8 ed fb a8 ff 0f 0b 48 89 fe 48 89 c2 48 c7 c7 80 a1 eb ae e8 d9 fb a8 ff <0f> 0b 48 89 d1 48 c7 c7 d0 a1 eb ae 48 89 f2 48 89 c6 e8 c2 fb a8
+[  417.291040] rsp: 0018:ffffb16a40807df8 eflags: 00010246
+[  417.291046] rax: 000000000000006d rbx: ffff8e589866f500 rcx: 0000000000000000
+[  417.291051] rdx: 0000000000000000 rsi: ffff8e59f7b23180 rdi: ffff8e59f7b23180
+[  417.291055] rbp: ffffb16a412c9000 r08: 0000000000000000 r09: 0000000000000003
+[  417.291059] r10: ffffb16a40807c80 r11: ffffffffaf9edce8 r12: ffff8e594427ac20
+[  417.291063] r13: ffff8e59f7b44780 r14: ffff8e58800b7a05 r15: 0000000000000000
+[  417.291074] fs:  0000000000000000(0000) gs:ffff8e59f7b00000(0000) knlgs:0000000000000000
+[  417.291079] cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+[  417.291083] cr2: 00007fc4083efe08 cr3: 00000001c3626006 cr4: 0000000000770ee0
+[  417.291088] pkru: 55555554
+[  417.291091] call trace:
+[  417.291096]  <task>
+[  417.291103]  nsim_bpf_destroy_prog+0x31/0x80 [netdevsim]
+[  417.291154]  __bpf_prog_offload_destroy+0x2a/0x80
+[  417.291163]  bpf_prog_dev_bound_destroy+0x6f/0xb0
+[  417.291171]  bpf_prog_free_deferred+0x18e/0x1a0
+[  417.291178]  process_one_work+0x18a/0x3a0
+[  417.291188]  worker_thread+0x27b/0x3a0
+[  417.291197]  ? __pfx_worker_thread+0x10/0x10
+[  417.291207]  kthread+0xe5/0x120
+[  417.291214]  ? __pfx_kthread+0x10/0x10
+[  417.291221]  ret_from_fork+0x31/0x50
+[  417.291230]  ? __pfx_kthread+0x10/0x10
+[  417.291236]  ret_from_fork_asm+0x1a/0x30
+[  417.291246]  </task>
+
+add a mutex lock, to prevent simultaneous addition and deletion operations
+on the list.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23126" target="_blank">CVE-2026-23126</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+netdevsim: fix a race issue related to the operation on bpf_bound_progs list
+
+The netdevsim driver lacks a protection mechanism for operations on the
+bpf_bound_progs list. When the nsim_bpf_create_prog() performs
+list_add_tail, it is possible that nsim_bpf_destroy_prog() is
+simultaneously performs list_del. Concurrent operations on the list may
+lead to list corruption and trigger a kernel crash as follows:
+
+[  417.290971] kernel BUG at lib/list_debug.c:62!
+[  417.290983] invalid opcode: 0000 [#1] PREEMPT SMP NOPTI
+[  417.290992] CPU: 10 PID: 168 Comm: kworker/10:1 Kdump: loaded Not tainted 6.19.0-rc5 #1
+[  417.291003] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[  417.291007] Workqueue: events bpf_prog_free_deferred
+[  417.291021] RIP: 0010:__list_del_entry_valid_or_report+0xa7/0xc0
+[  417.291034] Code: a8 ff 0f 0b 48 89 fe 48 89 ca 48 c7 c7 48 a1 eb ae e8 ed fb a8 ff 0f 0b 48 89 fe 48 89 c2 48 c7 c7 80 a1 eb ae e8 d9 fb a8 ff <0f> 0b 48 89 d1 48 c7 c7 d0 a1 eb ae 48 89 f2 48 89 c6 e8 c2 fb a8
+[  417.291040] RSP: 0018:ffffb16a40807df8 EFLAGS: 00010246
+[  417.291046] RAX: 000000000000006d RBX: ffff8e589866f500 RCX: 0000000000000000
+[  417.291051] RDX: 0000000000000000 RSI: ffff8e59f7b23180 RDI: ffff8e59f7b23180
+[  417.291055] RBP: ffffb16a412c9000 R08: 0000000000000000 R09: 0000000000000003
+[  417.291059] R10: ffffb16a40807c80 R11: ffffffffaf9edce8 R12: ffff8e594427ac20
+[  417.291063] R13: ffff8e59f7b44780 R14: ffff8e58800b7a05 R15: 0000000000000000
+[  417.291074] FS:  0000000000000000(0000) GS:ffff8e59f7b00000(0000) knlGS:0000000000000000
+[  417.291079] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[  417.291083] CR2: 00007fc4083efe08 CR3: 00000001c3626006 CR4: 0000000000770ee0
+[  417.291088] PKRU: 55555554
+[  417.291091] Call Trace:
+[  417.291096]  <TASK>
+[  417.291103]  nsim_bpf_destroy_prog+0x31/0x80 [netdevsim]
+[  417.291154]  __bpf_prog_offload_destroy+0x2a/0x80
+[  417.291163]  bpf_prog_dev_bound_destroy+0x6f/0xb0
+[  417.291171]  bpf_prog_free_deferred+0x18e/0x1a0
+[  417.291178]  process_one_work+0x18a/0x3a0
+[  417.291188]  worker_thread+0x27b/0x3a0
+[  417.291197]  ? __pfx_worker_thread+0x10/0x10
+[  417.291207]  kthread+0xe5/0x120
+[  417.291214]  ? __pfx_kthread+0x10/0x10
+[  417.291221]  ret_from_fork+0x31/0x50
+[  417.291230]  ? __pfx_kthread+0x10/0x10
+[  417.291236]  ret_from_fork_asm+0x1a/0x30
+[  417.291246]  </TASK>
+
+Add a mutex lock, to prevent simultaneous addition and deletion operations
+on the list.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-0550" data-description="the mycred plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's 'mycred_load_coupon' shortcode in all versions up to, and including, 2.9.7.3 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-0550" target="_blank">CVE-2026-0550</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 03:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The myCred plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's 'mycred_load_coupon' shortcode in all versions up to, and including, 2.9.7.3 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23125" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+sctp: move sctp_cmd_assoc_shkey right after sctp_cmd_peer_init
+
+a null-ptr-deref was reported in the sctp transmit path when sctp-auth key
+initialization fails:
+
+  ==================================================================
+  kasan: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
+  cpu: 0 pid: 16 comm: ksoftirqd/0 tainted: g w 6.6.0 #2
+  rip: 0010:sctp_packet_bundle_auth net/sctp/output.c:264 [inline]
+  rip: 0010:sctp_packet_append_chunk+0xb36/0x1260 net/sctp/output.c:401
+  call trace:
+
+  sctp_packet_transmit_chunk+0x31/0x250 net/sctp/output.c:189
+  sctp_outq_flush_data+0xa29/0x26d0 net/sctp/outqueue.c:1111
+  sctp_outq_flush+0xc80/0x1240 net/sctp/outqueue.c:1217
+  sctp_cmd_interpreter.isra.0+0x19a5/0x62c0 net/sctp/sm_sideeffect.c:1787
+  sctp_side_effects net/sctp/sm_sideeffect.c:1198 [inline]
+  sctp_do_sm+0x1a3/0x670 net/sctp/sm_sideeffect.c:1169
+  sctp_assoc_bh_rcv+0x33e/0x640 net/sctp/associola.c:1052
+  sctp_inq_push+0x1dd/0x280 net/sctp/inqueue.c:88
+  sctp_rcv+0x11ae/0x3100 net/sctp/input.c:243
+  sctp6_rcv+0x3d/0x60 net/sctp/ipv6.c:1127
+
+the issue is triggered when sctp_auth_asoc_init_active_key() fails in
+sctp_sf_do_5_1c_ack() while processing an init_ack. in this case, the
+command sequence is currently:
+
+- sctp_cmd_peer_init
+- sctp_cmd_timer_stop (t1_init)
+- sctp_cmd_timer_start (t1_cookie)
+- sctp_cmd_new_state (cookie_echoed)
+- sctp_cmd_assoc_shkey
+- sctp_cmd_gen_cookie_echo
+
+if sctp_cmd_assoc_shkey fails, asoc->shkey remains null, while
+asoc->peer.auth_capable and asoc->peer.peer_chunks have already been set by
+sctp_cmd_peer_init. this allows a data chunk with auth = 1 and shkey = null
+to be queued by sctp_datamsg_from_user().
+
+since command interpretation stops on failure, no cookie_echo should been
+sent via sctp_cmd_gen_cookie_echo. however, the t1_cookie timer has already
+been started, and it may enqueue a cookie_echo into the outqueue later. as
+a result, the data chunk can be transmitted together with the cookie_echo
+in sctp_outq_flush_data(), leading to the observed issue.
+
+similar to the other places where it calls sctp_auth_asoc_init_active_key()
+right after sctp_process_init(), this patch moves the sctp_cmd_assoc_shkey
+immediately after sctp_cmd_peer_init, before stopping t1_init and starting
+t1_cookie. this ensures that if shared key generation fails, authenticated
+data cannot be sent. it also allows the t1_init timer to retransmit init,
+giving the client another chance to process init_ack and retry key setup.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23125" target="_blank">CVE-2026-23125</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+sctp: move SCTP_CMD_ASSOC_SHKEY right after SCTP_CMD_PEER_INIT
+
+A null-ptr-deref was reported in the SCTP transmit path when SCTP-AUTH key
+initialization fails:
+
+  ==================================================================
+  KASAN: null-ptr-deref in range [0x0000000000000018-0x000000000000001f]
+  CPU: 0 PID: 16 Comm: ksoftirqd/0 Tainted: G W 6.6.0 #2
+  RIP: 0010:sctp_packet_bundle_auth net/sctp/output.c:264 [inline]
+  RIP: 0010:sctp_packet_append_chunk+0xb36/0x1260 net/sctp/output.c:401
+  Call Trace:
+
+  sctp_packet_transmit_chunk+0x31/0x250 net/sctp/output.c:189
+  sctp_outq_flush_data+0xa29/0x26d0 net/sctp/outqueue.c:1111
+  sctp_outq_flush+0xc80/0x1240 net/sctp/outqueue.c:1217
+  sctp_cmd_interpreter.isra.0+0x19a5/0x62c0 net/sctp/sm_sideeffect.c:1787
+  sctp_side_effects net/sctp/sm_sideeffect.c:1198 [inline]
+  sctp_do_sm+0x1a3/0x670 net/sctp/sm_sideeffect.c:1169
+  sctp_assoc_bh_rcv+0x33e/0x640 net/sctp/associola.c:1052
+  sctp_inq_push+0x1dd/0x280 net/sctp/inqueue.c:88
+  sctp_rcv+0x11ae/0x3100 net/sctp/input.c:243
+  sctp6_rcv+0x3d/0x60 net/sctp/ipv6.c:1127
+
+The issue is triggered when sctp_auth_asoc_init_active_key() fails in
+sctp_sf_do_5_1C_ack() while processing an INIT_ACK. In this case, the
+command sequence is currently:
+
+- SCTP_CMD_PEER_INIT
+- SCTP_CMD_TIMER_STOP (T1_INIT)
+- SCTP_CMD_TIMER_START (T1_COOKIE)
+- SCTP_CMD_NEW_STATE (COOKIE_ECHOED)
+- SCTP_CMD_ASSOC_SHKEY
+- SCTP_CMD_GEN_COOKIE_ECHO
+
+If SCTP_CMD_ASSOC_SHKEY fails, asoc->shkey remains NULL, while
+asoc->peer.auth_capable and asoc->peer.peer_chunks have already been set by
+SCTP_CMD_PEER_INIT. This allows a DATA chunk with auth = 1 and shkey = NULL
+to be queued by sctp_datamsg_from_user().
+
+Since command interpretation stops on failure, no COOKIE_ECHO should been
+sent via SCTP_CMD_GEN_COOKIE_ECHO. However, the T1_COOKIE timer has already
+been started, and it may enqueue a COOKIE_ECHO into the outqueue later. As
+a result, the DATA chunk can be transmitted together with the COOKIE_ECHO
+in sctp_outq_flush_data(), leading to the observed issue.
+
+Similar to the other places where it calls sctp_auth_asoc_init_active_key()
+right after sctp_process_init(), this patch moves the SCTP_CMD_ASSOC_SHKEY
+immediately after SCTP_CMD_PEER_INIT, before stopping T1_INIT and starting
+T1_COOKIE. This ensures that if shared key generation fails, authenticated
+DATA cannot be sent. It also allows the T1_INIT timer to retransmit INIT,
+giving the client another chance to process INIT_ACK and retry key setup.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-8572" data-description="the truelysell core plugin for wordpress is vulnerable to privilege escalation in versions less than, or equal to, 1.8.7. this is due to insufficient validation of the user_role parameter during user registration. this makes it possible for unauthenticated attackers to create accounts with elevated privileges, including administrator access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-8572" target="_blank">CVE-2025-8572</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 03:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>The Truelysell Core plugin for WordPress is vulnerable to privilege escalation in versions less than, or equal to, 1.8.7. This is due to insufficient validation of the user_role parameter during user registration. This makes it possible for unauthenticated attackers to create accounts with elevated privileges, including administrator access.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23124" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ipv6: annotate data-race in ndisc_router_discovery()
+
+syzbot found that ndisc_router_discovery() could read and write
+in6_dev->ra_mtu without holding a lock [1]
+
+this looks fine, ifla_inet6_ra_mtu is best effort.
+
+add read_once()/write_once() to document the race.
+
+note that we might also reject illegal mtu values
+(mtu < ipv6_min_mtu || mtu > skb->dev->mtu) in a future patch.
+
+[1]
+bug: kcsan: data-race in ndisc_router_discovery / ndisc_router_discovery
+
+read to 0xffff888119809c20 of 4 bytes by task 25817 on cpu 1:
+  ndisc_router_discovery+0x151d/0x1c90 net/ipv6/ndisc.c:1558
+  ndisc_rcv+0x2ad/0x3d0 net/ipv6/ndisc.c:1841
+  icmpv6_rcv+0xe5a/0x12f0 net/ipv6/icmp.c:989
+  ip6_protocol_deliver_rcu+0xb2a/0x10d0 net/ipv6/ip6_input.c:438
+  ip6_input_finish+0xf0/0x1d0 net/ipv6/ip6_input.c:489
+  nf_hook include/linux/netfilter.h:318 [inline]
+  ip6_input+0x5e/0x140 net/ipv6/ip6_input.c:500
+  ip6_mc_input+0x27c/0x470 net/ipv6/ip6_input.c:590
+  dst_input include/net/dst.h:474 [inline]
+  ip6_rcv_finish+0x336/0x340 net/ipv6/ip6_input.c:79
+...
+
+write to 0xffff888119809c20 of 4 bytes by task 25816 on cpu 0:
+  ndisc_router_discovery+0x155a/0x1c90 net/ipv6/ndisc.c:1559
+  ndisc_rcv+0x2ad/0x3d0 net/ipv6/ndisc.c:1841
+  icmpv6_rcv+0xe5a/0x12f0 net/ipv6/icmp.c:989
+  ip6_protocol_deliver_rcu+0xb2a/0x10d0 net/ipv6/ip6_input.c:438
+  ip6_input_finish+0xf0/0x1d0 net/ipv6/ip6_input.c:489
+  nf_hook include/linux/netfilter.h:318 [inline]
+  ip6_input+0x5e/0x140 net/ipv6/ip6_input.c:500
+  ip6_mc_input+0x27c/0x470 net/ipv6/ip6_input.c:590
+  dst_input include/net/dst.h:474 [inline]
+  ip6_rcv_finish+0x336/0x340 net/ipv6/ip6_input.c:79
+...
+
+value changed: 0x00000000 -> 0xe5400659">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23124" target="_blank">CVE-2026-23124</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ipv6: annotate data-race in ndisc_router_discovery()
+
+syzbot found that ndisc_router_discovery() could read and write
+in6_dev->ra_mtu without holding a lock [1]
+
+This looks fine, IFLA_INET6_RA_MTU is best effort.
+
+Add READ_ONCE()/WRITE_ONCE() to document the race.
+
+Note that we might also reject illegal MTU values
+(mtu < IPV6_MIN_MTU || mtu > skb->dev->mtu) in a future patch.
+
+[1]
+BUG: KCSAN: data-race in ndisc_router_discovery / ndisc_router_discovery
+
+read to 0xffff888119809c20 of 4 bytes by task 25817 on cpu 1:
+  ndisc_router_discovery+0x151d/0x1c90 net/ipv6/ndisc.c:1558
+  ndisc_rcv+0x2ad/0x3d0 net/ipv6/ndisc.c:1841
+  icmpv6_rcv+0xe5a/0x12f0 net/ipv6/icmp.c:989
+  ip6_protocol_deliver_rcu+0xb2a/0x10d0 net/ipv6/ip6_input.c:438
+  ip6_input_finish+0xf0/0x1d0 net/ipv6/ip6_input.c:489
+  NF_HOOK include/linux/netfilter.h:318 [inline]
+  ip6_input+0x5e/0x140 net/ipv6/ip6_input.c:500
+  ip6_mc_input+0x27c/0x470 net/ipv6/ip6_input.c:590
+  dst_input include/net/dst.h:474 [inline]
+  ip6_rcv_finish+0x336/0x340 net/ipv6/ip6_input.c:79
+...
+
+write to 0xffff888119809c20 of 4 bytes by task 25816 on cpu 0:
+  ndisc_router_discovery+0x155a/0x1c90 net/ipv6/ndisc.c:1559
+  ndisc_rcv+0x2ad/0x3d0 net/ipv6/ndisc.c:1841
+  icmpv6_rcv+0xe5a/0x12f0 net/ipv6/icmp.c:989
+  ip6_protocol_deliver_rcu+0xb2a/0x10d0 net/ipv6/ip6_input.c:438
+  ip6_input_finish+0xf0/0x1d0 net/ipv6/ip6_input.c:489
+  NF_HOOK include/linux/netfilter.h:318 [inline]
+  ip6_input+0x5e/0x140 net/ipv6/ip6_input.c:500
+  ip6_mc_input+0x27c/0x470 net/ipv6/ip6_input.c:590
+  dst_input include/net/dst.h:474 [inline]
+  ip6_rcv_finish+0x336/0x340 net/ipv6/ip6_input.c:79
+...
+
+value changed: 0x00000000 -> 0xe5400659</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-2024" data-description="the photostack gallery plugin for wordpress is vulnerable to sql injection via the 'postid' parameter in all versions up to, and including, 0.4.1 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2024" target="_blank">CVE-2026-2024</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The PhotoStack Gallery plugin for WordPress is vulnerable to SQL Injection via the 'postid' parameter in all versions up to, and including, 0.4.1 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for unauthenticated attackers to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23123" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+interconnect: debugfs: initialize src_node and dst_node to empty strings
+
+the debugfs_create_str() api assumes that the string pointer is either null
+or points to valid kmalloc() memory. leaving the pointer uninitialized can
+cause problems.
+
+initialize src_node and dst_node to empty strings before creating the
+debugfs entries to guarantee that reads and writes are safe.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23123" target="_blank">CVE-2026-23123</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+interconnect: debugfs: initialize src_node and dst_node to empty strings
+
+The debugfs_create_str() API assumes that the string pointer is either NULL
+or points to valid kmalloc() memory. Leaving the pointer uninitialized can
+cause problems.
+
+Initialize src_node and dst_node to empty strings before creating the
+debugfs entries to guarantee that reads and writes are safe.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-2022" data-description="the smart forms plugin for wordpress is vulnerable to unauthorized access of data due to a missing capability check on the 'rednao_smart_forms_get_campaigns' ajax action in all versions up to, and including, 2.6.99. this makes it possible for authenticated attackers, with subscriber-level access and above, to retrieve donation campaign data including campaign ids and names.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2022" target="_blank">CVE-2026-2022</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The Smart Forms plugin for WordPress is vulnerable to unauthorized access of data due to a missing capability check on the 'rednao_smart_forms_get_campaigns' AJAX action in all versions up to, and including, 2.6.99. This makes it possible for authenticated attackers, with Subscriber-level access and above, to retrieve donation campaign data including campaign IDs and names.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23122" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+igc: reduce tsn tx packet buffer from 7kb to 5kb per queue
+
+the previous 7 kb per queue caused tx unit hangs under heavy
+timestamping load. reducing to 5 kb avoids these hangs and matches
+the tsn recommendation in i225/i226 sw user manual section 7.5.4.
+
+the 8 kb "freed" by this change is currently unused. this reduction
+is not expected to impact throughput, as the i226 is pcie-limited
+for small tsn packets rather than tx-buffer-limited.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23122" target="_blank">CVE-2026-23122</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+igc: Reduce TSN TX packet buffer from 7KB to 5KB per queue
+
+The previous 7 KB per queue caused TX unit hangs under heavy
+timestamping load. Reducing to 5 KB avoids these hangs and matches
+the TSN recommendation in I225/I226 SW User Manual Section 7.5.4.
+
+The 8 KB "freed" by this change is currently unused. This reduction
+is not expected to impact throughput, as the i226 is PCIe-limited
+for small TSN packets rather than TX-buffer-limited.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1988" data-description="the flexi product slider and grid for woocommerce plugin for wordpress is vulnerable to local file inclusion in all versions up to, and including, 1.0.5 via the `flexipsg_carousel` shortcode. this is due to the `theme` parameter being directly concatenated into a file path without proper sanitization or validation, allowing directory traversal. this makes it possible for authenticated attackers, with contributor-level access and above, to include and execute arbitrary php files on the server via the `theme` parameter granted they can create posts with shortcodes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1988" target="_blank">CVE-2026-1988</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The Flexi Product Slider and Grid for WooCommerce plugin for WordPress is vulnerable to Local File Inclusion in all versions up to, and including, 1.0.5 via the `flexipsg_carousel` shortcode. This is due to the `theme` parameter being directly concatenated into a file path without proper sanitization or validation, allowing directory traversal. This makes it possible for authenticated attackers, with Contributor-level access and above, to include and execute arbitrary PHP files on the server via the `theme` parameter granted they can create posts with shortcodes.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23121" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+misdn: annotate data-race around dev->work
+
+dev->work can re read locklessly in misdn_read()
+and misdn_poll(). add read_once()/write_once() annotations.
+
+bug: kcsan: data-race in misdn_ioctl / misdn_read
+
+write to 0xffff88812d848280 of 4 bytes by task 10864 on cpu 1:
+  misdn_add_timer drivers/isdn/misdn/timerdev.c:175 [inline]
+  misdn_ioctl+0x2fb/0x550 drivers/isdn/misdn/timerdev.c:233
+  vfs_ioctl fs/ioctl.c:51 [inline]
+  __do_sys_ioctl fs/ioctl.c:597 [inline]
+  __se_sys_ioctl+0xce/0x140 fs/ioctl.c:583
+  __x64_sys_ioctl+0x43/0x50 fs/ioctl.c:583
+  x64_sys_call+0x14b0/0x3000 arch/x86/include/generated/asm/syscalls_64.h:17
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xd8/0x2c0 arch/x86/entry/syscall_64.c:94
+ entry_syscall_64_after_hwframe+0x77/0x7f
+
+read to 0xffff88812d848280 of 4 bytes by task 10857 on cpu 0:
+  misdn_read+0x1f2/0x470 drivers/isdn/misdn/timerdev.c:112
+  do_loop_readv_writev fs/read_write.c:847 [inline]
+  vfs_readv+0x3fb/0x690 fs/read_write.c:1020
+  do_readv+0xe7/0x210 fs/read_write.c:1080
+  __do_sys_readv fs/read_write.c:1165 [inline]
+  __se_sys_readv fs/read_write.c:1162 [inline]
+  __x64_sys_readv+0x45/0x50 fs/read_write.c:1162
+  x64_sys_call+0x2831/0x3000 arch/x86/include/generated/asm/syscalls_64.h:20
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xd8/0x2c0 arch/x86/entry/syscall_64.c:94
+ entry_syscall_64_after_hwframe+0x77/0x7f
+
+value changed: 0x00000000 -> 0x00000001">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23121" target="_blank">CVE-2026-23121</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mISDN: annotate data-race around dev->work
+
+dev->work can re read locklessly in mISDN_read()
+and mISDN_poll(). Add READ_ONCE()/WRITE_ONCE() annotations.
+
+BUG: KCSAN: data-race in mISDN_ioctl / mISDN_read
+
+write to 0xffff88812d848280 of 4 bytes by task 10864 on cpu 1:
+  misdn_add_timer drivers/isdn/mISDN/timerdev.c:175 [inline]
+  mISDN_ioctl+0x2fb/0x550 drivers/isdn/mISDN/timerdev.c:233
+  vfs_ioctl fs/ioctl.c:51 [inline]
+  __do_sys_ioctl fs/ioctl.c:597 [inline]
+  __se_sys_ioctl+0xce/0x140 fs/ioctl.c:583
+  __x64_sys_ioctl+0x43/0x50 fs/ioctl.c:583
+  x64_sys_call+0x14b0/0x3000 arch/x86/include/generated/asm/syscalls_64.h:17
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xd8/0x2c0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+read to 0xffff88812d848280 of 4 bytes by task 10857 on cpu 0:
+  mISDN_read+0x1f2/0x470 drivers/isdn/mISDN/timerdev.c:112
+  do_loop_readv_writev fs/read_write.c:847 [inline]
+  vfs_readv+0x3fb/0x690 fs/read_write.c:1020
+  do_readv+0xe7/0x210 fs/read_write.c:1080
+  __do_sys_readv fs/read_write.c:1165 [inline]
+  __se_sys_readv fs/read_write.c:1162 [inline]
+  __x64_sys_readv+0x45/0x50 fs/read_write.c:1162
+  x64_sys_call+0x2831/0x3000 arch/x86/include/generated/asm/syscalls_64.h:20
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xd8/0x2c0 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+value changed: 0x00000000 -> 0x00000001</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1987" data-description="the scheduler widget plugin for wordpress is vulnerable to insecure direct object reference in all versions up to, and including, 0.1.6. this is due to the `scheduler_widget_ajax_save_event()` function lacking proper authorization checks and ownership verification when updating events. this makes it possible for authenticated attackers, with subscriber-level access and above, to modify any event in the scheduler via the `id` parameter granted they have knowledge of the event id.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1987" target="_blank">CVE-2026-1987</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>The Scheduler Widget plugin for WordPress is vulnerable to Insecure Direct Object Reference in all versions up to, and including, 0.1.6. This is due to the `scheduler_widget_ajax_save_event()` function lacking proper authorization checks and ownership verification when updating events. This makes it possible for authenticated attackers, with Subscriber-level access and above, to modify any event in the scheduler via the `id` parameter granted they have knowledge of the event ID.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23120" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+l2tp: avoid one data-race in l2tp_tunnel_del_work()
+
+we should read sk->sk_socket only when dealing with kernel sockets.
+
+syzbot reported the following data-race:
+
+bug: kcsan: data-race in l2tp_tunnel_del_work / sk_common_release
+
+write to 0xffff88811c182b20 of 8 bytes by task 5365 on cpu 0:
+  sk_set_socket include/net/sock.h:2092 [inline]
+  sock_orphan include/net/sock.h:2118 [inline]
+  sk_common_release+0xae/0x230 net/core/sock.c:4003
+  udp_lib_close+0x15/0x20 include/net/udp.h:325
+  inet_release+0xce/0xf0 net/ipv4/af_inet.c:437
+  __sock_release net/socket.c:662 [inline]
+  sock_close+0x6b/0x150 net/socket.c:1455
+  __fput+0x29b/0x650 fs/file_table.c:468
+  ____fput+0x1c/0x30 fs/file_table.c:496
+  task_work_run+0x131/0x1a0 kernel/task_work.c:233
+  resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
+  __exit_to_user_mode_loop kernel/entry/common.c:44 [inline]
+  exit_to_user_mode_loop+0x1fe/0x740 kernel/entry/common.c:75
+  __exit_to_user_mode_prepare include/linux/irq-entry-common.h:226 [inline]
+  syscall_exit_to_user_mode_prepare include/linux/irq-entry-common.h:256 [inline]
+  syscall_exit_to_user_mode_work include/linux/entry-common.h:159 [inline]
+  syscall_exit_to_user_mode include/linux/entry-common.h:194 [inline]
+  do_syscall_64+0x1e1/0x2b0 arch/x86/entry/syscall_64.c:100
+ entry_syscall_64_after_hwframe+0x77/0x7f
+
+read to 0xffff88811c182b20 of 8 bytes by task 827 on cpu 1:
+  l2tp_tunnel_del_work+0x2f/0x1a0 net/l2tp/l2tp_core.c:1418
+  process_one_work kernel/workqueue.c:3257 [inline]
+  process_scheduled_works+0x4ce/0x9d0 kernel/workqueue.c:3340
+  worker_thread+0x582/0x770 kernel/workqueue.c:3421
+  kthread+0x489/0x510 kernel/kthread.c:463
+  ret_from_fork+0x149/0x290 arch/x86/kernel/process.c:158
+  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.s:246
+
+value changed: 0xffff88811b818000 -> 0x0000000000000000">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23120" target="_blank">CVE-2026-23120</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+l2tp: avoid one data-race in l2tp_tunnel_del_work()
+
+We should read sk->sk_socket only when dealing with kernel sockets.
+
+syzbot reported the following data-race:
+
+BUG: KCSAN: data-race in l2tp_tunnel_del_work / sk_common_release
+
+write to 0xffff88811c182b20 of 8 bytes by task 5365 on cpu 0:
+  sk_set_socket include/net/sock.h:2092 [inline]
+  sock_orphan include/net/sock.h:2118 [inline]
+  sk_common_release+0xae/0x230 net/core/sock.c:4003
+  udp_lib_close+0x15/0x20 include/net/udp.h:325
+  inet_release+0xce/0xf0 net/ipv4/af_inet.c:437
+  __sock_release net/socket.c:662 [inline]
+  sock_close+0x6b/0x150 net/socket.c:1455
+  __fput+0x29b/0x650 fs/file_table.c:468
+  ____fput+0x1c/0x30 fs/file_table.c:496
+  task_work_run+0x131/0x1a0 kernel/task_work.c:233
+  resume_user_mode_work include/linux/resume_user_mode.h:50 [inline]
+  __exit_to_user_mode_loop kernel/entry/common.c:44 [inline]
+  exit_to_user_mode_loop+0x1fe/0x740 kernel/entry/common.c:75
+  __exit_to_user_mode_prepare include/linux/irq-entry-common.h:226 [inline]
+  syscall_exit_to_user_mode_prepare include/linux/irq-entry-common.h:256 [inline]
+  syscall_exit_to_user_mode_work include/linux/entry-common.h:159 [inline]
+  syscall_exit_to_user_mode include/linux/entry-common.h:194 [inline]
+  do_syscall_64+0x1e1/0x2b0 arch/x86/entry/syscall_64.c:100
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+read to 0xffff88811c182b20 of 8 bytes by task 827 on cpu 1:
+  l2tp_tunnel_del_work+0x2f/0x1a0 net/l2tp/l2tp_core.c:1418
+  process_one_work kernel/workqueue.c:3257 [inline]
+  process_scheduled_works+0x4ce/0x9d0 kernel/workqueue.c:3340
+  worker_thread+0x582/0x770 kernel/workqueue.c:3421
+  kthread+0x489/0x510 kernel/kthread.c:463
+  ret_from_fork+0x149/0x290 arch/x86/kernel/process.c:158
+  ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:246
+
+value changed: 0xffff88811b818000 -> 0x0000000000000000</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1985" data-description="the press3d plugin for wordpress is vulnerable to stored cross-site scripting via the 3d model gutenberg block in all versions up to, and including, 1.0.2. this is due to the plugin failing to sanitize and validate the url scheme when storing link urls for 3d model blocks, allowing `javascript:` urls. this makes it possible for authenticated attackers, with author-level access and above, to inject arbitrary web scripts in pages via the link url parameter that will execute whenever a user clicks on the 3d model.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1985" target="_blank">CVE-2026-1985</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Press3D plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 3D Model Gutenberg block in all versions up to, and including, 1.0.2. This is due to the plugin failing to sanitize and validate the URL scheme when storing link URLs for 3D model blocks, allowing `javascript:` URLs. This makes it possible for authenticated attackers, with Author-level access and above, to inject arbitrary web scripts in pages via the link URL parameter that will execute whenever a user clicks on the 3D model.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23119" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bonding: provide a net pointer to __skb_flow_dissect()
+
+after 3cbf4ffba5ee ("net: plumb network namespace into __skb_flow_dissect")
+we have to provide a net pointer to __skb_flow_dissect(),
+either via skb->dev, skb->sk, or a user provided pointer.
+
+in the following case, syzbot was able to cook a bare skb.
+
+warning: net/core/flow_dissector.c:1131 at __skb_flow_dissect+0xb57/0x68b0 net/core/flow_dissector.c:1131, cpu#1: syz.2.1418/11053
+call trace:
+ <task>
+  bond_flow_dissect drivers/net/bonding/bond_main.c:4093 [inline]
+  __bond_xmit_hash+0x2d7/0xba0 drivers/net/bonding/bond_main.c:4157
+  bond_xmit_hash_xdp drivers/net/bonding/bond_main.c:4208 [inline]
+  bond_xdp_xmit_3ad_xor_slave_get drivers/net/bonding/bond_main.c:5139 [inline]
+  bond_xdp_get_xmit_slave+0x1fd/0x710 drivers/net/bonding/bond_main.c:5515
+  xdp_master_redirect+0x13f/0x2c0 net/core/filter.c:4388
+  bpf_prog_run_xdp include/net/xdp.h:700 [inline]
+  bpf_test_run+0x6b2/0x7d0 net/bpf/test_run.c:421
+  bpf_prog_test_run_xdp+0x795/0x10e0 net/bpf/test_run.c:1390
+  bpf_prog_test_run+0x2c7/0x340 kernel/bpf/syscall.c:4703
+  __sys_bpf+0x562/0x860 kernel/bpf/syscall.c:6182
+  __do_sys_bpf kernel/bpf/syscall.c:6274 [inline]
+  __se_sys_bpf kernel/bpf/syscall.c:6272 [inline]
+  __x64_sys_bpf+0x7c/0x90 kernel/bpf/syscall.c:6272
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xec/0xf80 arch/x86/entry/syscall_64.c:94">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23119" target="_blank">CVE-2026-23119</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bonding: provide a net pointer to __skb_flow_dissect()
+
+After 3cbf4ffba5ee ("net: plumb network namespace into __skb_flow_dissect")
+we have to provide a net pointer to __skb_flow_dissect(),
+either via skb->dev, skb->sk, or a user provided pointer.
+
+In the following case, syzbot was able to cook a bare skb.
+
+WARNING: net/core/flow_dissector.c:1131 at __skb_flow_dissect+0xb57/0x68b0 net/core/flow_dissector.c:1131, CPU#1: syz.2.1418/11053
+Call Trace:
+ <TASK>
+  bond_flow_dissect drivers/net/bonding/bond_main.c:4093 [inline]
+  __bond_xmit_hash+0x2d7/0xba0 drivers/net/bonding/bond_main.c:4157
+  bond_xmit_hash_xdp drivers/net/bonding/bond_main.c:4208 [inline]
+  bond_xdp_xmit_3ad_xor_slave_get drivers/net/bonding/bond_main.c:5139 [inline]
+  bond_xdp_get_xmit_slave+0x1fd/0x710 drivers/net/bonding/bond_main.c:5515
+  xdp_master_redirect+0x13f/0x2c0 net/core/filter.c:4388
+  bpf_prog_run_xdp include/net/xdp.h:700 [inline]
+  bpf_test_run+0x6b2/0x7d0 net/bpf/test_run.c:421
+  bpf_prog_test_run_xdp+0x795/0x10e0 net/bpf/test_run.c:1390
+  bpf_prog_test_run+0x2c7/0x340 kernel/bpf/syscall.c:4703
+  __sys_bpf+0x562/0x860 kernel/bpf/syscall.c:6182
+  __do_sys_bpf kernel/bpf/syscall.c:6274 [inline]
+  __se_sys_bpf kernel/bpf/syscall.c:6272 [inline]
+  __x64_sys_bpf+0x7c/0x90 kernel/bpf/syscall.c:6272
+  do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+  do_syscall_64+0xec/0xf80 arch/x86/entry/syscall_64.c:94</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1944" data-description="the callbackkiller service widget plugin for wordpress is vulnerable to unauthorized modification of data due to a missing capability check on the cbk_save() function in all versions up to, and including, 1.2. this makes it possible for unauthenticated attackers to modify the plugin's site id settings via the 'cbk_save_v1' ajax action.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1944" target="_blank">CVE-2026-1944</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The CallbackKiller service widget plugin for WordPress is vulnerable to unauthorized modification of data due to a missing capability check on the cbk_save() function in all versions up to, and including, 1.2. This makes it possible for unauthenticated attackers to modify the plugin's site ID settings via the 'cbk_save_v1' AJAX action.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23118" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rxrpc: fix data-race warning and potential load/store tearing
+
+fix the following:
+
+        bug: kcsan: data-race in rxrpc_peer_keepalive_worker / rxrpc_send_data_packet
+
+which is reporting an issue with the reads and writes to ->last_tx_at in:
+
+        conn->peer->last_tx_at = ktime_get_seconds();
+
+and:
+
+        keepalive_at = peer->last_tx_at + rxrpc_keepalive_time;
+
+the lockless accesses to these to values aren't actually a problem as the
+read only needs an approximate time of last transmission for the purposes
+of deciding whether or not the transmission of a keepalive packet is
+warranted yet.
+
+also, as ->last_tx_at is a 64-bit value, tearing can occur on a 32-bit
+arch.
+
+fix both of these by switching to an unsigned int for ->last_tx_at and only
+storing the lsw of the time64_t.  it can then be reconstructed at need
+provided no more than 68 years has elapsed since the last transmission.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23118" target="_blank">CVE-2026-23118</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+rxrpc: Fix data-race warning and potential load/store tearing
+
+Fix the following:
+
+        BUG: KCSAN: data-race in rxrpc_peer_keepalive_worker / rxrpc_send_data_packet
+
+which is reporting an issue with the reads and writes to ->last_tx_at in:
+
+        conn->peer->last_tx_at = ktime_get_seconds();
+
+and:
+
+        keepalive_at = peer->last_tx_at + RXRPC_KEEPALIVE_TIME;
+
+The lockless accesses to these to values aren't actually a problem as the
+read only needs an approximate time of last transmission for the purposes
+of deciding whether or not the transmission of a keepalive packet is
+warranted yet.
+
+Also, as ->last_tx_at is a 64-bit value, tearing can occur on a 32-bit
+arch.
+
+Fix both of these by switching to an unsigned int for ->last_tx_at and only
+storing the LSW of the time64_t.  It can then be reconstructed at need
+provided no more than 68 years has elapsed since the last transmission.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1939" data-description="the percent to infograph plugin for wordpress is vulnerable to stored cross-site scripting via the `percent_to_graph` shortcode in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1939" target="_blank">CVE-2026-1939</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Percent to Infograph plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the `percent_to_graph` shortcode in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23117" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ice: add missing ice_deinit_hw() in devlink reinit path
+
+devlink-reload results in ice_init_hw failed error, and then removing
+the ice driver causes a null pointer dereference.
+
+[  +0.102213] ice 0000:ca:00.0: ice_init_hw failed: -16
+...
+[  +0.000001] call trace:
+[  +0.000003]  <task>
+[  +0.000006]  ice_unload+0x8f/0x100 [ice]
+[  +0.000081]  ice_remove+0xba/0x300 [ice]
+
+commit 1390b8b3d2be ("ice: remove duplicate call to ice_deinit_hw() on
+error paths") removed ice_deinit_hw() from ice_deinit_dev(). as a result
+ice_devlink_reinit_down() no longer calls ice_deinit_hw(), but
+ice_devlink_reinit_up() still calls ice_init_hw(). since the control
+queues are not uninitialized, ice_init_hw() fails with -ebusy.
+
+add ice_deinit_hw() to ice_devlink_reinit_down() to correspond with
+ice_init_hw() in ice_devlink_reinit_up().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23117" target="_blank">CVE-2026-23117</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ice: add missing ice_deinit_hw() in devlink reinit path
+
+devlink-reload results in ice_init_hw failed error, and then removing
+the ice driver causes a NULL pointer dereference.
+
+[  +0.102213] ice 0000:ca:00.0: ice_init_hw failed: -16
+...
+[  +0.000001] Call Trace:
+[  +0.000003]  <TASK>
+[  +0.000006]  ice_unload+0x8f/0x100 [ice]
+[  +0.000081]  ice_remove+0xba/0x300 [ice]
+
+Commit 1390b8b3d2be ("ice: remove duplicate call to ice_deinit_hw() on
+error paths") removed ice_deinit_hw() from ice_deinit_dev(). As a result
+ice_devlink_reinit_down() no longer calls ice_deinit_hw(), but
+ice_devlink_reinit_up() still calls ice_init_hw(). Since the control
+queues are not uninitialized, ice_init_hw() fails with -EBUSY.
+
+Add ice_deinit_hw() to ice_devlink_reinit_down() to correspond with
+ice_init_hw() in ice_devlink_reinit_up().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1915" data-description="the simple plyr plugin for wordpress is vulnerable to stored cross-site scripting via the 'poster' parameter in the 'plyr' shortcode in all versions up to, and including, 0.0.1 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1915" target="_blank">CVE-2026-1915</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Simple Plyr plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'poster' parameter in the 'plyr' shortcode in all versions up to, and including, 0.0.1 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23116" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+pmdomain: imx8m-blk-ctrl: remove separate rst and clk mask for 8mq vpu
+
+for i.mx8mq platform, the adb in the vpumix domain has no separate reset
+and clock enable bits, but is ungated and reset together with the vpus.
+so we can't reset g1 or g2 separately, it may led to the system hang.
+remove rst_mask and clk_mask of imx8mq_vpu_blk_ctl_domain_data.
+let imx8mq_vpu_power_notifier() do really vpu reset.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23116" target="_blank">CVE-2026-23116</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+pmdomain: imx8m-blk-ctrl: Remove separate rst and clk mask for 8mq vpu
+
+For i.MX8MQ platform, the ADB in the VPUMIX domain has no separate reset
+and clock enable bits, but is ungated and reset together with the VPUs.
+So we can't reset G1 or G2 separately, it may led to the system hang.
+Remove rst_mask and clk_mask of imx8mq_vpu_blk_ctl_domain_data.
+Let imx8mq_vpu_power_notifier() do really vpu reset.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1910" data-description="the upmenu – online ordering for restaurants plugin for wordpress is vulnerable to stored cross-site scripting via the 'lang' attribute of the 'upmenu-menu' shortcode in all versions up to, and including, 3.1. this is due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1910" target="_blank">CVE-2026-1910</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The UpMenu – Online ordering for restaurants plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'lang' attribute of the 'upmenu-menu' shortcode in all versions up to, and including, 3.1. This is due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23115" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+serial: fix not set tty->port race condition
+
+revert commit bfc467db60b7 ("serial: remove redundant
+tty_port_link_device()") because the tty_port_link_device() is not
+redundant: the tty->port has to be confured before we call
+uart_configure_port(), otherwise user-space can open console without tty
+linked to the driver.
+
+this tty_port_link_device() was added explicitly to avoid this exact
+issue in commit fb2b90014d78 ("tty: link tty and port before configuring
+it as console"), so offending commit basically reverted the fix saying
+it is redundant without addressing the actual race condition presented
+there.
+
+reproducible always as tty->port warning on qualcomm soc with most of
+devices disabled, so with very fast boot, and one serial device being
+the console:
+
+  printk: legacy console [ttymsm0] enabled
+  printk: legacy console [ttymsm0] enabled
+  printk: legacy bootconsole [qcom_geni0] disabled
+  printk: legacy bootconsole [qcom_geni0] disabled
+  ------------[ cut here ]------------
+  tty_init_dev: ttymsm driver does not set tty->port. this would crash the kernel. fix the driver!
+  warning: drivers/tty/tty_io.c:1414 at tty_init_dev.part.0+0x228/0x25c, cpu#2: systemd/1
+  modules linked in: socinfo tcsrcc_eliza gcc_eliza sm3_ce fuse ipv6
+  cpu: 2 uid: 0 pid: 1 comm: systemd tainted: g s                  6.19.0-rc4-next-20260108-00024-g2202f4d30aa8 #73 preempt
+  tainted: [s]=cpu_out_of_spec
+  hardware name: qualcomm technologies, inc. eliza (dt)
+  ...
+  tty_init_dev.part.0 (drivers/tty/tty_io.c:1414 (discriminator 11)) (p)
+  tty_open (arch/arm64/include/asm/atomic_ll_sc.h:95 (discriminator 3) drivers/tty/tty_io.c:2073 (discriminator 3) drivers/tty/tty_io.c:2120 (discriminator 3))
+  chrdev_open (fs/char_dev.c:411)
+  do_dentry_open (fs/open.c:962)
+  vfs_open (fs/open.c:1094)
+  do_open (fs/namei.c:4634)
+  path_openat (fs/namei.c:4793)
+  do_filp_open (fs/namei.c:4820)
+  do_sys_openat2 (fs/open.c:1391 (discriminator 3))
+  ...
+  starting network name resolution...
+
+apparently the flow with this small yocto-based ramdisk user-space is:
+
+driver (qcom_geni_serial.c):                  user-space:
+============================                  ===========
+qcom_geni_serial_probe()
+ uart_add_one_port()
+  serial_core_register_port()
+   serial_core_add_one_port()
+    uart_configure_port()
+     register_console()
+    |
+    |                                         open console
+    |                                          ...
+    |                                          tty_init_dev()
+    |                                           driver->ports[idx] is null
+    |
+    tty_port_register_device_attr_serdev()
+     tty_port_link_device() <- set driver->ports[idx]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23115" target="_blank">CVE-2026-23115</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+serial: Fix not set tty->port race condition
+
+Revert commit bfc467db60b7 ("serial: remove redundant
+tty_port_link_device()") because the tty_port_link_device() is not
+redundant: the tty->port has to be confured before we call
+uart_configure_port(), otherwise user-space can open console without TTY
+linked to the driver.
+
+This tty_port_link_device() was added explicitly to avoid this exact
+issue in commit fb2b90014d78 ("tty: link tty and port before configuring
+it as console"), so offending commit basically reverted the fix saying
+it is redundant without addressing the actual race condition presented
+there.
+
+Reproducible always as tty->port warning on Qualcomm SoC with most of
+devices disabled, so with very fast boot, and one serial device being
+the console:
+
+  printk: legacy console [ttyMSM0] enabled
+  printk: legacy console [ttyMSM0] enabled
+  printk: legacy bootconsole [qcom_geni0] disabled
+  printk: legacy bootconsole [qcom_geni0] disabled
+  ------------[ cut here ]------------
+  tty_init_dev: ttyMSM driver does not set tty->port. This would crash the kernel. Fix the driver!
+  WARNING: drivers/tty/tty_io.c:1414 at tty_init_dev.part.0+0x228/0x25c, CPU#2: systemd/1
+  Modules linked in: socinfo tcsrcc_eliza gcc_eliza sm3_ce fuse ipv6
+  CPU: 2 UID: 0 PID: 1 Comm: systemd Tainted: G S                  6.19.0-rc4-next-20260108-00024-g2202f4d30aa8 #73 PREEMPT
+  Tainted: [S]=CPU_OUT_OF_SPEC
+  Hardware name: Qualcomm Technologies, Inc. Eliza (DT)
+  ...
+  tty_init_dev.part.0 (drivers/tty/tty_io.c:1414 (discriminator 11)) (P)
+  tty_open (arch/arm64/include/asm/atomic_ll_sc.h:95 (discriminator 3) drivers/tty/tty_io.c:2073 (discriminator 3) drivers/tty/tty_io.c:2120 (discriminator 3))
+  chrdev_open (fs/char_dev.c:411)
+  do_dentry_open (fs/open.c:962)
+  vfs_open (fs/open.c:1094)
+  do_open (fs/namei.c:4634)
+  path_openat (fs/namei.c:4793)
+  do_filp_open (fs/namei.c:4820)
+  do_sys_openat2 (fs/open.c:1391 (discriminator 3))
+  ...
+  Starting Network Name Resolution...
+
+Apparently the flow with this small Yocto-based ramdisk user-space is:
+
+driver (qcom_geni_serial.c):                  user-space:
+============================                  ===========
+qcom_geni_serial_probe()
+ uart_add_one_port()
+  serial_core_register_port()
+   serial_core_add_one_port()
+    uart_configure_port()
+     register_console()
+    |
+    |                                         open console
+    |                                          ...
+    |                                          tty_init_dev()
+    |                                           driver->ports[idx] is NULL
+    |
+    tty_port_register_device_attr_serdev()
+     tty_port_link_device() <- set driver->ports[idx]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1905" data-description="the sphere manager plugin for wordpress is vulnerable to stored cross-site scripting via the 'width' parameter in the 'show_sphere_image' shortcode in all versions up to, and including, 1.0.2 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1905" target="_blank">CVE-2026-1905</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Sphere Manager plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'width' parameter in the 'show_sphere_image' shortcode in all versions up to, and including, 1.0.2 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23114" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+arm64/fpsimd: ptrace: fix sve writes on !sme systems
+
+when sve is supported but sme is not supported, a ptrace write to the
+nt_arm_sve regset can place the tracee into an invalid state where
+(non-streaming) sve register data is stored in fp_state_sve format but
+tif_sve is clear. this can result in a later warning from
+fpsimd_restore_current_state(), e.g.
+
+  warning: cpu: 0 pid: 7214 at arch/arm64/kernel/fpsimd.c:383 fpsimd_restore_current_state+0x50c/0x748
+
+when this happens, fpsimd_restore_current_state() will set tif_sve,
+placing the task into the correct state. this occurs before any other
+check of tif_sve can possibly occur, as other checks of tif_sve only
+happen while the fpsimd/sve/sme state is live. thus, aside from the
+warning, there is no functional issue.
+
+this bug was introduced during rework to error handling in commit:
+
+  9f8bf718f2923 ("arm64/fpsimd: ptrace: gracefully handle errors")
+
+... where the setting of tif_sve was moved into a block which is only
+executed when system_supports_sme() is true.
+
+fix this by removing the system_supports_sme() check. this ensures that
+tif_sve is set for (sve-formatted) writes to nt_arm_sve, at the cost of
+unconditionally manipulating the tracee's saved svcr value. the
+manipulation of svcr is benign and inexpensive, and we already do
+similar elsewhere (e.g. during signal handling), so i don't think it's
+worth guarding this with system_supports_sme() checks.
+
+aside from the above, there is no functional change. the 'type' argument
+to sve_set_common() is only set to arm64_vec_sme (in ssve_set())) when
+system_supports_sme(), so the arm64_vec_sme case in the switch statement
+is still unreachable when !system_supports_sme(). when
+config_arm64_sme=n, the only caller of sve_set_common() is sve_set(),
+and the compiler can constant-fold for the case where type is
+arm64_vec_sve, removing the logic for other cases.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23114" target="_blank">CVE-2026-23114</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+arm64/fpsimd: ptrace: Fix SVE writes on !SME systems
+
+When SVE is supported but SME is not supported, a ptrace write to the
+NT_ARM_SVE regset can place the tracee into an invalid state where
+(non-streaming) SVE register data is stored in FP_STATE_SVE format but
+TIF_SVE is clear. This can result in a later warning from
+fpsimd_restore_current_state(), e.g.
+
+  WARNING: CPU: 0 PID: 7214 at arch/arm64/kernel/fpsimd.c:383 fpsimd_restore_current_state+0x50c/0x748
+
+When this happens, fpsimd_restore_current_state() will set TIF_SVE,
+placing the task into the correct state. This occurs before any other
+check of TIF_SVE can possibly occur, as other checks of TIF_SVE only
+happen while the FPSIMD/SVE/SME state is live. Thus, aside from the
+warning, there is no functional issue.
+
+This bug was introduced during rework to error handling in commit:
+
+  9f8bf718f2923 ("arm64/fpsimd: ptrace: Gracefully handle errors")
+
+... where the setting of TIF_SVE was moved into a block which is only
+executed when system_supports_sme() is true.
+
+Fix this by removing the system_supports_sme() check. This ensures that
+TIF_SVE is set for (SVE-formatted) writes to NT_ARM_SVE, at the cost of
+unconditionally manipulating the tracee's saved svcr value. The
+manipulation of svcr is benign and inexpensive, and we already do
+similar elsewhere (e.g. during signal handling), so I don't think it's
+worth guarding this with system_supports_sme() checks.
+
+Aside from the above, there is no functional change. The 'type' argument
+to sve_set_common() is only set to ARM64_VEC_SME (in ssve_set())) when
+system_supports_sme(), so the ARM64_VEC_SME case in the switch statement
+is still unreachable when !system_supports_sme(). When
+CONFIG_ARM64_SME=n, the only caller of sve_set_common() is sve_set(),
+and the compiler can constant-fold for the case where type is
+ARM64_VEC_SVE, removing the logic for other cases.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1903" data-description="the ravelry designs widget plugin for wordpress is vulnerable to stored cross-site scripting via the 'layout' attribute of the 'sb_ravelry_designs' shortcode in all versions up to, and including, 1.0.0. this is due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1903" target="_blank">CVE-2026-1903</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Ravelry Designs Widget plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'layout' attribute of the 'sb_ravelry_designs' shortcode in all versions up to, and including, 1.0.0. This is due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23113" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/io-wq: check io_wq_bit_exit inside work run loop
+
+currently this is checked before running the pending work. normally this
+is quite fine, as work items either end up blocking (which will create a
+new worker for other items), or they complete fairly quickly. but syzbot
+reports an issue where io-wq takes seemingly forever to exit, and with a
+bit of debugging, this turns out to be because it queues a bunch of big
+(2gb - 4096b) reads with a /dev/msr* file. since this file type doesn't
+support ->read_iter(), loop_rw_iter() ends up handling them. each read
+returns 16mb of data read, which takes 20 (!!) seconds. with a bunch of
+these pending, processing the whole chain can take a long time. easily
+longer than the syzbot uninterruptible sleep timeout of 140 seconds.
+this then triggers a complaint off the io-wq exit path:
+
+info: task syz.4.135:6326 blocked for more than 143 seconds.
+      not tainted syzkaller #0
+      blocked by coredump.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz.4.135       state:d stack:26824 pid:6326  tgid:6324  ppid:5957   task_flags:0x400548 flags:0x00080000
+call trace:
+ <task>
+ context_switch kernel/sched/core.c:5256 [inline]
+ __schedule+0x1139/0x6150 kernel/sched/core.c:6863
+ __schedule_loop kernel/sched/core.c:6945 [inline]
+ schedule+0xe7/0x3a0 kernel/sched/core.c:6960
+ schedule_timeout+0x257/0x290 kernel/time/sleep_timeout.c:75
+ do_wait_for_common kernel/sched/completion.c:100 [inline]
+ __wait_for_common+0x2fc/0x4e0 kernel/sched/completion.c:121
+ io_wq_exit_workers io_uring/io-wq.c:1328 [inline]
+ io_wq_put_and_exit+0x271/0x8a0 io_uring/io-wq.c:1356
+ io_uring_clean_tctx+0x10d/0x190 io_uring/tctx.c:203
+ io_uring_cancel_generic+0x69c/0x9a0 io_uring/cancel.c:651
+ io_uring_files_cancel include/linux/io_uring.h:19 [inline]
+ do_exit+0x2ce/0x2bd0 kernel/exit.c:911
+ do_group_exit+0xd3/0x2a0 kernel/exit.c:1112
+ get_signal+0x2671/0x26d0 kernel/signal.c:3034
+ arch_do_signal_or_restart+0x8f/0x7e0 arch/x86/kernel/signal.c:337
+ __exit_to_user_mode_loop kernel/entry/common.c:41 [inline]
+ exit_to_user_mode_loop+0x8c/0x540 kernel/entry/common.c:75
+ __exit_to_user_mode_prepare include/linux/irq-entry-common.h:226 [inline]
+ syscall_exit_to_user_mode_prepare include/linux/irq-entry-common.h:256 [inline]
+ syscall_exit_to_user_mode_work include/linux/entry-common.h:159 [inline]
+ syscall_exit_to_user_mode include/linux/entry-common.h:194 [inline]
+ do_syscall_64+0x4ee/0xf80 arch/x86/entry/syscall_64.c:100
+ entry_syscall_64_after_hwframe+0x77/0x7f
+rip: 0033:0x7fa02738f749
+rsp: 002b:00007fa0281ae0e8 eflags: 00000246 orig_rax: 00000000000000ca
+rax: fffffffffffffe00 rbx: 00007fa0275e6098 rcx: 00007fa02738f749
+rdx: 0000000000000000 rsi: 0000000000000080 rdi: 00007fa0275e6098
+rbp: 00007fa0275e6090 r08: 0000000000000000 r09: 0000000000000000
+r10: 0000000000000000 r11: 0000000000000246 r12: 0000000000000000
+r13: 00007fa0275e6128 r14: 00007fff14e4fcb0 r15: 00007fff14e4fd98
+
+there's really nothing wrong here, outside of processing these reads
+will take a long time. however, we can speed up the exit by checking the
+io_wq_bit_exit inside the io_worker_handle_work() loop, as syzbot will
+exit the ring after queueing up all of these reads. then once the first
+item is processed, io-wq will simply cancel the rest. that should avoid
+syzbot running into this complaint again.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23113" target="_blank">CVE-2026-23113</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/io-wq: check IO_WQ_BIT_EXIT inside work run loop
+
+Currently this is checked before running the pending work. Normally this
+is quite fine, as work items either end up blocking (which will create a
+new worker for other items), or they complete fairly quickly. But syzbot
+reports an issue where io-wq takes seemingly forever to exit, and with a
+bit of debugging, this turns out to be because it queues a bunch of big
+(2GB - 4096b) reads with a /dev/msr* file. Since this file type doesn't
+support ->read_iter(), loop_rw_iter() ends up handling them. Each read
+returns 16MB of data read, which takes 20 (!!) seconds. With a bunch of
+these pending, processing the whole chain can take a long time. Easily
+longer than the syzbot uninterruptible sleep timeout of 140 seconds.
+This then triggers a complaint off the io-wq exit path:
+
+INFO: task syz.4.135:6326 blocked for more than 143 seconds.
+      Not tainted syzkaller #0
+      Blocked by coredump.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:syz.4.135       state:D stack:26824 pid:6326  tgid:6324  ppid:5957   task_flags:0x400548 flags:0x00080000
+Call Trace:
+ <TASK>
+ context_switch kernel/sched/core.c:5256 [inline]
+ __schedule+0x1139/0x6150 kernel/sched/core.c:6863
+ __schedule_loop kernel/sched/core.c:6945 [inline]
+ schedule+0xe7/0x3a0 kernel/sched/core.c:6960
+ schedule_timeout+0x257/0x290 kernel/time/sleep_timeout.c:75
+ do_wait_for_common kernel/sched/completion.c:100 [inline]
+ __wait_for_common+0x2fc/0x4e0 kernel/sched/completion.c:121
+ io_wq_exit_workers io_uring/io-wq.c:1328 [inline]
+ io_wq_put_and_exit+0x271/0x8a0 io_uring/io-wq.c:1356
+ io_uring_clean_tctx+0x10d/0x190 io_uring/tctx.c:203
+ io_uring_cancel_generic+0x69c/0x9a0 io_uring/cancel.c:651
+ io_uring_files_cancel include/linux/io_uring.h:19 [inline]
+ do_exit+0x2ce/0x2bd0 kernel/exit.c:911
+ do_group_exit+0xd3/0x2a0 kernel/exit.c:1112
+ get_signal+0x2671/0x26d0 kernel/signal.c:3034
+ arch_do_signal_or_restart+0x8f/0x7e0 arch/x86/kernel/signal.c:337
+ __exit_to_user_mode_loop kernel/entry/common.c:41 [inline]
+ exit_to_user_mode_loop+0x8c/0x540 kernel/entry/common.c:75
+ __exit_to_user_mode_prepare include/linux/irq-entry-common.h:226 [inline]
+ syscall_exit_to_user_mode_prepare include/linux/irq-entry-common.h:256 [inline]
+ syscall_exit_to_user_mode_work include/linux/entry-common.h:159 [inline]
+ syscall_exit_to_user_mode include/linux/entry-common.h:194 [inline]
+ do_syscall_64+0x4ee/0xf80 arch/x86/entry/syscall_64.c:100
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fa02738f749
+RSP: 002b:00007fa0281ae0e8 EFLAGS: 00000246 ORIG_RAX: 00000000000000ca
+RAX: fffffffffffffe00 RBX: 00007fa0275e6098 RCX: 00007fa02738f749
+RDX: 0000000000000000 RSI: 0000000000000080 RDI: 00007fa0275e6098
+RBP: 00007fa0275e6090 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007fa0275e6128 R14: 00007fff14e4fcb0 R15: 00007fff14e4fd98
+
+There's really nothing wrong here, outside of processing these reads
+will take a LONG time. However, we can speed up the exit by checking the
+IO_WQ_BIT_EXIT inside the io_worker_handle_work() loop, as syzbot will
+exit the ring after queueing up all of these reads. Then once the first
+item is processed, io-wq will simply cancel the rest. That should avoid
+syzbot running into this complaint again.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-1901" data-description="the questionpro surveys plugin for wordpress is vulnerable to stored cross-site scripting via the 'questionpro' shortcode in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1901" target="_blank">CVE-2026-1901</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-02-14 01:16:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The QuestionPro Surveys plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'questionpro' shortcode in all versions up to, and including, 1.0 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2025-71200" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mmc: sdhci-of-dwcmshc: prevent illegal clock reduction in hs200/hs400 mode
+
+when operating in hs200 or hs400 timing modes, reducing the clock frequency
+below 52mhz will lead to link broken as the rockchip dwc mshc controller
+requires maintaining a minimum clock of 52mhz in these modes.
+
+add a check to prevent illegal clock reduction through debugfs:
+
+root@debian:/# echo 50000000 > /sys/kernel/debug/mmc0/clock
+root@debian:/# [   30.090146] mmc0: running cqe recovery
+mmc0: cqhci: failed to halt
+mmc0: cqhci: spurious tcn for tag 0
+warning: drivers/mmc/host/cqhci-core.c:797 at cqhci_irq+0x254/0x818, cpu#1: kworker/1:0h/24
+modules linked in:
+cpu: 1 uid: 0 pid: 24 comm: kworker/1:0h not tainted 6.19.0-rc1-00001-g09db0998649d-dirty #204 preempt
+hardware name: rockchip rk3588 evb1 v10 board (dt)
+workqueue: kblockd blk_mq_run_work_fn
+pstate: 604000c9 (nzcv daif +pan -uao -tco -dit -ssbs btype=--)
+pc : cqhci_irq+0x254/0x818
+lr : cqhci_irq+0x254/0x818
+...">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-71200" target="_blank">CVE-2025-71200</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-02-14 09:16:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mmc: sdhci-of-dwcmshc: Prevent illegal clock reduction in HS200/HS400 mode
+
+When operating in HS200 or HS400 timing modes, reducing the clock frequency
+below 52MHz will lead to link broken as the Rockchip DWC MSHC controller
+requires maintaining a minimum clock of 52MHz in these modes.
+
+Add a check to prevent illegal clock reduction through debugfs:
+
+root@debian:/# echo 50000000 > /sys/kernel/debug/mmc0/clock
+root@debian:/# [   30.090146] mmc0: running CQE recovery
+mmc0: cqhci: Failed to halt
+mmc0: cqhci: spurious TCN for tag 0
+WARNING: drivers/mmc/host/cqhci-core.c:797 at cqhci_irq+0x254/0x818, CPU#1: kworker/1:0H/24
+Modules linked in:
+CPU: 1 UID: 0 PID: 24 Comm: kworker/1:0H Not tainted 6.19.0-rc1-00001-g09db0998649d-dirty #204 PREEMPT
+Hardware name: Rockchip RK3588 EVB1 V10 Board (DT)
+Workqueue: kblockd blk_mq_run_work_fn
+pstate: 604000c9 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+pc : cqhci_irq+0x254/0x818
+lr : cqhci_irq+0x254/0x818
+...</p>
                 </div>
         
             </div>
