@@ -33,6 +33,614 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-23248" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+perf/core: fix refcount bug and potential uaf in perf_mmap
+
+syzkaller reported a refcount_t: addition on 0; use-after-free warning
+in perf_mmap.
+
+the issue is caused by a race condition between a failing mmap() setup
+and a concurrent mmap() on a dependent event (e.g., using output
+redirection).
+
+in perf_mmap(), the ring_buffer (rb) is allocated and assigned to
+event->rb with the mmap_mutex held. the mutex is then released to
+perform map_range().
+
+if map_range() fails, perf_mmap_close() is called to clean up.
+however, since the mutex was dropped, another thread attaching to
+this event (via inherited events or output redirection) can acquire
+the mutex, observe the valid event->rb pointer, and attempt to
+increment its reference count. if the cleanup path has already
+dropped the reference count to zero, this results in a
+use-after-free or refcount saturation warning.
+
+fix this by extending the scope of mmap_mutex to cover the
+map_range() call. this ensures that the ring buffer initialization
+and mapping (or cleanup on failure) happens atomically effectively,
+preventing other threads from accessing a half-initialized or
+dying ring buffer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23248" target="_blank">CVE-2026-23248</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+perf/core: Fix refcount bug and potential UAF in perf_mmap
+
+Syzkaller reported a refcount_t: addition on 0; use-after-free warning
+in perf_mmap.
+
+The issue is caused by a race condition between a failing mmap() setup
+and a concurrent mmap() on a dependent event (e.g., using output
+redirection).
+
+In perf_mmap(), the ring_buffer (rb) is allocated and assigned to
+event->rb with the mmap_mutex held. The mutex is then released to
+perform map_range().
+
+If map_range() fails, perf_mmap_close() is called to clean up.
+However, since the mutex was dropped, another thread attaching to
+this event (via inherited events or output redirection) can acquire
+the mutex, observe the valid event->rb pointer, and attempt to
+increment its reference count. If the cleanup path has already
+dropped the reference count to zero, this results in a
+use-after-free or refcount saturation warning.
+
+Fix this by extending the scope of mmap_mutex to cover the
+map_range() call. This ensures that the ring buffer initialization
+and mapping (or cleanup on failure) happens atomically effectively,
+preventing other threads from accessing a half-initialized or
+dying ring buffer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23247" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+tcp: secure_seq: add back ports to ts offset
+
+this reverts 28ee1b746f49 ("secure_seq: downgrade to per-host timestamp offsets")
+
+tcp_tw_recycle went away in 2017.
+
+zhouyan deng reported off-path tcp source port leakage via
+syn cookie side-channel that can be fixed in multiple ways.
+
+one of them is to bring back tcp ports in ts offset randomization.
+
+as a bonus, we perform a single siphash() computation
+to provide both an isn and a ts offset.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23247" target="_blank">CVE-2026-23247</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+tcp: secure_seq: add back ports to TS offset
+
+This reverts 28ee1b746f49 ("secure_seq: downgrade to per-host timestamp offsets")
+
+tcp_tw_recycle went away in 2017.
+
+Zhouyan Deng reported off-path TCP source port leakage via
+SYN cookie side-channel that can be fixed in multiple ways.
+
+One of them is to bring back TCP ports in TS offset randomization.
+
+As a bonus, we perform a single siphash() computation
+to provide both an ISN and a TS offset.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23246" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: mac80211: bounds-check link_id in ieee80211_ml_reconfiguration
+
+link_id is taken from the ml reconfiguration element (control & 0x000f),
+so it can be 0..15. link_removal_timeout[] has ieee80211_mld_max_num_links
+(15) elements, so index 15 is out-of-bounds. skip subelements with
+link_id >= ieee80211_mld_max_num_links to avoid a stack out-of-bounds
+write.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23246" target="_blank">CVE-2026-23246</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: mac80211: bounds-check link_id in ieee80211_ml_reconfiguration
+
+link_id is taken from the ML Reconfiguration element (control & 0x000f),
+so it can be 0..15. link_removal_timeout[] has IEEE80211_MLD_MAX_NUM_LINKS
+(15) elements, so index 15 is out-of-bounds. Skip subelements with
+link_id >= IEEE80211_MLD_MAX_NUM_LINKS to avoid a stack out-of-bounds
+write.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23245" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/sched: act_gate: snapshot parameters with rcu on replace
+
+the gate action can be replaced while the hrtimer callback or dump path is
+walking the schedule list.
+
+convert the parameters to an rcu-protected snapshot and swap updates under
+tcf_lock, freeing the previous snapshot via call_rcu(). when replace omits
+the entry list, preserve the existing schedule so the effective state is
+unchanged.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23245" target="_blank">CVE-2026-23245</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/sched: act_gate: snapshot parameters with RCU on replace
+
+The gate action can be replaced while the hrtimer callback or dump path is
+walking the schedule list.
+
+Convert the parameters to an RCU-protected snapshot and swap updates under
+tcf_lock, freeing the previous snapshot via call_rcu(). When REPLACE omits
+the entry list, preserve the existing schedule so the effective state is
+unchanged.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23244" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nvme: fix memory allocation in nvme_pr_read_keys()
+
+nvme_pr_read_keys() takes num_keys from userspace and uses it to
+calculate the allocation size for rse via struct_size(). the upper
+limit is pr_keys_max (64k).
+
+a malicious or buggy userspace can pass a large num_keys value that
+results in a 4mb allocation attempt at most, causing a warning in
+the page allocator when the order exceeds max_page_order.
+
+to fix this, use kvzalloc() instead of kzalloc().
+
+this bug has the same reasoning and fix with the patch below:
+https://lore.kernel.org/linux-block/20251212013510.3576091-1-kartikey406@gmail.com/
+
+warning log:
+warning: mm/page_alloc.c:5216 at __alloc_frozen_pages_noprof+0x5aa/0x2300 mm/page_alloc.c:5216, cpu#1: syz-executor117/272
+modules linked in:
+cpu: 1 uid: 0 pid: 272 comm: syz-executor117 not tainted 6.19.0 #1 preempt(voluntary)
+hardware name: qemu standard pc (i440fx + piix, 1996), bios rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+rip: 0010:__alloc_frozen_pages_noprof+0x5aa/0x2300 mm/page_alloc.c:5216
+code: ff 83 bd a8 fe ff ff 0a 0f 86 69 fb ff ff 0f b6 1d f9 f9 c4 04 80 fb 01 0f 87 3b 76 30 ff 83 e3 01 75 09 c6 05 e4 f9 c4 04 01 <0f> 0b 48 c7 85 70 fe ff ff 00 00 00 00 e9 8f fd ff ff 31 c0 e9 0d
+rsp: 0018:ffffc90000fcf450 eflags: 00010246
+rax: 0000000000000000 rbx: 0000000000000000 rcx: 1ffff920001f9ea0
+rdx: 0000000000000000 rsi: 000000000000000b rdi: 0000000000040dc0
+rbp: ffffc90000fcf648 r08: ffff88800b6c3380 r09: 0000000000000001
+r10: ffffc90000fcf840 r11: ffff88807ffad280 r12: 0000000000000000
+r13: 0000000000040dc0 r14: 0000000000000001 r15: ffffc90000fcf620
+fs:  0000555565db33c0(0000) gs:ffff8880be26c000(0000) knlgs:0000000000000000
+cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+cr2: 000000002000000c cr3: 0000000003b72000 cr4: 00000000000006f0
+call trace:
+ <task>
+ alloc_pages_mpol+0x236/0x4d0 mm/mempolicy.c:2486
+ alloc_frozen_pages_noprof+0x149/0x180 mm/mempolicy.c:2557
+ ___kmalloc_large_node+0x10c/0x140 mm/slub.c:5598
+ __kmalloc_large_node_noprof+0x25/0xc0 mm/slub.c:5629
+ __do_kmalloc_node mm/slub.c:5645 [inline]
+ __kmalloc_noprof+0x483/0x6f0 mm/slub.c:5669
+ kmalloc_noprof include/linux/slab.h:961 [inline]
+ kzalloc_noprof include/linux/slab.h:1094 [inline]
+ nvme_pr_read_keys+0x8f/0x4c0 drivers/nvme/host/pr.c:245
+ blkdev_pr_read_keys block/ioctl.c:456 [inline]
+ blkdev_common_ioctl+0x1b71/0x29b0 block/ioctl.c:730
+ blkdev_ioctl+0x299/0x700 block/ioctl.c:786
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x1bf/0x220 fs/ioctl.c:583
+ x64_sys_call+0x1280/0x21b0 mnt/fuzznvme_1/fuzznvme/linux-build/v6.19/./arch/x86/include/generated/asm/syscalls_64.h:17
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x71/0x330 arch/x86/entry/syscall_64.c:94
+ entry_syscall_64_after_hwframe+0x76/0x7e
+rip: 0033:0x7fb893d3108d
+code: 28 c3 e8 46 1e 00 00 66 0f 1f 44 00 00 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+rsp: 002b:00007ffff61f2f38 eflags: 00000246 orig_rax: 0000000000000010
+rax: ffffffffffffffda rbx: 00007ffff61f3138 rcx: 00007fb893d3108d
+rdx: 0000000020000040 rsi: 00000000c01070ce rdi: 0000000000000003
+rbp: 0000000000000001 r08: 0000000000000000 r09: 00007ffff61f3138
+r10: 0000000000000000 r11: 0000000000000246 r12: 0000000000000001
+r13: 00007ffff61f3128 r14: 00007fb893dae530 r15: 0000000000000001
+ </task>">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23244" target="_blank">CVE-2026-23244</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nvme: fix memory allocation in nvme_pr_read_keys()
+
+nvme_pr_read_keys() takes num_keys from userspace and uses it to
+calculate the allocation size for rse via struct_size(). The upper
+limit is PR_KEYS_MAX (64K).
+
+A malicious or buggy userspace can pass a large num_keys value that
+results in a 4MB allocation attempt at most, causing a warning in
+the page allocator when the order exceeds MAX_PAGE_ORDER.
+
+To fix this, use kvzalloc() instead of kzalloc().
+
+This bug has the same reasoning and fix with the patch below:
+https://lore.kernel.org/linux-block/20251212013510.3576091-1-kartikey406@gmail.com/
+
+Warning log:
+WARNING: mm/page_alloc.c:5216 at __alloc_frozen_pages_noprof+0x5aa/0x2300 mm/page_alloc.c:5216, CPU#1: syz-executor117/272
+Modules linked in:
+CPU: 1 UID: 0 PID: 272 Comm: syz-executor117 Not tainted 6.19.0 #1 PREEMPT(voluntary)
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org 04/01/2014
+RIP: 0010:__alloc_frozen_pages_noprof+0x5aa/0x2300 mm/page_alloc.c:5216
+Code: ff 83 bd a8 fe ff ff 0a 0f 86 69 fb ff ff 0f b6 1d f9 f9 c4 04 80 fb 01 0f 87 3b 76 30 ff 83 e3 01 75 09 c6 05 e4 f9 c4 04 01 <0f> 0b 48 c7 85 70 fe ff ff 00 00 00 00 e9 8f fd ff ff 31 c0 e9 0d
+RSP: 0018:ffffc90000fcf450 EFLAGS: 00010246
+RAX: 0000000000000000 RBX: 0000000000000000 RCX: 1ffff920001f9ea0
+RDX: 0000000000000000 RSI: 000000000000000b RDI: 0000000000040dc0
+RBP: ffffc90000fcf648 R08: ffff88800b6c3380 R09: 0000000000000001
+R10: ffffc90000fcf840 R11: ffff88807ffad280 R12: 0000000000000000
+R13: 0000000000040dc0 R14: 0000000000000001 R15: ffffc90000fcf620
+FS:  0000555565db33c0(0000) GS:ffff8880be26c000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000000002000000c CR3: 0000000003b72000 CR4: 00000000000006f0
+Call Trace:
+ <TASK>
+ alloc_pages_mpol+0x236/0x4d0 mm/mempolicy.c:2486
+ alloc_frozen_pages_noprof+0x149/0x180 mm/mempolicy.c:2557
+ ___kmalloc_large_node+0x10c/0x140 mm/slub.c:5598
+ __kmalloc_large_node_noprof+0x25/0xc0 mm/slub.c:5629
+ __do_kmalloc_node mm/slub.c:5645 [inline]
+ __kmalloc_noprof+0x483/0x6f0 mm/slub.c:5669
+ kmalloc_noprof include/linux/slab.h:961 [inline]
+ kzalloc_noprof include/linux/slab.h:1094 [inline]
+ nvme_pr_read_keys+0x8f/0x4c0 drivers/nvme/host/pr.c:245
+ blkdev_pr_read_keys block/ioctl.c:456 [inline]
+ blkdev_common_ioctl+0x1b71/0x29b0 block/ioctl.c:730
+ blkdev_ioctl+0x299/0x700 block/ioctl.c:786
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl fs/ioctl.c:583 [inline]
+ __x64_sys_ioctl+0x1bf/0x220 fs/ioctl.c:583
+ x64_sys_call+0x1280/0x21b0 mnt/fuzznvme_1/fuzznvme/linux-build/v6.19/./arch/x86/include/generated/asm/syscalls_64.h:17
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x71/0x330 arch/x86/entry/syscall_64.c:94
+ entry_SYSCALL_64_after_hwframe+0x76/0x7e
+RIP: 0033:0x7fb893d3108d
+Code: 28 c3 e8 46 1e 00 00 66 0f 1f 44 00 00 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007ffff61f2f38 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 00007ffff61f3138 RCX: 00007fb893d3108d
+RDX: 0000000020000040 RSI: 00000000c01070ce RDI: 0000000000000003
+RBP: 0000000000000001 R08: 0000000000000000 R09: 00007ffff61f3138
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000001
+R13: 00007ffff61f3128 R14: 00007fb893dae530 R15: 0000000000000001
+ </TASK></p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23243" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/umad: reject negative data_len in ib_umad_write
+
+ib_umad_write computes data_len from user-controlled count and the
+mad header sizes. with a mismatched user mad header size and rmpp
+header length, data_len can become negative and reach ib_create_send_mad().
+this can make the padding calculation exceed the segment size and trigger
+an out-of-bounds memset in alloc_send_rmpp_list().
+
+add an explicit check to reject negative data_len before creating the
+send buffer.
+
+kasan splat:
+[  211.363464] bug: kasan: slab-out-of-bounds in ib_create_send_mad+0xa01/0x11b0
+[  211.364077] write of size 220 at addr ffff88800c3fa1f8 by task spray_thread/102
+[  211.365867] ib_create_send_mad+0xa01/0x11b0
+[  211.365887] ib_umad_write+0x853/0x1c80">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23243" target="_blank">CVE-2026-23243</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/umad: Reject negative data_len in ib_umad_write
+
+ib_umad_write computes data_len from user-controlled count and the
+MAD header sizes. With a mismatched user MAD header size and RMPP
+header length, data_len can become negative and reach ib_create_send_mad().
+This can make the padding calculation exceed the segment size and trigger
+an out-of-bounds memset in alloc_send_rmpp_list().
+
+Add an explicit check to reject negative data_len before creating the
+send buffer.
+
+KASAN splat:
+[  211.363464] BUG: KASAN: slab-out-of-bounds in ib_create_send_mad+0xa01/0x11b0
+[  211.364077] Write of size 220 at addr ffff88800c3fa1f8 by task spray_thread/102
+[  211.365867] ib_create_send_mad+0xa01/0x11b0
+[  211.365887] ib_umad_write+0x853/0x1c80</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-23242" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/siw: fix potential null pointer dereference in header processing
+
+if siw_get_hdr() returns -einval before set_rx_fpdu_context(),
+qp->rx_fpdu can be null. the error path in siw_tcp_rx_data()
+dereferences qp->rx_fpdu->more_ddp_segs without checking, which
+may lead to a null pointer deref. only check more_ddp_segs when
+rx_fpdu is present.
+
+kasan splat:
+[  101.384271] kasan: null-ptr-deref in range [0x00000000000000c0-0x00000000000000c7]
+[  101.385869] rip: 0010:siw_tcp_rx_data+0x13ad/0x1e50">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23242" target="_blank">CVE-2026-23242</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/siw: Fix potential NULL pointer dereference in header processing
+
+If siw_get_hdr() returns -EINVAL before set_rx_fpdu_context(),
+qp->rx_fpdu can be NULL. The error path in siw_tcp_rx_data()
+dereferences qp->rx_fpdu->more_ddp_segs without checking, which
+may lead to a NULL pointer deref. Only check more_ddp_segs when
+rx_fpdu is present.
+
+KASAN splat:
+[  101.384271] KASAN: null-ptr-deref in range [0x00000000000000c0-0x00000000000000c7]
+[  101.385869] RIP: 0010:siw_tcp_rx_data+0x13ad/0x1e50</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-71267" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fs: ntfs3: fix infinite loop triggered by zero-sized attr_list
+
+we found an infinite loop bug in the ntfs3 file system that can lead to a
+denial-of-service (dos) condition.
+
+a malformed ntfs image can cause an infinite loop when an attr_list attribute
+indicates a zero data size while the driver allocates memory for it.
+
+when ntfs_load_attr_list() processes a resident attr_list with data_size set
+to zero, it still allocates memory because of al_aligned(0). this creates an
+inconsistent state where ni->attr_list.size is zero, but ni->attr_list.le is
+non-null. this causes ni_enum_attr_ex to incorrectly assume that no attribute
+list exists and enumerates only the primary mft record. when it finds
+attr_list, the code reloads it and restarts the enumeration, repeating
+indefinitely. the mount operation never completes, hanging the kernel thread.
+
+this patch adds validation to ensure that data_size is non-zero before memory
+allocation. when a zero-sized attr_list is detected, the function returns
+-einval, preventing a dos vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-71267" target="_blank">CVE-2025-71267</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fs: ntfs3: fix infinite loop triggered by zero-sized ATTR_LIST
+
+We found an infinite loop bug in the ntfs3 file system that can lead to a
+Denial-of-Service (DoS) condition.
+
+A malformed NTFS image can cause an infinite loop when an ATTR_LIST attribute
+indicates a zero data size while the driver allocates memory for it.
+
+When ntfs_load_attr_list() processes a resident ATTR_LIST with data_size set
+to zero, it still allocates memory because of al_aligned(0). This creates an
+inconsistent state where ni->attr_list.size is zero, but ni->attr_list.le is
+non-null. This causes ni_enum_attr_ex to incorrectly assume that no attribute
+list exists and enumerates only the primary MFT record. When it finds
+ATTR_LIST, the code reloads it and restarts the enumeration, repeating
+indefinitely. The mount operation never completes, hanging the kernel thread.
+
+This patch adds validation to ensure that data_size is non-zero before memory
+allocation. When a zero-sized ATTR_LIST is detected, the function returns
+-EINVAL, preventing a DoS vulnerability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-71266" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fs: ntfs3: check return value of indx_find to avoid infinite loop
+
+we found an infinite loop bug in the ntfs3 file system that can lead to a
+denial-of-service (dos) condition.
+
+a malformed dentry in the ntfs3 filesystem can cause the kernel to hang
+during the lookup operations. by setting the has_sub_node flag in an
+index_entry within a directory's index_allocation block and manipulating the
+vcn pointer, an attacker can cause the indx_find() function to repeatedly
+read the same block, allocating 4 kb of memory each time. the kernel lacks
+vcn loop detection and depth limits, causing memory exhaustion and an oom
+crash.
+
+this patch adds a return value check for fnd_push() to prevent a memory
+exhaustion vulnerability caused by infinite loops. when the index exceeds the
+size of the fnd->nodes array, fnd_push() returns -einval. the indx_find()
+function checks this return value and stops processing, preventing further
+memory allocation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-71266" target="_blank">CVE-2025-71266</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fs: ntfs3: check return value of indx_find to avoid infinite loop
+
+We found an infinite loop bug in the ntfs3 file system that can lead to a
+Denial-of-Service (DoS) condition.
+
+A malformed dentry in the ntfs3 filesystem can cause the kernel to hang
+during the lookup operations. By setting the HAS_SUB_NODE flag in an
+INDEX_ENTRY within a directory's INDEX_ALLOCATION block and manipulating the
+VCN pointer, an attacker can cause the indx_find() function to repeatedly
+read the same block, allocating 4 KB of memory each time. The kernel lacks
+VCN loop detection and depth limits, causing memory exhaustion and an OOM
+crash.
+
+This patch adds a return value check for fnd_push() to prevent a memory
+exhaustion vulnerability caused by infinite loops. When the index exceeds the
+size of the fnd->nodes array, fnd_push() returns -EINVAL. The indx_find()
+function checks this return value and stops processing, preventing further
+memory allocation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-71265" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fs: ntfs3: fix infinite loop in attr_load_runs_range on inconsistent metadata
+
+we found an infinite loop bug in the ntfs3 file system that can lead to a
+denial-of-service (dos) condition.
+
+a malformed ntfs image can cause an infinite loop when an attribute header
+indicates an empty run list, while directory entries reference it as
+containing actual data. in ntfs, setting evcn=-1 with svcn=0 is a valid way
+to represent an empty run list, and run_unpack() correctly handles this by
+checking if evcn + 1 equals svcn and returning early without parsing any run
+data. however, this creates a problem when there is metadata inconsistency,
+where the attribute header claims to be empty (evcn=-1) but the caller
+expects to read actual data. when run_unpack() immediately returns success
+upon seeing this condition, it leaves the runs_tree uninitialized with
+run->runs as a null. the calling function attr_load_runs_range() assumes
+that a successful return means that the runs were loaded and sets clen to 0,
+expecting the next run_lookup_entry() call to succeed. because runs_tree
+remains uninitialized, run_lookup_entry() continues to fail, and the loop
+increments vcn by zero (vcn += 0), leading to an infinite loop.
+
+this patch adds a retry counter to detect when run_lookup_entry() fails
+consecutively after attr_load_runs_vcn(). if the run is still not found on
+the second attempt, it indicates corrupted metadata and returns -einval,
+preventing the denial-of-service (dos) vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-71265" target="_blank">CVE-2025-71265</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fs: ntfs3: fix infinite loop in attr_load_runs_range on inconsistent metadata
+
+We found an infinite loop bug in the ntfs3 file system that can lead to a
+Denial-of-Service (DoS) condition.
+
+A malformed NTFS image can cause an infinite loop when an attribute header
+indicates an empty run list, while directory entries reference it as
+containing actual data. In NTFS, setting evcn=-1 with svcn=0 is a valid way
+to represent an empty run list, and run_unpack() correctly handles this by
+checking if evcn + 1 equals svcn and returning early without parsing any run
+data. However, this creates a problem when there is metadata inconsistency,
+where the attribute header claims to be empty (evcn=-1) but the caller
+expects to read actual data. When run_unpack() immediately returns success
+upon seeing this condition, it leaves the runs_tree uninitialized with
+run->runs as a NULL. The calling function attr_load_runs_range() assumes
+that a successful return means that the runs were loaded and sets clen to 0,
+expecting the next run_lookup_entry() call to succeed. Because runs_tree
+remains uninitialized, run_lookup_entry() continues to fail, and the loop
+increments vcn by zero (vcn += 0), leading to an infinite loop.
+
+This patch adds a retry counter to detect when run_lookup_entry() fails
+consecutively after attr_load_runs_vcn(). If the run is still not found on
+the second attempt, it indicates corrupted metadata and returns -EINVAL,
+preventing the Denial-of-Service (DoS) vulnerability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-12518" data-description="beefree.io sdk is vulnerable to stored xss in social media icon url parameter in email builder functionality. malicious attacker can inject arbitrary html and js into template, which will be rendered/executed when visiting preview page. however due to beefree's content security policy not all payloads will execute successfully.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+this issue has been fixed in version 3.47.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-12518" target="_blank">CVE-2025-12518</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-03-18 06:16:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>beefree.io SDK is vulnerable to Stored XSS in Social Media icon URL parameter in email builder functionality. Malicious attacker can inject arbitrary HTML and JS into template, which will be rendered/executed when visiting preview page. However due to beefree's Content Security Policy not all payloads will execute successfully.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This issue has been fixed in version 3.47.0.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-32565" data-description="missing authorization vulnerability in webberzone contextual related posts allows exploiting incorrectly configured access control security levels.this issue affects contextual related posts: from n/a before 4.2.2.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-32565" target="_blank">CVE-2026-32565</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-03-18 05:16:25 CDT</p>
@@ -115,94 +723,6 @@ The vulnerability occurs when user-supplied values in filter expressions are not
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.9</p>
                     <p>A stack-based buffer overflow in the device's file installation workflow allows a high-privileged attacker to send oversized POST parameters that overflow a fixed-size stack buffer within an internal process, resulting in a DoS attack.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-22318" data-description="a stack-based buffer overflow vulnerability in the device's file transfer parameter workflow allows a high-privileged attacker to send oversized post parameters, causing memory corruption in an internal process, resulting in a dos attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-22318" target="_blank">CVE-2026-22318</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 03:16:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>A stack-based buffer overflow vulnerability in the device's file transfer parameter workflow allows a high-privileged attacker to send oversized POST parameters, causing memory corruption in an internal process, resulting in a DoS attack.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-22317" data-description="a command injection vulnerability in the device’s root ca certificate transfer workflow allows a high-privileged attacker to send crafted http post requests that result in arbitrary command execution on the underlying linux os with root privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-22317" target="_blank">CVE-2026-22317</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 03:16:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>A command injection vulnerability in the device’s Root CA certificate transfer workflow allows a high-privileged attacker to send crafted HTTP POST requests that result in arbitrary command execution on the underlying Linux OS with root privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-22316" data-description="a remote attacker with user privileges for the webui can use the setting of the tftp filename with a post request to trigger a stack-based buffer overflow, resulting in a dos attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-22316" target="_blank">CVE-2026-22316</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 03:16:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A remote attacker with user privileges for the webUI can use the setting of the TFTP Filename with a POST Request to trigger a stack-based Buffer Overflow, resulting in a DoS attack.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-31703" data-description="a vulnerability found in dahua nvr/xvr device. a third-party malicious attacker with physical access to the device may gain access to a restricted shell via the serial port, and bypasses the shell's authentication mechanism to escalate privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-31703" target="_blank">CVE-2025-31703</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 03:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A vulnerability found in Dahua NVR/XVR device. A third-party malicious attacker with physical access to the device may gain access to a restricted shell via the serial port, and bypasses the shell's authentication mechanism to escalate privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-3512" data-description="the writeprint stylometry plugin for wordpress is vulnerable to reflected cross-site scripting via the 'p' get parameter in all versions up to and including 0.1. this is due to insufficient input sanitization and output escaping in the bjl_wprintstylo_comments_nav() function. the function directly outputs the $_get['p'] parameter into an html href attribute without any escaping. this makes it possible for authenticated attackers with contributor-level permissions or higher to inject arbitrary web scripts in pages that execute if they can successfully trick another user into performing an action such as clicking on a link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-3512" target="_blank">CVE-2026-3512</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 02:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>The Writeprint Stylometry plugin for WordPress is vulnerable to Reflected Cross-Site Scripting via the 'p' GET parameter in all versions up to and including 0.1. This is due to insufficient input sanitization and output escaping in the bjl_wprintstylo_comments_nav() function. The function directly outputs the $_GET['p'] parameter into an HTML href attribute without any escaping. This makes it possible for authenticated attackers with Contributor-level permissions or higher to inject arbitrary web scripts in pages that execute if they can successfully trick another user into performing an action such as clicking on a link.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-32608" data-description="glances is an open-source system cross-platform monitoring tool. the glances action system allows administrators to configure shell commands that execute when monitoring thresholds are exceeded. these commands support mustache template variables (e.g., `{{name}}`, `{{key}}`) that are populated with runtime monitoring data. the `secure_popen()` function, which executes these commands, implements its own pipe, redirect, and chain operator handling by splitting the command string before passing each segment to `subprocess.popen(shell=false)`. prior to 4.5.2, when a mustache-rendered value (such as a process name, filesystem mount point, or container name) contains pipe, redirect, or chain metacharacters, the rendered command is split in unintended ways, allowing an attacker who controls a process name or container name to inject arbitrary commands. version 4.5.2 fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-32608" target="_blank">CVE-2026-32608</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 02:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>Glances is an open-source system cross-platform monitoring tool. The Glances action system allows administrators to configure shell commands that execute when monitoring thresholds are exceeded. These commands support Mustache template variables (e.g., `{{name}}`, `{{key}}`) that are populated with runtime monitoring data. The `secure_popen()` function, which executes these commands, implements its own pipe, redirect, and chain operator handling by splitting the command string before passing each segment to `subprocess.Popen(shell=False)`. Prior to 4.5.2, when a Mustache-rendered value (such as a process name, filesystem mount point, or container name) contains pipe, redirect, or chain metacharacters, the rendered command is split in unintended ways, allowing an attacker who controls a process name or container name to inject arbitrary commands. Version 4.5.2 fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-15363" data-description="the get use apis  wordpress plugin before 2.0.10 executes imported json, which could allow users with a role as low as contributor to perform cross-site scripting attacks under certain server configurations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15363" target="_blank">CVE-2025-15363</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 02:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Get Use APIs  WordPress plugin before 2.0.10 executes imported JSON, which could allow users with a role as low as contributor to perform Cross-Site Scripting attacks under certain server configurations.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-32606" data-description="incusos is an immutable os image dedicated to running incus. prior to 202603142010, the default configuration of systemd-cryptenroll as used by incusos through mkosi allows for an attacker with physical access to the machine to access the encrypted data without requiring any interaction by the system's owner or any tampering of secure boot state or kernel (uki) boot image. that's because in this configuration, the luks key is made available by the tpm so long as the system has the expected pcr7 value and the pcr11 policy matches. that default pcr11 policy importantly allows for the tpm to release the key to the booted system rather than just from the initrd part of the signed kernel image (uki). the attack relies on the attacker being able to substitute the original encrypted root partition for one that they control. by doing so, the system will prompt for a recovery key on boot, which the attacker has defined and can provide, before booting the system using the attacker's root partition rather than the system's original one. the attacker only needs to put a systemd unit starting on system boot within their root partition to have the system run that logic on boot. that unit will then run in an environment where the tpm will allow for the retrieval of the encryption key of the real root disk, allowing the attacker to steal the luks volume key (immutable master key) and then use it against the real root disk, altering it or getting data out before putting the disk back the way it was and returning the system without a trace of this attack having happened. this is all possible because the system will have still booted with secure boot enabled, will have measured and ran the expected bootloader and kernel image (uki). the initrd selects the root disk based on gpt partition identifiers making it possible to easily substitute the real root disk for an attacker controlled one. this doesn't lead to any change in the tpm state and therefore allows for retrieval of the luks key by the attacker through a boot time systemd unit on their alternative root partition. incusos version 202603142010 (2026/03/14 20:10 utc)  includes the new pcr15 logic and will automatically update the tpm policy on boot. anyone suspecting that their system may have been physically accessed while shut down should perform a full system wipe and reinstallation as only that will rotate the luks volume key and prevent subsequent access to the encrypted data should the system have been previously compromised. there are no known workarounds other than updating to a version with corrected logic which will automatically rebind the luks keys to the new set of tpm registers and prevent this from being exploited.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-32606" target="_blank">CVE-2026-32606</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 01:16:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>IncusOS is an immutable OS image dedicated to running Incus. Prior to 202603142010, the default configuration of systemd-cryptenroll as used by IncusOS through mkosi allows for an attacker with physical access to the machine to access the encrypted data without requiring any interaction by the system's owner or any tampering of Secure Boot state or kernel (UKI) boot image. That's because in this configuration, the LUKS key is made available by the TPM so long as the system has the expected PCR7 value and the PCR11 policy matches. That default PCR11 policy importantly allows for the TPM to release the key to the booted system rather than just from the initrd part of the signed kernel image (UKI). The attack relies on the attacker being able to substitute the original encrypted root partition for one that they control. By doing so, the system will prompt for a recovery key on boot, which the attacker has defined and can provide, before booting the system using the attacker's root partition rather than the system's original one. The attacker only needs to put a systemd unit starting on system boot within their root partition to have the system run that logic on boot. That unit will then run in an environment where the TPM will allow for the retrieval of the encryption key of the real root disk, allowing the attacker to steal the LUKS volume key (immutable master key) and then use it against the real root disk, altering it or getting data out before putting the disk back the way it was and returning the system without a trace of this attack having happened. This is all possible because the system will have still booted with Secure Boot enabled, will have measured and ran the expected bootloader and kernel image (UKI). The initrd selects the root disk based on GPT partition identifiers making it possible to easily substitute the real root disk for an attacker controlled one. This doesn't lead to any change in the TPM state and therefore allows for retrieval of the LUKS key by the attacker through a boot time systemd unit on their alternative root partition. IncusOS version 202603142010 (2026/03/14 20:10 UTC)  includes the new PCR15 logic and will automatically update the TPM policy on boot. Anyone suspecting that their system may have been physically accessed while shut down should perform a full system wipe and reinstallation as only that will rotate the LUKS volume key and prevent subsequent access to the encrypted data should the system have been previously compromised. There are no known workarounds other than updating to a version with corrected logic which will automatically rebind the LUKS keys to the new set of TPM registers and prevent this from being exploited.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-32596" data-description="glances is an open-source system cross-platform monitoring tool. prior to 4.5.2, glances web server runs without authentication by default when started with `glances -w`, exposing rest api with sensitive system information including process command-lines containing credentials (passwords, api keys, tokens) to any network client. version 4.5.2 fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-32596" target="_blank">CVE-2026-32596</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 01:16:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Glances is an open-source system cross-platform monitoring tool. Prior to 4.5.2, Glances web server runs without authentication by default when started with `glances -w`, exposing REST API with sensitive system information including process command-lines containing credentials (passwords, API keys, tokens) to any network client. Version 4.5.2 fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-32268" data-description="the azure blob storage for craft cms plugin provides an azure blob storage integration for craft cms. in versions on the 2.x branch prior to 2.1.1, unauthenticated users can view a list of buckets the plugin has access to. the `defaultcontroller->actionloadcontainerdata()` endpoint allows unauthenticated users with a valid csrf token to view a list of buckets that the plugin is allowed to see. because azure can return sensitive data in error messages, additional attack vectors are also exposed. users should update to version 2.1.1 of the plugin to mitigate the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-32268" target="_blank">CVE-2026-32268</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-18 01:16:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Azure Blob Storage for Craft CMS plugin provides an Azure Blob Storage integration for Craft CMS. In versions on the 2.x branch prior to 2.1.1, unauthenticated users can view a list of buckets the plugin has access to. The `DefaultController->actionLoadContainerData()` endpoint allows unauthenticated users with a valid CSRF token to view a list of buckets that the plugin is allowed to see. Because Azure can return sensitive data in error messages, additional attack vectors are also exposed. Users should update to version 2.1.1 of the plugin to mitigate the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-4366" data-description="a flaw was identified in keycloak, an identity and access management solution, where it improperly follows http redirects when processing certain client configuration requests. this behavior allows an attacker to trick the server into making unintended requests to internal or restricted resources. as a result, sensitive internal services such as cloud metadata endpoints could be accessed. this issue may lead to information disclosure and enable attackers to map internal network infrastructure.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-4366" target="_blank">CVE-2026-4366</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-03-17 23:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.8</p>
-                    <p>A flaw was identified in Keycloak, an identity and access management solution, where it improperly follows HTTP redirects when processing certain client configuration requests. This behavior allows an attacker to trick the server into making unintended requests to internal or restricted resources. As a result, sensitive internal services such as cloud metadata endpoints could be accessed. This issue may lead to information disclosure and enable attackers to map internal network infrastructure.</p>
                 </div>
         
             </div>
