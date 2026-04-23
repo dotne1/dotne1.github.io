@@ -33,6 +33,152 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-31532" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+can: raw: fix ro->uniq use-after-free in raw_rcv()
+
+raw_release() unregisters raw can receive filters via can_rx_unregister(),
+but receiver deletion is deferred with call_rcu(). this leaves a window
+where raw_rcv() may still be running in an rcu read-side critical section
+after raw_release() frees ro->uniq, leading to a use-after-free of the
+percpu uniq storage.
+
+move free_percpu(ro->uniq) out of raw_release() and into a raw-specific
+socket destructor. can_rx_unregister() takes an extra reference to the
+socket and only drops it from the rcu callback, so freeing uniq from
+sk_destruct ensures the percpu area is not released until the relevant
+callbacks have drained.
+
+[mkl: applied manually]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-31532" target="_blank">CVE-2026-31532</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-04-23 07:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+can: raw: fix ro->uniq use-after-free in raw_rcv()
+
+raw_release() unregisters raw CAN receive filters via can_rx_unregister(),
+but receiver deletion is deferred with call_rcu(). This leaves a window
+where raw_rcv() may still be running in an RCU read-side critical section
+after raw_release() frees ro->uniq, leading to a use-after-free of the
+percpu uniq storage.
+
+Move free_percpu(ro->uniq) out of raw_release() and into a raw-specific
+socket destructor. can_rx_unregister() takes an extra reference to the
+socket and only drops it from the RCU callback, so freeing uniq from
+sk_destruct ensures the percpu area is not released until the relevant
+callbacks have drained.
+
+[mkl: applied manually]</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-31531" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ipv4: nexthop: allocate skb dynamically in rtm_get_nexthop()
+
+when querying a nexthop object via rtm_getnexthop, the kernel currently
+allocates a fixed-size skb using nlmsg_goodsize. while sufficient for
+single nexthops and small equal-cost multi-path groups, this fixed
+allocation fails for large nexthop groups like 512 nexthops.
+
+this results in the following warning splat:
+
+ warning: net/ipv4/nexthop.c:3395 at rtm_get_nexthop+0x176/0x1c0, cpu#20: rep/4608
+ [...]
+ rip: 0010:rtm_get_nexthop (net/ipv4/nexthop.c:3395)
+ [...]
+ call trace:
+  <task>
+  rtnetlink_rcv_msg (net/core/rtnetlink.c:6989)
+  netlink_rcv_skb (net/netlink/af_netlink.c:2550)
+  netlink_unicast (net/netlink/af_netlink.c:1319 net/netlink/af_netlink.c:1344)
+  netlink_sendmsg (net/netlink/af_netlink.c:1894)
+  ____sys_sendmsg (net/socket.c:721 net/socket.c:736 net/socket.c:2585)
+  ___sys_sendmsg (net/socket.c:2641)
+  __sys_sendmsg (net/socket.c:2671)
+  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
+  entry_syscall_64_after_hwframe (arch/x86/entry/entry_64.s:130)
+  </task>
+
+fix this by allocating the size dynamically using nh_nlmsg_size() and
+using nlmsg_new(), this is consistent with nexthop_notify() behavior. in
+addition, adjust nh_nlmsg_size_grp() so it calculates the size needed
+based on flags passed. while at it, also add the size of nha_fdb for
+nexthop group size calculation as it was missing too.
+
+this cannot be reproduced via iproute2 as the group size is currently
+limited and the command fails as follows:
+
+addattr_l error: message exceeded bound of 1048">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-31531" target="_blank">CVE-2026-31531</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-04-23 07:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ipv4: nexthop: allocate skb dynamically in rtm_get_nexthop()
+
+When querying a nexthop object via RTM_GETNEXTHOP, the kernel currently
+allocates a fixed-size skb using NLMSG_GOODSIZE. While sufficient for
+single nexthops and small Equal-Cost Multi-Path groups, this fixed
+allocation fails for large nexthop groups like 512 nexthops.
+
+This results in the following warning splat:
+
+ WARNING: net/ipv4/nexthop.c:3395 at rtm_get_nexthop+0x176/0x1c0, CPU#20: rep/4608
+ [...]
+ RIP: 0010:rtm_get_nexthop (net/ipv4/nexthop.c:3395)
+ [...]
+ Call Trace:
+  <TASK>
+  rtnetlink_rcv_msg (net/core/rtnetlink.c:6989)
+  netlink_rcv_skb (net/netlink/af_netlink.c:2550)
+  netlink_unicast (net/netlink/af_netlink.c:1319 net/netlink/af_netlink.c:1344)
+  netlink_sendmsg (net/netlink/af_netlink.c:1894)
+  ____sys_sendmsg (net/socket.c:721 net/socket.c:736 net/socket.c:2585)
+  ___sys_sendmsg (net/socket.c:2641)
+  __sys_sendmsg (net/socket.c:2671)
+  do_syscall_64 (arch/x86/entry/syscall_64.c:63 arch/x86/entry/syscall_64.c:94)
+  entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:130)
+  </TASK>
+
+Fix this by allocating the size dynamically using nh_nlmsg_size() and
+using nlmsg_new(), this is consistent with nexthop_notify() behavior. In
+addition, adjust nh_nlmsg_size_grp() so it calculates the size needed
+based on flags passed. While at it, also add the size of NHA_FDB for
+nexthop group size calculation as it was missing too.
+
+This cannot be reproduced via iproute2 as the group size is currently
+limited and the command fails as follows:
+
+addattr_l ERROR: message exceeded bound of 1048</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-28040" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in magepeople inc. taxi booking manager for woocommerce allows stored xss.this issue affects taxi booking manager for woocommerce: from n/a through 2.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-28040" target="_blank">CVE-2026-28040</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-04-23 07:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Magepeople inc. Taxi Booking Manager for WooCommerce allows Stored XSS.This issue affects Taxi Booking Manager for WooCommerce: from n/a through 2.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-62110" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in rescue themes rescue shortcodes allows stored xss.this issue affects rescue shortcodes: from n/a through 3.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62110" target="_blank">CVE-2025-62110</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-04-23 07:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Rescue Themes Rescue Shortcodes allows Stored XSS.This issue affects Rescue Shortcodes: from n/a through 3.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-62104" data-description="missing authorization vulnerability in navneil naicker acf galerie 4 allows exploiting incorrectly configured access control security levels.this issue affects acf galerie 4: from n/a through 1.4.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-62104" target="_blank">CVE-2025-62104</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-04-23 07:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Missing Authorization vulnerability in Navneil Naicker ACF Galerie 4 allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects ACF Galerie 4: from n/a through 1.4.2.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-6903" data-description="the labone web server, backing the labone user interface, contains insufficient input validation in its file access functionality. an unauthenticated attacker could exploit this vulnerability to read arbitrary files on the host system that are accessible to the operating system user running the labone software.
 
 additionally, the web server does not sufficiently restrict cross-origin requests, which could allow a remote attacker to trigger file access from a victim's browser by directing the victim to a malicious website.
@@ -171,46 +317,6 @@ This affects preforking services such as the Starman web server, where a Crypt::
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.7</p>
                     <p>Libgcrypt before 1.12.2 sometimes allows a heap-based buffer overflow and denial of service via crafted ECDH ciphertext to gcry_pk_decrypt.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41988" data-description="uuid before 14.0.0 can make unexpected writes when external output buffers are used, and the uuid version is 3, 5, or 6. in particular, uuid version 4, which is very commonly used, is unaffected by this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41988" target="_blank">CVE-2026-41988</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-04-23 00:16:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.2</p>
-                    <p>uuid before 14.0.0 can make unexpected writes when external output buffers are used, and the UUID version is 3, 5, or 6. In particular, UUID version 4, which is very commonly used, is unaffected by this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41233" data-description="froxlor is open source server administration software. prior to version 2.3.6, in `domains.add()`, the `adminid` parameter is accepted from user input and used without validation when the calling reseller does not have the `customers_see_all` permission. this allows a reseller to attribute newly created domains to any other admin, bypassing their own domain quota (since the wrong admin's `domains_used` counter is incremented) and potentially exhausting another admin's quota. version 2.3.6 fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41233" target="_blank">CVE-2026-41233</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-04-23 00:16:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Froxlor is open source server administration software. Prior to version 2.3.6, in `Domains.add()`, the `adminid` parameter is accepted from user input and used without validation when the calling reseller does not have the `customers_see_all` permission. This allows a reseller to attribute newly created domains to any other admin, bypassing their own domain quota (since the wrong admin's `domains_used` counter is incremented) and potentially exhausting another admin's quota. Version 2.3.6 fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41232" data-description="froxlor is open source server administration software. prior to version 2.3.6, in `emailsender::add()`, the domain ownership validation for full email sender aliases uses the wrong array index when splitting the email address, passing the local part instead of the domain to `validatelocaldomainownership()`. this causes the ownership check to always pass for non-existent "domains," allowing any authenticated customer to add sender aliases for email addresses on domains belonging to other customers. postfix's `sender_login_maps` then authorizes the attacker to send emails as those addresses. version 2.3.6 fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41232" target="_blank">CVE-2026-41232</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-04-23 00:16:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
-                    <p>Froxlor is open source server administration software. Prior to version 2.3.6, in `EmailSender::add()`, the domain ownership validation for full email sender aliases uses the wrong array index when splitting the email address, passing the local part instead of the domain to `validateLocalDomainOwnership()`. This causes the ownership check to always pass for non-existent "domains," allowing any authenticated customer to add sender aliases for email addresses on domains belonging to other customers. Postfix's `sender_login_maps` then authorizes the attacker to send emails as those addresses. Version 2.3.6 fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40529" data-description="cms alaya provided by kanata limited contains an sql injection vulnerability. information stored in the database may be obtained or altered by an attacker with access to the administrative interface.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40529" target="_blank">CVE-2026-40529</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-04-23 00:16:04 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
-                    <p>CMS ALAYA provided by KANATA Limited contains an SQL injection vulnerability. Information stored in the database may be obtained or altered by an attacker with access to the administrative interface.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41231" data-description="froxlor is open source server administration software. prior to version 2.3.6, `datadump.add()` constructs the export destination path from user-supplied input without passing the `$fixed_homedir` parameter to `filedir::makecorrectdir()`, bypassing the symlink validation that was added to all other customer-facing path operations (likely as the fix for cve-2023-6069). when the exportcron runs as root, it executes `chown -r` on the resolved symlink target, allowing a customer to take ownership of arbitrary directories on the system. version 2.3.6 contains an updated fix.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41231" target="_blank">CVE-2026-41231</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-04-22 23:16:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Froxlor is open source server administration software. Prior to version 2.3.6, `DataDump.add()` constructs the export destination path from user-supplied input without passing the `$fixed_homedir` parameter to `FileDir::makeCorrectDir()`, bypassing the symlink validation that was added to all other customer-facing path operations (likely as the fix for CVE-2023-6069). When the ExportCron runs as root, it executes `chown -R` on the resolved symlink target, allowing a customer to take ownership of arbitrary directories on the system. Version 2.3.6 contains an updated fix.</p>
                 </div>
         
             </div>
