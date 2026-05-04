@@ -33,758 +33,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-42812" data-description="in apache iceberg, the table's metadata files are control files: they tell readers
-which data files belong to the table and which table version to read.
-
-
-
-`write.metadata.path` is an optional table property that tells polaris
-where to
-write those metadata files. 
-for a table already registered in a
-polaris-managed
-catalog, changing only that property through an `alter table`-style settings
-change (not a row-level `insert`, `select`, `update`, or `delete`) bypasses
-the commit-time branch that is supposed to revalidate storage locations.
-
-the full persisted / credential-vending variant requires the affected
-catalog
-to have `polaris.config.allow.unstructured.table.location=true`, with
-`allowedlocations` broad enough to include the attacker-chosen target.
-
-
-`allowedlocations` is the admin-configured allowlist of storage paths that
-the
-catalog is allowed to use. public project materials suggest that this flag
-is a
-real supported compatibility / layout mode, not just a contrived lab-only
-prerequisite.
-
-
-in that configuration, a user who can change table settings can cause apache polaris
-itself to write new table metadata to an attacker-chosen reachable storage
-location before the intended location-validation branch runs.
-
-if the later concrete-path validation also accepts that location, polaris
-persists the resulting metadata path into stored table state. later
-table-load
-and credential apis can then return temporary cloud-storage credentials for
-the
-same location without revalidating it. in plain terms, polaris can later
-hand
-out temporary storage access for the same attacker-chosen area.
-
-that attacker-chosen area does not need to be limited to the poisoned
-table's
-own files. if it is a broader storage prefix, another table's prefix, or,
-depending on configuration or provider behavior, even a bucket/container
-root,
-the resulting disclosure or corruption scope can extend to any data and
-metadata polaris can reach there.
-
-
-
-the practical consequences are therefore similar to the staged-create
-credential-vending issue already discussed: data and metadata reachable in
-that
-storage scope can be exposed and, if write-capable credentials are later
-issued, modified, corrupted, or removed. even before that later credential
-step, polaris itself performs the metadata write to the unchecked location.
-
-so the core issue is not only later credential vending. 
-
-the primary defect
-is
-that polaris skips its intended location checks before performing a
-security-
-sensitive metadata write when only `write.metadata.path` changes.
-
-
-
-when `polaris.config.allow.unstructured.table.location=false`, current code
-review suggests the later `updatetablelike(...)` validation usually rejects
-out-of-tree metadata locations before the unsafe path is persisted. that may
-reduce the persisted / credential-vending variant, but it does not prevent
-the
-underlying defect: polaris still skips the intended pre-write location check
-when only `write.metadata.path` changes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42812" target="_blank">CVE-2026-42812</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>In Apache Iceberg, the table's metadata files are control files: they tell readers
-which data files belong to the table and which table version to read.
-
-
-
-`write.metadata.path` is an optional table property that tells Polaris
-where to
-write those metadata files. 
-For a table already registered in a
-Polaris-managed
-catalog, changing only that property through an `ALTER TABLE`-style settings
-change (not a row-level `INSERT`, `SELECT`, `UPDATE`, or `DELETE`) bypasses
-the commit-time branch that is supposed to revalidate storage locations.
-
-The full persisted / credential-vending variant requires the affected
-catalog
-to have `polaris.config.allow.unstructured.table.location=true`, with
-`allowedLocations` broad enough to include the attacker-chosen target.
-
-
-`allowedLocations` is the admin-configured allowlist of storage paths that
-the
-catalog is allowed to use. Public project materials suggest that this flag
-is a
-real supported compatibility / layout mode, not just a contrived lab-only
-prerequisite.
-
-
-In that configuration, a user who can change table settings can cause Apache Polaris
-itself to write new table metadata to an attacker-chosen reachable storage
-location before the intended location-validation branch runs.
-
-If the later concrete-path validation also accepts that location, Polaris
-persists the resulting metadata path into stored table state. Later
-table-load
-and credential APIs can then return temporary cloud-storage credentials for
-the
-same location without revalidating it. In plain terms, Polaris can later
-hand
-out temporary storage access for the same attacker-chosen area.
-
-That attacker-chosen area does not need to be limited to the poisoned
-table's
-own files. If it is a broader storage prefix, another table's prefix, or,
-depending on configuration or provider behavior, even a bucket/container
-root,
-the resulting disclosure or corruption scope can extend to any data and
-metadata Polaris can reach there.
-
-
-
-The practical consequences are therefore similar to the staged-create
-credential-vending issue already discussed: data and metadata reachable in
-that
-storage scope can be exposed and, if write-capable credentials are later
-issued, modified, corrupted, or removed. Even before that later credential
-step, Polaris itself performs the metadata write to the unchecked location.
-
-So the core issue is not only later credential vending. 
-
-The primary defect
-is
-that Polaris skips its intended location checks before performing a
-security-
-sensitive metadata write when only `write.metadata.path` changes.
-
-
-
-When `polaris.config.allow.unstructured.table.location=false`, current code
-review suggests the later `updateTableLike(...)` validation usually rejects
-out-of-tree metadata locations before the unsafe path is persisted. That may
-reduce the persisted / credential-vending variant, but it does not prevent
-the
-underlying defect: Polaris still skips the intended pre-write location check
-when only `write.metadata.path` changes.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-43616" data-description="detect-it-easy prior to 3.21 contains a path traversal vulnerability that allows attackers to write arbitrary files to the filesystem by crafting malicious archive entries with relative traversal sequences or absolute paths. attackers can exploit insufficient path normalization during archive extraction to write files outside the intended extraction directory and achieve persistent code execution by overwriting user startup scripts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43616" target="_blank">CVE-2026-43616</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Detect-It-Easy prior to 3.21 contains a path traversal vulnerability that allows attackers to write arbitrary files to the filesystem by crafting malicious archive entries with relative traversal sequences or absolute paths. Attackers can exploit insufficient path normalization during archive extraction to write files outside the intended extraction directory and achieve persistent code execution by overwriting user startup scripts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42811" data-description="in plain terms, apache polaris is supposed to issue short-lived gcs credentials
-that
-only work for one table's files, but a crafted namespace or table name can
-cause those credentials to work across the configured bucket instead.
-
-
-apache polaris builds google cloud storage downscoped credentials by creating a
-credential access boundary (cab) with cel conditions that are intended to
-restrict access to the requested table's storage path.
-
-
-
-the relevant cel string is built from the bucket name and the table path.
-that
-table path is derived from namespace and table identifiers. in current code,
-that path appears to be inserted into the cel expression without escaping.
-
-
-
-as a result, a namespace or table identifier containing a single quote and
-other uri-safe cel fragments can break out of the intended quoted string and
-change the meaning of the cel condition.
-
-
-
-in private testing against polaris 1.4.0 on real google cloud storage, it was confirmed that polaris accepted a crafted identifier and returned delegated
-gcs
-credentials whose cel path restriction had effectively collapsed.
-
-
-those delegated credentials could then:
-
-
-- list another table's object prefix;
-
-- read another table's metadata control file (iceberg metadata json);
-
-- create and delete an object under another table's object prefix;
-
-- and also list, read, create, and delete objects under an unrelated
-external
-prefix in the same bucket that was not part of any table path.
-
-
-
-that last point is important. the issue is not limited to "another table".
-in
-the confirmed setup, once apache polaris returned credentials for the crafted
-table,
-the path restriction inside the configured bucket was effectively gone.
-
-the practical effect is that temporary credentials for one crafted table
-can be
-broader than the table polaris was asked to authorize, and can become
-effectively bucket-wide within the configured bucket.
-
-
-
-the current gcs testing used a polaris principal with broad catalog
-privileges for setup. a separate least-privilege polaris rbac variant
-has not yet been tested on gcs. however, the storage-credential
-broadening behavior itself has been confirmed on gcs.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42811" target="_blank">CVE-2026-42811</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:26 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42796" data-description="arelle before 2.39.10 contains an unauthenticated remote code execution vulnerability in the /rest/configure rest endpoint that accepts a plugins query parameter and forwards it to the plugin manager without authentication or authorization. attackers can supply a url to a malicious python file through the plugins parameter, causing the arelle webserver to download and execute the attacker-controlled code within the arelle process with its privileges.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42796" target="_blank">CVE-2026-42796</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>In plain terms, Apache Polaris is supposed to issue short-lived GCS credentials
-that
-only work for one table's files, but a crafted namespace or table name can
-cause those credentials to work across the configured bucket instead.
-
-
-Apache Polaris builds Google Cloud Storage downscoped credentials by creating a
-Credential Access Boundary (CAB) with CEL conditions that are intended to
-restrict access to the requested table's storage path.
-
-
-
-The relevant CEL string is built from the bucket name and the table path.
-That
-table path is derived from namespace and table identifiers. In current code,
-that path appears to be inserted into the CEL expression without escaping.
-
-
-
-As a result, a namespace or table identifier containing a single quote and
-other URI-safe CEL fragments can break out of the intended quoted string and
-change the meaning of the CEL condition.
-
-
-
-In private testing against Polaris 1.4.0 on real Google Cloud Storage, it was confirmed that Polaris accepted a crafted identifier and returned delegated
-GCS
-credentials whose CEL path restriction had effectively collapsed.
-
-
-Those delegated credentials could then:
-
-
-- list another table's object prefix;
-
-- read another table's metadata control file (Iceberg metadata JSON);
-
-- create and delete an object under another table's object prefix;
-
-- and also list, read, create, and delete objects under an unrelated
-external
-prefix in the same bucket that was not part of any table path.
-
-
-
-That last point is important. The issue is not limited to "another table".
-In
-the confirmed setup, once Apache Polaris returned credentials for the crafted
-table,
-the path restriction inside the configured bucket was effectively gone.
-
-The practical effect is that temporary credentials for one crafted table
-can be
-broader than the table Polaris was asked to authorize, and can become
-effectively bucket-wide within the configured bucket.
-
-
-
-The current GCS testing used a Polaris principal with broad catalog
-privileges for setup. A separate least-privilege Polaris RBAC variant
-has not yet been tested on GCS. However, the storage-credential
-broadening behavior itself has been confirmed on GCS.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>Arelle before 2.39.10 contains an unauthenticated remote code execution vulnerability in the /rest/configure REST endpoint that accepts a plugins query parameter and forwards it to the plugin manager without authentication or authorization. Attackers can supply a URL to a malicious Python file through the plugins parameter, causing the Arelle webserver to download and execute the attacker-controlled code within the Arelle process with its privileges.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42810" data-description="apache polaris accepts literal `*` characters in namespace and table names. when it
-later builds temporary s3 access policies for delegated table access, those
-same characters appear to be reused unescaped in s3 iam resource patterns
-and
-`s3:prefix` conditions.
-
-
-
-in s3 iam policy matching, `*` is treated as a wildcard rather than as
-ordinary text. that means temporary credentials issued for one crafted table
-can match the storage path of a different table.
-
-
-
-in private testing against polaris 1.4.0 using polaris' aws s3 temporary-
-credential path on both minio and real aws s3, credentials returned for
-crafted tables such as `f*.t1`, `f*.*`, `*.*`, and `foo.*` could reach other
-tables' s3 locations.
-
-
-the confirmed behavior includes:
-
-
-- reading another table's metadata control file ([iceberg metadata json]);
-
-- listing another table's exact s3 table prefix ([table prefix]);
-
-- and, when write delegation was returned for the crafted table, creating
-and
-deleting an object under another table's exact s3 table prefix.
-
-
-
-a control case using ordinary different names did not allow the same
-cross-table access.
-
-
-
-a least-privilege aws s3 variant was also confirmed in which the attacker
-principal had no polaris permissions on the victim table and only the
-minimal permissions required to create and use a crafted wildcard table
-(namespace-scoped `table_create` and `table_write_data` on `*`). in that
-setup, direct polaris access to `foo.t1` remained forbidden, but the
-attacker
-could still create and load `*.*`, receive delegated s3 credentials, and use
-those credentials to list, read, create, and delete objects under `foo.t1`.
-
-
-
-in iceberg, the metadata json file is a control file: it tells readers which
-data files belong to the table, which snapshots exist, and which table
-version
-to read. so unauthorized access to it is already a meaningful
-confidentiality
-problem. the confirmed write-capable variant means the issue is not limited
-to
-disclosure.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42810" target="_blank">CVE-2026-42810</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>Apache Polaris accepts literal `*` characters in namespace and table names. When it
-later builds temporary S3 access policies for delegated table access, those
-same characters appear to be reused unescaped in S3 IAM resource patterns
-and
-`s3:prefix` conditions.
-
-
-
-In S3 IAM policy matching, `*` is treated as a wildcard rather than as
-ordinary text. That means temporary credentials issued for one crafted table
-can match the storage path of a different table.
-
-
-
-In private testing against Polaris 1.4.0 using Polaris' AWS S3 temporary-
-credential path on both MinIO and real AWS S3, credentials returned for
-crafted tables such as `f*.t1`, `f*.*`, `*.*`, and `foo.*` could reach other
-tables' S3 locations.
-
-
-The confirmed behavior includes:
-
-
-- reading another table's metadata control file ([Iceberg metadata JSON]);
-
-- listing another table's exact S3 table prefix ([table prefix]);
-
-- and, when write delegation was returned for the crafted table, creating
-and
-deleting an object under another table's exact S3 table prefix.
-
-
-
-A control case using ordinary different names did not allow the same
-cross-table access.
-
-
-
-A least-privilege AWS S3 variant was also confirmed in which the attacker
-principal had no Polaris permissions on the victim table and only the
-minimal permissions required to create and use a crafted wildcard table
-(namespace-scoped `TABLE_CREATE` and `TABLE_WRITE_DATA` on `*`). In that
-setup, direct Polaris access to `foo.t1` remained forbidden, but the
-attacker
-could still create and load `*.*`, receive delegated S3 credentials, and use
-those credentials to list, read, create, and delete objects under `foo.t1`.
-
-
-
-In Iceberg, the metadata JSON file is a control file: it tells readers which
-data files belong to the table, which snapshots exist, and which table
-version
-to read. So unauthorized access to it is already a meaningful
-confidentiality
-problem. The confirmed write-capable variant means the issue is not limited
-to
-disclosure.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42146" data-description="cimg library is a c++ library for image processing. prior to commit c3aacf5, the nb_colors field read from the bmp file header is used directly to compute an allocation size without validating it against the remaining file size. a crafted bmp file with a large nb_colors value triggers an out-of-memory condition, crashing any application that uses cimg to load untrusted bmp files. this issue has been patched via commit c3aacf5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42146" target="_blank">CVE-2026-42146</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>CImg Library is a C++ library for image processing. Prior to commit c3aacf5, the nb_colors field read from the BMP file header is used directly to compute an allocation size without validating it against the remaining file size. A crafted BMP file with a large nb_colors value triggers an out-of-memory condition, crashing any application that uses CImg to load untrusted BMP files. This issue has been patched via commit c3aacf5.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42809" data-description="apache polaris can issue broad temporary ("vended") storage credentials during
-staged
-table creation before the effective table location has been validated or
-durably reserved. 
-those temporary credentials are meant to limit the scope
-of
-accessible table data and metadata, but this scope limitation becomes
-attacker-
-directed because the attacker can choose a reachable target location.
-
-
-
-in the confirmed variant, if the caller supplies a custom `location` during
-stage create and requests credential vending, apache polaris uses that location to
-construct delegated storage credentials immediately. the stage-create path
-itself neither runs the normal location validation nor the overlap checks
-before those credentials are issued.
-
-
-
-closely related to that, the staged-create flow also accepts
-`write.data.path` / `write.metadata.path` in the request properties and
-feeds
-those location overrides into the same effective table location set used for
-credential vending. those fields are secondary to the main custom-`location`
-exploit, but they are still attacker-influenced location inputs that should
-be
-validated before any credentials are issued.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42809" target="_blank">CVE-2026-42809</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>Apache Polaris can issue broad temporary ("vended") storage credentials during
-staged
-table creation before the effective table location has been validated or
-durably reserved. 
-Those temporary credentials are meant to limit the scope
-of
-accessible table data and metadata, but this scope limitation becomes
-attacker-
-directed because the attacker can choose a reachable target location.
-
-
-
-In the confirmed variant, if the caller supplies a custom `location` during
-stage create and requests credential vending, Apache Polaris uses that location to
-construct delegated storage credentials immediately. The stage-create path
-itself neither runs the normal location validation nor the overlap checks
-before those credentials are issued.
-
-
-
-Closely related to that, the staged-create flow also accepts
-`write.data.path` / `write.metadata.path` in the request properties and
-feeds
-those location overrides into the same effective table location set used for
-credential vending. Those fields are secondary to the main custom-`location`
-exploit, but they are still attacker-influenced location inputs that should
-be
-validated before any credentials are issued.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42144" data-description="cimg library is a c++ library for image processing. prior to commit 4ca26bc, there is an integer overflow vulnerability in the w*h*d size computation inside _load_pnm() that can bypass the memory allocation guard. a crafted pnm/pgm/ppm file with large dimension values causes the overflow to wrap around, allocating an undersized buffer and potentially triggering a heap buffer overflow. any application using cimg to load untrusted image files is affected. this issue has been patched via commit 4ca26bc.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42144" target="_blank">CVE-2026-42144</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>CImg Library is a C++ library for image processing. Prior to commit 4ca26bc, there is an integer overflow vulnerability in the W*H*D size computation inside _load_pnm() that can bypass the memory allocation guard. A crafted PNM/PGM/PPM file with large dimension values causes the overflow to wrap around, allocating an undersized buffer and potentially triggering a heap buffer overflow. Any application using CImg to load untrusted image files is affected. This issue has been patched via commit 4ca26bc.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42440" data-description="oom denial of service via unbounded array allocation in apache opennlp abstractmodelreader 
-
-versions affected: 
-
-before 2.5.9
-
-before 3.0.0-m3 
-
-description:
-
-
-the abstractmodelreader methods getoutcomes(), getoutcomepatterns(), and getpredicates() each read a 32-bit signed integer count field from a binary model stream and pass that value directly to an array allocation (new string[numoutcomes], new int[numoctypes][], new string[num_preds]) without validating that the value is non-negative or within a reasonable bound. the count is therefore fully attacker-controlled when the model file originates from an untrusted source.
-
-
-a crafted .bin model file in which any of these count fields is set to integer.max_value (or any value large enough to exhaust the available heap) triggers an outofmemoryerror at the array allocation itself, before the corresponding label or pattern data is consumed from the stream. the error occurs very early in deserialization: for a gis model, getoutcomes() is reached after only the model-type string, the correction constant, and the correction parameter have been read; so the attacker pays no meaningful size cost to weaponize a payload, and a single small file can crash a jvm that loads it. any code path that deserializes a .bin model is affected, including direct use of genericmodelreader and any higher-level component that delegates to it during model load.
-
-
-the practical impact is denial of service against processes that load model files from untrusted or semi-trusted origins.  
-
-
-mitigation:
-
-
-
-  *  2.x users should upgrade to 2.5.9.
-
-  *  3.x users should upgrade to 3.0.0-m3.
-
-
-
-
-note: the fix introduces an upper bound on each of the three count fields, checked before array allocation; counts that are negative or exceed the bound cause an illegalargumentexception to be thrown and the read to fail fast with no large allocation. the default bound is 10,000,000, which is well above the entry counts of legitimate opennlp models but far below any value that would threaten heap exhaustion. deployments that legitimately need to load models with more entries than the default can raise the limit at jvm startup by setting the opennlp_max_entries system property to the desired positive integer (e.g. -dopennlp_max_entries=50000000); invalid or non-positive values fall back to the default.
-
-
-users who cannot upgrade immediately should treat all .bin model files as untrusted input unless their provenance is verified, and should avoid loading models supplied by end users or fetched from third-party repositories without integrity checks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42440" target="_blank">CVE-2026-42440</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:26 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42140" data-description="plantuml macro is a macro for rendering uml diagrams from simple textual schemes. prior to version 2.4.1, the plantuml macro is vulnerable to server-side request forgery (ssrf). the macro allows users to specify an alternative plantuml server via the server parameter. however, the application does not validate the supplied url. an attacker can supply an internal ip address or a malicious external url. the xwiki server will attempt to connect to this url to "render" the diagram. this issue has been patched in version 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42140" target="_blank">CVE-2026-42140</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
+                    <p>PlantUML Macro is a macro for rendering UML diagrams from simple textual schemes. Prior to version 2.4.1, the PlantUML Macro is vulnerable to Server-Side Request Forgery (SSRF). The macro allows users to specify an alternative PlantUML server via the server parameter. However, the application does not validate the supplied URL. An attacker can supply an internal IP address or a malicious external URL. The XWiki server will attempt to connect to this URL to "render" the diagram. This issue has been patched in version 2.4.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-42138" data-description="dify is an open-source llm app development platform. prior to version 1.13.1, using the method post /api/files/upload, any unauthenticated user can upload an svg file with xss. the method post /v1/files/upload, which requires authentication through the application api, is also vulnerable. this issue has been patched in version 1.13.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42138" target="_blank">CVE-2026-42138</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>OOM Denial of Service via Unbounded Array Allocation in Apache OpenNLP AbstractModelReader 
-
-Versions Affected: 
-
-before 2.5.9
-
-before 3.0.0-M3 
-
-Description:
-
-
-The AbstractModelReader methods getOutcomes(), getOutcomePatterns(), and getPredicates() each read a 32-bit signed integer count field from a binary model stream and pass that value directly to an array allocation (new String[numOutcomes], new int[numOCTypes][], new String[NUM_PREDS]) without validating that the value is non-negative or within a reasonable bound. The count is therefore fully attacker-controlled when the model file originates from an untrusted source.
-
-
-A crafted .bin model file in which any of these count fields is set to Integer.MAX_VALUE (or any value large enough to exhaust the available heap) triggers an OutOfMemoryError at the array allocation itself, before the corresponding label or pattern data is consumed from the stream. The error occurs very early in deserialization: for a GIS model, getOutcomes() is reached after only the model-type string, the correction constant, and the correction parameter have been read; so the attacker pays no meaningful size cost to weaponize a payload, and a single small file can crash a JVM that loads it. Any code path that deserializes a .bin model is affected, including direct use of GenericModelReader and any higher-level component that delegates to it during model load.
-
-
-The practical impact is denial of service against processes that load model files from untrusted or semi-trusted origins.  
-
-
-Mitigation:
-
-
-
-  *  2.x users should upgrade to 2.5.9.
-
-  *  3.x users should upgrade to 3.0.0-M3.
-
-
-
-
-Note: The fix introduces an upper bound on each of the three count fields, checked before array allocation; counts that are negative or exceed the bound cause an IllegalArgumentException to be thrown and the read to fail fast with no large allocation. The default bound is 10,000,000, which is well above the entry counts of legitimate OpenNLP models but far below any value that would threaten heap exhaustion. Deployments that legitimately need to load models with more entries than the default can raise the limit at JVM startup by setting the OPENNLP_MAX_ENTRIES system property to the desired positive integer (e.g. -DOPENNLP_MAX_ENTRIES=50000000); invalid or non-positive values fall back to the default.
-
-
-Users who cannot upgrade immediately should treat all .bin model files as untrusted input unless their provenance is verified, and should avoid loading models supplied by end users or fetched from third-party repositories without integrity checks.</p>
+                    <p>Dify is an open-source LLM app development platform. Prior to version 1.13.1, using the method POST /api/files/upload, any unauthenticated user can upload an SVG file with XSS. The method POST /v1/files/upload, which requires authentication through the application API, is also vulnerable. This issue has been patched in version 1.13.1.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42376" data-description="d-link dir-456u hardware revision a1 (end-of-life, eol) contains a hardcoded telnet backdoor. the device starts a telnet daemon at boot via /etc/init0.d/s80telnetd.sh with the username "alphanetworks" and the static password "whdrv01_dlob_dir456u" read from /etc/config/image_sign. the custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. the device has reached end-of-life (eol) and will not receive patches.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42376" target="_blank">CVE-2026-42376</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>D-Link DIR-456U Hardware Revision A1 (End-of-Life, EOL) contains a hardcoded telnet backdoor. The device starts a telnet daemon at boot via /etc/init0.d/S80telnetd.sh with the username "Alphanetworks" and the static password "whdrv01_dlob_dir456U" read from /etc/config/image_sign. The custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. Successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. The device has reached End-of-Life (EOL) and will not receive patches.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42092" data-description="titra is an open source time tracking project. in version 0.99.52, the globalsettings meteor publication returns all global settings without any admin or role check. any authenticated user can subscribe via ddp and receive sensitive configuration fields such as google_secret, openai_apikey, and google_clientid. at time of publication no public patch is available.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42092" target="_blank">CVE-2026-42092</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>titra is an open source time tracking project. In version 0.99.52, the globalsettings Meteor publication returns all global settings without any admin or role check. Any authenticated user can subscribe via DDP and receive sensitive configuration fields such as google_secret, openai_apikey, and google_clientid. At time of publication no public patch is available.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42375" data-description="d-link dir-600l hardware revision a1 (end-of-life) contains a hardcoded telnet backdoor. the device starts a telnet daemon at boot via /bin/telnetd.sh with the username "alphanetworks" and the static password "wrgn35_dlwbr_dir600l" read from /etc/alpha_config/image_sign. the custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. the device has reached end-of-life (eol) and will not receive patches.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42375" target="_blank">CVE-2026-42375</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>D-Link DIR-600L Hardware Revision A1 (End-of-Life) contains a hardcoded telnet backdoor. The device starts a telnet daemon at boot via /bin/telnetd.sh with the username "Alphanetworks" and the static password "wrgn35_dlwbr_dir600l" read from /etc/alpha_config/image_sign. The custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. Successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. The device has reached End-of-Life (EOL) and will not receive patches.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42091" data-description="goshs is a simplehttpserver written in go. prior to version 2.0.2, the put upload handler (httpserver/updown.go) lacks the csrf token validation that was added to the post upload handler during the cve-2026-40883 fix. combined with the unconditional access-control-allow-origin: * on the options preflight handler (httpserver/server.go), any website can write arbitrary files to a goshs instance through the victim's browser — bypassing network isolation (e.g. localhost, internal network). this issue has been patched in version 2.0.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42091" target="_blank">CVE-2026-42091</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>goshs is a SimpleHTTPServer written in Go. Prior to version 2.0.2, the PUT upload handler (httpserver/updown.go) lacks the CSRF token validation that was added to the POST upload handler during the CVE-2026-40883 fix. Combined with the unconditional Access-Control-Allow-Origin: * on the OPTIONS preflight handler (httpserver/server.go), any website can write arbitrary files to a goshs instance through the victim's browser — bypassing network isolation (e.g. localhost, internal network). This issue has been patched in version 2.0.2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42374" data-description="d-link dir-600l hardware revision b1 (end-of-life) contains a hardcoded telnet backdoor. the device starts a telnet daemon at boot via /bin/telnetd.sh with the username "alphanetworks" and the static password "wrgn61_dlwbr_dir600l" read from /etc/alpha_config/image_sign. the custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control.  the device has reached end-of-life (eol) and will not receive patches.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42374" target="_blank">CVE-2026-42374</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>D-Link DIR-600L Hardware Revision B1 (End-of-Life) contains a hardcoded telnet backdoor. The device starts a telnet daemon at boot via /bin/telnetd.sh with the username "Alphanetworks" and the static password "wrgn61_dlwbr_dir600L" read from /etc/alpha_config/image_sign. The custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. Successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control.  The device has reached End-of-Life (EOL) and will not receive patches.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42373" data-description="d-link dir-605l hardware revision b2 (end-of-life, eol) contains a hardcoded telnet backdoor. the device starts a telnet daemon at boot via /bin/telnetd.sh with the username "alphanetworks" and the static password "wrgn76_dlwbr_dir605l" read from /etc/alpha_config/image_sign. the custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. the device has reached end-of-life (eol) and will not receive patches.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42373" target="_blank">CVE-2026-42373</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>D-Link DIR-605L Hardware Revision B2 (End-of-Life, EOL) contains a hardcoded telnet backdoor. The device starts a telnet daemon at boot via /bin/telnetd.sh with the username "Alphanetworks" and the static password "wrgn76_dlwbr_dir605L" read from /etc/alpha_config/image_sign. The custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. Successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. The device has reached End-of-Life (EOL) and will not receive patches.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42372" data-description="d-link dir-605l hardware revision a1 (end-of-life, eol) contains a hardcoded telnet backdoor. the device starts a telnet daemon at boot via /bin/telnetd.sh with the username "alphanetworks" and the static password "wrgn35_dlwbr_dir605l" read from /etc/alpha_config/image_sign. the custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. the device has reached end-of-life (eol) and will not receive patches.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42372" target="_blank">CVE-2026-42372</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>D-Link DIR-605L Hardware Revision A1 (End-of-Life, EOL) contains a hardcoded telnet backdoor. The device starts a telnet daemon at boot via /bin/telnetd.sh with the username "Alphanetworks" and the static password "wrgn35_dlwbr_dir605l" read from /etc/alpha_config/image_sign. The custom telnetd binary accepts a -u user:password flag, and the custom login binary uses strcmp() to validate credentials. Successful authentication grants an unauthenticated attacker on the local network a root shell with full administrative control. The device has reached End-of-Life (EOL) and will not receive patches.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42090" data-description="notesnook is a note-taking app focused on user privacy & ease of use. prior to notesnook web/desktop version 3.3.15 and prior to notesnook ios/android version 3.3.20, a stored xss vulnerability in the note export flow can be escalated to remote code execution in the desktop app. the root cause is that exported note fields such as title, headline, and content are inserted into the generated html template without html escaping. when the note is later exported to pdf, notesnook renders that html into a same-origin, unsandboxed iframe using iframe.srcdoc = .... injected script executes in the notesnook origin. in the desktop app, this becomes rce because electron is configured with nodeintegration: true and contextisolation: false. this issue has been patched in notesnook web/desktop version 3.3.15 and notesnook ios/android version 3.3.20.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42090" target="_blank">CVE-2026-42090</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:25 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42088" data-description="openc3 cosmos provides the functionality needed to send commands to and receive data from one or more embedded systems. prior to version 7.0.0-rc3, the script runner widget allows users to execute python and ruby scripts directly from the openc3-cosmos-script-runner-api container. because all the docker containers share a network, users can execute specially crafted scripts to bypass the api permissions check and perform administrative actions, including reading and modifying data inside the redis database, which can be used to read secrets and change cosmos settings, as well as read and write to the buckets service, which holds configuration, log, and plugin files. these actions are normally only available from the admin console or with administrative privileges. any user with permission to create and run scripts can connect to any service in the docker network. this issue has been patched in version 7.0.0-rc3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42088" target="_blank">CVE-2026-42088</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.6</p>
-                    <p>Notesnook is a note-taking app focused on user privacy & ease of use. Prior to Notesnook Web/Desktop version 3.3.15 and prior to Notesnook iOS/Android version 3.3.20, a stored XSS vulnerability in the note export flow can be escalated to remote code execution in the desktop app. The root cause is that exported note fields such as title, headline, and content are inserted into the generated HTML template without HTML escaping. When the note is later exported to PDF, Notesnook renders that HTML into a same-origin, unsandboxed iframe using iframe.srcdoc = .... Injected script executes in the Notesnook origin. In the desktop app, this becomes RCE because Electron is configured with nodeIntegration: true and contextIsolation: false. This issue has been patched in Notesnook Web/Desktop version 3.3.15 and Notesnook iOS/Android version 3.3.20.</p>
+                    <p>OpenC3 COSMOS provides the functionality needed to send commands to and receive data from one or more embedded systems. Prior to version 7.0.0-rc3, the Script Runner widget allows users to execute Python and Ruby scripts directly from the openc3-COSMOS-script-runner-api container. Because all the docker containers share a network, users can execute specially crafted scripts to bypass the API permissions check and perform administrative actions, including reading and modifying data inside the Redis database, which can be used to read secrets and change COSMOS settings, as well as read and write to the buckets service, which holds configuration, log, and plugin files. These actions are normally only available from the Admin Console or with administrative privileges. Any user with permission to create and run scripts can connect to any service in the docker network. This issue has been patched in version 7.0.0-rc3.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42080" data-description="pptagent is an agentic framework for reflective powerpoint generation. prior to commit 418491a, there is an arbitrary file write vulnerability via `save_generated_slides`. this issue has been patched via commit 418491a.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42080" target="_blank">CVE-2026-42080</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
-                    <p>PPTAgent is an agentic framework for reflective PowerPoint generation. Prior to commit 418491a, there is an arbitrary file write vulnerability via `save_generated_slides`. This issue has been patched via commit 418491a.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42079" data-description="pptagent is an agentic framework for reflective powerpoint generation. prior to commit 418491a, pptagent is vulnerable to arbitrary code execution via python eval() of llm-generated code with builtins in scope. this issue has been patched via commit 418491a.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42079" target="_blank">CVE-2026-42079</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.6</p>
-                    <p>PPTAgent is an agentic framework for reflective PowerPoint generation. Prior to commit 418491a, PPTAgent is vulnerable to arbitrary code execution via Python eval() of LLM-generated code with builtins in scope. This issue has been patched via commit 418491a.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42078" data-description="pptagent is an agentic framework for reflective powerpoint generation. prior to commit 418491a, pptagent is vulnerable to arbitrary file write and directory creation via markdown_table_to_image. this issue has been patched via commit 418491a.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42078" target="_blank">CVE-2026-42078</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
-                    <p>PPTAgent is an agentic framework for reflective PowerPoint generation. Prior to commit 418491a, PPTAgent is vulnerable to arbitrary file write and directory creation via markdown_table_to_image. This issue has been patched via commit 418491a.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42077" data-description="evolver is a gep-powered self-evolving engine for ai agents. prior to version 1.69.3, a prototype pollution vulnerability in the mailbox store module allows attackers to modify the behavior of all javascript objects by injecting malicious properties into object.prototype. the vulnerability exists in the _applyupdate() and _updaterecord() functions which use object.assign() to merge user-controlled data without filtering dangerous keys like __proto__, constructor, or prototype. this issue has been patched in version 1.69.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42077" target="_blank">CVE-2026-42077</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.2</p>
-                    <p>Evolver is a GEP-powered self-evolving engine for AI agents. Prior to version 1.69.3, a prototype pollution vulnerability in the mailbox store module allows attackers to modify the behavior of all JavaScript objects by injecting malicious properties into Object.prototype. The vulnerability exists in the _applyUpdate() and _updateRecord() functions which use Object.assign() to merge user-controlled data without filtering dangerous keys like __proto__, constructor, or prototype. This issue has been patched in version 1.69.3.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42076" data-description="evolver is a gep-powered self-evolving engine for ai agents. prior to version 1.69.3, a command injection vulnerability in the _extractllm() function allows attackers to execute arbitrary shell commands on the server. the function constructs a curl command using string concatenation and passes it to execsync() without proper sanitization, enabling remote code execution when the corpus parameter contains shell metacharacters. this issue has been patched in version 1.69.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42076" target="_blank">CVE-2026-42076</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:24 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42087" data-description="openc3 cosmos provides the functionality needed to send commands to and receive data from one or more embedded systems. from version 6.7.0 to before version 7.0.0-rc3, a sql injection vulnerability exists in the time-series database (tsdb) component of cosmos. the tsdb_lookup function in the cvt_model.rb file directly places user-supplied input into a sql query without sanitizing the input. as a result, a user can break out of the initial sql statement and execute arbitrary sql commands, including deleting data. this issue has been patched in version 7.0.0-rc3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42087" target="_blank">CVE-2026-42087</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Evolver is a GEP-powered self-evolving engine for AI agents. Prior to version 1.69.3, a command injection vulnerability in the _extractLLM() function allows attackers to execute arbitrary shell commands on the server. The function constructs a curl command using string concatenation and passes it to execSync() without proper sanitization, enabling remote code execution when the corpus parameter contains shell metacharacters. This issue has been patched in version 1.69.3.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.6</p>
+                    <p>OpenC3 COSMOS provides the functionality needed to send commands to and receive data from one or more embedded systems. From version 6.7.0 to before version 7.0.0-rc3, a SQL injection vulnerability exists in the Time-Series Database (TSDB) component of COSMOS. The tsdb_lookup function in the cvt_model.rb file directly places user-supplied input into a SQL query without sanitizing the input. As a result, a user can break out of the initial SQL statement and execute arbitrary SQL commands, including deleting data. This issue has been patched in version 7.0.0-rc3.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42075" data-description="evolver is a gep-powered self-evolving engine for ai agents. prior to version 1.69.3, a path traversal vulnerability in the skill download (fetch) command allows attackers to write files to arbitrary locations on the filesystem. the --out= flag accepts user-provided paths without validation, enabling directory traversal attacks that can overwrite critical system files or create files in sensitive location. this issue has been patched in version 1.69.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42075" target="_blank">CVE-2026-42075</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:24 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42086" data-description="openc3 cosmos provides the functionality needed to send commands to and receive data from one or more embedded systems. prior to version 7.0.0, the command sender ui uses an unsafe eval() function on array-like command parameters, which allows a user-supplied payload to execute in the browser when sending a command. this creates a self-xss risk because an attacker can trigger their own script execution in the victim’s session, if allowed to influence the array parameter input, for example via phishing. if successful, an attacker may read or modify data in the authenticated browser context, including session tokens in local storage. this issue has been patched in version 7.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42086" target="_blank">CVE-2026-42086</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
+                    <p>OpenC3 COSMOS provides the functionality needed to send commands to and receive data from one or more embedded systems. Prior to version 7.0.0, the Command Sender UI uses an unsafe eval() function on array-like command parameters, which allows a user-supplied payload to execute in the browser when sending a command. This creates a self-XSS risk because an attacker can trigger their own script execution in the victim’s session, if allowed to influence the array parameter input, for example via phishing. If successful, an attacker may read or modify data in the authenticated browser context, including session tokens in local storage. This issue has been patched in version 7.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-42085" data-description="openc3 cosmos provides the functionality needed to send commands to and receive data from one or more embedded systems. prior to versions 6.10.5 and 7.0.0-rc3, openc3 cosmos contains a design flaw in the save_tool_config() function that allows saving tool configuration files at arbitrary locations inside the shared /plugins directory tree by supplying crafted configuration filenames. although the implementation sufficiently mitigates standard path traversal attacks, by canonicalizing filename to an absolute path, all plugins share this same root directory. that enables users to create arbitrary file structures and overwrite existing configuration files within the shared /plugins directory. this issue has been patched in versions 6.10.5 and 7.0.0-rc3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42085" target="_blank">CVE-2026-42085</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>OpenC3 COSMOS provides the functionality needed to send commands to and receive data from one or more embedded systems. Prior to versions 6.10.5 and 7.0.0-rc3, OpenC3 COSMOS contains a design flaw in the save_tool_config() function that allows saving tool configuration files at arbitrary locations inside the shared /plugins directory tree by supplying crafted configuration filenames. Although the implementation sufficiently mitigates standard path traversal attacks, by canonicalizing filename to an absolute path, all plugins share this same root directory. That enables users to create arbitrary file structures and overwrite existing configuration files within the shared /plugins directory. This issue has been patched in versions 6.10.5 and 7.0.0-rc3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-42084" data-description="openc3 cosmos provides the functionality needed to send commands to and receive data from one or more embedded systems. prior to versions 6.10.5 and 7.0.0-rc3, the openc3 password change functionality allows a user to change their password without providing the old password, by accepting a valid session token instead. in assumed breach scenarios, this behaviour can be exploited by an attacker who has already obtained a valid session token, to gain persistence in hijacked account (including admin) and prevent legitimate users from accessing the account. this issue has been patched in versions 6.10.5 and 7.0.0-rc3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42084" target="_blank">CVE-2026-42084</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Evolver is a GEP-powered self-evolving engine for AI agents. Prior to version 1.69.3, a path traversal vulnerability in the skill download (fetch) command allows attackers to write files to arbitrary locations on the filesystem. The --out= flag accepts user-provided paths without validation, enabling directory traversal attacks that can overwrite critical system files or create files in sensitive location. This issue has been patched in version 1.69.3.</p>
+                    <p>OpenC3 COSMOS provides the functionality needed to send commands to and receive data from one or more embedded systems. Prior to versions 6.10.5 and 7.0.0-rc3, the OpenC3 password change functionality allows a user to change their password without providing the old password, by accepting a valid session token instead. In assumed breach scenarios, this behaviour can be exploited by an attacker who has already obtained a valid session token, to gain persistence in hijacked account (including admin) and prevent legitimate users from accessing the account. This issue has been patched in versions 6.10.5 and 7.0.0-rc3.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42027" data-description="arbitrary class instantiation via model manifest in apache opennlp extensionloader
-
-
-
-
-
-versions affected: before 2.5.9, before 3.0.0-m3
-
-
-
-
-
-description: 
-
-the extensionloader.instantiateextension(class, string) method loads a class by its fully-qualified name via class.forname() and invokes its no-arg constructor, with the class name sourced from the manifest.properties entry of a model archive. the existing isassignablefrom check correctly rejects classes that are not subtypes of the expected extension interface (basetoolfactory for factory=, artifactserializer for serializer-class-*), but the check runs after class.forname() has already loaded and initialized the named class. 
-
-class.forname() with default initialization semantics executes the target class's static initializer before returning, so an attacker who can supply a crafted model archive can cause the static initializer of any class on the classpath to run during model loading, regardless of whether that class passes the subsequent type check. 
-
-exploitation requires a class with attacker-useful side effects in its static initializer (for example, jndi lookup, outbound network i/o, or filesystem access) to be present on the classpath, so this is not a drop-in remote code execution; however, the attack surface grows as third-party model distribution becomes more common (community model repositories, hugging face-style sharing), where users routinely load model files from origins they do not control. a secondary, narrower vector affects deployments that ship legitimate basetoolfactory or artifactserializer subclasses with side-effecting no-arg constructors: a malicious manifest can name such a class and force its constructor to run during model load.
-
-
-
-
-
-mitigation: 
-
-
-
-  *  2.x users should upgrade to 2.5.9. 
-  *  3.x users should upgrade to 3.0.0-m3. 
-
-
-
-
-note: the fix introduces a package-prefix allowlist that is consulted before class.forname() is invoked, so the static initializer of a disallowed class is never executed. classes under the opennlp. prefix remain permitted by default. deployments that load models referencing factories or serializers outside opennlp.* must opt those packages in, either programmatically via extensionloader.registerallowedpackage(string) before the first model load, or by setting the opennlp_ext_allowed_packages system property to a comma-separated list of allowed package prefixes. 
-
-users who cannot upgrade immediately should ensure that all model files are sourced from trusted origins and should audit their classpath for classes with side-effecting static initializers or constructors, particularly any that perform jndi lookups, network requests, or filesystem operations during class initialization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42027" target="_blank">CVE-2026-42027</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:24 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-42052" data-description="beets is the media library management system. prior to version 2.10.0, the bundled web ui uses underscore template interpolation mode <%= ... %> for untrusted metadata fields. in this runtime, <%= ... %> is raw insertion and html escaping is only performed by <%- ... %>. rendered output is then inserted with .html(...), allowing attacker-controlled markup to become active dom. this issue has been patched in version 2.10.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42052" target="_blank">CVE-2026-42052</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Arbitrary Class Instantiation via Model Manifest in Apache OpenNLP ExtensionLoader
-
-
-
-
-
-Versions Affected: before 2.5.9, before 3.0.0-M3
-
-
-
-
-
-Description: 
-
-The ExtensionLoader.instantiateExtension(Class, String) method loads a class by its fully-qualified name via Class.forName() and invokes its no-arg constructor, with the class name sourced from the manifest.properties entry of a model archive. The existing isAssignableFrom check correctly rejects classes that are not subtypes of the expected extension interface (BaseToolFactory for factory=, ArtifactSerializer for serializer-class-*), but the check runs after Class.forName() has already loaded and initialized the named class. 
-
-Class.forName() with default initialization semantics executes the target class's static initializer before returning, so an attacker who can supply a crafted model archive can cause the static initializer of any class on the classpath to run during model loading, regardless of whether that class passes the subsequent type check. 
-
-Exploitation requires a class with attacker-useful side effects in its static initializer (for example, JNDI lookup, outbound network I/O, or filesystem access) to be present on the classpath, so this is not a drop-in remote code execution; however, the attack surface grows as third-party model distribution becomes more common (community model repositories, Hugging Face-style sharing), where users routinely load model files from origins they do not control. A secondary, narrower vector affects deployments that ship legitimate BaseToolFactory or ArtifactSerializer subclasses with side-effecting no-arg constructors: a malicious manifest can name such a class and force its constructor to run during model load.
-
-
-
-
-
-Mitigation: 
-
-
-
-  *  2.x users should upgrade to 2.5.9. 
-  *  3.x users should upgrade to 3.0.0-M3. 
-
-
-
-
-Note: The fix introduces a package-prefix allowlist that is consulted before Class.forName() is invoked, so the static initializer of a disallowed class is never executed. Classes under the opennlp. prefix remain permitted by default. Deployments that load models referencing factories or serializers outside opennlp.* must opt those packages in, either programmatically via ExtensionLoader.registerAllowedPackage(String) before the first model load, or by setting the OPENNLP_EXT_ALLOWED_PACKAGES system property to a comma-separated list of allowed package prefixes. 
-
-Users who cannot upgrade immediately should ensure that all model files are sourced from trusted origins and should audit their classpath for classes with side-effecting static initializers or constructors, particularly any that perform JNDI lookups, network requests, or filesystem operations during class initialization.</p>
+                    <p>Beets is the media library management system. Prior to version 2.10.0, the bundled web UI uses Underscore template interpolation mode <%= ... %> for untrusted metadata fields. In this runtime, <%= ... %> is raw insertion and HTML escaping is only performed by <%- ... %>. Rendered output is then inserted with .html(...), allowing attacker-controlled markup to become active DOM. This issue has been patched in version 2.10.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-40682" data-description="xml external entity (xxe) via unsanitized dictionary parsing in apache opennlp dictionaryentrypersistor
-
-
-versions affected: before 2.5.9, before 3.0.0-m3
-
-
-description: the dictionaryentrypersistor class initializes a static saxparserfactory at class-load time without enabling feature_secure_processing or disabling dtd processing. when create(inputstream, entryinserter) is invoked, the only feature set on the xmlreader is namespace support — external entity resolution and doctype declarations remain fully enabled. an attacker who can supply a crafted dictionary file (e.g., a stop-word list or domain dictionary) containing a malicious doctype declaration can trigger local file disclosure via file:// entity references or server-side request forgery via http:// entity references during sax parsing, before the application processes a single dictionary entry. this is inconsistent with the project's own xmlutil.createsaxparser() helper, which correctly sets feature_secure_processing and disallow-doctype-decl and is used by all other xml parsing paths in the codebase. the public dictionary(inputstream) constructor delegates directly to this method and is the documented api for loading user-supplied dictionaries, making untrusted input a realistic scenario.
-
-
-mitigation: 2.x users should upgrade to 2.5.9. 3.x users should upgrade to 3.0.0-m3. users who cannot upgrade immediately should ensure that all dictionary files are sourced from trusted origins and should consider wrapping the dictionary(inputstream) constructor with input validation that rejects any xml containing a doctype declaration before it reaches the parser.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40682" target="_blank">CVE-2026-40682</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>XML External Entity (XXE) via Unsanitized Dictionary Parsing in Apache OpenNLP DictionaryEntryPersistor
-
-
-Versions Affected: before 2.5.9, before 3.0.0-M3
-
-
-Description: The DictionaryEntryPersistor class initializes a static SAXParserFactory at class-load time without enabling FEATURE_SECURE_PROCESSING or disabling DTD processing. When create(InputStream, EntryInserter) is invoked, the only feature set on the XMLReader is namespace support — external entity resolution and DOCTYPE declarations remain fully enabled. An attacker who can supply a crafted dictionary file (e.g., a stop-word list or domain dictionary) containing a malicious DOCTYPE declaration can trigger local file disclosure via file:// entity references or server-side request forgery via http:// entity references during SAX parsing, before the application processes a single dictionary entry. This is inconsistent with the project's own XmlUtil.createSaxParser() helper, which correctly sets FEATURE_SECURE_PROCESSING and disallow-doctype-decl and is used by all other XML parsing paths in the codebase. The public Dictionary(InputStream) constructor delegates directly to this method and is the documented API for loading user-supplied dictionaries, making untrusted input a realistic scenario.
-
-
-Mitigation: 2.x users should upgrade to 2.5.9. 3.x users should upgrade to 3.0.0-M3. Users who cannot upgrade immediately should ensure that all dictionary files are sourced from trusted origins and should consider wrapping the Dictionary(InputStream) constructor with input validation that rejects any XML containing a DOCTYPE declaration before it reaches the parser.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-41572" data-description="note mark is an open-source note-taking application. prior to version 0.19.3, after a note-mark owner soft-deletes a public book, its notes and uploaded assets stay readable at /api/notes/{id}, /api/notes/{id}/content, the slug url, and the asset endpoints. unauthenticated callers who hold the note id or the slug path retain access. gorm's soft-delete scope does not reach the raw "join books ..." clauses used by the note and asset queries. this issue has been patched in version 0.19.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41572" target="_blank">CVE-2026-41572</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Note Mark is an open-source note-taking application. Prior to version 0.19.3, after a note-mark owner soft-deletes a public book, its notes and uploaded assets stay readable at /api/notes/{id}, /api/notes/{id}/content, the slug URL, and the asset endpoints. Unauthenticated callers who hold the note ID or the slug path retain access. GORM's soft-delete scope does not reach the raw "JOIN books ..." clauses used by the note and asset queries. This issue has been patched in version 0.19.3.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-38669" data-description="wcms v.1.4 is vulnerable to cross site scripting (xss) when creating a new blog.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-38669" target="_blank">CVE-2026-38669</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-04 12:16:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-41571" data-description="note mark is an open-source note-taking application. in version 0.19.2, ispasswordmatch in backend/db/models.go falls back to a hard-coded bcrypt("null") placeholder whenever a user has no stored password. oidc-registered users are created with an empty password, so anyone who submits password: "null" to the internal login endpoint receives a valid session for that user. the bypass is unauthenticated and requires no user interaction. this issue has been patched in version 0.19.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41571" target="_blank">CVE-2026-41571</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.4</p>
+                    <p>Note Mark is an open-source note-taking application. In version 0.19.2, IsPasswordMatch in backend/db/models.go falls back to a hard-coded bcrypt("null") placeholder whenever a user has no stored password. OIDC-registered users are created with an empty password, so anyone who submits password: "null" to the internal login endpoint receives a valid session for that user. The bypass is unauthenticated and requires no user interaction. This issue has been patched in version 0.19.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-41471" data-description="easy paypal events & tickets plugin for wordpress versions 1.3 and earlier contain an information disclosure vulnerability in the qr code scanning endpoint that allows unauthenticated attackers to enumerate and retrieve all customer order records. attackers can iterate over sequential wordpress post ids through the scan_qr.php endpoint to harvest the complete set of orders stored in the database without requiring authentication or prior knowledge of specific order identifiers. this plugin was officially closed as of 2026-03-18.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41471" target="_blank">CVE-2026-41471</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Easy PayPal Events & Tickets plugin for WordPress versions 1.3 and earlier contain an information disclosure vulnerability in the QR code scanning endpoint that allows unauthenticated attackers to enumerate and retrieve all customer order records. Attackers can iterate over sequential WordPress post IDs through the scan_qr.php endpoint to harvest the complete set of orders stored in the database without requiring authentication or prior knowledge of specific order identifiers. This plugin was officially closed as of 2026-03-18.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-37459" data-description="an integer underflow in frrouting (frr) stable/10.0 to stable/10.6 allows attackers to cause a denial of service (dos) via supplying a crafted bgp update message.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-37459" target="_blank">CVE-2026-37459</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:28 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>wCMS v.1.4 is vulnerable to Cross Site Scripting (XSS) when creating a new blog.</p>
+                    <p>An integer underflow in FRRouting (FRR) stable/10.0 to stable/10.6 allows attackers to cause a Denial of Service (DoS) via supplying a crafted BGP UPDATE message.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-32834" data-description="easy paypal events & tickets plugin for wordpress version 1.3 and earlier contain a hardcoded authentication bypass vulnerability in the qr code scanning functionality that allows unauthenticated remote attackers to bypass hash verification by supplying 'test' as the hash parameter. attackers can access the vulnerable endpoint via the add_wpeevent_button_qr action to retrieve sensitive order details including paypal transaction ids, customer email addresses, purchase amounts, and ticket information for any order with a known or guessed post id. this plugin was officially closed as of 2026-03-18.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-32834" target="_blank">CVE-2026-32834</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Easy PayPal Events & Tickets plugin for WordPress version 1.3 and earlier contain a hardcoded authentication bypass vulnerability in the QR code scanning functionality that allows unauthenticated remote attackers to bypass hash verification by supplying 'test' as the hash parameter. Attackers can access the vulnerable endpoint via the add_wpeevent_button_qr action to retrieve sensitive order details including PayPal transaction IDs, customer email addresses, purchase amounts, and ticket information for any order with a known or guessed post ID. This plugin was officially closed as of 2026-03-18.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-2828" data-description="rejected reason: ** reject ** do not use this candidate number. reason: this candidate was issued in error. notes: all references and descriptions in this candidate have been removed to prevent accidental usage.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2828" target="_blank">CVE-2026-2828</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-04 13:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: ** REJECT ** DO NOT USE THIS CANDIDATE NUMBER. Reason: This candidate was issued in error. Notes: All references and descriptions in this candidate have been removed to prevent accidental usage.</p>
                 </div>
         
             </div>
