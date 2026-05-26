@@ -33,6 +33,126 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-48692" data-description="fastnetmon community edition through 1.2.9 exposes a grpc api server on port 50052 with no authentication mechanism. the server is initialized with grpc::insecureservercredentials() (src/fastnetmon.cpp line 477) and a source code comment explicitly acknowledges 'listen on the given address without any authentication mechanism.' none of the rpc methods in src/api.cpp (executeban, executeunban, getbanlist, gettotaltrafficcounters, etc.) perform any credential verification. the executeban and executeunban methods trigger security-critical actions: bgp route announcements that can blackhole network traffic, and execution of external notification scripts via popen(). an attacker with local network access can ban arbitrary ip addresses (causing denial of service to legitimate traffic), unban active attacks (disabling ddos mitigation), and trigger script execution. there is also no role-based access control separating read-only monitoring from destructive administrative operations.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48692" target="_blank">CVE-2026-48692</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 exposes a gRPC API server on port 50052 with no authentication mechanism. The server is initialized with grpc::InsecureServerCredentials() (src/fastnetmon.cpp line 477) and a source code comment explicitly acknowledges 'Listen on the given address without any authentication mechanism.' None of the RPC methods in src/api.cpp (ExecuteBan, ExecuteUnBan, GetBanlist, GetTotalTrafficCounters, etc.) perform any credential verification. The ExecuteBan and ExecuteUnBan methods trigger security-critical actions: BGP route announcements that can blackhole network traffic, and execution of external notification scripts via popen(). An attacker with local network access can ban arbitrary IP addresses (causing denial of service to legitimate traffic), unban active attacks (disabling DDoS mitigation), and trigger script execution. There is also no role-based access control separating read-only monitoring from destructive administrative operations.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48688" data-description="fastnetmon community edition through 1.2.9 contains multiple out-of-bounds reads in the bgp mp_reach_nlri ipv6 attribute decoder. the function decode_mp_reach_ipv6() in src/bgp_protocol.cpp contains a todo comment at line 156 explicitly acknowledging 'we should add sanity checks to avoid reads after attribute memory block.' the function casts raw pointers to structure types without verifying sufficient data exists (line 158), uses the attacker-controlled length_of_next_hop field to determine memcpy size (line 181), and computes prefix_length by dereferencing a pointer calculated from multiple attacker-controlled offsets without bounds validation (line 189). the prefix_length is then used to calculate number_of_bytes_required_for_prefix which becomes a memcpy length (line 202) with no check against remaining buffer size.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48688" target="_blank">CVE-2026-48688</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 contains multiple out-of-bounds reads in the BGP MP_REACH_NLRI IPv6 attribute decoder. The function decode_mp_reach_ipv6() in src/bgp_protocol.cpp contains a TODO comment at line 156 explicitly acknowledging 'we should add sanity checks to avoid reads after attribute memory block.' The function casts raw pointers to structure types without verifying sufficient data exists (line 158), uses the attacker-controlled length_of_next_hop field to determine memcpy size (line 181), and computes prefix_length by dereferencing a pointer calculated from multiple attacker-controlled offsets without bounds validation (line 189). The prefix_length is then used to calculate number_of_bytes_required_for_prefix which becomes a memcpy length (line 202) with no check against remaining buffer size.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48687" data-description="fastnetmon community edition through 1.2.9 contains an os command injection vulnerability in the juniper router integration plugin. the _log() function in src/juniper_plugin/fastnetmon_juniper.php (lines 117-118) constructs shell commands by concatenating the $msg parameter directly into exec() calls: exec("echo `date` \"- {fastnetmon] - " . $msg . " \" >> " . $file_log_tmp). the $msg variable contains unsanitized data derived from command-line arguments argv[1] through argv[3], which represent the attack ip address, direction, and power. while fastnetmon's c++ core currently passes ip addresses via inet_ntoa() (which only produces safe dotted-decimal notation), the php script performs no input validation or shell escaping. if the script is invoked directly, by another orchestration system, or if future code changes pass string-sourced ips, arbitrary commands can be injected. the correct fix is to replace exec() with file_put_contents() or use escapeshellarg() on all parameters.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48687" target="_blank">CVE-2026-48687</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 contains an OS command injection vulnerability in the Juniper router integration plugin. The _log() function in src/juniper_plugin/fastnetmon_juniper.php (lines 117-118) constructs shell commands by concatenating the $msg parameter directly into exec() calls: exec("echo `date` \"- {FASTNETMON] - " . $msg . " \" >> " . $FILE_LOG_TMP). The $msg variable contains unsanitized data derived from command-line arguments argv[1] through argv[3], which represent the attack IP address, direction, and power. While FastNetMon's C++ core currently passes IP addresses via inet_ntoa() (which only produces safe dotted-decimal notation), the PHP script performs no input validation or shell escaping. If the script is invoked directly, by another orchestration system, or if future code changes pass string-sourced IPs, arbitrary commands can be injected. The correct fix is to replace exec() with file_put_contents() or use escapeshellarg() on all parameters.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48686" data-description="fastnetmon community edition through 1.2.9 contains a stack-based buffer overflow in the bgp nlri (network layer reachability information) decoder. the function decode_bgp_subnet_encoding_ipv4_raw() in src/bgp_protocol.cpp reads prefix_bit_length directly from the bgp packet (line 99) without validating it is <= 32 for ipv4 prefixes. this value is passed to how_much_bytes_we_need_for_storing_certain_subnet_mask() which computes ceil(prefix_bit_length / 8), returning up to 32 bytes for a prefix_bit_length of 255. the result is used as the length argument to memcpy() (line 106), which copies into a 4-byte uint32_t stack variable (prefix_ipv4). this causes a stack buffer overflow of up to 28 bytes, which can be exploited for arbitrary code execution. additionally, the unvalidated prefix_bit_length is passed to convert_cidr_to_binary_netmask_local_function_copy() (line 111), where a shift of (32 - cidr) with cidr > 32 causes undefined behavior.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48686" target="_blank">CVE-2026-48686</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 contains a stack-based buffer overflow in the BGP NLRI (Network Layer Reachability Information) decoder. The function decode_bgp_subnet_encoding_ipv4_raw() in src/bgp_protocol.cpp reads prefix_bit_length directly from the BGP packet (line 99) without validating it is <= 32 for IPv4 prefixes. This value is passed to how_much_bytes_we_need_for_storing_certain_subnet_mask() which computes ceil(prefix_bit_length / 8), returning up to 32 bytes for a prefix_bit_length of 255. The result is used as the length argument to memcpy() (line 106), which copies into a 4-byte uint32_t stack variable (prefix_ipv4). This causes a stack buffer overflow of up to 28 bytes, which can be exploited for arbitrary code execution. Additionally, the unvalidated prefix_bit_length is passed to convert_cidr_to_binary_netmask_local_function_copy() (line 111), where a shift of (32 - cidr) with cidr > 32 causes undefined behavior.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48685" data-description="fastnetmon community edition through 1.2.9 has out-of-bounds memory access because it incorrectly parses bgp path attributes with the extended length flag set. in src/bgp_protocol.hpp, the parse_raw_bgp_attribute() function correctly identifies when extended_length_bit is set and sets length_of_length_field to 2, but then reads only a single byte for the attribute value length (attribute_value_length = value[2] at line 173). per rfc 4271 section 4.3, when the extended length bit is set, the attribute length field is two octets and the value should be read as a 16-bit big-endian integer from value[2] and value[3]. as a result, any attribute longer than 255 bytes has its length silently truncated to the low byte (e.g., 300 bytes = 0x012c is read as 0x2c = 44 bytes). the remaining 256 bytes are then misinterpreted as subsequent attributes, causing cascading parse failures and potential out-of-bounds memory access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48685" target="_blank">CVE-2026-48685</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 has out-of-bounds memory access because it incorrectly parses BGP path attributes with the extended length flag set. In src/bgp_protocol.hpp, the parse_raw_bgp_attribute() function correctly identifies when extended_length_bit is set and sets length_of_length_field to 2, but then reads only a single byte for the attribute value length (attribute_value_length = value[2] at line 173). Per RFC 4271 Section 4.3, when the Extended Length bit is set, the Attribute Length field is two octets and the value should be read as a 16-bit big-endian integer from value[2] and value[3]. As a result, any attribute longer than 255 bytes has its length silently truncated to the low byte (e.g., 300 bytes = 0x012C is read as 0x2C = 44 bytes). The remaining 256 bytes are then misinterpreted as subsequent attributes, causing cascading parse failures and potential out-of-bounds memory access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48684" data-description="fastnetmon community edition through 1.2.9 contains an out-of-bounds read in the netflow v9 options template parser. in process_netflow_v9_options_template() (src/netflow_plugin/netflow_v9_collector.cpp), the scope parsing loop (lines 224-229) iterates until scopes_offset reaches the attacker-controlled option_scope_length value, reading netflow9_template_flowset_record_t structures at each step. no bounds check validates that (zone_address + scopes_offset + sizeof(record)) stays within the flowset. the same issue affects the options field loop (lines 241-257) with option_length. furthermore, option_scope_length is not validated to be a multiple of sizeof(netflow9_template_flowset_record_t), potentially causing misaligned reads. an attacker can trigger reads past the end of the udp packet buffer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48684" target="_blank">CVE-2026-48684</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 contains an out-of-bounds read in the NetFlow v9 options template parser. In process_netflow_v9_options_template() (src/netflow_plugin/netflow_v9_collector.cpp), the scope parsing loop (lines 224-229) iterates until scopes_offset reaches the attacker-controlled option_scope_length value, reading netflow9_template_flowset_record_t structures at each step. No bounds check validates that (zone_address + scopes_offset + sizeof(record)) stays within the flowset. The same issue affects the options field loop (lines 241-257) with option_length. Furthermore, option_scope_length is not validated to be a multiple of sizeof(netflow9_template_flowset_record_t), potentially causing misaligned reads. An attacker can trigger reads past the end of the UDP packet buffer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48683" data-description="fastnetmon community edition through 1.2.9 contains an out-of-bounds read vulnerability in the netflow v9 data flowset processor. in src/netflow_plugin/netflow_v9_collector.cpp, the data template branch (lines 1695-1702) iterates over flow records without performing a per-iteration bounds check against the packet end pointer. in contrast, the options template branch (lines 1709-1719) correctly checks 'if (pkt + offset + field_template->total_length > packet_end)' before each iteration. the data branch omits this check entirely. since template definitions are sent by the network peer (and are unauthenticated udp), an attacker can craft templates that cause the parser to read arbitrary memory past the packet buffer. this can leak sensitive memory contents or cause a crash.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48683" target="_blank">CVE-2026-48683</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>FastNetMon Community Edition through 1.2.9 contains an out-of-bounds read vulnerability in the NetFlow v9 data flowset processor. In src/netflow_plugin/netflow_v9_collector.cpp, the Data template branch (lines 1695-1702) iterates over flow records without performing a per-iteration bounds check against the packet end pointer. In contrast, the Options template branch (lines 1709-1719) correctly checks 'if (pkt + offset + field_template->total_length > packet_end)' before each iteration. The Data branch omits this check entirely. Since template definitions are sent by the network peer (and are unauthenticated UDP), an attacker can craft templates that cause the parser to read arbitrary memory past the packet buffer. This can leak sensitive memory contents or cause a crash.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46620" data-description="e107 is a content management system (cms). prior to 2.3.5, e107 cms does not properly enforce csrf token validation on comment moderation actions. the problem comes down to how session_handler::check() handles csrf tokens. instead of requiring a token on every state-changing request, it only validates the token if one happens to be present. if there is no token at all, the check is skipped entirely. this vulnerability is fixed in 2.3.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46620" target="_blank">CVE-2026-46620</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>e107 is a content management system (CMS). Prior to 2.3.5, e107 CMS does not properly enforce CSRF token validation on comment moderation actions. The problem comes down to how session_handler::check() handles CSRF tokens. Instead of requiring a token on every state-changing request, it only validates the token if one happens to be present. If there is no token at all, the check is skipped entirely. This vulnerability is fixed in 2.3.5.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-43936" data-description="e107 is a content management system (cms). prior to 2.3.4, you can access the local environment by specifying the url of the local environment from "image/file url:" of "from a remote location" in "media manager" on the administrator screen. this vulnerability is fixed in 2.3.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43936" target="_blank">CVE-2026-43936</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>e107 is a content management system (CMS). Prior to 2.3.4, you can access the local environment by specifying the URL of the local environment from "Image/File URL:" of "From a remote location" in "Media Manager" on the administrator screen. This vulnerability is fixed in 2.3.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-43935" data-description="e107 is a content management system (cms). prior to 2.3.4, a host header injection vulnerability in the password reset page allows attackers to manipulate the host header to generate password reset links pointing to attacker-controlled domains. this can lead to phishing attacks, account takeover, or other security risks. the severity is high, as the vulnerability affects a critical function related to user authentication. this vulnerability is fixed in 2.3.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43935" target="_blank">CVE-2026-43935</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>e107 is a content management system (CMS). Prior to 2.3.4, a Host Header Injection vulnerability in the password reset page allows attackers to manipulate the Host header to generate password reset links pointing to attacker-controlled domains. This can lead to phishing attacks, account takeover, or other security risks. The severity is high, as the vulnerability affects a critical function related to user authentication. This vulnerability is fixed in 2.3.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-43934" data-description="e107 is a content management system (cms). prior to 2.3.4, a broken access control vulnerability exists in the application, allowing an unauthorized authenticated user to edit comments posted by others. this stems from inadequate server-side access control validation, where the application depends only on a predictable identifier in the request to determine which comment to edit, without confirming the requesting user’s ownership of the comment. this vulnerability is fixed in 2.3.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43934" target="_blank">CVE-2026-43934</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>e107 is a content management system (CMS). Prior to 2.3.4, a Broken Access Control vulnerability exists in the application, allowing an unauthorized authenticated user to edit comments posted by others. This stems from inadequate server-side access control validation, where the application depends only on a predictable identifier in the request to determine which comment to edit, without confirming the requesting user’s ownership of the comment. This vulnerability is fixed in 2.3.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-40564" data-description="files or directories accessible to external parties, server-side request forgery (ssrf) vulnerability in apache flink kubernetes operator.
+
+the flinksessionjob jaruri is currently not validated so that it points to user-owned files or addresses.  this lets a user with cr create permissions read files from the operator pod's filesystem and pull content from any backing store reachable through flink's pluggable filesystem layer and access them through the submitted flink job. furthermore for fetching from http/https addresses there is currently no allowlist on the uri scheme, no host check, no ip-range restriction, and no protection against pointing the uri at internal or link-local addresses.this issue affects apache flink kubernetes operator: from 1.3.0 before 1.15.0.
+
+users are recommended to upgrade to version 1.15.0, which fixes the issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40564" target="_blank">CVE-2026-40564</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Files or Directories Accessible to External Parties, Server-Side Request Forgery (SSRF) vulnerability in Apache Flink Kubernetes Operator.
+
+The FlinkSessionJob jarURI is currently not validated so that it points to user-owned files or addresses.  This lets a user with CR create permissions read files from the operator pod's filesystem and pull content from any backing store reachable through Flink's pluggable filesystem layer and access them through the submitted Flink job. Furthermore for fetching from http/https addresses there is currently no allowlist on the URI scheme, no host check, no IP-range restriction, and no protection against pointing the URI at internal or link-local addresses.This issue affects Apache Flink Kubernetes Operator: from 1.3.0 before 1.15.0.
+
+Users are recommended to upgrade to version 1.15.0, which fixes the issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-38587" data-description="an insecure direct object reference (idor) vulnerability was discovered in onlyoffice docspace before 3.2.1. the flaw exists in multiple rest api endpoints. this allows authenticated users with low-level permissions (user or guest) to retrieve sensitive information, such as the owner's unique identifier (id) and profile information, which should only be accessible to administrators.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-38587" target="_blank">CVE-2026-38587</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An Insecure Direct Object Reference (IDOR) vulnerability was discovered in ONLYOFFICE DocSpace before 3.2.1. The flaw exists in multiple REST API endpoints. This allows authenticated users with low-level permissions (User or Guest) to retrieve sensitive information, such as the Owner's unique identifier (ID) and profile information, which should only be accessible to administrators.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-25112" data-description="a high-severity vulnerability in the deployment of genetec rabbitmq that allows a privilege escalation attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25112" target="_blank">CVE-2026-25112</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-26 11:16:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>A high-severity vulnerability in the deployment of Genetec RabbitMQ that allows a privilege escalation attack.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-9552" data-description="a security flaw has been discovered in das parking management system 停车场管理系统 6.2.0. this vulnerability affects unknown code of the component search api endpoint. the manipulation of the argument value results in sql injection. it is possible to launch the attack remotely. the exploit has been released to the public and may be used for attacks. the vendor was contacted early about this disclosure but did not respond in any way.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9552" target="_blank">CVE-2026-9552</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-05-26 10:17:02 CDT</p>
@@ -81,118 +201,6 @@ substitution character without escaping shell meta characters. A remote attacker
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
                     <p>Mirasvit Full Page Cache Warmer for Magento 2 before version 1.11.12 contains a PHP object injection vulnerability that allows unauthenticated attackers to achieve remote code execution by supplying a crafted serialized PHP object in the CacheWarmer cookie. Attackers can exploit the unrestricted call to PHP's native unserialize() function combined with gadget chains available in Magento and its dependencies to execute arbitrary code on the server.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-45082" data-description="karakeep is a elf-hostable bookmark-everything app. a server-side request forgery (ssrf) protection bypass vulnerability was identified in versions prior to 0.32.0 affecting redirect-following processing components. although the application implements protections intended to prevent requests toward internal/private network destinations, these protections could be bypassed through crafted http redirect chains. by leveraging attacker-controlled redirects, an authenticated user could cause vulnerable application components to initiate requests toward internally reachable docker network services accessible from the application environment. the issue affected multiple processing paths, including crawler-related functionality and video download processing flows. version 0.32.0 contains a patch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-45082" target="_blank">CVE-2026-45082</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>Karakeep is a elf-hostable bookmark-everything app. A Server-Side Request Forgery (SSRF) protection bypass vulnerability was identified in versions prior to 0.32.0 affecting redirect-following processing components. Although the application implements protections intended to prevent requests toward internal/private network destinations, these protections could be bypassed through crafted HTTP redirect chains. By leveraging attacker-controlled redirects, an authenticated user could cause vulnerable application components to initiate requests toward internally reachable Docker network services accessible from the application environment. The issue affected multiple processing paths, including crawler-related functionality and video download processing flows. Version 0.32.0 contains a patch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-43919" data-description="rejected reason: ** reject ** do not use this candidate number. consultids: cve-2026-43918. reason: this candidate is a duplicate of cve-2026-43918. notes: all cve users should reference cve-2026-43918 instead of this candidate.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43919" target="_blank">CVE-2026-43919</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: ** REJECT ** DO NOT USE THIS CANDIDATE NUMBER. ConsultIDs: CVE-2026-43918. Reason: This candidate is a duplicate of CVE-2026-43918. Notes: All CVE users should reference CVE-2026-43918 instead of this candidate.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42785" data-description="openkm 6.3.12 contains a remote code execution vulnerability that allows authenticated administrators to execute arbitrary java/beanshell code through the /admin/scripting endpoint. attackers can submit malicious script content with an action=evaluate parameter to execute operating system commands in the context of the openkm application server.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42785" target="_blank">CVE-2026-42785</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>OpenKM 6.3.12 contains a remote code execution vulnerability that allows authenticated administrators to execute arbitrary Java/BeanShell code through the /admin/Scripting endpoint. Attackers can submit malicious script content with an action=Evaluate parameter to execute operating system commands in the context of the OpenKM application server.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42425" data-description="openkm 6.3.12 contains an unrestricted sql execution vulnerability that allows authenticated administrative users to execute arbitrary sql statements against the application database via the databasequery interface. attackers can submit malicious sql queries through the qs parameter to the /admin/databasequery endpoint to extract sensitive data including usernames and password hashes from the okm_user table, modify permissions, or delete database records.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42425" target="_blank">CVE-2026-42425</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>OpenKM 6.3.12 contains an unrestricted SQL execution vulnerability that allows authenticated administrative users to execute arbitrary SQL statements against the application database via the DatabaseQuery interface. Attackers can submit malicious SQL queries through the qs parameter to the /admin/DatabaseQuery endpoint to extract sensitive data including usernames and password hashes from the OKM_USER table, modify permissions, or delete database records.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42347" data-description="rejected reason: ** reject ** do not use this candidate number. consultids: cve-2026-28496. reason: this candidate is a duplicate of cve-2026-28496. notes: all cve users should reference cve-2026-28496 instead of this candidate.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42347" target="_blank">CVE-2026-42347</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: ** REJECT ** DO NOT USE THIS CANDIDATE NUMBER. ConsultIDs: CVE-2026-28496. Reason: This candidate is a duplicate of CVE-2026-28496. Notes: All CVE users should reference CVE-2026-28496 instead of this candidate.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41917" data-description="openkm 6.3.12 contains a local file inclusion vulnerability in the administrative scripting interface at /admin/scripting that allows authenticated administrators to read arbitrary files by supplying an attacker-controlled filesystem path through the fspath parameter with action=load. attackers can exploit this to access sensitive files including /etc/passwd, configuration files containing database credentials, and jvm keystores accessible to the openkm process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41917" target="_blank">CVE-2026-41917</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>OpenKM 6.3.12 contains a local file inclusion vulnerability in the administrative scripting interface at /admin/Scripting that allows authenticated administrators to read arbitrary files by supplying an attacker-controlled filesystem path through the fsPath parameter with action=Load. Attackers can exploit this to access sensitive files including /etc/passwd, configuration files containing database credentials, and JVM keystores accessible to the OpenKM process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41401" data-description="libyang before 5.2.6 contains a heap use-after-free write vulnerability in lyd_parser_set_data_flags that incorrectly updates metadata list pointers when freeing non-head default metadata entries. attackers can trigger this vulnerability by submitting crafted yang xml documents with specific metadata attributes to applications parsing untrusted xml data, causing process crashes or potential code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41401" target="_blank">CVE-2026-41401</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>libyang before 5.2.6 contains a heap use-after-free write vulnerability in lyd_parser_set_data_flags that incorrectly updates metadata list pointers when freeing non-head default metadata entries. Attackers can trigger this vulnerability by submitting crafted YANG XML documents with specific metadata attributes to applications parsing untrusted XML data, causing process crashes or potential code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40034" data-description="gix-submodule before 0.82.0 incorrectly validates the update field in .gitmodules, allowing attackers to bypass the commandforbiddeninmodulesconfiguration guard when a submodule has been initialized with only partial configuration in .git/config. an attacker can inject arbitrary shell commands via the update field in .gitmodules that will be executed when submodule::update() is called on a previously-initialized submodule, enabling remote code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40034" target="_blank">CVE-2026-40034</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>gix-submodule before 0.82.0 incorrectly validates the update field in .gitmodules, allowing attackers to bypass the CommandForbiddenInModulesConfiguration guard when a submodule has been initialized with only partial configuration in .git/config. An attacker can inject arbitrary shell commands via the update field in .gitmodules that will be executed when Submodule::update() is called on a previously-initialized submodule, enabling remote code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40033" data-description="freerdp before 3.26.0 contains a heap-buffer-overflow vulnerability in gdi_cachetosurface that allows remote attackers to write out-of-bounds heap memory. the vulnerability occurs because rectangle validation clamps coordinates to uint16_max but performs copy operations using unclamped cache entry dimensions, enabling malicious rdp servers to trigger large out-of-bounds writes and potentially achieve remote code execution or client crash.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40033" target="_blank">CVE-2026-40033</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 10:16:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>FreeRDP before 3.26.0 contains a heap-buffer-overflow vulnerability in gdi_CacheToSurface that allows remote attackers to write out-of-bounds heap memory. The vulnerability occurs because rectangle validation clamps coordinates to UINT16_MAX but performs copy operations using unclamped cache entry dimensions, enabling malicious RDP servers to trigger large out-of-bounds writes and potentially achieve remote code execution or client crash.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9544" data-description="a vulnerability was found in shenzhen sixun software sixun shanghui group business management system 10. affected by this vulnerability is an unknown functionality of the file /api/dinner/payconfig. performing a manipulation of the argument tableno results in sql injection. the attack is possible to be carried out remotely. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9544" target="_blank">CVE-2026-9544</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 09:16:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was found in Shenzhen Sixun Software Sixun Shanghui Group Business Management System 10. Affected by this vulnerability is an unknown functionality of the file /api/Dinner/PayConfig. Performing a manipulation of the argument tableno results in sql injection. The attack is possible to be carried out remotely. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9543" data-description="a vulnerability has been found in totolink n300rh 6.1c.1353_b20190305. affected is the function setpasswordcfg of the file /cgi-bin/cstecgi.cgi of the component web management interface. such manipulation of the argument admpass leads to os command injection. the attack can be executed remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9543" target="_blank">CVE-2026-9543</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 09:16:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>A vulnerability has been found in Totolink N300RH 6.1c.1353_B20190305. Affected is the function setPasswordCfg of the file /cgi-bin/cstecgi.cgi of the component Web Management Interface. Such manipulation of the argument admpass leads to os command injection. The attack can be executed remotely. The exploit has been disclosed to the public and may be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9542" data-description="a weakness has been identified in codeastro leave management system 1.0. the affected element is an unknown function of the file /admin/add_staff.php. executing a manipulation of the argument email_id can lead to sql injection. the attack can be launched remotely. the exploit has been made available to the public and could be used for attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9542" target="_blank">CVE-2026-9542</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 09:16:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A weakness has been identified in CodeAstro Leave Management System 1.0. The affected element is an unknown function of the file /admin/add_staff.php. Executing a manipulation of the argument email_id can lead to sql injection. The attack can be launched remotely. The exploit has been made available to the public and could be used for attacks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9541" data-description="a security flaw has been discovered in squirrel up to 3.2. impacted is the function readobject of the file squirrel/sqobject.cpp of the component cnut file handler. performing a manipulation results in heap-based buffer overflow. the attack is only possible with local access. the exploit has been released to the public and may be used for attacks. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9541" target="_blank">CVE-2026-9541</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 09:16:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A security flaw has been discovered in Squirrel up to 3.2. Impacted is the function ReadObject of the file squirrel/sqobject.cpp of the component Cnut File Handler. Performing a manipulation results in heap-based buffer overflow. The attack is only possible with local access. The exploit has been released to the public and may be used for attacks. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9540" data-description="a vulnerability was identified in vllm-project vllm 0.19.0. this issue affects some unknown processing of the component openai-compatible serving path. such manipulation leads to denial of service. it is possible to launch the attack remotely. the exploit is publicly available and might be used. the pull request to fix this issue awaits acceptance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9540" target="_blank">CVE-2026-9540</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-26 09:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability was identified in vllm-project vllm 0.19.0. This issue affects some unknown processing of the component OpenAI-compatible Serving Path. Such manipulation leads to denial of service. It is possible to launch the attack remotely. The exploit is publicly available and might be used. The pull request to fix this issue awaits acceptance.</p>
                 </div>
         
             </div>
