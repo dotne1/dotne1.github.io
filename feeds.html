@@ -33,6 +33,108 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-46242" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+eventpoll: fix ep_remove struct eventpoll / struct file uaf
+
+ep_remove() (via ep_remove_file()) cleared file->f_ep under
+file->f_lock but then kept using @file inside the critical section
+(is_file_epoll(), hlist_del_rcu() through the head, spin_unlock).
+a concurrent __fput() taking the eventpoll_release() fastpath in
+that window observed the transient null, skipped
+eventpoll_release_file() and ran to f_op->release / file_free().
+
+for the epoll-watches-epoll case, f_op->release is
+ep_eventpoll_release() -> ep_clear_and_put() -> ep_free(), which
+kfree()s the watched struct eventpoll. its embedded ->refs
+hlist_head is exactly where epi->fllink.pprev points, so the
+subsequent hlist_del_rcu()'s "*pprev = next" scribbles into freed
+kmalloc-192 memory.
+
+in addition, struct file is slab_typesafe_by_rcu, so the slot
+backing @file could be recycled by alloc_empty_file() --
+reinitializing f_lock and f_ep -- while ep_remove() is still
+nominally inside that lock. the upshot is an attacker-controllable
+kmem_cache_free() against the wrong slab cache.
+
+pin @file via epi_fget() at the top of ep_remove() and gate the
+critical section on the pin succeeding. with the pin held @file
+cannot reach refcount zero, which holds __fput() off and
+transitively keeps the watched struct eventpoll alive across the
+hlist_del_rcu() and the f_lock use, closing both uafs.
+
+if the pin fails @file has already reached refcount zero and its
+__fput() is in flight. because we bailed before clearing f_ep,
+that path takes the eventpoll_release() slow path into
+eventpoll_release_file() and blocks on ep->mtx until the waiter
+side's ep_clear_and_put() drops it. the bailed epi's share of
+ep->refcount stays intact, so the trailing ep_refcount_dec_and_test()
+in ep_clear_and_put() cannot free the eventpoll out from under
+eventpoll_release_file(); the orphaned epi is then cleaned up
+there.
+
+a successful pin also proves we are not racing
+eventpoll_release_file() on this epi, so drop the now-redundant
+re-check of epi->dying under f_lock. the cheap lockless
+read_once(epi->dying) fast-path bailout stays.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46242" target="_blank">CVE-2026-46242</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 08:16:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+eventpoll: fix ep_remove struct eventpoll / struct file UAF
+
+ep_remove() (via ep_remove_file()) cleared file->f_ep under
+file->f_lock but then kept using @file inside the critical section
+(is_file_epoll(), hlist_del_rcu() through the head, spin_unlock).
+A concurrent __fput() taking the eventpoll_release() fastpath in
+that window observed the transient NULL, skipped
+eventpoll_release_file() and ran to f_op->release / file_free().
+
+For the epoll-watches-epoll case, f_op->release is
+ep_eventpoll_release() -> ep_clear_and_put() -> ep_free(), which
+kfree()s the watched struct eventpoll. Its embedded ->refs
+hlist_head is exactly where epi->fllink.pprev points, so the
+subsequent hlist_del_rcu()'s "*pprev = next" scribbles into freed
+kmalloc-192 memory.
+
+In addition, struct file is SLAB_TYPESAFE_BY_RCU, so the slot
+backing @file could be recycled by alloc_empty_file() --
+reinitializing f_lock and f_ep -- while ep_remove() is still
+nominally inside that lock. The upshot is an attacker-controllable
+kmem_cache_free() against the wrong slab cache.
+
+Pin @file via epi_fget() at the top of ep_remove() and gate the
+critical section on the pin succeeding. With the pin held @file
+cannot reach refcount zero, which holds __fput() off and
+transitively keeps the watched struct eventpoll alive across the
+hlist_del_rcu() and the f_lock use, closing both UAFs.
+
+If the pin fails @file has already reached refcount zero and its
+__fput() is in flight. Because we bailed before clearing f_ep,
+that path takes the eventpoll_release() slow path into
+eventpoll_release_file() and blocks on ep->mtx until the waiter
+side's ep_clear_and_put() drops it. The bailed epi's share of
+ep->refcount stays intact, so the trailing ep_refcount_dec_and_test()
+in ep_clear_and_put() cannot free the eventpoll out from under
+eventpoll_release_file(); the orphaned epi is then cleaned up
+there.
+
+A successful pin also proves we are not racing
+eventpoll_release_file() on this epi, so drop the now-redundant
+re-check of epi->dying under f_lock. The cheap lockless
+READ_ONCE(epi->dying) fast-path bailout stays.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-10117" data-description="a weakness has been identified in open5gs up to 2.7.7. this issue affects the function ogs_pool_id_calloc in the library /lib/sbi/nghttp2-server.c. executing a manipulation can lead to denial of service. the attack may be launched remotely. the exploit has been made available to the public and could be used for attacks. it is best practice to apply a patch to resolve this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10117" target="_blank">CVE-2026-10117</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 08:16:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A weakness has been identified in Open5GS up to 2.7.7. This issue affects the function ogs_pool_id_calloc in the library /lib/sbi/nghttp2-server.c. Executing a manipulation can lead to denial of service. The attack may be launched remotely. The exploit has been made available to the public and could be used for attacks. It is best practice to apply a patch to resolve this issue.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-10116" data-description="a security flaw has been discovered in open5gs up to 2.7.7. this vulnerability affects the function ogs_sbi_xact_add in the library /lib/core/ogs-timer.c of the component ue-authentications endpoint. performing a manipulation results in denial of service. the attack may be initiated remotely. the exploit has been released to the public and may be used for attacks. applying a patch is the recommended action to fix this issue.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10116" target="_blank">CVE-2026-10116</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-05-30 07:16:23 CDT</p>
@@ -205,22 +307,6 @@ The condition was reported through coordinated disclosure by Hope Walker (Specte
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.4</p>
                     <p>Spatie Laravel Media Library before version 11.23.0 contains a server-side request forgery vulnerability that allows remote attackers to cause the server to issue arbitrary outbound HTTP requests by passing user-controlled URLs to the addMediaFromUrl() method in InteractsWithMedia.php.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-47266" data-description="formie is a craft cms plugin for creating forms. prior to 2.2.21 and 3.1.26, unauthenticated users could modify existing submissions by posting a known or guessed submission id to formie/submissions/save-submission. this vulnerability is fixed in 2.2.21 and 3.1.26.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-47266" target="_blank">CVE-2026-47266</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 15:16:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Formie is a Craft CMS plugin for creating forms. Prior to 2.2.21 and 3.1.26, unauthenticated users could modify existing submissions by posting a known or guessed submission ID to formie/submissions/save-submission. This vulnerability is fixed in 2.2.21 and 3.1.26.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-47123" data-description="freescout is a free help desk and shared inbox built with php's laravel framework. prior to 1.8.220, the email processing pipeline in freescout's fetchemails command has two code paths for identifying agent (user) replies based on in-reply-to / references headers. the notification reply path (notify-{thread_id}-{user_id}-...) extracts thread_id and user_id directly from the message-id without hmac verification. an external attacker who can spoof the from address of a helpdesk agent can inject messages that freescout processes as legitimate agent replies — which are then automatically forwarded to customers via the legitimate smtp server. this vulnerability is fixed in 1.8.220.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-47123" target="_blank">CVE-2026-47123</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 15:16:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>FreeScout is a free help desk and shared inbox built with PHP's Laravel framework. Prior to 1.8.220, the email processing pipeline in FreeScout's FetchEmails command has two code paths for identifying agent (user) replies based on In-Reply-To / References headers. The notification reply path (notify-{thread_id}-{user_id}-...) extracts thread_id and user_id directly from the Message-ID without HMAC verification. An external attacker who can spoof the From address of a helpdesk agent can inject messages that FreeScout processes as legitimate agent replies — which are then automatically forwarded to customers via the legitimate SMTP server. This vulnerability is fixed in 1.8.220.</p>
                 </div>
         
             </div>
