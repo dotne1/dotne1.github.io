@@ -33,280 +33,176 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-10120" data-description="a vulnerability was detected in trendnet tew-432brp 3.10b20. the affected element is the function formsetfirewallrule of the file /goform/formsetfirewallrule. the manipulation of the argument firewall_name results in stack-based buffer overflow. the attack can be executed remotely. the exploit is now public and may be used. the vendor explains: "this product has been eol for 15 years (since 2009). as the item has been eol for such a long time, we are not able to replicate or fix any vulnerabilities." this vulnerability only affects products that are no longer supported by the maintainer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10120" target="_blank">CVE-2026-10120</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 10:16:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A vulnerability was detected in TRENDnet TEW-432BRP 3.10B20. The affected element is the function formSetFirewallRule of the file /goform/formSetFirewallRule. The manipulation of the argument firewall_name results in stack-based buffer overflow. The attack can be executed remotely. The exploit is now public and may be used. The vendor explains: "This product has been EOL for 15 years (since 2009). As the item has been EOL for such a long time, we are not able to replicate or fix any vulnerabilities." This vulnerability only affects products that are no longer supported by the maintainer.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10119" data-description="a security vulnerability has been detected in trendnet tew-432brp 3.10b20. impacted is the function formsetmacfilter of the file /goform/formsetmacfilter. the manipulation of the argument filter_name leads to stack-based buffer overflow. remote exploitation of the attack is possible. the exploit has been disclosed publicly and may be used. the vendor explains: "this product has been eol for 15 years (since 2009). as the item has been eol for such a long time, we are not able to replicate or fix any vulnerabilities." this vulnerability only affects products that are no longer supported by the maintainer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10119" target="_blank">CVE-2026-10119</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 09:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A security vulnerability has been detected in TRENDnet TEW-432BRP 3.10B20. Impacted is the function formSetMACFilter of the file /goform/formSetMACFilter. The manipulation of the argument filter_name leads to stack-based buffer overflow. Remote exploitation of the attack is possible. The exploit has been disclosed publicly and may be used. The vendor explains: "This product has been EOL for 15 years (since 2009). As the item has been EOL for such a long time, we are not able to replicate or fix any vulnerabilities." This vulnerability only affects products that are no longer supported by the maintainer.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-46242" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-8594" data-description="text::linefold versions through 2019.001 for perl duplicate the output based on the number of special break characters.
 
-eventpoll: fix ep_remove struct eventpoll / struct file uaf
+text::linefold splits the input string by specific line break characters (such as vt, ff and others) into segments, but applies the break function to the entire string, not just the segment.
 
-ep_remove() (via ep_remove_file()) cleared file->f_ep under
-file->f_lock but then kept using @file inside the critical section
-(is_file_epoll(), hlist_del_rcu() through the head, spin_unlock).
-a concurrent __fput() taking the eventpoll_release() fastpath in
-that window observed the transient null, skipped
-eventpoll_release_file() and ran to f_op->release / file_free().
+a side effect of this is that the full input can be duplicated for each segment.  besides being incorrect, this can lead to unexpected resource consumption and possible denial of service.
 
-for the epoll-watches-epoll case, f_op->release is
-ep_eventpoll_release() -> ep_clear_and_put() -> ep_free(), which
-kfree()s the watched struct eventpoll. its embedded ->refs
-hlist_head is exactly where epi->fllink.pprev points, so the
-subsequent hlist_del_rcu()'s "*pprev = next" scribbles into freed
-kmalloc-192 memory.
-
-in addition, struct file is slab_typesafe_by_rcu, so the slot
-backing @file could be recycled by alloc_empty_file() --
-reinitializing f_lock and f_ep -- while ep_remove() is still
-nominally inside that lock. the upshot is an attacker-controllable
-kmem_cache_free() against the wrong slab cache.
-
-pin @file via epi_fget() at the top of ep_remove() and gate the
-critical section on the pin succeeding. with the pin held @file
-cannot reach refcount zero, which holds __fput() off and
-transitively keeps the watched struct eventpoll alive across the
-hlist_del_rcu() and the f_lock use, closing both uafs.
-
-if the pin fails @file has already reached refcount zero and its
-__fput() is in flight. because we bailed before clearing f_ep,
-that path takes the eventpoll_release() slow path into
-eventpoll_release_file() and blocks on ep->mtx until the waiter
-side's ep_clear_and_put() drops it. the bailed epi's share of
-ep->refcount stays intact, so the trailing ep_refcount_dec_and_test()
-in ep_clear_and_put() cannot free the eventpoll out from under
-eventpoll_release_file(); the orphaned epi is then cleaned up
-there.
-
-a successful pin also proves we are not racing
-eventpoll_release_file() on this epi, so drop the now-redundant
-re-check of epi->dying under f_lock. the cheap lockless
-read_once(epi->dying) fast-path bailout stays.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46242" target="_blank">CVE-2026-46242</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 08:16:21 CDT</p>
+note that text::linefold is part of the unicode-linebreak distribution, which may have a higher version number than the module.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8594" target="_blank">CVE-2026-8594</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:05 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+                    <p>Text::LineFold versions through 2019.001 for Perl duplicate the output based on the number of special break characters.
 
-eventpoll: fix ep_remove struct eventpoll / struct file UAF
+Text::LineFold splits the input string by specific line break characters (such as VT, FF and others) into segments, but applies the break function to the entire string, not just the segment.
 
-ep_remove() (via ep_remove_file()) cleared file->f_ep under
-file->f_lock but then kept using @file inside the critical section
-(is_file_epoll(), hlist_del_rcu() through the head, spin_unlock).
-A concurrent __fput() taking the eventpoll_release() fastpath in
-that window observed the transient NULL, skipped
-eventpoll_release_file() and ran to f_op->release / file_free().
+A side effect of this is that the full input can be duplicated for each segment.  Besides being incorrect, this can lead to unexpected resource consumption and possible denial of service.
 
-For the epoll-watches-epoll case, f_op->release is
-ep_eventpoll_release() -> ep_clear_and_put() -> ep_free(), which
-kfree()s the watched struct eventpoll. Its embedded ->refs
-hlist_head is exactly where epi->fllink.pprev points, so the
-subsequent hlist_del_rcu()'s "*pprev = next" scribbles into freed
-kmalloc-192 memory.
-
-In addition, struct file is SLAB_TYPESAFE_BY_RCU, so the slot
-backing @file could be recycled by alloc_empty_file() --
-reinitializing f_lock and f_ep -- while ep_remove() is still
-nominally inside that lock. The upshot is an attacker-controllable
-kmem_cache_free() against the wrong slab cache.
-
-Pin @file via epi_fget() at the top of ep_remove() and gate the
-critical section on the pin succeeding. With the pin held @file
-cannot reach refcount zero, which holds __fput() off and
-transitively keeps the watched struct eventpoll alive across the
-hlist_del_rcu() and the f_lock use, closing both UAFs.
-
-If the pin fails @file has already reached refcount zero and its
-__fput() is in flight. Because we bailed before clearing f_ep,
-that path takes the eventpoll_release() slow path into
-eventpoll_release_file() and blocks on ep->mtx until the waiter
-side's ep_clear_and_put() drops it. The bailed epi's share of
-ep->refcount stays intact, so the trailing ep_refcount_dec_and_test()
-in ep_clear_and_put() cannot free the eventpoll out from under
-eventpoll_release_file(); the orphaned epi is then cleaned up
-there.
-
-A successful pin also proves we are not racing
-eventpoll_release_file() on this epi, so drop the now-redundant
-re-check of epi->dying under f_lock. The cheap lockless
-READ_ONCE(epi->dying) fast-path bailout stays.</p>
+Note that Text::LineFold is part of the Unicode-LineBreak distribution, which may have a higher version number than the module.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-10117" data-description="a weakness has been identified in open5gs up to 2.7.7. this issue affects the function ogs_pool_id_calloc in the library /lib/sbi/nghttp2-server.c. executing a manipulation can lead to denial of service. the attack may be launched remotely. the exploit has been made available to the public and could be used for attacks. it is best practice to apply a patch to resolve this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10117" target="_blank">CVE-2026-10117</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 08:16:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A weakness has been identified in Open5GS up to 2.7.7. This issue affects the function ogs_pool_id_calloc in the library /lib/sbi/nghttp2-server.c. Executing a manipulation can lead to denial of service. The attack may be launched remotely. The exploit has been made available to the public and could be used for attacks. It is best practice to apply a patch to resolve this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10116" data-description="a security flaw has been discovered in open5gs up to 2.7.7. this vulnerability affects the function ogs_sbi_xact_add in the library /lib/core/ogs-timer.c of the component ue-authentications endpoint. performing a manipulation results in denial of service. the attack may be initiated remotely. the exploit has been released to the public and may be used for attacks. applying a patch is the recommended action to fix this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10116" target="_blank">CVE-2026-10116</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 07:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A security flaw has been discovered in Open5GS up to 2.7.7. This vulnerability affects the function ogs_sbi_xact_add in the library /lib/core/ogs-timer.c of the component ue-authentications Endpoint. Performing a manipulation results in denial of service. The attack may be initiated remotely. The exploit has been released to the public and may be used for attacks. Applying a patch is the recommended action to fix this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10115" data-description="a vulnerability was identified in open5gs up to 2.7.7. this affects an unknown part in the library lib/sbi/nnrf-handler.c of the component shared nf-profile parser. such manipulation leads to denial of service. the attack can be launched remotely. the exploit is publicly available and might be used. it is advisable to implement a patch to correct this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10115" target="_blank">CVE-2026-10115</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 06:17:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was identified in Open5GS up to 2.7.7. This affects an unknown part in the library lib/sbi/nnrf-handler.c of the component Shared NF-profile Parser. Such manipulation leads to denial of service. The attack can be launched remotely. The exploit is publicly available and might be used. It is advisable to implement a patch to correct this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10114" data-description="a vulnerability was determined in open5gs up to 2.7.7. affected by this issue is the function handle_scp_info in the library lib/sbi/nnrf-handler.c of the component shared nf-profile parser. this manipulation causes out-of-bounds write. the attack can be initiated remotely. the exploit has been publicly disclosed and may be utilized. to fix this issue, it is recommended to deploy a patch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10114" target="_blank">CVE-2026-10114</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 06:17:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was determined in Open5GS up to 2.7.7. Affected by this issue is the function handle_scp_info in the library lib/sbi/nnrf-handler.c of the component Shared NF-profile Parser. This manipulation causes out-of-bounds write. The attack can be initiated remotely. The exploit has been publicly disclosed and may be utilized. To fix this issue, it is recommended to deploy a patch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9757" data-description="the geo my wp plugin for wordpress is vulnerable to sql injection via the 'swlatlng' and 'nelatlng' parameters in all versions up to, and including, 4.5.5 the parameters are read from $_server['query_string'] via parse_str() (bypassing wordpress's wp_magic_quotes protection, which only covers $_post/$_get/$_cookie/$_request), then each is split on ',' via explode() and the resulting fragments are interpolated directly into a sql between clause in gmw_get_locations_within_boundaries_sql() without is_numeric() validation, (float) casting, esc_sql(), or $wpdb->prepare(). this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database. exploitation requires the site to host the posts locator search-results shortcode (`[gmw form="results" form_id=n]`) on a public page and to have at least one published post with an associated gmw_location row.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9757" target="_blank">CVE-2026-9757</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 05:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The GEO my WP plugin for WordPress is vulnerable to SQL Injection via the 'swlatlng' and 'nelatlng' parameters in all versions up to, and including, 4.5.5 The parameters are read from $_SERVER['QUERY_STRING'] via parse_str() (bypassing WordPress's wp_magic_quotes protection, which only covers $_POST/$_GET/$_COOKIE/$_REQUEST), then each is split on ',' via explode() and the resulting fragments are interpolated directly into a SQL BETWEEN clause in gmw_get_locations_within_boundaries_sql() without is_numeric() validation, (float) casting, esc_sql(), or $wpdb->prepare(). This makes it possible for unauthenticated attackers to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. Exploitation requires the site to host the Posts Locator search-results shortcode (`[gmw form="results" form_id=N]`) on a public page and to have at least one published post with an associated gmw_location row.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-7465" data-description="the spectra gutenberg blocks – website builder for the block editor plugin for wordpress is vulnerable to remote code execution in all versions up to, and including, 2.19.25. this makes it possible for authenticated attackers, with contributor-level access and above, to execute code on the server. exploitation requires a two-block payload embedded in post content: the first block registers a fake uagb/-prefixed block type with an attacker-specified render_callback, and the second block of the same fake type triggers invocation of that callback via call_user_func() during sequential block rendering in the same page request.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7465" target="_blank">CVE-2026-7465</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 05:16:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-10125" data-description="a vulnerability was identified in edimax br-6478ac 1.23. affected by this vulnerability is the function formpppoesetup of the file /goform/formpppoesetup of the component post request handler. the manipulation of the argument pppusername leads to stack-based buffer overflow. the attack can be initiated remotely. the exploit is publicly available and might be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10125" target="_blank">CVE-2026-10125</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:04 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The Spectra Gutenberg Blocks – Website Builder for the Block Editor plugin for WordPress is vulnerable to Remote Code Execution in all versions up to, and including, 2.19.25. This makes it possible for authenticated attackers, with Contributor-level access and above, to execute code on the server. Exploitation requires a two-block payload embedded in post content: the first block registers a fake uagb/-prefixed block type with an attacker-specified render_callback, and the second block of the same fake type triggers invocation of that callback via call_user_func() during sequential block rendering in the same page request.</p>
+                    <p>A vulnerability was identified in Edimax BR-6478AC 1.23. Affected by this vulnerability is the function formPPPoESetup of the file /goform/formPPPoESetup of the component POST Request Handler. The manipulation of the argument pppUserName leads to stack-based buffer overflow. The attack can be initiated remotely. The exploit is publicly available and might be used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-7459" data-description="the simple history – track, log, and audit wordpress changes plugin for wordpress is vulnerable to authenticated (subscriber+) account takeover in all versions up to, and including, 5.26.0 via the event reaction endpoints (react_to_event() / unreact_to_event()). the endpoints register get_items_permissions_check() as their permission_callback, which only verifies the requester is logged in and does not enforce the per-logger capability checks normally applied by log_query. as a result, a subscriber-level user can post to /wp-json/simple-history/v1/events/<id>/react with the _fields=context query parameter and read the full context of any simple history event — including simpleuserlogger entries that record the full password-reset email body (reset url with the reset key) for any user. the attacker triggers a password reset for an administrator via the lost-password form, brute-forces recent event ids through the reaction endpoint to read the resulting user_requested_password_reset_link event, extracts the reset key from context.message, and completes the password reset to take over the administrator account. exploitation requires an administrator to have first enabled the experimental features option (simple_history_experimental_features_enabled), which is not the default.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7459" target="_blank">CVE-2026-7459</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 05:16:22 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-10124" data-description="a vulnerability was determined in shibby tomato up to 1.28. affected is the function rip_zebra_read_ipv4 of the file /usr/sbin/ripd of the component zserv handler. executing a manipulation can lead to stack-based buffer overflow. it is possible to launch the attack remotely. the exploit has been publicly disclosed and may be utilized. this project is superseded by freshtomato. this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10124" target="_blank">CVE-2026-10124</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>A vulnerability was determined in Shibby Tomato up to 1.28. Affected is the function rip_zebra_read_ipv4 of the file /usr/sbin/ripd of the component Zserv Handler. Executing a manipulation can lead to stack-based buffer overflow. It is possible to launch the attack remotely. The exploit has been publicly disclosed and may be utilized. This project is superseded by FreshTomato. This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-10123" data-description="a vulnerability was found in trendnet tew-432brp 3.10b20. this impacts the function formsetdomainfilter of the file /goform/formsetdomainfilter. performing a manipulation of the argument blocked_domain/permitted_domain/blocked_domain_list/permitted_domain_list results in stack-based buffer overflow. it is possible to initiate the attack remotely. the exploit has been made public and could be used. the vendor explains: "this product has been eol for 15 years (since 2009). as the item has been eol for such a long time, we are not able to replicate or fix any vulnerabilities." this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10123" target="_blank">CVE-2026-10123</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>A vulnerability was found in TRENDnet TEW-432BRP 3.10B20. This impacts the function formSetDomainFilter of the file /goform/formSetDomainFilter. Performing a manipulation of the argument blocked_domain/permitted_domain/blocked_domain_list/permitted_domain_list results in stack-based buffer overflow. It is possible to initiate the attack remotely. The exploit has been made public and could be used. The vendor explains: "This product has been EOL for 15 years (since 2009). As the item has been EOL for such a long time, we are not able to replicate or fix any vulnerabilities." This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-10122" data-description="a vulnerability has been found in trendnet tew-432brp 3.10b20. this affects the function formsetprotocolfilter of the file /goform/formsetprotocolfilter. such manipulation of the argument protocol_name leads to stack-based buffer overflow. the attack may be performed from remote. the exploit has been disclosed to the public and may be used. the vendor explains: "this product has been eol for 15 years (since 2009). as the item has been eol for such a long time, we are not able to replicate or fix any vulnerabilities." this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10122" target="_blank">CVE-2026-10122</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>A vulnerability has been found in TRENDnet TEW-432BRP 3.10B20. This affects the function formSetProtocolFilter of the file /goform/formSetProtocolFilter. Such manipulation of the argument protocol_name leads to stack-based buffer overflow. The attack may be performed from remote. The exploit has been disclosed to the public and may be used. The vendor explains: "This product has been EOL for 15 years (since 2009). As the item has been EOL for such a long time, we are not able to replicate or fix any vulnerabilities." This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-10121" data-description="a flaw has been found in trendnet tew-432brp 3.10b20. the impacted element is the function formseturlfilter of the file /goform/formseturlfilter. this manipulation of the argument keyword_list/keyword causes stack-based buffer overflow. the attack is possible to be carried out remotely. the exploit has been published and may be used. the vendor explains: "this product has been eol for 15 years (since 2009). as the item has been eol for such a long time, we are not able to replicate or fix any vulnerabilities." this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10121" target="_blank">CVE-2026-10121</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>A flaw has been found in TRENDnet TEW-432BRP 3.10B20. The impacted element is the function formSetUrlFilter of the file /goform/formSetUrlFilter. This manipulation of the argument keyword_list/keyword causes stack-based buffer overflow. The attack is possible to be carried out remotely. The exploit has been published and may be used. The vendor explains: "This product has been EOL for 15 years (since 2009). As the item has been EOL for such a long time, we are not able to replicate or fix any vulnerabilities." This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25426" data-description="winmtr 0.91 contains a denial of service vulnerability that allows attackers to crash the application by sending a malformed payload file containing a large buffer of repeated characters. attackers can create a specially crafted input file with 238 bytes of data to trigger a buffer overflow condition that causes the application to crash.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25426" target="_blank">CVE-2018-25426</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The Simple History – Track, Log, and Audit WordPress Changes plugin for WordPress is vulnerable to authenticated (Subscriber+) account takeover in all versions up to, and including, 5.26.0 via the event reaction endpoints (react_to_event() / unreact_to_event()). The endpoints register get_items_permissions_check() as their permission_callback, which only verifies the requester is logged in and does not enforce the per-logger capability checks normally applied by Log_Query. As a result, a Subscriber-level user can POST to /wp-json/simple-history/v1/events/<id>/react with the _fields=context query parameter and read the full context of any Simple History event — including SimpleUserLogger entries that record the full password-reset email body (reset URL with the reset key) for any user. The attacker triggers a password reset for an administrator via the lost-password form, brute-forces recent event IDs through the reaction endpoint to read the resulting user_requested_password_reset_link event, extracts the reset key from context.message, and completes the password reset to take over the administrator account. Exploitation requires an administrator to have first enabled the experimental features option (simple_history_experimental_features_enabled), which is not the default.</p>
+                    <p>WinMTR 0.91 contains a denial of service vulnerability that allows attackers to crash the application by sending a malformed payload file containing a large buffer of repeated characters. Attackers can create a specially crafted input file with 238 bytes of data to trigger a buffer overflow condition that causes the application to crash.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-10113" data-description="a vulnerability was found in open5gs up to 2.7.7. affected by this vulnerability is an unknown functionality in the library lib/sbi/nnrf-handler.c of the component shared nf-profile parser. the manipulation results in denial of service. it is possible to launch the attack remotely. the exploit has been made public and could be used. a patch should be applied to remediate this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10113" target="_blank">CVE-2026-10113</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 04:16:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was found in Open5GS up to 2.7.7. Affected by this vulnerability is an unknown functionality in the library lib/sbi/nnrf-handler.c of the component Shared NF-profile Parser. The manipulation results in denial of service. It is possible to launch the attack remotely. The exploit has been made public and could be used. A patch should be applied to remediate this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-5071" data-description="the socketcan implementation validates the length of a user-provided buffer containing a socketcan_frame object using only a net_assert statement in zcan_sendto_ctx() before dereferencing it in socketcan_to_can_frame(). in production builds where assertions are disabled, a userspace application that controls the length passed to a sendto syscall can supply an incomplete or truncated frame, causing socketcan_to_can_frame() to dereference fields beyond the end of the buffer. this results in an out-of-bounds read that can cause denial-of-service crashes or, because the parsed frame contents are transmitted on the network, leak adjacent memory.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-5071" target="_blank">CVE-2026-5071</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 03:16:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>The SocketCAN implementation validates the length of a user-provided buffer containing a socketcan_frame object using only a NET_ASSERT statement in zcan_sendto_ctx() before dereferencing it in socketcan_to_can_frame(). In production builds where assertions are disabled, a userspace application that controls the length passed to a sendto syscall can supply an incomplete or truncated frame, causing socketcan_to_can_frame() to dereference fields beyond the end of the buffer. This results in an out-of-bounds read that can cause denial-of-service crashes or, because the parsed frame contents are transmitted on the network, leak adjacent memory.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10112" data-description="a vulnerability has been found in sambitraj student-management-system 1.0. affected is an unknown function of the component dashboard page. the manipulation of the argument name leads to cross site scripting. it is possible to initiate the attack remotely. the exploit has been disclosed to the public and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10112" target="_blank">CVE-2026-10112</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 03:16:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.4</p>
-                    <p>A vulnerability has been found in sambitraj STUDENT-MANAGEMENT-SYSTEM 1.0. Affected is an unknown function of the component Dashboard Page. The manipulation of the argument Name leads to cross site scripting. It is possible to initiate the attack remotely. The exploit has been disclosed to the public and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10111" data-description="a flaw has been found in sambitraj student-management-system 1.0. this impacts an unknown function of the component login page. executing a manipulation of the argument email can lead to sql injection. the attack may be performed from remote. the exploit has been published and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10111" target="_blank">CVE-2026-10111</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 03:16:16 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25425" data-description="yot cms 3.3.1 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the aid and cid parameters. attackers can send get requests to index.php with crafted sql payloads in the aid or cid parameters to extract database information including table and column names.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25425" target="_blank">CVE-2018-25425</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A flaw has been found in sambitraj STUDENT-MANAGEMENT-SYSTEM 1.0. This impacts an unknown function of the component Login Page. Executing a manipulation of the argument email can lead to sql injection. The attack may be performed from remote. The exploit has been published and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>Yot CMS 3.3.1 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the aid and cid parameters. Attackers can send GET requests to index.php with crafted SQL payloads in the aid or cid parameters to extract database information including table and column names.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-10110" data-description="a vulnerability was detected in code-projects student details management system 1.0. this affects an unknown function of the file /index.php. performing a manipulation of the argument roll results in sql injection. the attack is possible to be carried out remotely. the exploit is now public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10110" target="_blank">CVE-2026-10110</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-30 02:16:27 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25424" data-description="gate pass management system 2.1 contains an sql injection vulnerability that allows unauthenticated attackers to bypass authentication by injecting sql code through the login and password parameters. attackers can submit crafted post requests to login-exec.php with sql injection payloads in form parameters to authenticate without valid credentials and gain access to the application.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25424" target="_blank">CVE-2018-25424</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was detected in code-projects Student Details Management System 1.0. This affects an unknown function of the file /index.php. Performing a manipulation of the argument roll results in sql injection. The attack is possible to be carried out remotely. The exploit is now public and may be used.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>Gate Pass Management System 2.1 contains an SQL injection vulnerability that allows unauthenticated attackers to bypass authentication by injecting SQL code through the login and password parameters. Attackers can submit crafted POST requests to login-exec.php with SQL injection payloads in form parameters to authenticate without valid credentials and gain access to the application.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-48840" data-description="exim 4.88 before 4.99.4, in some proxy configurations, mishandles certain short payloads, leading to disclosure of uninitialized stack memory values to a client.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48840" target="_blank">CVE-2026-48840</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 21:16:19 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25423" data-description="arm whois 3.11 contains a buffer overflow vulnerability that allows local attackers to crash the application by supplying an oversized input string. attackers can paste a malicious buffer of 700 bytes into the ip address or domain input field to trigger a denial of service condition.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25423" target="_blank">CVE-2018-25423</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Exim 4.88 before 4.99.4, in some proxy configurations, mishandles certain short payloads, leading to disclosure of uninitialized stack memory values to a client.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.2</p>
+                    <p>Arm Whois 3.11 contains a buffer overflow vulnerability that allows local attackers to crash the application by supplying an oversized input string. Attackers can paste a malicious buffer of 700 bytes into the IP address or domain input field to trigger a denial of service condition.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-9831" data-description="a race condition in the shared extreme platform
-one iam gateway api-key authentication path could, under specific
-high-concurrency traffic conditions, intermittently allow requests
-authenticated with an extreme platform one /iam-issued api key to receive
-response data for another tenant. the issue was observed through extremecloud
-iq/xiq api endpoints and validated against both xiq/xapi and extreme platform one
-/common services api paths. xiq-native tokens and standard oauth/bearer jwt
-authentication were not affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9831" target="_blank">CVE-2026-9831</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 17:16:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25422" data-description="mogg web simulator script contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql commands by injecting malicious code through the id parameter. attackers can send get requests to play.php with crafted sql payloads in the id parameter to extract sensitive database information including usernames and other data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25422" target="_blank">CVE-2018-25422</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>MOGG web simulator Script contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL commands by injecting malicious code through the id parameter. Attackers can send GET requests to play.php with crafted SQL payloads in the id parameter to extract sensitive database information including usernames and other data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25421" data-description="open sta manager 2.3 contains a path traversal vulnerability that allows authenticated users to download arbitrary files by manipulating the file parameter. attackers can send get requests to modules/backup/actions.php with op=getfile and traverse directories using ../ sequences to access sensitive system files.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25421" target="_blank">CVE-2018-25421</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A race condition in the shared Extreme Platform
-ONE IAM Gateway API-key authentication path could, under specific
-high-concurrency traffic conditions, intermittently allow requests
-authenticated with an Extreme Platform ONE /IAM-issued API key to receive
-response data for another tenant. The issue was observed through ExtremeCloud
-IQ/XIQ API endpoints and validated against both XIQ/XAPI and Extreme Platform ONE
-/Common Services API paths. XIQ-native tokens and standard OAuth/Bearer JWT
-authentication were not affected.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Open STA Manager 2.3 contains a path traversal vulnerability that allows authenticated users to download arbitrary files by manipulating the file parameter. Attackers can send GET requests to modules/backup/actions.php with op=getfile and traverse directories using ../ sequences to access sensitive system files.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-4387" data-description="strongdm desktop application before 23.74.0 (desktop client before 53.77.0) on microsoft windows stores authentication state, including a json web token and asymmetric key material, in cleartext in a per-user state file located at c:\users\<username>\.sdm\state.kv. the file is protected only by default user-level ntfs permissions.
-
-
-
-exploitation requires local read access to the affected user's profile directory and additional deployment and execution conditions on the target host.
-
-
-
-the condition was reported through coordinated disclosure by hope walker (specterops).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-4387" target="_blank">CVE-2026-4387</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 15:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>StrongDM Desktop Application before 23.74.0 (Desktop Client before 53.77.0) on Microsoft Windows stores authentication state, including a JSON Web Token and asymmetric key material, in cleartext in a per-user state file located at C:\Users\<username>\.sdm\state.kv. The file is protected only by default user-level NTFS permissions.
-
-
-
-Exploitation requires local read access to the affected user's profile directory and additional deployment and execution conditions on the target host.
-
-
-
-The condition was reported through coordinated disclosure by Hope Walker (SpecterOps).</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25420" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the 'id' parameter. attackers can send get requests to watch.php with crafted sql payloads to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25420" target="_blank">CVE-2018-25420</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the 'id' parameter. Attackers can send GET requests to watch.php with crafted SQL payloads to extract sensitive database information including usernames, database names, and version details.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-48811" data-description="freescout is a free help desk and shared inbox built with php's laravel framework. prior to 1.8.221, freescout allows a non-admin user to permanently delete an internal note (private thread) from any conversation, even after that user's access to the mailbox containing the conversation has been revoked. the threadpolicy::delete authorization policy does not verify mailbox membership, so a former team member retains destructive write access to notes they created. this vulnerability is fixed in 1.8.221.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48811" target="_blank">CVE-2026-48811</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 15:16:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>FreeScout is a free help desk and shared inbox built with PHP's Laravel framework. Prior to 1.8.221, FreeScout allows a non-admin user to permanently delete an internal note (private thread) from any conversation, even after that user's access to the mailbox containing the conversation has been revoked. The ThreadPolicy::delete authorization policy does not verify mailbox membership, so a former team member retains destructive write access to notes they created. This vulnerability is fixed in 1.8.221.</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25419" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the genre parameter. attackers can send get requests to genre.php with crafted sql payloads in the genre parameter to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25419" target="_blank">CVE-2018-25419</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the genre parameter. Attackers can send GET requests to genre.php with crafted SQL payloads in the genre parameter to extract sensitive database information including usernames, database names, and version details.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-48810" data-description="freescout is a free help desk and shared inbox built with php's laravel framework. prior to 1.8.221, while investigating the threadpolicy::delete issue reported previously, the same missing mailbox membership check was found in the sibling threadpolicy::edit method. a user with the perm_edit_conversations permission who created a message or internal note in mailbox a can rewrite that thread's body after an administrator removes them from mailbox a, because the policy checks only authorship and a global permission flag — not current mailbox membership. this vulnerability is fixed in 1.8.221.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48810" target="_blank">CVE-2026-48810</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-05-29 15:16:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>FreeScout is a free help desk and shared inbox built with PHP's Laravel framework. Prior to 1.8.221, while investigating the ThreadPolicy::delete issue reported previously, the same missing mailbox membership check was found in the sibling ThreadPolicy::edit method. A user with the PERM_EDIT_CONVERSATIONS permission who created a message or internal note in Mailbox A can rewrite that thread's body after an administrator removes them from Mailbox A, because the policy checks only authorship and a global permission flag — not current mailbox membership. This vulnerability is fixed in 1.8.221.</p>
+                <div class="cve-entry" data-cve-id="CVE-2018-25418" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the year parameter. attackers can send get requests to year.php with crafted sql payloads in the year parameter to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25418" target="_blank">CVE-2018-25418</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the year parameter. Attackers can send GET requests to year.php with crafted SQL payloads in the year parameter to extract sensitive database information including usernames, database names, and version details.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25417" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the quality parameter. attackers can send get requests to quality.php with crafted sql payloads in the quality parameter to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25417" target="_blank">CVE-2018-25417</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the quality parameter. Attackers can send GET requests to quality.php with crafted SQL payloads in the quality parameter to extract sensitive database information including usernames, database names, and version details.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25416" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the country parameter. attackers can send get requests to country.php with crafted sql payloads in the country parameter to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25416" target="_blank">CVE-2018-25416</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the country parameter. Attackers can send GET requests to country.php with crafted SQL payloads in the country parameter to extract sensitive database information including usernames, database names, and version details.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25415" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the director parameter. attackers can send get requests to director.php with crafted sql payloads in the director parameter to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25415" target="_blank">CVE-2018-25415</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the director parameter. Attackers can send GET requests to director.php with crafted SQL payloads in the director parameter to extract sensitive database information including usernames, database names, and version details.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25414" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the actor parameter. attackers can send get requests to actor.php with crafted sql payloads in the actor parameter to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25414" target="_blank">CVE-2018-25414</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the actor parameter. Attackers can send GET requests to actor.php with crafted SQL payloads in the actor parameter to extract sensitive database information including usernames, database names, and version details.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2018-25413" data-description="aiopmsd final 1.0.0 contains an sql injection vulnerability that allows unauthenticated attackers to execute arbitrary sql queries by injecting malicious code through the 'q' parameter. attackers can send get requests to search.php with crafted sql payloads to extract sensitive database information including usernames, database names, and version details.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2018-25413" target="_blank">CVE-2018-25413</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-05-30 11:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>AiOPMSD Final 1.0.0 contains an SQL injection vulnerability that allows unauthenticated attackers to execute arbitrary SQL queries by injecting malicious code through the 'q' parameter. Attackers can send GET requests to search.php with crafted SQL payloads to extract sensitive database information including usernames, database names, and version details.</p>
                 </div>
         
             </div>
