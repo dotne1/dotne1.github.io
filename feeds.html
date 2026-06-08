@@ -33,208 +33,338 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-49235" data-description="when routinator encounters a file via rrdp using a specifically crafted document type definition, routinator crashes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49235" target="_blank">CVE-2026-49235</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-49975" data-description="memory allocation with excessive size value vulnerability in apache http server's mod_http leads to denial of service via malicious http requests.
+
+this issue affects apache http server: from 2.4.17 through 2.4.67.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49975" target="_blank">CVE-2026-49975</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When Routinator encounters a file via RRDP using a specifically crafted Document Type Definition, Routinator crashes.</p>
+                    <p>Memory Allocation with Excessive Size Value vulnerability in Apache HTTP Server's mod_http leads to denial of service via malicious HTTP requests.
+
+This issue affects Apache HTTP Server: from 2.4.17 through 2.4.67.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-49234" data-description="when sending a specifically crafted non-utf-8 string as select-asn query parameter to the /api/v1/origins endpoint, routinator crashes. 
+                <div class="cve-entry" data-cve-id="CVE-2026-49756" data-description="improper neutralization of crlf sequences ('crlf injection') vulnerability in wojtekmach req allows multipart parameter smuggling via attacker-influenced part metadata.
 
-this only affects users who allow api access from untrusted networks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49234" target="_blank">CVE-2026-49234</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:48 CDT</p>
+req.utils.encode_form_part/2 in lib/req/utils.ex builds the per-part headers by interpolating the caller-supplied name, filename, and content_type values directly into the content-disposition and content-type lines with no escaping or crlf stripping. a value containing ", \r, or \n closes the surrounding quoted value and starts a new header line; an additional \r\n--<boundary> terminates the current part and prepends a smuggled part of the attacker's choosing.
+
+this is reachable through every supported way of supplying a part. it is particularly easy when value is a %file.stream{}, because filename then defaults to path.basename(stream.path) and posix filenames may legitimately contain \r and \n. any application that forwards user-controlled filenames (or field names / mime types) through req.post/2 with form_multipart: lets an attacker inject arbitrary headers into the outgoing multipart body or smuggle additional fields and parts into the request the victim service sends downstream.
+
+this issue affects req: from 0.5.3 before 0.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49756" target="_blank">CVE-2026-49756</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When sending a specifically crafted non-UTF-8 string as select-asn query parameter to the /api/v1/origins endpoint, Routinator crashes. 
+                    <p>Improper Neutralization of CRLF Sequences ('CRLF Injection') vulnerability in wojtekmach Req allows multipart parameter smuggling via attacker-influenced part metadata.
 
-This only affects users who allow API access from untrusted networks.</p>
+Req.Utils.encode_form_part/2 in lib/req/utils.ex builds the per-part headers by interpolating the caller-supplied name, filename, and content_type values directly into the content-disposition and content-type lines with no escaping or CRLF stripping. A value containing ", \r, or \n closes the surrounding quoted value and starts a new header line; an additional \r\n--<boundary> terminates the current part and prepends a smuggled part of the attacker's choosing.
+
+This is reachable through every supported way of supplying a part. It is particularly easy when value is a %File.Stream{}, because filename then defaults to Path.basename(stream.path) and POSIX filenames may legitimately contain \r and \n. Any application that forwards user-controlled filenames (or field names / MIME types) through Req.post/2 with form_multipart: lets an attacker inject arbitrary headers into the outgoing multipart body or smuggle additional fields and parts into the request the victim service sends downstream.
+
+This issue affects req: from 0.5.3 before 0.6.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-49233" data-description="routinator does not properly check the module component of rsync uris, which are used to create the file system paths for the routinator cache. this allows for path traversal by having a module name containing .., potentially providing an attacker access to the entire routinator rsync cache.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49233" target="_blank">CVE-2026-49233</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:47 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-49755" data-description="improper handling of highly compressed data (data amplification) vulnerability in wojtekmach req allows attacker-controlled http servers to exhaust memory in a req client via decompression-bomb response bodies.
+
+req's default response pipeline includes req.steps.decode_body/1 and req.steps.decompress_body/1 in lib/req/steps.ex. decode_body/1 dispatches on the server-supplied content-type (or url extension) and calls :zip.extract(body, [:memory]) for application/zip, :erl_tar.extract({:binary, body}, [:memory]) for application/x-tar, and :erl_tar.extract({:binary, body}, [:memory, :compressed]) for application/gzip / .tgz. each returns the full decompressed archive contents as a [{name, bytes}] list in memory, with no per-entry or total size cap. decompress_body/1 walks the content-encoding header and chains :zlib/:brotli/:ezstd decoders, so a response advertising content-encoding: gzip, gzip, gzip inflates through multiple layers without bound.
+
+both steps are enabled by default, no caller opt-in is required, and the attacker controls the content-type and content-encoding headers on their own server (or on any host reached via req's automatic redirect following). a sub-megabyte response can expand to multiple gigabytes on the victim, crashing the beam process.
+
+this issue affects req: from 0.1.0 before 0.6.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49755" target="_blank">CVE-2026-49755</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:43 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Routinator does not properly check the module component of rsync URIs, which are used to create the file system paths for the Routinator cache. This allows for path traversal by having a module name containing .., potentially providing an attacker access to the entire Routinator rsync cache.</p>
+                    <p>Improper Handling of Highly Compressed Data (Data Amplification) vulnerability in wojtekmach Req allows attacker-controlled HTTP servers to exhaust memory in a Req client via decompression-bomb response bodies.
+
+Req's default response pipeline includes Req.Steps.decode_body/1 and Req.Steps.decompress_body/1 in lib/req/steps.ex. decode_body/1 dispatches on the server-supplied content-type (or URL extension) and calls :zip.extract(body, [:memory]) for application/zip, :erl_tar.extract({:binary, body}, [:memory]) for application/x-tar, and :erl_tar.extract({:binary, body}, [:memory, :compressed]) for application/gzip / .tgz. Each returns the full decompressed archive contents as a [{name, bytes}] list in memory, with no per-entry or total size cap. decompress_body/1 walks the content-encoding header and chains :zlib/:brotli/:ezstd decoders, so a response advertising content-encoding: gzip, gzip, gzip inflates through multiple layers without bound.
+
+Both steps are enabled by default, no caller opt-in is required, and the attacker controls the content-type and content-encoding headers on their own server (or on any host reached via Req's automatic redirect following). A sub-megabyte response can expand to multiple gigabytes on the victim, crashing the BEAM process.
+
+This issue affects req: from 0.1.0 before 0.6.1.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-49232" data-description="routinator exits on any error when accepting incoming http or rtr connections, including ones it can recover from such as running out of file descriptors. this condition can be triggered maliciously by an attacker by opening a large number of connections to the http or rtr server.
+                <div class="cve-entry" data-cve-id="CVE-2026-48913" data-description="use after free vulnerability in apache http server module mod_http2 when file handles are already exhausted.
 
-this only affects users that make their http or rtr server available to untrusted networks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49232" target="_blank">CVE-2026-49232</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:47 CDT</p>
+this issue affects apache http server: from 2.4.55 through 2.4.67.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48913" target="_blank">CVE-2026-48913</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:43 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Routinator exits on any error when accepting incoming HTTP or RTR connections, including ones it can recover from such as running out of file descriptors. This condition can be triggered maliciously by an attacker by opening a large number of connections to the HTTP or RTR server.
+                    <p>Use After Free vulnerability in Apache HTTP Server module mod_http2 when file handles are already exhausted.
 
-This only affects users that make their HTTP or RTR server available to untrusted networks.</p>
+This issue affects Apache HTTP Server: from 2.4.55 through 2.4.67.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-43974" data-description="unexpected status code or return value vulnerability in ninenines gun (gun_http module) allows a malicious http server to force the client into raw protocol mode via an unsolicited 101 switching protocols response.
-
-in gun_http:handle_inform/8, when a 101 switching protocols response is received over http/1.1, the function verifies only that the upgrade header is syntactically valid and that the stream reference is a plain reference(). it does not check whether the client ever sent an upgrade or connection: upgrade header on the corresponding request. because this check is absent, any 101 response (solicited or not) causes gun to dispatch a gun_upgrade message to the caller and transition the entire connection to raw protocol mode.
-
-a malicious or compromised http server can send an unsolicited 101 response to any http/1.1 request, causing the gun client to abandon http framing for that connection. once in raw mode, gun_raw applies no flow control (flow=infinity) and re-arms socket active mode after every received packet, so the server can flood the client with arbitrary bytes. these are forwarded as unbounded gun_data messages to the owner process, exhausting its mailbox and beam memory, ultimately crashing the vm.
-
-this issue affects gun: from 2.0.0 before 2.4.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43974" target="_blank">CVE-2026-43974</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-48488" data-description="phpmyfaq is an open source faq web application. prior to version 4.1.4, attachment passwords are hashed using sha-1, a cryptographically broken algorithm. sha-1 has been vulnerable to collision attacks since 2017 (shattered). version 4.1.4 fixes the issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48488" target="_blank">CVE-2026-48488</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:43 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Unexpected Status Code or Return Value vulnerability in ninenines gun (gun_http module) allows a malicious HTTP server to force the client into raw protocol mode via an unsolicited 101 Switching Protocols response.
-
-In gun_http:handle_inform/8, when a 101 Switching Protocols response is received over HTTP/1.1, the function verifies only that the Upgrade header is syntactically valid and that the stream reference is a plain reference(). It does not check whether the client ever sent an Upgrade or Connection: upgrade header on the corresponding request. Because this check is absent, any 101 response (solicited or not) causes gun to dispatch a gun_upgrade message to the caller and transition the entire connection to raw protocol mode.
-
-A malicious or compromised HTTP server can send an unsolicited 101 response to any HTTP/1.1 request, causing the gun client to abandon HTTP framing for that connection. Once in raw mode, gun_raw applies no flow control (flow=infinity) and re-arms socket active mode after every received packet, so the server can flood the client with arbitrary bytes. These are forwarded as unbounded gun_data messages to the owner process, exhausting its mailbox and BEAM memory, ultimately crashing the VM.
-
-This issue affects gun: from 2.0.0 before 2.4.0.</p>
+                    <p>phpMyFAQ is an open source FAQ web application. Prior to version 4.1.4, attachment passwords are hashed using SHA-1, a cryptographically broken algorithm. SHA-1 has been vulnerable to collision attacks since 2017 (SHAttered). Version 4.1.4 fixes the issue.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-43973" data-description="uncontrolled resource consumption vulnerability in ninenines gun (gun_http module) allows a malicious server to exhaust client memory via unbounded http/1.1 response buffering.
-
-in gun_http:handle/5, three clauses accumulate incoming tcp data into the connection's buffer field using binary concatenation with no upper-bound check: the head clause appends data until the \r\n\r\n header terminator is found; the body_chunked clause appends data whenever cow_http_te:stream_chunked/2 returns a more result indicating an incomplete chunk boundary; and the body_trailer clause appends data until the trailing \r\n\r\n is found. in each case, when the expected terminator never arrives, the enlarged binary is stored back into state and the process waits for more data, with no configurable or hard-coded ceiling on buffer size.
-
-a malicious or compromised server can exploit this by sending a partial response that never completes. for example, a response may begin with http/1.1 200 ok\r\nx-pad:  followed by an unbounded stream of arbitrary bytes, never sending the header terminator. the gun connection process will continuously append the incoming data to its buffer, causing unbounded heap growth. because beam imposes no per-process heap limit by default, a single malicious connection can exhaust all available memory on the node, causing a node-wide out-of-memory crash.
-
-this issue affects gun: from 1.0.0 before 2.4.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43973" target="_blank">CVE-2026-43973</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Uncontrolled Resource Consumption vulnerability in ninenines gun (gun_http module) allows a malicious server to exhaust client memory via unbounded HTTP/1.1 response buffering.
-
-In gun_http:handle/5, three clauses accumulate incoming TCP data into the connection's buffer field using binary concatenation with no upper-bound check: the head clause appends data until the \r\n\r\n header terminator is found; the body_chunked clause appends data whenever cow_http_te:stream_chunked/2 returns a more result indicating an incomplete chunk boundary; and the body_trailer clause appends data until the trailing \r\n\r\n is found. In each case, when the expected terminator never arrives, the enlarged binary is stored back into state and the process waits for more data, with no configurable or hard-coded ceiling on buffer size.
-
-A malicious or compromised server can exploit this by sending a partial response that never completes. For example, a response may begin with HTTP/1.1 200 OK\r\nX-Pad:  followed by an unbounded stream of arbitrary bytes, never sending the header terminator. The gun connection process will continuously append the incoming data to its buffer, causing unbounded heap growth. Because BEAM imposes no per-process heap limit by default, a single malicious connection can exhaust all available memory on the node, causing a node-wide out-of-memory crash.
-
-This issue affects gun: from 1.0.0 before 2.4.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-46657" data-description="bludit is a content management system. versions prior to 3.22.0 have a vulnerability in the user management logic that allows deactivated accounts to maintain access via persistent authentication tokens. when an administrator disables a user account, the application fails to invalidate or clear the associated tokenauth and tokenremember fields in the json database. consequently, any user with a pre-existing "remember me" cookie can bypass the account disablement and maintain a valid authenticated state. version 3.22.0 patches the issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46657" target="_blank">CVE-2026-46657</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:43 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Bludit is a content management system. Versions prior to 3.22.0 have a vulnerability in the user management logic that allows deactivated accounts to maintain access via persistent authentication tokens. When an administrator disables a user account, the application fails to invalidate or clear the associated tokenAuth and tokenRemember fields in the JSON database. Consequently, any user with a pre-existing "Remember Me" cookie can bypass the account disablement and maintain a valid authenticated state. Version 3.22.0 patches the issue.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-43972" data-description="origin validation error vulnerability in ninenines gun (gun_http2 module) allows cross-origin cookie injection via unvalidated http/2 push_promise authority.
-
-in gun_http2:push_promise_frame/7, the :authority pseudo-header from an incoming push_promise frame is stored verbatim into the promised stream record without checking that it matches the connection's origin. when gun_http2:headers_frame/9 later processes the response headers for the promised stream, it calls gun_cookies:set_cookie_header/7 with the unvalidated server-supplied authority before any status branching and before user code can act. this violates rfc 7540 §10.6 / rfc 9113 §8.4, which require receivers to treat as a protocol error any push for a resource the server is not authoritative for.
-
-a malicious or compromised http/2 server can plant cookies scoped to arbitrary third-party domains into the client's shared cookie store. this enables session fixation attacks against those domains and, if the planted cookie overrides a legitimate session token, may result in account takeover. no user interaction beyond making a normal http/2 request to the attacker-controlled server is required.
-
-this issue affects gun: from 2.0.0 before 2.4.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43972" target="_blank">CVE-2026-43972</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Origin Validation Error vulnerability in ninenines gun (gun_http2 module) allows cross-origin cookie injection via unvalidated HTTP/2 PUSH_PROMISE authority.
-
-In gun_http2:push_promise_frame/7, the :authority pseudo-header from an incoming PUSH_PROMISE frame is stored verbatim into the promised stream record without checking that it matches the connection's origin. When gun_http2:headers_frame/9 later processes the response headers for the promised stream, it calls gun_cookies:set_cookie_header/7 with the unvalidated server-supplied authority before any status branching and before user code can act. This violates RFC 7540 §10.6 / RFC 9113 §8.4, which require receivers to treat as a protocol error any push for a resource the server is not authoritative for.
-
-A malicious or compromised HTTP/2 server can plant cookies scoped to arbitrary third-party domains into the client's shared cookie store. This enables session fixation attacks against those domains and, if the planted cookie overrides a legitimate session token, may result in account takeover. No user interaction beyond making a normal HTTP/2 request to the attacker-controlled server is required.
-
-This issue affects gun: from 2.0.0 before 2.4.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-36789" data-description="shenzhen tenda technology co., ltd tenda ac1206 v15.03.06.23 was discovered to contain multiple stack overflows in the fromgstdhcpsetser function via the username and password parameters. these vulnerabilities allow attackers to cause a denial of service (dos) via a crafted http request.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-36789" target="_blank">CVE-2026-36789</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Shenzhen Tenda Technology Co., Ltd Tenda AC1206 v15.03.06.23 was discovered to contain multiple stack overflows in the fromGstDhcpSetSer function via the username and password parameters. These vulnerabilities allow attackers to cause a Denial of Service (DoS) via a crafted HTTP request.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-25558" data-description="qloapps through 1.7.0 contains a stored cross-site scripting vulnerability in the admin file manager that allows authenticated administrators to inject malicious javascript by uploading crafted svg files. attackers can embed javascript event handlers such as onload within svg files uploaded through the file manager to execute arbitrary scripts in the browser of any user who subsequently views the file.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25558" target="_blank">CVE-2026-25558</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>QloApps through 1.7.0 contains a stored cross-site scripting vulnerability in the admin file manager that allows authenticated administrators to inject malicious JavaScript by uploading crafted SVG files. Attackers can embed JavaScript event handlers such as onload within SVG files uploaded through the file manager to execute arbitrary scripts in the browser of any user who subsequently views the file.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11521" data-description="a security vulnerability has been detected in mohammed-eid35 bank-management-system-springboot up to 7b9bcc65ad7df3db29af71aed9bb500e5f24d948. this affects an unknown part of the file src/main/java/com/alien/bank/management/system/controller/transactioncontroller.java of the component transaction endpoint. such manipulation leads to improper authorization. it is possible to launch the attack remotely. the exploit has been disclosed publicly and may be used. this product takes the approach of rolling releases to provide continious delivery. therefore, version details for affected and updated releases are not available. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11521" target="_blank">CVE-2026-11521</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security vulnerability has been detected in Mohammed-eid35 bank-management-system-springboot up to 7b9bcc65ad7df3db29af71aed9bb500e5f24d948. This affects an unknown part of the file src/main/java/com/alien/bank/management/system/controller/TransactionController.java of the component Transaction Endpoint. Such manipulation leads to improper authorization. It is possible to launch the attack remotely. The exploit has been disclosed publicly and may be used. This product takes the approach of rolling releases to provide continious delivery. Therefore, version details for affected and updated releases are not available. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11520" data-description="a weakness has been identified in sourcecodester inventory system 1.0. affected by this issue is some unknown functionality of the file header.php. this manipulation causes cross site scripting. it is possible to initiate the attack remotely. the exploit has been made available to the public and could be used for attacks. multiple parameters might be affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11520" target="_blank">CVE-2026-11520</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.5</p>
-                    <p>A weakness has been identified in SourceCodester Inventory System 1.0. Affected by this issue is some unknown functionality of the file header.php. This manipulation causes cross site scripting. It is possible to initiate the attack remotely. The exploit has been made available to the public and could be used for attacks. Multiple parameters might be affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11519" data-description="a security flaw has been discovered in sourcecodester inventory system 1.0. affected by this vulnerability is an unknown functionality of the file /product_inventory/api/users_handler.php of the component account creation handler. the manipulation of the argument role results in improper authorization. the attack may be performed from remote. the exploit has been released to the public and may be used for attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11519" target="_blank">CVE-2026-11519</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security flaw has been discovered in SourceCodester Inventory System 1.0. Affected by this vulnerability is an unknown functionality of the file /Product_Inventory/api/users_handler.php of the component Account Creation Handler. The manipulation of the argument ROLE results in improper authorization. The attack may be performed from remote. The exploit has been released to the public and may be used for attacks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11518" data-description="a vulnerability was identified in sourcecodester inventory system 1.0. affected is an unknown function of the file /users.php of the component user management page. the manipulation of the argument fullname/username leads to cross site scripting. the attack is possible to be carried out remotely. the exploit is publicly available and might be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11518" target="_blank">CVE-2026-11518</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was identified in SourceCodester Inventory System 1.0. Affected is an unknown function of the file /users.php of the component User Management Page. The manipulation of the argument fullname/username leads to cross site scripting. The attack is possible to be carried out remotely. The exploit is publicly available and might be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11517" data-description="a vulnerability was determined in utt hiper 2610g up to 3.0.0-171107. this impacts the function strcpy of the file /goform/formconfigdnsfilterglobal. executing a manipulation of the argument groupname can lead to buffer overflow. the attack can be executed remotely. the exploit has been publicly disclosed and may be utilized.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11517" target="_blank">CVE-2026-11517</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:43 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-46656" data-description="bludit is a content management system. versions prior to 3.22.0 have a broken access control flaw where active sessions remain valid even after the corresponding user account has been  physically deleted from the database. this "ghost session" allows revoked users to maintain full unauthorized access to the system. version 3.22.0 fixes the issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46656" target="_blank">CVE-2026-46656</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:42 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A vulnerability was determined in UTT HiPER 2610G up to 3.0.0-171107. This impacts the function strcpy of the file /goform/formConfigDnsFilterGlobal. Executing a manipulation of the argument GroupName can lead to buffer overflow. The attack can be executed remotely. The exploit has been publicly disclosed and may be utilized.</p>
+                    <p>Bludit is a content management system. Versions prior to 3.22.0 have a Broken Access Control flaw where active sessions remain valid even after the corresponding user account has been  physically deleted from the database. This "Ghost Session" allows revoked users to maintain full unauthorized access to the system. Version 3.22.0 fixes the issue.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-11516" data-description="a vulnerability was found in utt hiper 2610g up to 3.0.0-171107. this affects the function strcpy of the file /goform/formnatstaticmap. performing a manipulation of the argument natbinds results in buffer overflow. the exploit has been made public and could be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11516" target="_blank">CVE-2026-11516</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 10:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A vulnerability was found in UTT HiPER 2610G up to 3.0.0-171107. This affects the function strcpy of the file /goform/formNatStaticMap. Performing a manipulation of the argument NatBinds results in buffer overflow. The exploit has been made public and could be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9549" data-description="stored cross-site scripting in the service discovery active check output in checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows an administrator who can configure active or custom checks to inject malicious html or javascript into check output that executes in the browser of an admin or a user with host read permissions when they run the check on the service discovery page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9549" target="_blank">CVE-2026-9549</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 08:16:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>Stored cross-site scripting in the service discovery active check output in Checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows an administrator who can configure active or custom checks to inject malicious HTML or JavaScript into check output that executes in the browser of an admin or a user with host read permissions when they run the check on the service discovery page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-8833" data-description="improper neutralization of html-encoded characters in the url validation function in checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows an authenticated user to bypass url validation and inject malicious urls such as javascript: uris, resulting in cross-site scripting when another user interacts with the crafted link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8833" target="_blank">CVE-2026-8833</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 08:16:33 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-46480" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, evaluator create and update mass-assignment allows cross-workspace evaluator takeover. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46480" target="_blank">CVE-2026-46480</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:42 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper neutralization of HTML-encoded characters in the URL validation function in Checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows an authenticated user to bypass URL validation and inject malicious URLs such as javascript: URIs, resulting in cross-site scripting when another user interacts with the crafted link.</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, evaluator create and update mass-assignment allows cross-workspace evaluator takeover. This issue has been patched in version 3.1.2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-8078" data-description="stored cross-site scripting in the global settings change log in checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows an administrator who can change global settings to store malicious html or javascript in changelog messages that executes in other users' browsers when they view the activate changes page or audit log.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8078" target="_blank">CVE-2026-8078</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 08:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>Stored cross-site scripting in the global settings change log in Checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows an administrator who can change global settings to store malicious HTML or JavaScript in changelog messages that executes in other users' browsers when they view the Activate Changes page or Audit log.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-7765" data-description="incorrect authorization in the user messages dashboard widget in checkmk <2.5.0p5 causes the message-fetching endpoints to return the dashboard creator's messages rather than the viewer's, allowing an attacker who knows a valid public dashboard share token to read the issuer's personal messages by sending requests to the underlying endpoint, even without a user messages widget present.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7765" target="_blank">CVE-2026-7765</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 08:16:33 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-46479" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, evaluation create and update mass-assignment allows cross-workspace evaluation takeover. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46479" target="_blank">CVE-2026-46479</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:42 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Incorrect authorization in the User Messages dashboard widget in Checkmk <2.5.0p5 causes the message-fetching endpoints to return the dashboard creator's messages rather than the viewer's, allowing an attacker who knows a valid public dashboard share token to read the issuer's personal messages by sending requests to the underlying endpoint, even without a User Messages widget present.</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, evaluation create and update mass-assignment allows cross-workspace evaluation takeover. This issue has been patched in version 3.1.2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-7186" data-description="stored cross-site scripting in the url dashboard widget in checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows a user with dashboard editing permissions to store a url with a dangerous uri scheme such as javascript: that executes scripts in other users' browsers when they view the dashboard.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7186" target="_blank">CVE-2026-7186</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-08 08:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Stored cross-site scripting in the URL dashboard widget in Checkmk <2.5.0p5, <2.4.0p31, <2.3.0p48, and all 2.2.0 versions allows a user with dashboard editing permissions to store a URL with a dangerous URI scheme such as javascript: that executes scripts in other users' browsers when they view the dashboard.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-46478" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, datasetrow create and update mass-assignment allows cross-workspace row takeover. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46478" target="_blank">CVE-2026-46478</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, DatasetRow create and update mass-assignment allows cross-workspace row takeover. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46477" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, dataset create and update mass-assignment allows cross-workspace dataset takeover. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46477" target="_blank">CVE-2026-46477</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, dataset create and update mass-assignment allows cross-workspace dataset takeover. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46476" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, customtemplate create and update mass-assignment allows cross-workspace template takeover. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46476" target="_blank">CVE-2026-46476</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, CustomTemplate create and update mass-assignment allows cross-workspace template takeover. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46475" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, assistant create and update mass-assignment allows cross-workspace assistant takeover. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46475" target="_blank">CVE-2026-46475</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, assistant create and update mass-assignment allows cross-workspace assistant takeover. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46444" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, all crud endpoints for openai assistants vector store have no authentication middleware and the route path /api/v1/openai-assistants-vector-store is not in whitelist_urls. however, it is also not protected by the main auth middleware when accessed via api key — the route requires api key auth (not whitelisted), but no permission checks exist on any operation. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46444" target="_blank">CVE-2026-46444</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, all CRUD endpoints for OpenAI Assistants Vector Store have no authentication middleware and the route path /api/v1/openai-assistants-vector-store is not in WHITELIST_URLS. However, it is also not protected by the main auth middleware when accessed via API key — the route requires API key auth (not whitelisted), but no permission checks exist on any operation. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46443" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, when credentials are fetched with a credentialname filter parameter, the encrypteddata field is not stripped from the response. the code properly omits encrypteddata when no filter is used but fails to do so when a filter is used. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46443" target="_blank">CVE-2026-46443</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, when credentials are fetched with a credentialName filter parameter, the encryptedData field is not stripped from the response. The code properly omits encryptedData when no filter is used but fails to do so when a filter is used. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46442" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, post /api/v1/node-custom-function lacks route-level authorization, allowing any authenticated user or api key to submit arbitrary javascript to the custom js function node. when e2b_apikey is not configured — the common deployment case — flowise executes this code inside a nodevm sandbox. this sandbox can be escaped, allowing an attacker to reach the host process object and execute system commands via child_process. the result is authenticated remote code execution on the flowise server host. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46442" target="_blank">CVE-2026-46442</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, POST /api/v1/node-custom-function lacks route-level authorization, allowing any authenticated user or API key to submit arbitrary JavaScript to the Custom JS Function node. When E2B_APIKEY is not configured — the common deployment case — Flowise executes this code inside a NodeVM sandbox. This sandbox can be escaped, allowing an attacker to reach the host process object and execute system commands via child_process. The result is authenticated remote code execution on the Flowise server host. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46441" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, a mass assignment vulnerability exists in the assistant update endpoint of flowiseai. the endpoint allows authenticated users to modify server-controlled properties such as workspaceid, createddate, and updateddate when updating an assistant resource. due to missing server-side validation and authorization checks, an attacker can manipulate the workspaceid field and reassign assistants to arbitrary workspaces. this breaks tenant isolation in multi-workspace environments. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46441" target="_blank">CVE-2026-46441</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, a mass assignment vulnerability exists in the assistant update endpoint of FlowiseAI. The endpoint allows authenticated users to modify server-controlled properties such as workspaceId, createdDate, and updatedDate when updating an assistant resource. Due to missing server-side validation and authorization checks, an attacker can manipulate the workspaceId field and reassign assistants to arbitrary workspaces. This breaks tenant isolation in multi-workspace environments. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46440" data-description="flowise is a drag & drop user interface to build a customized large language model flow. prior to version 3.1.2, the checkbasicauth endpoint validates credentials in plaintext without rate limiting and with direct comparison. this issue has been patched in version 3.1.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46440" target="_blank">CVE-2026-46440</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Flowise is a drag & drop user interface to build a customized large language model flow. Prior to version 3.1.2, the checkBasicAuth endpoint validates credentials in plaintext without rate limiting and with direct comparison. This issue has been patched in version 3.1.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46275" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bluetooth: hci_uart: fix uafs and race conditions in close and init paths
+
+vulnerabilities leading to use-after-free (uaf) and null pointer
+dereference (npd) conditions were observed in the lifecycle management
+of hci_uart.
+
+the primary issue arises because the workqueues (init_ready and
+write_work) are only flushed/cancelled if the hci_uart_proto_ready
+flag is set during tty close. if a hangup occurs before setup completes,
+hci_uart_tty_close() skips the teardown of these workqueues and
+proceeds to free the `hu` struct. when the scheduled work executes
+later, it blindly dereferences the freed `hu` struct.
+
+furthermore, several data races and uafs were identified in the teardown
+sequence:
+1. calling hci_uart_flush() from hci_uart_close() without effectively
+   disabling write_work causes a race condition where both can concurrently
+   double-free hu->tx_skb. this happens because protocol timers can
+   concurrently invoke hci_uart_tx_wakeup() and requeue write_work.
+2. calling hci_free_dev(hdev) before hu->proto->close(hu) causes a uaf
+   when vendor specific protocol close callbacks dereference hu->hdev.
+3. in the initialization error paths, failing to take the proto_lock
+   write lock before clearing proto_ready leads to races with active
+   readers. additionally, hci_uart_tty_receive() accesses hu->hdev
+   outside the read lock, leading to uafs if the initialization error
+   path frees hdev concurrently.
+
+fix these synchronization and lifecycle issues by:
+1. re-ordering hci_uart_tty_close() to clear hci_uart_proto_ready first,
+   followed immediately by a cancel_work_sync(&hu->write_work). clearing
+   the flag locks out concurrent protocol timers from successfully invoking
+   hci_uart_tx_wakeup(), effectively rendering the cancellation permanent
+   and preventing the tx_skb double-free.
+2. note: clearing proto_ready early causes hci_uart_close() to skip
+   hu->proto->flush(). this is perfectly safe in the tty_close path
+   because hu->proto->close() executes shortly after, which intrinsically
+   purges all protocol skb queues and tears down the state.
+3. relocating hu->proto->close(hu) strictly prior to hci_free_dev(hdev)
+   across all close and error paths to prevent vendor-level uafs.
+4. moving the hdev->stat.byte_rx increment in hci_uart_tty_receive()
+   inside the proto_lock read-side critical section to safely synchronize
+   with device unregistration.
+5. adding cancel_work_sync(&hu->write_work) to hci_uart_close() to safely
+   flush the workqueue before hci_uart_flush() is invoked via the hci core.
+6. utilizing cancel_work_sync() instead of disable_work_sync() across
+   all paths to prevent permanently breaking user-space retry capabilities.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46275" target="_blank">CVE-2026-46275</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Bluetooth: hci_uart: fix UAFs and race conditions in close and init paths
+
+Vulnerabilities leading to Use-After-Free (UAF) and Null Pointer
+Dereference (NPD) conditions were observed in the lifecycle management
+of hci_uart.
+
+The primary issue arises because the workqueues (init_ready and
+write_work) are only flushed/cancelled if the HCI_UART_PROTO_READY
+flag is set during TTY close. If a hangup occurs before setup completes,
+hci_uart_tty_close() skips the teardown of these workqueues and
+proceeds to free the `hu` struct. When the scheduled work executes
+later, it blindly dereferences the freed `hu` struct.
+
+Furthermore, several data races and UAFs were identified in the teardown
+sequence:
+1. Calling hci_uart_flush() from hci_uart_close() without effectively
+   disabling write_work causes a race condition where both can concurrently
+   double-free hu->tx_skb. This happens because protocol timers can
+   concurrently invoke hci_uart_tx_wakeup() and requeue write_work.
+2. Calling hci_free_dev(hdev) before hu->proto->close(hu) causes a UAF
+   when vendor specific protocol close callbacks dereference hu->hdev.
+3. In the initialization error paths, failing to take the proto_lock
+   write lock before clearing PROTO_READY leads to races with active
+   readers. Additionally, hci_uart_tty_receive() accesses hu->hdev
+   outside the read lock, leading to UAFs if the initialization error
+   path frees hdev concurrently.
+
+Fix these synchronization and lifecycle issues by:
+1. Re-ordering hci_uart_tty_close() to clear HCI_UART_PROTO_READY first,
+   followed immediately by a cancel_work_sync(&hu->write_work). Clearing
+   the flag locks out concurrent protocol timers from successfully invoking
+   hci_uart_tx_wakeup(), effectively rendering the cancellation permanent
+   and preventing the tx_skb double-free.
+2. Note: Clearing PROTO_READY early causes hci_uart_close() to skip
+   hu->proto->flush(). This is perfectly safe in the tty_close path
+   because hu->proto->close() executes shortly after, which intrinsically
+   purges all protocol SKB queues and tears down the state.
+3. Relocating hu->proto->close(hu) strictly prior to hci_free_dev(hdev)
+   across all close and error paths to prevent vendor-level UAFs.
+4. Moving the hdev->stat.byte_rx increment in hci_uart_tty_receive()
+   inside the proto_lock read-side critical section to safely synchronize
+   with device unregistration.
+5. Adding cancel_work_sync(&hu->write_work) to hci_uart_close() to safely
+   flush the workqueue before hci_uart_flush() is invoked via the HCI core.
+6. Utilizing cancel_work_sync() instead of disable_work_sync() across
+   all paths to prevent permanently breaking user-space retry capabilities.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46274" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io-wq: check that the predecessor is hashed in io_wq_remove_pending()
+
+io_wq_remove_pending() needs to fix up wq->hash_tail[] if the cancelled
+work was the tail of its hash bucket. when doing this, it checks whether
+the preceding entry in acct->work_list has the same hash value, but
+never checks that the predecessor is hashed at all. io_get_work_hash()
+is simply atomic_read(&work->flags) >> io_wq_hash_shift, and the hash
+bits are never set for non-hashed work, so it returns 0. thus, when a
+hashed bucket-0 work is cancelled while a non-hashed work is its list
+predecessor, the check spuriously passes and a pointer to the non-hashed
+io_kiocb is stored in wq->hash_tail[0].
+
+because non-hashed work is dequeued via the fast path in
+io_get_next_work(), which never touches hash_tail[], the stale pointer
+is never cleared. therefore, after the non-hashed io_kiocb completes and
+is freed back to req_cachep, wq->hash_tail[0] is a dangling pointer. the
+io_wq is per-task (tctx->io_wq) and survives ring open/close, so the
+dangling pointer persists for the lifetime of the task; the next hashed
+bucket-0 enqueue dereferences it in io_wq_insert_work() and
+wq_list_add_after() writes through freed memory.
+
+add the missing io_wq_is_hashed() check so a non-hashed predecessor
+never inherits a hash_tail[] slot.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46274" target="_blank">CVE-2026-46274</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-08 11:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io-wq: check that the predecessor is hashed in io_wq_remove_pending()
+
+io_wq_remove_pending() needs to fix up wq->hash_tail[] if the cancelled
+work was the tail of its hash bucket. When doing this, it checks whether
+the preceding entry in acct->work_list has the same hash value, but
+never checks that the predecessor is hashed at all. io_get_work_hash()
+is simply atomic_read(&work->flags) >> IO_WQ_HASH_SHIFT, and the hash
+bits are never set for non-hashed work, so it returns 0. Thus, when a
+hashed bucket-0 work is cancelled while a non-hashed work is its list
+predecessor, the check spuriously passes and a pointer to the non-hashed
+io_kiocb is stored in wq->hash_tail[0].
+
+Because non-hashed work is dequeued via the fast path in
+io_get_next_work(), which never touches hash_tail[], the stale pointer
+is never cleared. Therefore, after the non-hashed io_kiocb completes and
+is freed back to req_cachep, wq->hash_tail[0] is a dangling pointer. The
+io_wq is per-task (tctx->io_wq) and survives ring open/close, so the
+dangling pointer persists for the lifetime of the task; the next hashed
+bucket-0 enqueue dereferences it in io_wq_insert_work() and
+wq_list_add_after() writes through freed memory.
+
+Add the missing io_wq_is_hashed() check so a non-hashed predecessor
+never inherits a hash_tail[] slot.</p>
                 </div>
         
             </div>
