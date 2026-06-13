@@ -33,6 +33,200 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-11769" data-description="we have released version 5.24.0 of the grafana operator. this patch includes a critical severity security fix for a path traversal/privilege escalation vulnerability in the grafana operator.
+
+
+
+### summary
+
+
+
+the grafana operator supports loading dashboards & library panels using the jsonnet data templating language. the jsonnet expression is evaluated in the context of the operator manager pod.
+
+
+
+### impact
+
+
+
+it is possible for a malicious user who can create dashboard or librarypanel resources for a grafana instance to obtain the kubernetes service account token of the grafana operator manager.
+
+
+
+### affected versions
+
+
+
+all grafana operator versions <= 5.23
+
+
+
+### solutions and mitigations
+
+
+
+all installations should be upgraded as soon as possible.
+
+
+
+as a workaround, the following validatingadmissionpolicy prevent the creation or modification of jsonnet based resources:
+
+
+
+apiversion: admissionregistration.k8s.io/v1
+
+
+
+kind: validatingadmissionpolicy
+
+
+
+metadata:
+
+  name: "prevent-jsonnet-dashboards"
+
+
+spec:
+
+  failurepolicy: fail
+  matchconstraints:
+    resourcerules:
+      - apigroups: ["grafana.integreatly.org"]
+        apiversions: ["v1beta1"]
+        operations: ["create", "update"]
+        resources: ["grafanadashboards", "grafanalibrarypanels"]
+  validations:
+    - expression: "!has(object.spec.jsonnetlib)"
+
+
+---
+
+
+
+apiversion: admissionregistration.k8s.io/v1
+
+
+
+kind: validatingadmissionpolicybinding
+
+
+
+metadata:
+
+  name: "prevent-jsonnet-dashboards-clusterwide"
+
+
+spec:
+
+  policyname: "prevent-jsonnet-dashboards"
+  validationactions: [deny]
+
+
+### acknowledgement
+
+
+
+we would like to thank artem cherezov for responsibly disclosing the vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11769" target="_blank">CVE-2026-11769</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-13 01:16:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>We have released version 5.24.0 of the Grafana Operator. This patch includes a CRITICAL severity security fix for a path traversal/privilege escalation vulnerability in the Grafana Operator.
+
+
+
+### Summary
+
+
+
+The Grafana Operator supports loading dashboards & library panels using the jsonnet data templating language. The jsonnet expression is evaluated in the context of the operator manager pod.
+
+
+
+### Impact
+
+
+
+It is possible for a malicious user who can create Dashboard or LibraryPanel resources for a Grafana instance to obtain the Kubernetes service account token of the Grafana Operator manager.
+
+
+
+### Affected versions
+
+
+
+All Grafana Operator versions <= 5.23
+
+
+
+### Solutions and mitigations
+
+
+
+All installations should be upgraded as soon as possible.
+
+
+
+As a workaround, the following ValidatingAdmissionPolicy prevent the creation or modification of jsonnet based resources:
+
+
+
+apiVersion: admissionregistration.k8s.io/v1
+
+
+
+kind: ValidatingAdmissionPolicy
+
+
+
+metadata:
+
+  name: "prevent-jsonnet-dashboards"
+
+
+spec:
+
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["grafana.integreatly.org"]
+        apiVersions: ["v1beta1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["grafanadashboards", "grafanalibrarypanels"]
+  validations:
+    - expression: "!has(object.spec.jsonnetLib)"
+
+
+---
+
+
+
+apiVersion: admissionregistration.k8s.io/v1
+
+
+
+kind: ValidatingAdmissionPolicyBinding
+
+
+
+metadata:
+
+  name: "prevent-jsonnet-dashboards-clusterwide"
+
+
+spec:
+
+  policyName: "prevent-jsonnet-dashboards"
+  validationActions: [Deny]
+
+
+### Acknowledgement
+
+
+
+We would like to thank Artem Cherezov for responsibly disclosing the vulnerability.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-9848" data-description="the wp ticket plugin for wordpress is vulnerable to sql injection via the wordpress search query parameter (`s`) in versions up to, and including, 6.0.4 the plugin hooks wordpress's `posts_request` filter with `wp_ticket_com_posts_request()`, which calls `emd_author_search_results()` when the current request is an unauthenticated front-end search. that function reads `$query->query_vars['s']` — already wp_unslash()'d by `wp_query::parse_query()`, so wp_magic_quotes protection has been stripped — and concatenates the raw value into a sql `like` clause inside a union sub-select appended to the main query, with no `$wpdb->prepare()` or escaping. this makes it possible for unauthenticated attackers to append additional sql queries into already-existing queries that can be used to extract sensitive information from the database.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9848" target="_blank">CVE-2026-9848</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-06-12 22:16:22 CDT</p>
@@ -215,14 +409,6 @@ An attacker could craft a request with distribution set to 4 and an arbitrary sh
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
                     <p>OpenClaw before 2026.5.27 contains a state mutation vulnerability in node pairing reconnection that allows paired nodes to confuse approval scope decisions. Attackers can exploit reconnection logic to restore or present broader node authority than intended, potentially bypassing approval restrictions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-53837" data-description="openclaw before 2026.5.6 contains an improper access control vulnerability in mattermost event handlers that fails to validate channel type metadata. attackers can bypass intended dm policy decisions by sending crafted mattermost events missing channel type information to process restricted content.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53837" target="_blank">CVE-2026-53837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-12 17:16:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>OpenClaw before 2026.5.6 contains an improper access control vulnerability in Mattermost event handlers that fails to validate channel type metadata. Attackers can bypass intended DM policy decisions by sending crafted Mattermost events missing channel type information to process restricted content.</p>
                 </div>
         
             </div>
