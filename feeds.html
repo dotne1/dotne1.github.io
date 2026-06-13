@@ -33,6 +33,76 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-6428" data-description="sql injection in reports/catalogue_out.pl in koha community koha through 22.11.37, 23.x, 24.x before 24.11.16, 25.05.x before 25.05.11, 25.11.x before 25.11.05, 26.05.x before 26.05.01, and 26.11.x before 26.11.00 allows an authenticated staff user with the reports module flag to read arbitrary data from the koha application database via the filter url parameter when the criteria parameter matches /branchcode/.
+
+
+
+the vulnerable sink in sub calculate concatenates the unmodified filter request parameter directly into a like clause of the auxiliary $strsth2 statement and executes it via dbi without bound parameters:
+
+
+
+my $f = @$filters[0];
+$f =~ s/\*/%/g;
+$strsth2 .= " and $column like '$f' ";
+
+
+
+this enables error-based sql injection (e.g., via extractvalue) and full read access to sensitive tables including borrowers (password hashes, 2fa secrets, pii), borrower_password_recovery, api_keys, and sessions.
+
+
+
+proof of concept (error-based, single request):
+
+
+
+get /cgi-bin/koha/reports/catalogue_out.pl?do_it=1&output=screen&limit=10&criteria=branchcode&filter=x'+and+extractvalue(1,concat(0x7e,version(),0x7c,user(),0x7c,database(),0x7e))--+-
+cookie: cgisessid=<librarian_session>
+
+
+
+the response body contains the dbi exception leaking the mariadb version, database user, client ip, and database name, after which arbitrary data can be paged out using limit n,1 / substring(...).
+
+
+
+the vulnerable sink was introduced in commit 6bb77ae3e4 (2008-07-09); cve-2015-4633 patched the same class in sibling files but did not generalise the fix to reports/catalogue_out.pl. fixed in koha 22.11.38, 24.11.16, 25.05.11, 25.11.05, 26.05.01, and 26.11.00 by replacing the raw concatenation with a parameterised placeholder.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6428" target="_blank">CVE-2026-6428</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-13 12:16:17 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
+                    <p>SQL Injection in reports/catalogue_out.pl in Koha Community Koha through 22.11.37, 23.x, 24.x before 24.11.16, 25.05.x before 25.05.11, 25.11.x before 25.11.05, 26.05.x before 26.05.01, and 26.11.x before 26.11.00 allows an authenticated staff user with the Reports module flag to read arbitrary data from the Koha application database via the Filter URL parameter when the Criteria parameter matches /branchcode/.
+
+
+
+The vulnerable sink in sub calculate concatenates the unmodified Filter request parameter directly into a LIKE clause of the auxiliary $strsth2 statement and executes it via DBI without bound parameters:
+
+
+
+my $f = @$filters[0];
+$f =~ s/\*/%/g;
+$strsth2 .= " AND $column LIKE '$f' ";
+
+
+
+This enables error-based SQL injection (e.g., via EXTRACTVALUE) and full read access to sensitive tables including borrowers (password hashes, 2FA secrets, PII), borrower_password_recovery, api_keys, and sessions.
+
+
+
+Proof of concept (error-based, single request):
+
+
+
+GET /cgi-bin/koha/reports/catalogue_out.pl?do_it=1&output=screen&Limit=10&Criteria=branchcode&Filter=x'+AND+EXTRACTVALUE(1,CONCAT(0x7e,VERSION(),0x7c,USER(),0x7c,DATABASE(),0x7e))--+-
+Cookie: CGISESSID=<LIBRARIAN_SESSION>
+
+
+
+The response body contains the DBI exception leaking the MariaDB version, database user, client IP, and database name, after which arbitrary data can be paged out using LIMIT n,1 / SUBSTRING(...).
+
+
+
+The vulnerable sink was introduced in commit 6bb77ae3e4 (2008-07-09); CVE-2015-4633 patched the same class in sibling files but did not generalise the fix to reports/catalogue_out.pl. Fixed in Koha 22.11.38, 24.11.16, 25.05.11, 25.11.05, 26.05.01, and 26.11.00 by replacing the raw concatenation with a parameterised placeholder.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-5513" data-description="the online scheduling and appointment booking system – bookly plugin for wordpress is vulnerable to stored cross-site scripting via the 'bookly-customer-full-name' cookie in versions up to, and including, 27.2 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. exploitation requires 'remember personal information in cookies' setting to be enabled (disabled by default).">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-5513" target="_blank">CVE-2026-5513</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-06-13 07:16:15 CDT</p>
@@ -377,18 +447,6 @@ the specific flaw exists within the exportreport method. the issue results from 
                     <p>Allegra exportReport Directory Traversal Information Disclosure Vulnerability. This vulnerability allows remote attackers to disclose sensitive information on affected installations of Allegra. Authentication is required to exploit this vulnerability.
 
 The specific flaw exists within the exportReport method. The issue results from the lack of proper validation of a user-supplied path prior to using it in file operations. An attacker can leverage this vulnerability to disclose information in the context of the service account. Was ZDI-CAN-28208.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-6676" data-description="heap buffer out-of-bounds write vulnerability in avira antivirus engine when scanning a malformed posix tar archive may allow local execution of code or denial-of-service of the antivirus engine process.
-
-this issue affects avira antivirus on windows, macos, and linux for engine builds before 8.3.27.12.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6676" target="_blank">CVE-2026-6676</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-12 18:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Heap buffer out-of-bounds write vulnerability in Avira Antivirus engine when scanning a malformed POSIX tar archive may allow Local Execution of Code or Denial-of-Service of the antivirus engine process.
-
-This issue affects Avira Antivirus on Windows, macOS, and Linux for engine builds before 8.3.27.12.</p>
                 </div>
         
             </div>
