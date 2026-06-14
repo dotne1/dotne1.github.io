@@ -33,6 +33,38 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-11527" data-description="config::inifiles versions before 3.001000 for perl allow os command injection and file overwrite via a 2-arg open() of the -file argument in _make_filehandle.
+
+config::inifiles::_make_filehandle opens a filename argument with perl's 2-arg open(), so a filename that begins or ends with a pipe ("| cmd", "cmd |") or begins with a redirect ("> path", ">> path") is run as a command or redirect rather than opened as a file. the helper is the open path behind the documented -file argument: new(-file => $thing) reaches it through readconfig. an in-memory scalar reference (-file => \$text) does not open a path and is unaffected.
+
+any caller that forwards untrusted input to the -file argument can run an arbitrary command or truncate a file under the process uid.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11527" target="_blank">CVE-2026-11527</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-14 07:16:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Config::IniFiles versions before 3.001000 for Perl allow OS command injection and file overwrite via a 2-arg open() of the -file argument in _make_filehandle.
+
+Config::IniFiles::_make_filehandle opens a filename argument with Perl's 2-arg open(), so a filename that begins or ends with a pipe ("| cmd", "cmd |") or begins with a redirect ("> path", ">> path") is run as a command or redirect rather than opened as a file. The helper is the open path behind the documented -file argument: new(-file => $thing) reaches it through ReadConfig. An in-memory scalar reference (-file => \$text) does not open a path and is unaffected.
+
+Any caller that forwards untrusted input to the -file argument can run an arbitrary command or truncate a file under the process UID.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11526" data-description="gd versions before 2.86 for perl allow os command injection and file overwrite via a 2-arg open() of filename arguments in _make_filehandle.
+
+gd::image::_make_filehandle opens a filename argument with perl's 2-arg open(), so a filename that begins or ends with a pipe ("| cmd", "cmd |") or begins with a redirect ("> path", ">> path") is run as a command or redirect rather than opened as a file. _make_filehandle is the single open path behind every filename-accepting constructor (new, newfrompng, newfromjpeg, and the rest); the in-memory *data variants do not open a path and are unaffected.
+
+any caller that forwards untrusted input to one of these constructors as a pathname can run an arbitrary command or truncate a file under the process uid.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11526" target="_blank">CVE-2026-11526</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-14 07:16:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>GD versions before 2.86 for Perl allow OS command injection and file overwrite via a 2-arg open() of filename arguments in _make_filehandle.
+
+GD::Image::_make_filehandle opens a filename argument with Perl's 2-arg open(), so a filename that begins or ends with a pipe ("| cmd", "cmd |") or begins with a redirect ("> path", ">> path") is run as a command or redirect rather than opened as a file. _make_filehandle is the single open path behind every filename-accepting constructor (new, newFromPng, newFromJpeg, and the rest); the in-memory *Data variants do not open a path and are unaffected.
+
+Any caller that forwards untrusted input to one of these constructors as a pathname can run an arbitrary command or truncate a file under the process UID.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-15546" data-description="the iptanus file upload wordpress plugin before 5.1.7 does not implement proper file handling when the duplicatepolicy setting is configured to "maintain both." due to a time-of-check to time-of-use (toctou) race condition between the file existence check and the actual file write operation, an authenticated attacker can overwrite files uploaded by other users.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15546" target="_blank">CVE-2025-15546</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-06-14 03:16:17 CDT</p>
@@ -237,208 +269,6 @@ The vulnerable sink was introduced in commit 6bb77ae3e4 (2008-07-09); CVE-2015-4
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>The Store Locator WordPress plugin before 1.6.9 does not sanitize and escape store logo metadata before storing it and outputting it on the Store Locator WordPress plugin before 1.6.9 admin page, allowing high-privileged users such as administrators to perform Stored Cross-Site Scripting attacks even when the `unfiltered_html` capability is disallowed (e.g. in a multisite network).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11769" data-description="we have released version 5.24.0 of the grafana operator. this patch includes a critical severity security fix for a path traversal/privilege escalation vulnerability in the grafana operator.
-
-
-
-### summary
-
-
-
-the grafana operator supports loading dashboards & library panels using the jsonnet data templating language. the jsonnet expression is evaluated in the context of the operator manager pod.
-
-
-
-### impact
-
-
-
-it is possible for a malicious user who can create dashboard or librarypanel resources for a grafana instance to obtain the kubernetes service account token of the grafana operator manager.
-
-
-
-### affected versions
-
-
-
-all grafana operator versions <= 5.23
-
-
-
-### solutions and mitigations
-
-
-
-all installations should be upgraded as soon as possible.
-
-
-
-as a workaround, the following validatingadmissionpolicy prevent the creation or modification of jsonnet based resources:
-
-
-
-apiversion: admissionregistration.k8s.io/v1
-
-
-
-kind: validatingadmissionpolicy
-
-
-
-metadata:
-
-  name: "prevent-jsonnet-dashboards"
-
-
-spec:
-
-  failurepolicy: fail
-  matchconstraints:
-    resourcerules:
-      - apigroups: ["grafana.integreatly.org"]
-        apiversions: ["v1beta1"]
-        operations: ["create", "update"]
-        resources: ["grafanadashboards", "grafanalibrarypanels"]
-  validations:
-    - expression: "!has(object.spec.jsonnetlib)"
-
-
----
-
-
-
-apiversion: admissionregistration.k8s.io/v1
-
-
-
-kind: validatingadmissionpolicybinding
-
-
-
-metadata:
-
-  name: "prevent-jsonnet-dashboards-clusterwide"
-
-
-spec:
-
-  policyname: "prevent-jsonnet-dashboards"
-  validationactions: [deny]
-
-
-### acknowledgement
-
-
-
-we would like to thank artem cherezov for responsibly disclosing the vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11769" target="_blank">CVE-2026-11769</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-13 01:16:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>We have released version 5.24.0 of the Grafana Operator. This patch includes a CRITICAL severity security fix for a path traversal/privilege escalation vulnerability in the Grafana Operator.
-
-
-
-### Summary
-
-
-
-The Grafana Operator supports loading dashboards & library panels using the jsonnet data templating language. The jsonnet expression is evaluated in the context of the operator manager pod.
-
-
-
-### Impact
-
-
-
-It is possible for a malicious user who can create Dashboard or LibraryPanel resources for a Grafana instance to obtain the Kubernetes service account token of the Grafana Operator manager.
-
-
-
-### Affected versions
-
-
-
-All Grafana Operator versions <= 5.23
-
-
-
-### Solutions and mitigations
-
-
-
-All installations should be upgraded as soon as possible.
-
-
-
-As a workaround, the following ValidatingAdmissionPolicy prevent the creation or modification of jsonnet based resources:
-
-
-
-apiVersion: admissionregistration.k8s.io/v1
-
-
-
-kind: ValidatingAdmissionPolicy
-
-
-
-metadata:
-
-  name: "prevent-jsonnet-dashboards"
-
-
-spec:
-
-  failurePolicy: Fail
-  matchConstraints:
-    resourceRules:
-      - apiGroups: ["grafana.integreatly.org"]
-        apiVersions: ["v1beta1"]
-        operations: ["CREATE", "UPDATE"]
-        resources: ["grafanadashboards", "grafanalibrarypanels"]
-  validations:
-    - expression: "!has(object.spec.jsonnetLib)"
-
-
----
-
-
-
-apiVersion: admissionregistration.k8s.io/v1
-
-
-
-kind: ValidatingAdmissionPolicyBinding
-
-
-
-metadata:
-
-  name: "prevent-jsonnet-dashboards-clusterwide"
-
-
-spec:
-
-  policyName: "prevent-jsonnet-dashboards"
-  validationActions: [Deny]
-
-
-### Acknowledgement
-
-
-
-We would like to thank Artem Cherezov for responsibly disclosing the vulnerability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9848" data-description="the wp ticket plugin for wordpress is vulnerable to sql injection via the wordpress search query parameter (`s`) in versions up to, and including, 6.0.4 the plugin hooks wordpress's `posts_request` filter with `wp_ticket_com_posts_request()`, which calls `emd_author_search_results()` when the current request is an unauthenticated front-end search. that function reads `$query->query_vars['s']` — already wp_unslash()'d by `wp_query::parse_query()`, so wp_magic_quotes protection has been stripped — and concatenates the raw value into a sql `like` clause inside a union sub-select appended to the main query, with no `$wpdb->prepare()` or escaping. this makes it possible for unauthenticated attackers to append additional sql queries into already-existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9848" target="_blank">CVE-2026-9848</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-12 22:16:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The WP Ticket plugin for WordPress is vulnerable to SQL Injection via the WordPress search query parameter (`s`) in versions up to, and including, 6.0.4 The plugin hooks WordPress's `posts_request` filter with `wp_ticket_com_posts_request()`, which calls `emd_author_search_results()` when the current request is an unauthenticated front-end search. That function reads `$query->query_vars['s']` — already wp_unslash()'d by `WP_Query::parse_query()`, so wp_magic_quotes protection has been stripped — and concatenates the raw value into a SQL `LIKE` clause inside a UNION sub-SELECT appended to the main query, with no `$wpdb->prepare()` or escaping. This makes it possible for unauthenticated attackers to append additional SQL queries into already-existing queries that can be used to extract sensitive information from the database.</p>
                 </div>
         
             </div>
