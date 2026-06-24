@@ -33,6 +33,170 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-52944" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: fix fsctl permission bypass by adding a permission check for fsctl_set_sparse
+
+fsctl_set_sparse in fsctl_set_sparse() modifies the file's sparse
+attribute and saves it through xattr without any permission checks.
+
+this exposes two issues:
+
+1) a client on a read-only share can change the sparse attribute
+   on files it opened, even though the share is read-only.
+   other fsctl write operations already check
+   test_tree_conn_flag(work->tcon, ksmbd_tree_conn_flag_writable),
+   but fsctl_set_sparse does not.
+
+2) even on writable shares, clients without file_write_data or
+   file_write_attributes access should not modify the sparse
+   attribute. similar handle-level checks exist in other functions
+   but are missing here.
+
+add both share-level writable check and per-handle access check.
+use goto out on error to avoid leaking file references.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52944" target="_blank">CVE-2026-52944</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 05:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: fix FSCTL permission bypass by adding a permission check for FSCTL_SET_SPARSE
+
+FSCTL_SET_SPARSE in fsctl_set_sparse() modifies the file's sparse
+attribute and saves it through xattr without any permission checks.
+
+This exposes two issues:
+
+1) A client on a read-only share can change the sparse attribute
+   on files it opened, even though the share is read-only.
+   Other FSCTL write operations already check
+   test_tree_conn_flag(work->tcon, KSMBD_TREE_CONN_FLAG_WRITABLE),
+   but FSCTL_SET_SPARSE does not.
+
+2) Even on writable shares, clients without FILE_WRITE_DATA or
+   FILE_WRITE_ATTRIBUTES access should not modify the sparse
+   attribute. Similar handle-level checks exist in other functions
+   but are missing here.
+
+Add both share-level writable check and per-handle access check.
+Use goto out on error to avoid leaking file references.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-52943" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: skbuff: fix missing zerocopy reference in pskb_carve helpers
+
+pskb_carve_inside_header() and pskb_carve_inside_nonlinear() both copy
+the old skb_shared_info header into a new buffer via memcpy(), which
+includes the destructor_arg pointer (uarg) for msg_zerocopy skbs.
+neither function calls net_zcopy_get() for the new shinfo, creating an
+unaccounted holder: every skb_shared_info with destructor_arg set will
+call skb_zcopy_clear() once when freed, but the corresponding
+net_zcopy_get() was never called for the new copy. repeated calls
+drive uarg->refcnt to zero prematurely, freeing ubuf_info_msgzc while
+tx skbs still hold live destructor_arg pointers.
+
+kasan reports use-after-free on a freed ubuf_info_msgzc:
+
+  bug: kasan: slab-use-after-free in skb_release_data+0x77b/0x810
+  read of size 8 at addr ffff88801574d3e8 by task poc/220
+
+  call trace:
+   skb_release_data+0x77b/0x810
+   kfree_skb_list_reason+0x13e/0x610
+   skb_release_data+0x4cd/0x810
+   sk_skb_reason_drop+0xf3/0x340
+   skb_queue_purge_reason+0x282/0x440
+   rds_tcp_inc_free+0x1e/0x30
+   rds_recvmsg+0x354/0x1780
+   __sys_recvmsg+0xdf/0x180
+
+  allocated by task 219:
+   msg_zerocopy_realloc+0x157/0x7b0
+   tcp_sendmsg_locked+0x2892/0x3ba0
+
+  freed by task 219:
+   ip_recv_error+0x74a/0xb10
+   tcp_recvmsg+0x475/0x530
+
+the skb consuming the late access still referenced the same uarg via
+shinfo->destructor_arg copied by pskb_carve_inside_nonlinear() without
+a refcount bump. this has been verified to be reliably exploitable: a
+working proof-of-concept achieves full root privilege escalation from
+an unprivileged local user on a default kernel configuration.
+
+the fix follows the pattern of pskb_expand_head() which has the same
+memcpy/cloned structure. for pskb_carve_inside_header(), net_zcopy_get()
+is placed after skb_orphan_frags() succeeds, so the orphan error path
+needs no cleanup. for pskb_carve_inside_nonlinear(), net_zcopy_get() is
+placed after all failure points and just before skb_release_data(), so
+no error path needs cleanup at all -- matching pskb_expand_head() more
+closely and avoiding the need for a balancing net_zcopy_put().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52943" target="_blank">CVE-2026-52943</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 05:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: skbuff: fix missing zerocopy reference in pskb_carve helpers
+
+pskb_carve_inside_header() and pskb_carve_inside_nonlinear() both copy
+the old skb_shared_info header into a new buffer via memcpy(), which
+includes the destructor_arg pointer (uarg) for MSG_ZEROCOPY skbs.
+Neither function calls net_zcopy_get() for the new shinfo, creating an
+unaccounted holder: every skb_shared_info with destructor_arg set will
+call skb_zcopy_clear() once when freed, but the corresponding
+net_zcopy_get() was never called for the new copy. Repeated calls
+drive uarg->refcnt to zero prematurely, freeing ubuf_info_msgzc while
+TX skbs still hold live destructor_arg pointers.
+
+KASAN reports use-after-free on a freed ubuf_info_msgzc:
+
+  BUG: KASAN: slab-use-after-free in skb_release_data+0x77b/0x810
+  Read of size 8 at addr ffff88801574d3e8 by task poc/220
+
+  Call Trace:
+   skb_release_data+0x77b/0x810
+   kfree_skb_list_reason+0x13e/0x610
+   skb_release_data+0x4cd/0x810
+   sk_skb_reason_drop+0xf3/0x340
+   skb_queue_purge_reason+0x282/0x440
+   rds_tcp_inc_free+0x1e/0x30
+   rds_recvmsg+0x354/0x1780
+   __sys_recvmsg+0xdf/0x180
+
+  Allocated by task 219:
+   msg_zerocopy_realloc+0x157/0x7b0
+   tcp_sendmsg_locked+0x2892/0x3ba0
+
+  Freed by task 219:
+   ip_recv_error+0x74a/0xb10
+   tcp_recvmsg+0x475/0x530
+
+The skb consuming the late access still referenced the same uarg via
+shinfo->destructor_arg copied by pskb_carve_inside_nonlinear() without
+a refcount bump. This has been verified to be reliably exploitable: a
+working proof-of-concept achieves full root privilege escalation from
+an unprivileged local user on a default kernel configuration.
+
+The fix follows the pattern of pskb_expand_head() which has the same
+memcpy/cloned structure. For pskb_carve_inside_header(), net_zcopy_get()
+is placed after skb_orphan_frags() succeeds, so the orphan error path
+needs no cleanup. For pskb_carve_inside_nonlinear(), net_zcopy_get() is
+placed after all failure points and just before skb_release_data(), so
+no error path needs cleanup at all -- matching pskb_expand_head() more
+closely and avoiding the need for a balancing net_zcopy_put().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11968" data-description="argument injection in tortoisegitblame via malicious git history filenames leads to arbitrary file write in tortoisegit">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11968" target="_blank">CVE-2026-11968</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 05:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>Argument Injection in TortoiseGitBlame via Malicious Git History Filenames Leads to Arbitrary File Write in TortoiseGit</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-10745" data-description="improper output neutralization for logs vulnerability in upkeeper solutions upkeeper instant privilege access on windows allows log injection-tampering-forging.
 
 this issue affects upkeeper instant privilege access: through 1.6.1.">
@@ -717,128 +881,6 @@ reschedule the remaining streams.
 
 This keeps scheduler-private RR/FC/PRIO lists consistent while fully
 rolling back denied outgoing stream additions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52928" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-af_unix: reject siocatmark on non-stream sockets
-
-siocatmark reports whether the receive queue is at the urgent mark for
-msg_oob.
-
-in af_unix, msg_oob is supported only for sock_stream sockets.
-sock_dgram and sock_seqpacket reject msg_oob in sendmsg() and recvmsg(),
-so they should not support siocatmark either.
-
-return -eopnotsupp for non-stream sockets before checking the receive
-queue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52928" target="_blank">CVE-2026-52928</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-af_unix: Reject SIOCATMARK on non-stream sockets
-
-SIOCATMARK reports whether the receive queue is at the urgent mark for
-MSG_OOB.
-
-In AF_UNIX, MSG_OOB is supported only for SOCK_STREAM sockets.
-SOCK_DGRAM and SOCK_SEQPACKET reject MSG_OOB in sendmsg() and recvmsg(),
-so they should not support SIOCATMARK either.
-
-Return -EOPNOTSUPP for non-stream sockets before checking the receive
-queue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52927" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-netfilter: ebtables: fix oob read in compat_mtw_from_user
-
-luxiao xu says:
-
- the function compat_mtw_from_user() converts ebtables extensions from
- 32-bit user structures to kernel native structures. however, it lacks
- proper validation of the user-supplied match_size/target_size.
-
- when certain extensions are processed, the kernel-side translation
- logic may perform memory accesses based on the extension's expected
- size. if the user provides a size smaller than what the extension
- requires, it results in an out-of-bounds read as reported by kasan.
-
- this fix introduces a check to ensure match_size is at least as large
- as the extension's required compatsize. this covers matches, watchers,
- and targets, while maintaining compatibility with standard targets.
-
-afaiu this is relevant for matches that need to go though
-match->compat_from_user() call.  those that use plain memcpy with the
-user-provided size are ok because the caller checks that size vs the
-start of the next rule entry offset (which itself is checked vs. total
-size copied from userspace).
-
-the ->compat_from_user() callbacks assume they can read compatsize bytes,
-so they need this extra check.
-
-based on an earlier patch from luxiao xu.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52927" target="_blank">CVE-2026-52927</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-netfilter: ebtables: fix OOB read in compat_mtw_from_user
-
-Luxiao Xu says:
-
- The function compat_mtw_from_user() converts ebtables extensions from
- 32-bit user structures to kernel native structures. However, it lacks
- proper validation of the user-supplied match_size/target_size.
-
- When certain extensions are processed, the kernel-side translation
- logic may perform memory accesses based on the extension's expected
- size. If the user provides a size smaller than what the extension
- requires, it results in an out-of-bounds read as reported by KASAN.
-
- This fix introduces a check to ensure match_size is at least as large
- as the extension's required compatsize. This covers matches, watchers,
- and targets, while maintaining compatibility with standard targets.
-
-AFAIU this is relevant for matches that need to go though
-match->compat_from_user() call.  Those that use plain memcpy with the
-user-provided size are ok because the caller checks that size vs the
-start of the next rule entry offset (which itself is checked vs. total
-size copied from userspace).
-
-The ->compat_from_user() callbacks assume they can read compatsize bytes,
-so they need this extra check.
-
-Based on an earlier patch from Luxiao Xu.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52926" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-batman-adv: clear current gateway during teardown
-
-batadv_gw_node_free() removes the gateway list entries during mesh teardown,
-but it does not clear the currently selected gateway. this leaves stale
-gateway state behind across cleanup and can break a later mesh recreation.
-
-clear bat_priv->gw.curr_gw before walking the gateway list so the selected
-gateway reference is dropped as part of teardown.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52926" target="_blank">CVE-2026-52926</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-batman-adv: clear current gateway during teardown
-
-batadv_gw_node_free() removes the gateway list entries during mesh teardown,
-but it does not clear the currently selected gateway. This leaves stale
-gateway state behind across cleanup and can break a later mesh recreation.
-
-Clear bat_priv->gw.curr_gw before walking the gateway list so the selected
-gateway reference is dropped as part of teardown.</p>
                 </div>
         
             </div>
