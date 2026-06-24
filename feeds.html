@@ -33,824 +33,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-13150" data-description="server-side request forgery (ssrf) (cwe-918) in the pdf generation endpoint get /api/reports/{id}/pdf (backend/main.py) in ccyl13 pentestify 1.0.0 and lower allows remote attackers to make the server issue requests to arbitrary internal or external urls, including cloud metadata services, and return the rendered content in the resulting pdf via a crafted host header, because the target url is built from request.base_url without validation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13150" target="_blank">CVE-2026-13150</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 06:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Server-Side Request Forgery (SSRF) (CWE-918) in the PDF generation endpoint GET /api/reports/{id}/pdf (backend/main.py) in ccyl13 Pentestify 1.0.0 and lower allows remote attackers to make the server issue requests to arbitrary internal or external URLs, including cloud metadata services, and return the rendered content in the resulting PDF via a crafted Host header, because the target URL is built from request.base_url without validation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52944" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ksmbd: fix fsctl permission bypass by adding a permission check for fsctl_set_sparse
-
-fsctl_set_sparse in fsctl_set_sparse() modifies the file's sparse
-attribute and saves it through xattr without any permission checks.
-
-this exposes two issues:
-
-1) a client on a read-only share can change the sparse attribute
-   on files it opened, even though the share is read-only.
-   other fsctl write operations already check
-   test_tree_conn_flag(work->tcon, ksmbd_tree_conn_flag_writable),
-   but fsctl_set_sparse does not.
-
-2) even on writable shares, clients without file_write_data or
-   file_write_attributes access should not modify the sparse
-   attribute. similar handle-level checks exist in other functions
-   but are missing here.
-
-add both share-level writable check and per-handle access check.
-use goto out on error to avoid leaking file references.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52944" target="_blank">CVE-2026-52944</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 05:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ksmbd: fix FSCTL permission bypass by adding a permission check for FSCTL_SET_SPARSE
-
-FSCTL_SET_SPARSE in fsctl_set_sparse() modifies the file's sparse
-attribute and saves it through xattr without any permission checks.
-
-This exposes two issues:
-
-1) A client on a read-only share can change the sparse attribute
-   on files it opened, even though the share is read-only.
-   Other FSCTL write operations already check
-   test_tree_conn_flag(work->tcon, KSMBD_TREE_CONN_FLAG_WRITABLE),
-   but FSCTL_SET_SPARSE does not.
-
-2) Even on writable shares, clients without FILE_WRITE_DATA or
-   FILE_WRITE_ATTRIBUTES access should not modify the sparse
-   attribute. Similar handle-level checks exist in other functions
-   but are missing here.
-
-Add both share-level writable check and per-handle access check.
-Use goto out on error to avoid leaking file references.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52943" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net: skbuff: fix missing zerocopy reference in pskb_carve helpers
-
-pskb_carve_inside_header() and pskb_carve_inside_nonlinear() both copy
-the old skb_shared_info header into a new buffer via memcpy(), which
-includes the destructor_arg pointer (uarg) for msg_zerocopy skbs.
-neither function calls net_zcopy_get() for the new shinfo, creating an
-unaccounted holder: every skb_shared_info with destructor_arg set will
-call skb_zcopy_clear() once when freed, but the corresponding
-net_zcopy_get() was never called for the new copy. repeated calls
-drive uarg->refcnt to zero prematurely, freeing ubuf_info_msgzc while
-tx skbs still hold live destructor_arg pointers.
-
-kasan reports use-after-free on a freed ubuf_info_msgzc:
-
-  bug: kasan: slab-use-after-free in skb_release_data+0x77b/0x810
-  read of size 8 at addr ffff88801574d3e8 by task poc/220
-
-  call trace:
-   skb_release_data+0x77b/0x810
-   kfree_skb_list_reason+0x13e/0x610
-   skb_release_data+0x4cd/0x810
-   sk_skb_reason_drop+0xf3/0x340
-   skb_queue_purge_reason+0x282/0x440
-   rds_tcp_inc_free+0x1e/0x30
-   rds_recvmsg+0x354/0x1780
-   __sys_recvmsg+0xdf/0x180
-
-  allocated by task 219:
-   msg_zerocopy_realloc+0x157/0x7b0
-   tcp_sendmsg_locked+0x2892/0x3ba0
-
-  freed by task 219:
-   ip_recv_error+0x74a/0xb10
-   tcp_recvmsg+0x475/0x530
-
-the skb consuming the late access still referenced the same uarg via
-shinfo->destructor_arg copied by pskb_carve_inside_nonlinear() without
-a refcount bump. this has been verified to be reliably exploitable: a
-working proof-of-concept achieves full root privilege escalation from
-an unprivileged local user on a default kernel configuration.
-
-the fix follows the pattern of pskb_expand_head() which has the same
-memcpy/cloned structure. for pskb_carve_inside_header(), net_zcopy_get()
-is placed after skb_orphan_frags() succeeds, so the orphan error path
-needs no cleanup. for pskb_carve_inside_nonlinear(), net_zcopy_get() is
-placed after all failure points and just before skb_release_data(), so
-no error path needs cleanup at all -- matching pskb_expand_head() more
-closely and avoiding the need for a balancing net_zcopy_put().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52943" target="_blank">CVE-2026-52943</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 05:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net: skbuff: fix missing zerocopy reference in pskb_carve helpers
-
-pskb_carve_inside_header() and pskb_carve_inside_nonlinear() both copy
-the old skb_shared_info header into a new buffer via memcpy(), which
-includes the destructor_arg pointer (uarg) for MSG_ZEROCOPY skbs.
-Neither function calls net_zcopy_get() for the new shinfo, creating an
-unaccounted holder: every skb_shared_info with destructor_arg set will
-call skb_zcopy_clear() once when freed, but the corresponding
-net_zcopy_get() was never called for the new copy. Repeated calls
-drive uarg->refcnt to zero prematurely, freeing ubuf_info_msgzc while
-TX skbs still hold live destructor_arg pointers.
-
-KASAN reports use-after-free on a freed ubuf_info_msgzc:
-
-  BUG: KASAN: slab-use-after-free in skb_release_data+0x77b/0x810
-  Read of size 8 at addr ffff88801574d3e8 by task poc/220
-
-  Call Trace:
-   skb_release_data+0x77b/0x810
-   kfree_skb_list_reason+0x13e/0x610
-   skb_release_data+0x4cd/0x810
-   sk_skb_reason_drop+0xf3/0x340
-   skb_queue_purge_reason+0x282/0x440
-   rds_tcp_inc_free+0x1e/0x30
-   rds_recvmsg+0x354/0x1780
-   __sys_recvmsg+0xdf/0x180
-
-  Allocated by task 219:
-   msg_zerocopy_realloc+0x157/0x7b0
-   tcp_sendmsg_locked+0x2892/0x3ba0
-
-  Freed by task 219:
-   ip_recv_error+0x74a/0xb10
-   tcp_recvmsg+0x475/0x530
-
-The skb consuming the late access still referenced the same uarg via
-shinfo->destructor_arg copied by pskb_carve_inside_nonlinear() without
-a refcount bump. This has been verified to be reliably exploitable: a
-working proof-of-concept achieves full root privilege escalation from
-an unprivileged local user on a default kernel configuration.
-
-The fix follows the pattern of pskb_expand_head() which has the same
-memcpy/cloned structure. For pskb_carve_inside_header(), net_zcopy_get()
-is placed after skb_orphan_frags() succeeds, so the orphan error path
-needs no cleanup. For pskb_carve_inside_nonlinear(), net_zcopy_get() is
-placed after all failure points and just before skb_release_data(), so
-no error path needs cleanup at all -- matching pskb_expand_head() more
-closely and avoiding the need for a balancing net_zcopy_put().</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11968" data-description="argument injection in tortoisegitblame via malicious git history filenames leads to arbitrary file write in tortoisegit">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11968" target="_blank">CVE-2026-11968</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 05:17:19 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56761" data-description="hono before 4.12.14 contains an html injection vulnerability in jsx server-side rendering that allows attackers to inject unintended html by using malformed attribute names. attackers can craft specially crafted attribute keys containing characters like quotes or angle brackets to break html tag boundaries and inject arbitrary attributes or elements.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56761" target="_blank">CVE-2026-56761</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:37 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>Argument Injection in TortoiseGitBlame via Malicious Git History Filenames Leads to Arbitrary File Write in TortoiseGit</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>hono before 4.12.14 contains an html injection vulnerability in jsx server-side rendering that allows attackers to inject unintended html by using malformed attribute names. Attackers can craft specially crafted attribute keys containing characters like quotes or angle brackets to break html tag boundaries and inject arbitrary attributes or elements.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-10745" data-description="improper output neutralization for logs vulnerability in upkeeper solutions upkeeper instant privilege access on windows allows log injection-tampering-forging.
-
-this issue affects upkeeper instant privilege access: through 1.6.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10745" target="_blank">CVE-2026-10745</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 04:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper output neutralization for logs vulnerability in upKeeper Solutions upKeeper Instant Privilege Access on Windows allows Log Injection-Tampering-Forging.
-
-This issue affects upKeeper Instant Privilege Access: through 1.6.1.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56370" data-description="imagemagick before 7.1.2-19 contains an out-of-bounds access vulnerability in connectedcomponentsimage() when processing connected-components artifacts with invalid indices. attackers can trigger access violations by specifying malformed connected-components definitions via cli, causing denial of service or potential code execution.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56370" target="_blank">CVE-2026-56370</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
+                    <p>ImageMagick before 7.1.2-19 contains an out-of-bounds access vulnerability in ConnectedComponentsImage() when processing connected-components artifacts with invalid indices. Attackers can trigger access violations by specifying malformed connected-components definitions via CLI, causing denial of service or potential code execution.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-7761" data-description="the ultimate member plugin for wordpress is vulnerable to account takeover via password reset link disclosure in all versions up to and including 2.11.4. this is due to a chain of three logic bugs: (1) an md5 hash fallback in get_directory_by_hash() that allows any post to be used as a member directory by computing substring(md5(post_id), 11, 5), (2) a strstr() parsing logic flaw in post_data() that allows bypassing wordpress's protected meta key restrictions by placing '_um_' anywhere in the meta key name rather than at the start, and (3) missing field name validation in build_user_card_data() that allows arbitrary field names including 'password_reset_link' to be passed to um_filtered_value(). this makes it possible for authenticated attackers with contributor-level access and above to create a malicious post via xmlrpc with crafted meta fields, use the md5 fallback to point the member directory ajax handler to their post, inject 'password_reset_link' into the tagline_fields configuration, and leak live password reset urls for all users in the member directory response, including administrators.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7761" target="_blank">CVE-2026-7761</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56368" data-description="imagemagick before 7.1.2-15 contains a memory leak vulnerability in multiple coders that write raw pixel data where allocated objects are not properly freed. attackers can trigger this leak by processing specially crafted images, causing memory exhaustion and denial of service.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56368" target="_blank">CVE-2026-56368</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>ImageMagick before 7.1.2-15 contains a memory leak vulnerability in multiple coders that write raw pixel data where allocated objects are not properly freed. Attackers can trigger this leak by processing specially crafted images, causing memory exhaustion and denial of service.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56358" data-description="n8n before 1.123.25 (1.x) and before 2.11.2 (2.x), with the fix also included in 2.12.0, contains a stored cross-site scripting vulnerability in the form trigger node's css sanitization that allows authenticated users to inject malicious scripts. attackers with workflow creation permissions can inject xss payloads that execute persistently for all form visitors, enabling form hijacking and phishing attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56358" target="_blank">CVE-2026-56358</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>n8n before 1.123.25 (1.x) and before 2.11.2 (2.x), with the fix also included in 2.12.0, contains a stored cross-site scripting vulnerability in the Form Trigger node's CSS sanitization that allows authenticated users to inject malicious scripts. Attackers with workflow creation permissions can inject XSS payloads that execute persistently for all form visitors, enabling form hijacking and phishing attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56351" data-description="n8n before version 2.4.0 contains a sql injection vulnerability in mysql, postgresql, and microsoft sql nodes that allows authenticated users to inject arbitrary sql through unescaped identifier values in node configuration parameters. attackers with workflow creation permissions can supply specially crafted table or column names to execute unauthorized database commands and compromise data integrity.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56351" target="_blank">CVE-2026-56351</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>n8n before version 2.4.0 contains a sql injection vulnerability in MySQL, PostgreSQL, and Microsoft SQL nodes that allows authenticated users to inject arbitrary SQL through unescaped identifier values in node configuration parameters. Attackers with workflow creation permissions can supply specially crafted table or column names to execute unauthorized database commands and compromise data integrity.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56338" data-description="capgo before 12.128.2 contains a denial of service vulnerability in the /auth/v1/otp endpoint that prevents email verification for two-factor authentication due to captcha validation failures. authenticated users cannot complete 2fa enrollment as the backend consistently returns http 500 errors with captcha verification process failed messages, blocking access to security controls.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56338" target="_blank">CVE-2026-56338</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Capgo before 12.128.2 contains a denial of service vulnerability in the /auth/v1/otp endpoint that prevents email verification for two-factor authentication due to captcha validation failures. Authenticated users cannot complete 2FA enrollment as the backend consistently returns HTTP 500 errors with captcha verification process failed messages, blocking access to security controls.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56337" data-description="capgo before 12.128.2 contains an information disclosure vulnerability in the public.exist_app_v2 rpc function that allows unauthenticated attackers to enumerate app_ids by calling post /rest/v1/rpc/exist_app_v2 with arbitrary appid parameters. remote attackers can exploit this security definer function to determine whether specific app_ids exist in the public.apps table, enabling cross-tenant app enumeration and privacy violations.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56337" target="_blank">CVE-2026-56337</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Capgo before 12.128.2 contains an information disclosure vulnerability in the public.exist_app_v2 RPC function that allows unauthenticated attackers to enumerate app_ids by calling POST /rest/v1/rpc/exist_app_v2 with arbitrary appid parameters. Remote attackers can exploit this SECURITY DEFINER function to determine whether specific app_ids exist in the public.apps table, enabling cross-tenant app enumeration and privacy violations.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56310" data-description="cap-go before 12.128.2 contains an authorization bypass vulnerability in the get /organization/members endpoint that allows org-limited api keys to bypass limited_to_orgs restrictions. attackers with org-limited api keys can read membership data including uid, email, image_url, role, and is_tmp from organizations outside their assigned scope.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56310" target="_blank">CVE-2026-56310</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Cap-go before 12.128.2 contains an authorization bypass vulnerability in the GET /organization/members endpoint that allows org-limited API keys to bypass limited_to_orgs restrictions. Attackers with org-limited API keys can read membership data including uid, email, image_url, role, and is_tmp from organizations outside their assigned scope.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56302" data-description="capgo before 12.128.2 contains an unsecured images bucket lacking any row level security controls, allowing unauthenticated attackers to read, insert, and delete stored app icons. remote attackers can exploit this misconfiguration to delete all icons and leak sensitive app ids and user ids.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56302" target="_blank">CVE-2026-56302</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Capgo before 12.128.2 contains an unsecured images bucket lacking any row level security controls, allowing unauthenticated attackers to read, insert, and delete stored app icons. Remote attackers can exploit this misconfiguration to delete all icons and leak sensitive app IDs and user IDs.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56272" data-description="flowise before 3.0.13 uses bcrypt with default salt rounds of 5, providing only 32 iterations instead of the owasp-recommended minimum of 10 rounds. attackers can crack password hashes approximately 30 times faster with modern gpu hardware, potentially compromising all user accounts in a database breach scenario.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56272" target="_blank">CVE-2026-56272</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.1</p>
+                    <p>Flowise before 3.0.13 uses bcrypt with default salt rounds of 5, providing only 32 iterations instead of the OWASP-recommended minimum of 10 rounds. Attackers can crack password hashes approximately 30 times faster with modern GPU hardware, potentially compromising all user accounts in a database breach scenario.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56270" data-description="flowise before 3.1.0 (versions 3.0.13 and earlier) contains a missing authentication vulnerability in the /api/v1/loginmethod endpoint that allows unauthenticated users to retrieve an organization's complete sso configuration, including oauth client secrets in cleartext, by providing an organizationid parameter. remote attackers can send a get request to harvest sensitive api credentials for google, microsoft/azure, github, and auth0 integrations. this affects flowiseai cloud and self-hosted instances where the endpoint is exposed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56270" target="_blank">CVE-2026-56270</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Flowise before 3.1.0 (versions 3.0.13 and earlier) contains a missing authentication vulnerability in the /api/v1/loginmethod endpoint that allows unauthenticated users to retrieve an organization's complete SSO configuration, including OAuth client secrets in cleartext, by providing an organizationId parameter. Remote attackers can send a GET request to harvest sensitive API credentials for Google, Microsoft/Azure, GitHub, and Auth0 integrations. This affects FlowiseAI Cloud and self-hosted instances where the endpoint is exposed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56269" data-description="flowise before 3.1.0 (npm package flowise, versions 3.0.13 and earlier) uses a weak hardcoded default value 'secre$t' for the token_hash_secret environment variable in packages/server/src/enterprise/utils/temptokenutils.ts when the variable is not configured. this secret derives the aes-256-cbc key used to encrypt user ids and workspace ids in the 'meta' field of jwt tokens. an attacker who knows the default secret can decrypt this metadata to extract internal user and workspace identifiers, and re-encrypt manipulated values such as altered user or workspace ids. because the jwt signature is validated separately, decrypting or tampering with this metadata does not by itself grant access, but the disclosure of internal identifiers and possible metadata manipulation could aid privilege escalation or unauthorized data access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56269" target="_blank">CVE-2026-56269</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
+                    <p>Flowise before 3.1.0 (npm package flowise, versions 3.0.13 and earlier) uses a weak hardcoded default value 'Secre$t' for the TOKEN_HASH_SECRET environment variable in packages/server/src/enterprise/utils/tempTokenUtils.ts when the variable is not configured. This secret derives the AES-256-CBC key used to encrypt user IDs and workspace IDs in the 'meta' field of JWT tokens. An attacker who knows the default secret can decrypt this metadata to extract internal user and workspace identifiers, and re-encrypt manipulated values such as altered user or workspace IDs. Because the JWT signature is validated separately, decrypting or tampering with this metadata does not by itself grant access, but the disclosure of internal identifiers and possible metadata manipulation could aid privilege escalation or unauthorized data access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56262" data-description="crawl4ai before 0.8.7 contains an authentication bypass vulnerability in the monitor router endpoints that allows unauthenticated attackers to access destructive operations. remote attackers can invoke the /monitor/actions/cleanup endpoint and manipulate monitoring state without authentication, causing service disruption.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56262" target="_blank">CVE-2026-56262</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Crawl4AI before 0.8.7 contains an authentication bypass vulnerability in the monitor router endpoints that allows unauthenticated attackers to access destructive operations. Remote attackers can invoke the /monitor/actions/cleanup endpoint and manipulate monitoring state without authentication, causing service disruption.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56257" data-description="capgo before 12.128.2 allows direct patching of public.apps.owner_org through postgrest, bypassing the transfer_app() workflow and creating split-brain ownership. attackers can directly update apps.owner_org while leaving app_versions.owner_org unchanged, enabling old-org keys to retain access to version data while new-org keys control the app record.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56257" target="_blank">CVE-2026-56257</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Capgo before 12.128.2 allows direct patching of public.apps.owner_org through PostgREST, bypassing the transfer_app() workflow and creating split-brain ownership. Attackers can directly update apps.owner_org while leaving app_versions.owner_org unchanged, enabling old-org keys to retain access to version data while new-org keys control the app record.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56256" data-description="capgo before 12.128.2 enforces mandatory two-factor authentication only at the ui level. sensitive organization (org) management api endpoints (e.g., editing organization details, inviting users) do not validate 2fa completion on the backend. an authenticated admin user who has not enabled 2fa can replay or modify a previously captured org api request to perform privileged organization actions, bypassing the globally enforced 2fa requirement.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56256" target="_blank">CVE-2026-56256</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Capgo before 12.128.2 enforces mandatory two-factor authentication only at the UI level. Sensitive Organization (ORG) management API endpoints (e.g., editing organization details, inviting users) do not validate 2FA completion on the backend. An authenticated Admin user who has not enabled 2FA can replay or modify a previously captured ORG API request to perform privileged organization actions, bypassing the globally enforced 2FA requirement.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56245" data-description="supabase capgo before 12.128.2 contains an authorization bypass vulnerability in the security definer record_build_time rpc function that allows unauthenticated attackers to insert arbitrary build-time records. attackers can exploit this by calling post /rest/v1/rpc/record_build_time with a public api key to poison billing and quota data for any organization, enabling resource exhaustion and cross-tenant billing manipulation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56245" target="_blank">CVE-2026-56245</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>Supabase Capgo before 12.128.2 contains an authorization bypass vulnerability in the SECURITY DEFINER record_build_time RPC function that allows unauthenticated attackers to insert arbitrary build-time records. Attackers can exploit this by calling POST /rest/v1/rpc/record_build_time with a public API key to poison billing and quota data for any organization, enabling resource exhaustion and cross-tenant billing manipulation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56244" data-description="capgo before 12.128.2 allows non-admin api keys to read webhook signing secrets via supabase rest due to insufficient row-level security policies on the webhooks table. attackers can retrieve the webhook secret and forge valid x-capgo-signature headers to send authenticated webhook events to configured receivers, breaking webhook authenticity and integrity.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56244" target="_blank">CVE-2026-56244</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Capgo before 12.128.2 allows non-admin API keys to read webhook signing secrets via Supabase REST due to insufficient row-level security policies on the webhooks table. Attackers can retrieve the webhook secret and forge valid X-Capgo-Signature headers to send authenticated webhook events to configured receivers, breaking webhook authenticity and integrity.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56237" data-description="capgo before 12.128.2 contains a broken authentication vulnerability in its api key generation mechanism. api keys are exposed in frontend requests, and the backend fails to validate that keys are securely generated and bound to the authenticated user. an attacker can tamper with the api key parameter in the generation request and supply arbitrary values, generating custom api keys without proper authorization, which can lead to unauthorized access to protected endpoints.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56237" target="_blank">CVE-2026-56237</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>Capgo before 12.128.2 contains a broken authentication vulnerability in its API key generation mechanism. API keys are exposed in frontend requests, and the backend fails to validate that keys are securely generated and bound to the authenticated user. An attacker can tamper with the API key parameter in the generation request and supply arbitrary values, generating custom API keys without proper authorization, which can lead to unauthorized access to protected endpoints.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56232" data-description="capgo before 12.128.2 fails to enforce limited_to_orgs and limited_to_apps constraints on subkeys provided via x-limited-key-id header in middlewarekey function. attackers can bypass subkey scope restrictions by referencing their own subkeys, causing all downstream route handlers to use the unrestricted parent key instead of the scoped subkey.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56232" target="_blank">CVE-2026-56232</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The Ultimate Member plugin for WordPress is vulnerable to Account Takeover via Password Reset Link Disclosure in all versions up to and including 2.11.4. This is due to a chain of three logic bugs: (1) an MD5 hash fallback in get_directory_by_hash() that allows any post to be used as a member directory by computing SUBSTRING(MD5(post_id), 11, 5), (2) a strstr() parsing logic flaw in post_data() that allows bypassing WordPress's protected meta key restrictions by placing '_um_' anywhere in the meta key name rather than at the start, and (3) missing field name validation in build_user_card_data() that allows arbitrary field names including 'password_reset_link' to be passed to um_filtered_value(). This makes it possible for authenticated attackers with Contributor-level access and above to create a malicious post via XMLRPC with crafted meta fields, use the MD5 fallback to point the member directory AJAX handler to their post, inject 'password_reset_link' into the tagline_fields configuration, and leak live password reset URLs for all users in the member directory response, including administrators.</p>
+                    <p>Capgo before 12.128.2 fails to enforce limited_to_orgs and limited_to_apps constraints on subkeys provided via x-limited-key-id header in middlewareKey function. Attackers can bypass subkey scope restrictions by referencing their own subkeys, causing all downstream route handlers to use the unrestricted parent key instead of the scoped subkey.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-56052" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in funnelkit funnel builder by funnelkit allows blind sql injection.
-
-this issue affects funnel builder by funnelkit: from n/a through 3.15.0.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56052" target="_blank">CVE-2026-56052</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56231" data-description="capgo before 12.128.2 contains a broken object level authorization (bola) vulnerability in the post /build/start/:jobid and post /build/cancel/:jobid endpoints. the handlers authorize the request based only on the attacker-controlled app_id supplied in the request body and never verify that the jobid in the url belongs to that app_id (or the same tenant/org) before issuing privileged builder commands with the server-held builder api key. an authenticated user with the app.build_native permission for any app they control can start or cancel arbitrary builder jobs belonging to other tenants by supplying a victim jobid, resulting in cross-tenant build sabotage (denial of service), unauthorized compute actions, and potential billing impact.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56231" target="_blank">CVE-2026-56231</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-24 08:16:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in FunnelKit Funnel Builder by FunnelKit allows Blind SQL Injection.
-
-This issue affects Funnel Builder by FunnelKit: from n/a through 3.15.0.5.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52942" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-netfilter: nf_log: validate mac header was set before dumping it
-
-the fallback path of dump_mac_header() guards the mac header access
-only with "skb->mac_header != skb->network_header", without checking
-skb_mac_header_was_set(). when the mac header is unset, mac_header is
-0xffff, so the test passes and skb_mac_header(skb) returns
-skb->head + 0xffff, ~64 kib past the buffer; the loop then reads
-dev->hard_header_len bytes out of bounds into the kernel log.
-
-this is reachable via the netdev logger: nf_log_unknown_packet() calls
-dump_mac_header() unconditionally, and an skb sent through af_packet
-with packet_qdisc_bypass reaches the egress hook with mac_header still
-unset (__dev_queue_xmit(), which would reset it, is bypassed).
-
-add the skb_mac_header_was_set() check the arphrd_ether path already
-uses, and replace the open-coded mac header length test with
-skb_mac_header_len(). only skbs with an unset mac header are affected;
-valid ones are dumped as before.
-
- bug: kasan: slab-out-of-bounds in dump_mac_header (net/netfilter/nf_log_syslog.c:831)
- read of size 1 at addr ffff88800ea49d3f by task exploit/148
- call trace:
-  kasan_report (mm/kasan/report.c:595)
-  dump_mac_header (net/netfilter/nf_log_syslog.c:831)
-  nf_log_netdev_packet (net/netfilter/nf_log_syslog.c:938 net/netfilter/nf_log_syslog.c:963)
-  nf_log_packet (net/netfilter/nf_log.c:260)
-  nft_log_eval (net/netfilter/nft_log.c:60)
-  nft_do_chain (net/netfilter/nf_tables_core.c:285)
-  nft_do_chain_netdev (net/netfilter/nft_chain_filter.c:307)
-  nf_hook_slow (net/netfilter/core.c:619)
-  nf_hook_direct_egress (net/packet/af_packet.c:257)
-  packet_xmit (net/packet/af_packet.c:280)
-  packet_sendmsg (net/packet/af_packet.c:3114)
-  __sys_sendto (net/socket.c:2265)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52942" target="_blank">CVE-2026-52942</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-netfilter: nf_log: validate MAC header was set before dumping it
-
-The fallback path of dump_mac_header() guards the MAC header access
-only with "skb->mac_header != skb->network_header", without checking
-skb_mac_header_was_set(). When the MAC header is unset, mac_header is
-0xffff, so the test passes and skb_mac_header(skb) returns
-skb->head + 0xffff, ~64 KiB past the buffer; the loop then reads
-dev->hard_header_len bytes out of bounds into the kernel log.
-
-This is reachable via the netdev logger: nf_log_unknown_packet() calls
-dump_mac_header() unconditionally, and an skb sent through AF_PACKET
-with PACKET_QDISC_BYPASS reaches the egress hook with mac_header still
-unset (__dev_queue_xmit(), which would reset it, is bypassed).
-
-Add the skb_mac_header_was_set() check the ARPHRD_ETHER path already
-uses, and replace the open-coded MAC header length test with
-skb_mac_header_len(). Only skbs with an unset MAC header are affected;
-valid ones are dumped as before.
-
- BUG: KASAN: slab-out-of-bounds in dump_mac_header (net/netfilter/nf_log_syslog.c:831)
- Read of size 1 at addr ffff88800ea49d3f by task exploit/148
- Call Trace:
-  kasan_report (mm/kasan/report.c:595)
-  dump_mac_header (net/netfilter/nf_log_syslog.c:831)
-  nf_log_netdev_packet (net/netfilter/nf_log_syslog.c:938 net/netfilter/nf_log_syslog.c:963)
-  nf_log_packet (net/netfilter/nf_log.c:260)
-  nft_log_eval (net/netfilter/nft_log.c:60)
-  nft_do_chain (net/netfilter/nf_tables_core.c:285)
-  nft_do_chain_netdev (net/netfilter/nft_chain_filter.c:307)
-  nf_hook_slow (net/netfilter/core.c:619)
-  nf_hook_direct_egress (net/packet/af_packet.c:257)
-  packet_xmit (net/packet/af_packet.c:280)
-  packet_sendmsg (net/packet/af_packet.c:3114)
-  __sys_sendto (net/socket.c:2265)</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52941" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net/smc: avoid null deref of conn->lnk in smc_msg_event tracepoint
-
-the smc_msg_event tracepoint class, shared by smc_tx_sendmsg and
-smc_rx_recvmsg, unconditionally dereferences smc->conn.lnk:
-
-	__string(name, smc->conn.lnk->ibname)
-
-conn->lnk is only set for smc-r; for smc-d it is null. other code on
-these paths already handles this (e.g. !conn->lnk in
-smc_stat_rmb_tx_size_small()). with the tracepoint enabled, the first
-sendmsg()/recvmsg() on an smc-d socket crashes:
-
-  oops: general protection fault, probably for non-canonical address
-  kasan: null-ptr-deref in range [...]
-  rip: 0010:strlen+0x1e/0xa0
-  call trace:
-   trace_event_raw_event_smc_msg_event (net/smc/smc_tracepoint.h:44)
-   smc_rx_recvmsg (net/smc/smc_rx.c:515)
-   smc_recvmsg (net/smc/af_smc.c:2859)
-   __sys_recvfrom (net/socket.c:2315)
-   __x64_sys_recvfrom (net/socket.c:2326)
-   do_syscall_64
-
-the faulting address 0x3e0 is offsetof(struct smc_link, ibname),
-confirming the null ->lnk deref. enabling the tracepoint requires
-root, but the trigger itself is unprivileged: socket(af_smc, ...) has
-no capability check, and smc-d negotiation needs no admin step on
-s390 or on x86 with the loopback ism device loaded.
-
-log an empty device name for smc-d instead of dereferencing null.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52941" target="_blank">CVE-2026-52941</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net/smc: avoid NULL deref of conn->lnk in smc_msg_event tracepoint
-
-The smc_msg_event tracepoint class, shared by smc_tx_sendmsg and
-smc_rx_recvmsg, unconditionally dereferences smc->conn.lnk:
-
-	__string(name, smc->conn.lnk->ibname)
-
-conn->lnk is only set for SMC-R; for SMC-D it is NULL. Other code on
-these paths already handles this (e.g. !conn->lnk in
-SMC_STAT_RMB_TX_SIZE_SMALL()). With the tracepoint enabled, the first
-sendmsg()/recvmsg() on an SMC-D socket crashes:
-
-  Oops: general protection fault, probably for non-canonical address
-  KASAN: null-ptr-deref in range [...]
-  RIP: 0010:strlen+0x1e/0xa0
-  Call Trace:
-   trace_event_raw_event_smc_msg_event (net/smc/smc_tracepoint.h:44)
-   smc_rx_recvmsg (net/smc/smc_rx.c:515)
-   smc_recvmsg (net/smc/af_smc.c:2859)
-   __sys_recvfrom (net/socket.c:2315)
-   __x64_sys_recvfrom (net/socket.c:2326)
-   do_syscall_64
-
-The faulting address 0x3e0 is offsetof(struct smc_link, ibname),
-confirming the NULL ->lnk deref. Enabling the tracepoint requires
-root, but the trigger itself is unprivileged: socket(AF_SMC, ...) has
-no capability check, and SMC-D negotiation needs no admin step on
-s390 or on x86 with the loopback ISM device loaded.
-
-Log an empty device name for SMC-D instead of dereferencing NULL.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52940" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-tun: zero the whole vnet header in tun_put_user()
-
-tun_put_user() declares an on-stack struct virtio_net_hdr_v1_hash_tunnel
-without zeroing it. for a non-tunnel skb, virtio_net_hdr_tnl_from_skb()
-only initializes the first 10 bytes (sizeof(struct virtio_net_hdr)),
-leaving bytes 10..23 (num_buffers and the hash/tunnel fields) as stack
-garbage.
-
-an unprivileged user can set the vnet header size to 24 with
-tunsetvnethdrsz, so __tun_vnet_hdr_put() copies all 24 bytes of the
-partially-initialized struct to userspace, leaking 14 bytes of kernel
-stack on every read of a non-tunnel packet.
-
-fix it the same way tun_get_user() already does by zeroing the whole
-header right after declaration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52940" target="_blank">CVE-2026-52940</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-tun: zero the whole vnet header in tun_put_user()
-
-tun_put_user() declares an on-stack struct virtio_net_hdr_v1_hash_tunnel
-without zeroing it. For a non-tunnel skb, virtio_net_hdr_tnl_from_skb()
-only initializes the first 10 bytes (sizeof(struct virtio_net_hdr)),
-leaving bytes 10..23 (num_buffers and the hash/tunnel fields) as stack
-garbage.
-
-An unprivileged user can set the vnet header size to 24 with
-TUNSETVNETHDRSZ, so __tun_vnet_hdr_put() copies all 24 bytes of the
-partially-initialized struct to userspace, leaking 14 bytes of kernel
-stack on every read of a non-tunnel packet.
-
-Fix it the same way tun_get_user() already does by zeroing the whole
-header right after declaration.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52939" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net/rds: fix null deref in rds_ib_send_cqe_handler() on masked atomic completion
-
-rds_ib_xmit_atomic() always programs a masked atomic opcode
-(ib_wr_masked_atomic_cmp_and_swp or ib_wr_masked_atomic_fetch_and_add)
-for every rds atomic cmsg.  but the completion-side switch in
-rds_ib_send_unmap_op() only handles the non-masked opcodes, so a masked
-atomic completion falls through to default and returns rm == null while
-send->s_op is left set.  rds_ib_send_cqe_handler() then dereferences the
-null rm via rm->m_final_op, oopsing in softirq context.  an unprivileged
-af_rds sendmsg() of an atomic cmsg over an active rds/ib connection
-triggers it; on hardware that natively accepts masked atomics (mlx4,
-mlx5) no extra setup is needed.
-
-  rds/ib: rds_ib_send_unmap_op: unexpected opcode 0xd in wr!
-  oops: general protection fault [#1] smp kasan
-  kasan: null-ptr-deref in range [0x0000000000000190-0x0000000000000197]
-  rip: rds_ib_send_cqe_handler+0x25c/0xb10 (net/rds/ib_send.c:282)
-  call trace:
-   <irq>
-   rds_ib_send_cqe_handler (net/rds/ib_send.c:282)
-   poll_scq (net/rds/ib_cm.c:274)
-   rds_ib_tasklet_fn_send (net/rds/ib_cm.c:294)
-   tasklet_action_common (kernel/softirq.c:943)
-   handle_softirqs (kernel/softirq.c:573)
-   run_ksoftirqd (kernel/softirq.c:479)
-   </irq>
-  kernel panic - not syncing: fatal exception in interrupt
-
-handle the masked atomic opcodes in the same case as the non-masked
-ones: they map to the same struct rds_message.atomic union member, so
-the existing container_of()/rds_ib_send_unmap_atomic() body is correct
-for them.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52939" target="_blank">CVE-2026-52939</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net/rds: fix NULL deref in rds_ib_send_cqe_handler() on masked atomic completion
-
-rds_ib_xmit_atomic() always programs a masked atomic opcode
-(IB_WR_MASKED_ATOMIC_CMP_AND_SWP or IB_WR_MASKED_ATOMIC_FETCH_AND_ADD)
-for every RDS atomic cmsg.  But the completion-side switch in
-rds_ib_send_unmap_op() only handles the non-masked opcodes, so a masked
-atomic completion falls through to default and returns rm == NULL while
-send->s_op is left set.  rds_ib_send_cqe_handler() then dereferences the
-NULL rm via rm->m_final_op, oopsing in softirq context.  An unprivileged
-AF_RDS sendmsg() of an atomic cmsg over an active RDS/IB connection
-triggers it; on hardware that natively accepts masked atomics (mlx4,
-mlx5) no extra setup is needed.
-
-  RDS/IB: rds_ib_send_unmap_op: unexpected opcode 0xd in WR!
-  Oops: general protection fault [#1] SMP KASAN
-  KASAN: null-ptr-deref in range [0x0000000000000190-0x0000000000000197]
-  RIP: rds_ib_send_cqe_handler+0x25c/0xb10 (net/rds/ib_send.c:282)
-  Call Trace:
-   <IRQ>
-   rds_ib_send_cqe_handler (net/rds/ib_send.c:282)
-   poll_scq (net/rds/ib_cm.c:274)
-   rds_ib_tasklet_fn_send (net/rds/ib_cm.c:294)
-   tasklet_action_common (kernel/softirq.c:943)
-   handle_softirqs (kernel/softirq.c:573)
-   run_ksoftirqd (kernel/softirq.c:479)
-   </IRQ>
-  Kernel panic - not syncing: Fatal exception in interrupt
-
-Handle the masked atomic opcodes in the same case as the non-masked
-ones: they map to the same struct rds_message.atomic union member, so
-the existing container_of()/rds_ib_send_unmap_atomic() body is correct
-for them.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52938" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-bpf: fix null pointer dereference in bpf_sk_storage_clone and diag paths
-
-bpf_selem_unlink_nofail() sets sdata(selem)->smap to null before
-removing the selem from the storage hlist. a concurrent rcu reader in
-bpf_sk_storage_clone() can observe the selem still on the list with
-smap already null, causing a null pointer dereference.
-
- general protection fault, probably for non-canonical address 0xdffffc000000000a:
- kasan: null-ptr-deref in range [0x0000000000000050-0x0000000000000057]
- rip: 0010:bpf_sk_storage_clone+0x1cd/0xaa0 net/core/bpf_sk_storage.c:174
- call trace:
-  <irq>
-  sk_clone+0xfed/0x1980 net/core/sock.c:2591
-  inet_csk_clone_lock+0x30/0x760 net/ipv4/inet_connection_sock.c:1222
-  tcp_create_openreq_child+0x35/0x2680 net/ipv4/tcp_minisocks.c:571
-  tcp_v4_syn_recv_sock+0x123/0xf90 net/ipv4/tcp_ipv4.c:1729
-  tcp_check_req+0x8e1/0x2580 include/net/tcp.h:855
-  tcp_v4_rcv+0x1845/0x3b80 net/ipv4/tcp_ipv4.c:2347
-
-add a null check for smap in bpf_sk_storage_clone().
-
-bpf_sk_storage_diag_put_all() has the same issue. add a null check
-and pass the validated smap directly to diag_get(), which is refactored
-to take smap as a parameter instead of reading it internally.
-
-bpf_sk_storage_diag_put() uses diag->maps[i] which is always valid
-under its refcount, so diag->maps[i] is passed directly to diag_get().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52938" target="_blank">CVE-2026-52938</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-bpf: Fix NULL pointer dereference in bpf_sk_storage_clone and diag paths
-
-bpf_selem_unlink_nofail() sets SDATA(selem)->smap to NULL before
-removing the selem from the storage hlist. A concurrent RCU reader in
-bpf_sk_storage_clone() can observe the selem still on the list with
-smap already NULL, causing a NULL pointer dereference.
-
- general protection fault, probably for non-canonical address 0xdffffc000000000a:
- KASAN: null-ptr-deref in range [0x0000000000000050-0x0000000000000057]
- RIP: 0010:bpf_sk_storage_clone+0x1cd/0xaa0 net/core/bpf_sk_storage.c:174
- Call Trace:
-  <IRQ>
-  sk_clone+0xfed/0x1980 net/core/sock.c:2591
-  inet_csk_clone_lock+0x30/0x760 net/ipv4/inet_connection_sock.c:1222
-  tcp_create_openreq_child+0x35/0x2680 net/ipv4/tcp_minisocks.c:571
-  tcp_v4_syn_recv_sock+0x123/0xf90 net/ipv4/tcp_ipv4.c:1729
-  tcp_check_req+0x8e1/0x2580 include/net/tcp.h:855
-  tcp_v4_rcv+0x1845/0x3b80 net/ipv4/tcp_ipv4.c:2347
-
-Add a NULL check for smap in bpf_sk_storage_clone().
-
-bpf_sk_storage_diag_put_all() has the same issue. Add a NULL check
-and pass the validated smap directly to diag_get(), which is refactored
-to take smap as a parameter instead of reading it internally.
-
-bpf_sk_storage_diag_put() uses diag->maps[i] which is always valid
-under its refcount, so diag->maps[i] is passed directly to diag_get().</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52937" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-tap: fix stack info leak in tap_ioctl() siocgifhwaddr
-
-in the siocgifhwaddr path, tap_ioctl() copies 16 bytes of an
-uninitialised on-stack struct sockaddr_storage to userspace via
-ifr_hwaddr, but netif_get_mac_address() only writes sa_family and
-dev->addr_len (6 for ethernet) bytes, leaving sa_data[6..13] uninitialised.
-
-those 8 trailing bytes leak kernel stack contents; siocgifhwaddr on a
-macvtap chardev returns kernel .text and direct-map pointers, defeating
-kaslr.
-
-initialise ss at declaration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52937" target="_blank">CVE-2026-52937</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-tap: fix stack info leak in tap_ioctl() SIOCGIFHWADDR
-
-In the SIOCGIFHWADDR path, tap_ioctl() copies 16 bytes of an
-uninitialised on-stack struct sockaddr_storage to userspace via
-ifr_hwaddr, but netif_get_mac_address() only writes sa_family and
-dev->addr_len (6 for Ethernet) bytes, leaving sa_data[6..13] uninitialised.
-
-Those 8 trailing bytes leak kernel stack contents; SIOCGIFHWADDR on a
-macvtap chardev returns kernel .text and direct-map pointers, defeating
-KASLR.
-
-Initialise ss at declaration.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52936" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-crypto: jitterentropy - replace long-held spinlock with mutex
-
-jent_kcapi_random() serializes the shared jitterentropy state, but it
-currently holds a spinlock across the jent_read_entropy() call. that
-path performs expensive jitter collection and sha3 conditioning, so
-parallel readers can trigger stalls as contending waiters spin for
-the same lock.
-
-to prevent non-preemptible lock hold, replace rng->jent_lock with a
-mutex so contended readers sleep instead of spinning on a shared lock
-held across expensive entropy generation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52936" target="_blank">CVE-2026-52936</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-crypto: jitterentropy - replace long-held spinlock with mutex
-
-jent_kcapi_random() serializes the shared jitterentropy state, but it
-currently holds a spinlock across the jent_read_entropy() call. That
-path performs expensive jitter collection and SHA3 conditioning, so
-parallel readers can trigger stalls as contending waiters spin for
-the same lock.
-
-To prevent non-preemptible lock hold, replace rng->jent_lock with a
-mutex so contended readers sleep instead of spinning on a shared lock
-held across expensive entropy generation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52935" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xfrm: espintcp: do not reuse an in-progress partial send
-
-espintcp keeps a single in-flight transmit in ctx->partial.
-before building a new sk_msg, espintcp_sendmsg() first tries to flush
-that state through espintcp_push_msgs().
-
-for blocking callers, espintcp_push_msgs() may return success even when
-the previous partial send is still pending. espintcp_sendmsg() would
-then reinitialize emsg->skmsg and reuse ctx->partial while the old
-transfer still owns that state.
-
-do not rebuild the send message when ctx->partial is still in progress.
-if espintcp_push_msgs() returns with emsg->len still set, fail the new
-send instead of overwriting the live partial state.
-
-this is a memory-safety fix: reusing the live partial-send state can
-leave a stale offset attached to a new sk_msg and lead to an out-of-
-bounds read in the send path.
-
-tcp_sendmsg_locked() already handles waiting for send buffer memory, so
-the fix here is just to preserve espintcp's one-message-at-a-time
-transmit state.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52935" target="_blank">CVE-2026-52935</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xfrm: espintcp: do not reuse an in-progress partial send
-
-espintcp keeps a single in-flight transmit in ctx->partial.
-Before building a new sk_msg, espintcp_sendmsg() first tries to flush
-that state through espintcp_push_msgs().
-
-For blocking callers, espintcp_push_msgs() may return success even when
-the previous partial send is still pending. espintcp_sendmsg() would
-then reinitialize emsg->skmsg and reuse ctx->partial while the old
-transfer still owns that state.
-
-Do not rebuild the send message when ctx->partial is still in progress.
-If espintcp_push_msgs() returns with emsg->len still set, fail the new
-send instead of overwriting the live partial state.
-
-This is a memory-safety fix: reusing the live partial-send state can
-leave a stale offset attached to a new sk_msg and lead to an out-of-
-bounds read in the send path.
-
-tcp_sendmsg_locked() already handles waiting for send buffer memory, so
-the fix here is just to preserve espintcp's one-message-at-a-time
-transmit state.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52934" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-batman-adv: tvlv: reject oversized tvlv packets
-
-batadv_tvlv_container_ogm_append() builds a tvlv packet section from
-the tvlv.container_list. the total size of this section is computed by
-batadv_tvlv_container_list_size(), which sums the sizes of all registered
-containers.
-
-the return type and accumulator in batadv_tvlv_container_list_size() were
-u16. if the accumulated size exceeds u16_max, the value wraps around,
-causing the subsequent allocation in batadv_tvlv_container_ogm_append()
-to be undersized. the memcpy-style copy that follows would then write
-beyond the end of the allocated buffer, corrupting kernel memory.
-
-fix this by widening the return type of batadv_tvlv_container_list_size()
-to size_t. in batadv_tvlv_container_ogm_append(), check the computed length
-against u16_max before proceeding, and bail out as if the allocation had
-failed when the limit is exceeded.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52934" target="_blank">CVE-2026-52934</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-batman-adv: tvlv: reject oversized TVLV packets
-
-batadv_tvlv_container_ogm_append() builds a TVLV packet section from
-the tvlv.container_list. The total size of this section is computed by
-batadv_tvlv_container_list_size(), which sums the sizes of all registered
-containers.
-
-The return type and accumulator in batadv_tvlv_container_list_size() were
-u16. If the accumulated size exceeds U16_MAX, the value wraps around,
-causing the subsequent allocation in batadv_tvlv_container_ogm_append()
-to be undersized. The memcpy-style copy that follows would then write
-beyond the end of the allocated buffer, corrupting kernel memory.
-
-Fix this by widening the return type of batadv_tvlv_container_list_size()
-to size_t. In batadv_tvlv_container_ogm_append(), check the computed length
-against U16_MAX before proceeding, and bail out as if the allocation had
-failed when the limit is exceeded.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52933" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring/poll: fix signed comparison in io_poll_get_ownership()
-
-io_poll_get_ownership() uses a signed comparison to check whether
-poll_refs has reached the threshold for the slowpath:
-
-    if (unlikely(atomic_read(&req->poll_refs) >= io_poll_ref_bias))
-
-atomic_read() returns int (signed). when io_poll_cancel_flag
-(bit(31)) is set in poll_refs, the value becomes negative in
-signed arithmetic, so the >= 128 comparison always evaluates to
-false and the slowpath is never taken.
-
-fix this by casting the atomic_read() result to unsigned int
-before the comparison, so that the cancel flag is treated as a
-large positive value and correctly triggers the slowpath.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52933" target="_blank">CVE-2026-52933</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/poll: fix signed comparison in io_poll_get_ownership()
-
-io_poll_get_ownership() uses a signed comparison to check whether
-poll_refs has reached the threshold for the slowpath:
-
-    if (unlikely(atomic_read(&req->poll_refs) >= IO_POLL_REF_BIAS))
-
-atomic_read() returns int (signed). When IO_POLL_CANCEL_FLAG
-(BIT(31)) is set in poll_refs, the value becomes negative in
-signed arithmetic, so the >= 128 comparison always evaluates to
-false and the slowpath is never taken.
-
-Fix this by casting the atomic_read() result to unsigned int
-before the comparison, so that the cancel flag is treated as a
-large positive value and correctly triggers the slowpath.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52932" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xfrm: ipcomp: free destination pages on acomp errors
-
-move the out_free_req label up by a couple of lines so that the
-allocated dst sg list gets freed on error as well as success.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52932" target="_blank">CVE-2026-52932</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xfrm: ipcomp: Free destination pages on acomp errors
-
-Move the out_free_req label up by a couple of lines so that the
-allocated dst SG list gets freed on error as well as success.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52931" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-batman-adv: tp_meter: avoid use of uninit sender vars
-
-batadv_tp_recv_ack() and batadv_tp_stop() are only valid for tp_vars in the
-batadv_tp_sender role. when called with a batadv_tp_receiver role, it
-proceeds to read sender-only members that were never initialized, leading
-to undefined behavior.
-
-this can be triggered when a node that is currently acting as a receiver in
-an ongoing tp_meter session receives a malicious ack packet.
-
-guard against this by checking tp_vars->role immediately after the
-lookup and bailing out if it is not batadv_tp_sender, before any of
-those members are accessed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52931" target="_blank">CVE-2026-52931</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-batman-adv: tp_meter: avoid use of uninit sender vars
-
-batadv_tp_recv_ack() and batadv_tp_stop() are only valid for tp_vars in the
-BATADV_TP_SENDER role. When called with a BATADV_TP_RECEIVER role, it
-proceeds to read sender-only members that were never initialized, leading
-to undefined behavior.
-
-This can be triggered when a node that is currently acting as a receiver in
-an ongoing tp_meter session receives a malicious ACK packet.
-
-Guard against this by checking tp_vars->role immediately after the
-lookup and bailing out if it is not BATADV_TP_SENDER, before any of
-those members are accessed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-52930" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ipc/shm: serialize orphan cleanup with shm_nattch updates
-
-shm_destroy_orphaned() walks the shm idr under shm_ids(ns).rwsem, but that
-does not serialize all fields tested by shm_may_destroy().  in particular,
-shm_nattch is updated while holding shm_perm.lock, and attach paths can do
-that without holding the rwsem.
-
-do not decide that an orphaned segment is unused before taking the object
-lock.  move the shm_may_destroy() check under shm_perm.lock, matching the
-other destroy paths, and unlock the segment when it no longer qualifies
-for removal.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52930" target="_blank">CVE-2026-52930</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-24 03:16:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ipc/shm: serialize orphan cleanup with shm_nattch updates
-
-shm_destroy_orphaned() walks the shm idr under shm_ids(ns).rwsem, but that
-does not serialize all fields tested by shm_may_destroy().  In particular,
-shm_nattch is updated while holding shm_perm.lock, and attach paths can do
-that without holding the rwsem.
-
-Do not decide that an orphaned segment is unused before taking the object
-lock.  Move the shm_may_destroy() check under shm_perm.lock, matching the
-other destroy paths, and unlock the segment when it no longer qualifies
-for removal.</p>
+                    <p>Capgo before 12.128.2 contains a broken object level authorization (BOLA) vulnerability in the POST /build/start/:jobId and POST /build/cancel/:jobId endpoints. The handlers authorize the request based only on the attacker-controlled app_id supplied in the request body and never verify that the jobId in the URL belongs to that app_id (or the same tenant/org) before issuing privileged builder commands with the server-held builder API key. An authenticated user with the app.build_native permission for any app they control can start or cancel arbitrary builder jobs belonging to other tenants by supplying a victim jobId, resulting in cross-tenant build sabotage (denial of service), unauthorized compute actions, and potential billing impact.</p>
                 </div>
         
             </div>
