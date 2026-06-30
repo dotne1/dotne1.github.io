@@ -33,240 +33,170 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-8023" data-description="zephyr's http server (subsys/net/lib/http) provides a static-filesystem resource type (http_resource_type_static_fs, available when config_file_system is enabled) that serves files from a configured root directory. before this fix, both the http/1 and http/2 front-ends placed the raw, attacker-controlled request path into client-url_buffer (assembled in on_url() for http/1 and copied verbatim from the :path pseudo-header for http/2) without resolving ./.. segments. the static-fs handler then built the on-disk filename by directly concatenating the configured root with that raw url (snprintk(fname, ..., "%s%s", static_fs_detail-fs_path, client-url_buffer) at http_server_http1.c:603 and http_server_http2.c:490) and opened it with fs_open(fname, fs_o_read). because the handler is reached via wildcard/leading-dir (fnmatch fnm_leading_dir) or fallback resource matching, a request such as get /<prefix/../../<file is dispatched to the handler and, after the underlying filesystem (e.g. littlefs/fat) resolves the .. segments, escapes the configured web root, letting an unauthenticated remote client read arbitrary readable files on the mounted volume (information disclosure). the http server requires no tls or authentication to reach this path. the fix adds http_server_remove_dot_segments(), which canonicalizes the path portion of the url before resource lookup in both protocol handlers, neutralizing the traversal. affects releases v4.0.0 through v4.4.0 for deployments that register a static-filesystem resource.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8023" target="_blank">CVE-2026-8023</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 18:16:43 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-58450" data-description="invoice ninja through 5.13.26 contains an open redirect vulnerability in the client portal login that allows unauthenticated attackers to redirect authenticated victims to attacker-controlled external urls by injecting a malicious value into the intended query parameter. attackers can craft a client login link with an external url in the intended parameter, which is stored in the session without host validation and emitted verbatim via a bare redirect in the contactlogincontroller authenticated() handler after the victim completes a legitimate login, enabling phishing attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58450" target="_blank">CVE-2026-58450</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Invoice Ninja through 5.13.26 contains an open redirect vulnerability in the client portal login that allows unauthenticated attackers to redirect authenticated victims to attacker-controlled external URLs by injecting a malicious value into the intended query parameter. Attackers can craft a client login link with an external URL in the intended parameter, which is stored in the session without host validation and emitted verbatim via a bare redirect in the ContactLoginController authenticated() handler after the victim completes a legitimate login, enabling phishing attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58449" data-description="txtai through 9.10.0, fixed in commit 11b32da, exposes an api /reindex endpoint whose function body parameter is resolved through txtai.util.resolver, which performs __import__ and getattr on the caller-supplied dotted path with no allowlist. when the api is exposed with no token configured (authentication is opt-in, so all endpoints are unauthenticated) and the index is configured writable, a remote attacker can set function to an arbitrary callable such as subprocess.getoutput, achieving remote code execution as the server process during reindexing. exploitation requires those deployment conditions (api exposed, no token, writable index); it is not the default configuration. the fix gates the endpoint behind a new reindex configuration flag.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58449" target="_blank">CVE-2026-58449</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>txtai through 9.10.0, fixed in commit 11b32da, exposes an API /reindex endpoint whose function body parameter is resolved through txtai.util.Resolver, which performs __import__ and getattr on the caller-supplied dotted path with no allowlist. When the API is exposed with no TOKEN configured (authentication is opt-in, so all endpoints are unauthenticated) and the index is configured writable, a remote attacker can set function to an arbitrary callable such as subprocess.getoutput, achieving remote code execution as the server process during reindexing. Exploitation requires those deployment conditions (API exposed, no TOKEN, writable index); it is not the default configuration. The fix gates the endpoint behind a new reindex configuration flag.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58448" data-description="yudao-cloud before 2026.06 contains a broken access control vulnerability in the bpm module that allows any authenticated user to access arbitrary process instance records by supplying a caller-controlled process-instance identifier to an unprotected endpoint lacking the @preauthorize annotation. attackers can query any process-instance identifier through the unguarded get endpoint to read sensitive workflow data including submitted form variables, approver identities, approval and rejection comments, and process bpmn xml without ownership or tenant party verification.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58448" target="_blank">CVE-2026-58448</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>yudao-cloud before 2026.06 contains a broken access control vulnerability in the BPM module that allows any authenticated user to access arbitrary process instance records by supplying a caller-controlled process-instance identifier to an unprotected endpoint lacking the @PreAuthorize annotation. Attackers can query any process-instance identifier through the unguarded GET endpoint to read sensitive workflow data including submitted form variables, approver identities, approval and rejection comments, and process BPMN XML without ownership or tenant party verification.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58447" data-description="invidious through 2.20260626.0, fixed in commit 77ad416, contains a broken object level authorization vulnerability that allows authenticated attackers to delete videos from other users' playlists by supplying an arbitrary global video index in the remove_video action of the playlist endpoint. attackers can obtain per-video index values from the public playlist json api and submit them to the playlist video deletion endpoint without ownership validation, permanently removing videos from playlists they do not own.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58447" target="_blank">CVE-2026-58447</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Invidious through 2.20260626.0, fixed in commit 77ad416, contains a broken object level authorization vulnerability that allows authenticated attackers to delete videos from other users' playlists by supplying an arbitrary global video index in the remove_video action of the playlist endpoint. Attackers can obtain per-video index values from the public playlist JSON API and submit them to the playlist video deletion endpoint without ownership validation, permanently removing videos from playlists they do not own.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58446" data-description="presenton before 0.8.8-beta bundles an mcp server that, on server/docker deployments configured with session authentication (auth_username/auth_password), is reachable unauthenticated at /mcp because the nginx front-end does not apply the auth_request gate to that path and the mcp server auto-mints a valid internal session token for the configured user. a remote unauthenticated attacker can invoke mcp tools such as generate_presentation, performing authenticated application actions, consuming the operators configured llm api keys, and creating presentations in the operators instance. the electron desktop build is not affected (mcp disabled).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58446" target="_blank">CVE-2026-58446</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Presenton before 0.8.8-beta bundles an MCP server that, on server/Docker deployments configured with session authentication (AUTH_USERNAME/AUTH_PASSWORD), is reachable unauthenticated at /mcp because the nginx front-end does not apply the auth_request gate to that path and the MCP server auto-mints a valid internal session token for the configured user. A remote unauthenticated attacker can invoke MCP tools such as generate_presentation, performing authenticated application actions, consuming the operators configured LLM API keys, and creating presentations in the operators instance. The Electron desktop build is not affected (MCP disabled).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-57585" data-description="messagepack is the serializer implementation for python msgpack.org. prior to 1.2.1, there is an out-of-bounds read/crash on unpacker reuse after a caught error, potentially leading to a dos attack.  if the unpacker is used repeatedly after an error occurs, the process may crash with a segv. this issue has been fixed in version 1.2.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57585" target="_blank">CVE-2026-57585</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Zephyr's HTTP server (subsys/net/lib/http) provides a static-filesystem resource type (HTTP_RESOURCE_TYPE_STATIC_FS, available when CONFIG_FILE_SYSTEM is enabled) that serves files from a configured root directory. Before this fix, both the HTTP/1 and HTTP/2 front-ends placed the raw, attacker-controlled request path into client-url_buffer (assembled in on_url() for HTTP/1 and copied verbatim from the :path pseudo-header for HTTP/2) without resolving ./.. segments. The static-FS handler then built the on-disk filename by directly concatenating the configured root with that raw URL (snprintk(fname, ..., "%s%s", static_fs_detail-fs_path, client-url_buffer) at http_server_http1.c:603 and http_server_http2.c:490) and opened it with fs_open(fname, FS_O_READ). Because the handler is reached via wildcard/leading-dir (fnmatch FNM_LEADING_DIR) or fallback resource matching, a request such as GET /<prefix/../../<file is dispatched to the handler and, after the underlying filesystem (e.g. LittleFS/FAT) resolves the .. segments, escapes the configured web root, letting an unauthenticated remote client read arbitrary readable files on the mounted volume (information disclosure). The HTTP server requires no TLS or authentication to reach this path. The fix adds http_server_remove_dot_segments(), which canonicalizes the path portion of the URL before resource lookup in both protocol handlers, neutralizing the traversal. Affects releases v4.0.0 through v4.4.0 for deployments that register a static-filesystem resource.</p>
+                    <p>MessagePack is the serializer implementation for Python msgpack.org. Prior to 1.2.1, there is an Out-of-bounds read/crash on Unpacker reuse after a caught error, potentially leading to a DoS attack.  If the Unpacker is used repeatedly after an error occurs, the process may crash with a SEGV. This issue has been fixed in version 1.2.1.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-7656" data-description="the ipv6 neighbor discovery handlers in subsys/net/ip/ipv6_nbr.c (handle_ra_input, handle_ns_input, handle_na_input) used an incorrect boolean expression that combined the rfc 4861 validity checks with the icmpv6 code check using the wrong operator precedence: the form was '((length/hop/source/target checks) && (icmp_hdr-code != 0))'. because every legitimate nd message carries icmpv6 code 0, an attacker setting code == 0 (the normal value) caused the entire predicate to evaluate false, so the packet was never dropped and all of the other checks were silently skipped. the bypassed checks include the mandatory hop limit == 255 verification (which proves an nd packet originated on-link and was not forwarded) and, for router advertisements, the requirement that the source be a link-local address, as well as multicast-target sanity checks. as a result, an adjacent on-link attacker — and, because the hop-limit-255 guard is bypassed, potentially a remote/off-link attacker whose packets would otherwise be rejected — can have forged router advertisement, neighbor solicitation, and neighbor advertisement messages accepted. a forged ra lets the attacker reconfigure the victim's default router, on-link prefixes (slaac), mtu, reachable/retransmit timers, and (with config_net_ipv6_ra_rdnss) dns servers, while forged ns/na enable neighbor-cache poisoning, enabling man-in-the-middle, traffic redirection, and denial of service. the flaw is an input-validation/authentication weakness rather than a memory-safety issue: the underlying packet-parsing primitives (net_pkt_get_data, net_pkt_read, net_pkt_skip) are independently bounds-safe and the validated 'length' is the true buffer length, so skipping the length check causes no out-of-bounds access. the defect has existed since the logic was introduced in 2018 and shipped in all releases through v4.4.0; it is fixed by splitting the condition so any failing check drops the packet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7656" target="_blank">CVE-2026-7656</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 18:16:43 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-57204" data-description="pypdf is a free and open-source pure-python pdf library. prior to 6.13.3, a maliciously crafted pdf can cause dos. an attacker who uses this vulnerability can craft a pdf which leads to large memory usage, as max_declared_stream_length is sometimes ignored. this requires parsing a content stream without a /length value. this issue has been fixed in version 6.13.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57204" target="_blank">CVE-2026-57204</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>pypdf is a free and open-source pure-python PDF library. Prior to 6.13.3, a maliciously crafted PDF can cause DoS. An attacker who uses this vulnerability can craft a PDF which leads to large memory usage, as MAX_DECLARED_STREAM_LENGTH is sometimes ignored. This requires parsing a content stream without a /Length value. This issue has been fixed in version 6.13.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-52868" data-description="an unauthenticated attacker can read worklist records from a directory outside the intended per-ae worklist storage area. in a multi-area deployment, this can cross departmental or clinic data separation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52868" target="_blank">CVE-2026-52868</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>The IPv6 Neighbor Discovery handlers in subsys/net/ip/ipv6_nbr.c (handle_ra_input, handle_ns_input, handle_na_input) used an incorrect boolean expression that combined the RFC 4861 validity checks with the ICMPv6 code check using the wrong operator precedence: the form was '((length/hop/source/target checks) && (icmp_hdr-code != 0))'. Because every legitimate ND message carries ICMPv6 code 0, an attacker setting code == 0 (the normal value) caused the entire predicate to evaluate false, so the packet was never dropped and all of the other checks were silently skipped. The bypassed checks include the mandatory Hop Limit == 255 verification (which proves an ND packet originated on-link and was not forwarded) and, for Router Advertisements, the requirement that the source be a link-local address, as well as multicast-target sanity checks. As a result, an adjacent on-link attacker — and, because the Hop-Limit-255 guard is bypassed, potentially a remote/off-link attacker whose packets would otherwise be rejected — can have forged Router Advertisement, Neighbor Solicitation, and Neighbor Advertisement messages accepted. A forged RA lets the attacker reconfigure the victim's default router, on-link prefixes (SLAAC), MTU, reachable/retransmit timers, and (with CONFIG_NET_IPV6_RA_RDNSS) DNS servers, while forged NS/NA enable neighbor-cache poisoning, enabling man-in-the-middle, traffic redirection, and denial of service. The flaw is an input-validation/authentication weakness rather than a memory-safety issue: the underlying packet-parsing primitives (net_pkt_get_data, net_pkt_read, net_pkt_skip) are independently bounds-safe and the validated 'length' is the true buffer length, so skipping the length check causes no out-of-bounds access. The defect has existed since the logic was introduced in 2018 and shipped in all releases through v4.4.0; it is fixed by splitting the condition so any failing check drops the packet.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>An unauthenticated attacker can read worklist records from a directory outside the intended per-AE worklist storage area. In a multi-area deployment, this can cross departmental or clinic data separation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-51219" data-description="a heap buffer overflow in the highpriorityasduqueue_hasunconfirmedimessages function of lib60870 v2.3.3 to v2.3.6 allows attackers to cause a denial of service (dos) via a crafted payload.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-51219" target="_blank">CVE-2026-51219</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 18:16:42 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-52196" data-description="buffer overflow vulnerability in utt nv518g nv518gv3v3.2.7-210919-161313 allows a remote attacker to cause a denial of service via the gohead/sub_416f28 component">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52196" target="_blank">CVE-2026-52196</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A heap buffer overflow in the HighPriorityASDUQueue_hasUnconfirmedIMessages function of lib60870 v2.3.3 to v2.3.6 allows attackers to cause a Denial of Service (DoS) via a crafted payload.</p>
+                    <p>Buffer Overflow vulnerability in UTT nv518G nv518GV3v3.2.7-210919-161313 allows a remote attacker to cause a denial of service via the gohead/sub_416f28 component</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-51218" data-description="a heap buffer overflow in the ts7worker::performfunctionwrite() function (/core/s7_server.cpp) of snap7 v1.4.3 allows attackers to cause a denial of service (dos) via a crafted packet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-51218" target="_blank">CVE-2026-51218</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 18:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A heap buffer overflow in the TS7Worker::PerformFunctionWrite() function (/core/s7_server.cpp) of snap7 v1.4.3 allows attackers to cause a Denial of Service (DoS) via a crafted packet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10648" data-description="mcumgr_serial_process_frag() in subsys/mgmt/mcumgr/transport/src/serial_util.c calls net_buf_reset() on the result of smp_packet_alloc() before checking it for null. smp_packet_alloc() uses net_buf_alloc(k_no_wait) against the shared mcumgr packet pool (config_mcumgr_transport_netbuf_count, default 4), which returns null when the pool is exhausted. in default builds the __assert_no_msg in net_buf_reset is a no-op, so net_buf_simple_reset writes through the null pointer (buf->len = 0; buf->data = buf->__buf), causing a fault/crash. the fragment data reaches this code from attacker-controlled bytes on the mcumgr serial/uart/shell-console transports (smp_uart.c, smp_raw_uart.c, smp_shell.c), and a fresh buffer is allocated at the start of essentially every new packet. an attacker on the serial/console link can flood the transport to drive the 4-entry buffer pool to exhaustion and induce the null dereference, crashing the device (denial of service). the defect was introduced after the original mcumgr rework and shipped in zephyr v4.4.0. the fix moves the null check ahead of net_buf_reset.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10648" target="_blank">CVE-2026-10648</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 18:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.2</p>
-                    <p>mcumgr_serial_process_frag() in subsys/mgmt/mcumgr/transport/src/serial_util.c calls net_buf_reset() on the result of smp_packet_alloc() before checking it for NULL. smp_packet_alloc() uses net_buf_alloc(K_NO_WAIT) against the shared MCUmgr packet pool (CONFIG_MCUMGR_TRANSPORT_NETBUF_COUNT, default 4), which returns NULL when the pool is exhausted. In default builds the __ASSERT_NO_MSG in net_buf_reset is a no-op, so net_buf_simple_reset writes through the NULL pointer (buf->len = 0; buf->data = buf->__buf), causing a fault/crash. The fragment data reaches this code from attacker-controlled bytes on the MCUmgr serial/UART/shell-console transports (smp_uart.c, smp_raw_uart.c, smp_shell.c), and a fresh buffer is allocated at the start of essentially every new packet. An attacker on the serial/console link can flood the transport to drive the 4-entry buffer pool to exhaustion and induce the NULL dereference, crashing the device (denial of service). The defect was introduced after the original MCUmgr rework and shipped in Zephyr v4.4.0. The fix moves the NULL check ahead of net_buf_reset.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-57997" data-description="strapi users-permissions plugin fails to restrict jwt algorithms when plugin::users-permissions.jwt.algorithm is not explicitly configured, allowing acceptance of hs384 and hs512 tokens alongside hs256. attackers possessing the jwtsecret can mint tokens with non-standard hmac variants to bypass algorithm restrictions and weaken authentication controls.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57997" target="_blank">CVE-2026-57997</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 17:16:49 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>Strapi users-permissions plugin fails to restrict JWT algorithms when plugin::users-permissions.jwt.algorithm is not explicitly configured, allowing acceptance of HS384 and HS512 tokens alongside HS256. Attackers possessing the jwtSecret can mint tokens with non-standard HMAC variants to bypass algorithm restrictions and weaken authentication controls.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-51221" data-description="a buffer overflow in the get_attribute_list function of eipstackgroup opener commit 76b95c allows attackers to cause a denial of service (dos) via supplying a crafted common packet format (cpf) packet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-51221" target="_blank">CVE-2026-51221</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 17:16:49 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A buffer overflow in the Get_Attribute_List function of EIPStackGroup OpENer commit 76b95c allows attackers to cause a Denial of Service (DoS) via supplying a crafted Common Packet Format (CPF) packet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-34592" data-description="coolify is an open-source and self-hostable tool for managing servers, applications, and databases. prior to 4.0.0-beta.471, coolify server and project lookups are not scoped to the current team, allowing any authenticated user to access servers and projects belonging to other teams by specifying their ids directly. this vulnerability is fixed in 4.0.0-beta.471.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-34592" target="_blank">CVE-2026-34592</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 17:16:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>Coolify is an open-source and self-hostable tool for managing servers, applications, and databases. Prior to 4.0.0-beta.471, Coolify server and project lookups are not scoped to the current team, allowing any authenticated user to access servers and projects belonging to other teams by specifying their IDs directly. This vulnerability is fixed in 4.0.0-beta.471.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10647" data-description="the usb cdc-ncm device class (subsys/usb/device_next/class/usbd_cdc_ncm.c) ignores the return value of usbd_ep_enqueue() in its ethernet transmit callback cdc_ncm_send(). when the enqueue fails, the function still calls k_sem_take(&data-sync_sem, k_forever), blocking on a completion semaphore that is only ever signaled from the bulk-in transfer-completion callback. because nothing was enqueued, that callback never fires and the calling thread — a shared network traffic-class tx thread — deadlocks permanently while holding the interface tx lock, halting transmission until reboot (and leaking the transmit buffer).
-
-the enqueue fails under conditions controlled by the attached usb host: usbd_ep_enqueue() returns -eperm whenever the bus is suspended (a standard, persistent host operation), and the underlying udc_ep_enqueue() returns -eperm/-enodev on disconnect, bus reset, or endpoint disable. the cdc_ncm_send() guard only checks the data_iface_enabled and iface_up flags, not the suspended state, so a packet transmitted while the host holds the bus suspended reaches the failing enqueue and deadlocks the tx path.
-
-the realistic trigger is a bus suspend that occurs while the exported network interface is active and has traffic to send — host sleep, usb selective/auto-suspend, or hub power management — after which any device-originated packet deadlocks the path, recoverable only by reboot. the impact is a persistent loss of the virtual network connection between the host's ncm interface and the zephyr device; because the deadlocked thread is a shared traffic-class tx thread, egress on other network interfaces can stall as well. there is no memory corruption or information disclosure.
-
-the defect was introduced with the cdc-ncm driver and shipped in releases through v4.4.0; it is fixed by checking the usbd_ep_enqueue() return value and freeing the buffer before the blocking wait.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10647" target="_blank">CVE-2026-10647</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 17:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The USB CDC-NCM device class (subsys/usb/device_next/class/usbd_cdc_ncm.c) ignores the return value of usbd_ep_enqueue() in its ethernet transmit callback cdc_ncm_send(). When the enqueue fails, the function still calls k_sem_take(&data-sync_sem, K_FOREVER), blocking on a completion semaphore that is only ever signaled from the bulk-IN transfer-completion callback. Because nothing was enqueued, that callback never fires and the calling thread — a shared network traffic-class TX thread — deadlocks permanently while holding the interface TX lock, halting transmission until reboot (and leaking the transmit buffer).
-
-The enqueue fails under conditions controlled by the attached USB host: usbd_ep_enqueue() returns -EPERM whenever the bus is suspended (a standard, persistent host operation), and the underlying udc_ep_enqueue() returns -EPERM/-ENODEV on disconnect, bus reset, or endpoint disable. The cdc_ncm_send() guard only checks the DATA_IFACE_ENABLED and IFACE_UP flags, not the suspended state, so a packet transmitted while the host holds the bus suspended reaches the failing enqueue and deadlocks the TX path.
-
-The realistic trigger is a bus suspend that occurs while the exported network interface is active and has traffic to send — host sleep, USB selective/auto-suspend, or hub power management — after which any device-originated packet deadlocks the path, recoverable only by reboot. The impact is a persistent loss of the virtual network connection between the host's NCM interface and the Zephyr device; because the deadlocked thread is a shared traffic-class TX thread, egress on other network interfaces can stall as well. There is no memory corruption or information disclosure.
-
-The defect was introduced with the CDC-NCM driver and shipped in releases through v4.4.0; it is fixed by checking the usbd_ep_enqueue() return value and freeing the buffer before the blocking wait.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55957" data-description="missing critical step in authentication vulnerability in apache tomcat when the jndirealm was configured to authenticate binds using gssapi allowed attackers to authenticate without provided the correct password.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.4, from 10.1.0-m1 through 10.1.36, from 9.0.0.m1 through 9.0.100, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109.
-
-users are recommended to upgrade to version 11.0.5, 10.1.37 or 9.0.101, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55957" target="_blank">CVE-2026-55957</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Missing Critical Step in Authentication vulnerability in Apache Tomcat when the JNDIRealm was configured to authenticate binds using GSSAPI allowed attackers to authenticate without provided the correct password.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.4, from 10.1.0-M1 through 10.1.36, from 9.0.0.M1 through 9.0.100, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109.
-
-Users are recommended to upgrade to version 11.0.5, 10.1.37 or 9.0.101, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55956" data-description="improper authorization vulnerability in apache tomcat leads to security constraints specified for the default servlet ignoring any method or method omission configured as part of the constraint.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.22, from 10.1.0-m1 through 10.1.55, from 9.0.0.m1 through 9.0.118, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109. other versions that have reached end of support may also be affected.
-
-users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fix the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55956" target="_blank">CVE-2026-55956</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Authorization vulnerability in Apache Tomcat leads to security constraints specified for the default servlet ignoring any method or method omission configured as part of the constraint.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.22, from 10.1.0-M1 through 10.1.55, from 9.0.0.M1 through 9.0.118, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109. Other versions that have reached end of support may also be affected.
-
-Users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fix the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55955" data-description="improper authentication vulnerability in apache tomcat allowed a replay attack against the encryptioninterceptor in the cluster component.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.22, from 10.1.0-m1 through 10.1.55, from 9.0.13 through 9.0.18, from 8.5.38 through 8.5.100, from 7.0.100 through 7.0.109.
-
-users are recommended to upgrade to version 11.0.23, 10.1.56, 9.0.119, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55955" target="_blank">CVE-2026-55955</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Authentication vulnerability in Apache Tomcat allowed a replay attack against the EncryptionInterceptor in the cluster component.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.22, from 10.1.0-M1 through 10.1.55, from 9.0.13 through 9.0.18, from 8.5.38 through 8.5.100, from 7.0.100 through 7.0.109.
-
-Users are recommended to upgrade to version 11.0.23, 10.1.56, 9.0.119, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55276" data-description="always-incorrect control flow implementation vulnerability in apache tomcat meant that special roles and empty authorisation constraints were not included when the effective web.xml was logged.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.22, from 10.1.0-m1 through 10.1.55, from 9.0.0.m1 through 9.0.118, from 8.5.0 through 8.5.100. other versions that have reached end of support may also be affected.
-
-users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119 which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55276" target="_blank">CVE-2026-55276</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Always-Incorrect Control Flow Implementation vulnerability in Apache Tomcat meant that special roles and empty authorisation constraints were not included when the effective web.xml was logged.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.22, from 10.1.0-M1 through 10.1.55, from 9.0.0.M1 through 9.0.118, from 8.5.0 through 8.5.100. Other versions that have reached end of support may also be affected.
-
-Users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119 which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-53434" data-description="detection of error condition without action vulnerability in apache tomcat when configuring crls for a ffm based connector.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.22, from 10.1.0-m7 through 10.1.55, from 9.0.83 through 9.0.118.
-
-users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53434" target="_blank">CVE-2026-53434</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Detection of Error Condition Without Action vulnerability in Apache Tomcat when configuring CRLs for a FFM based connector.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.22, from 10.1.0-M7 through 10.1.55, from 9.0.83 through 9.0.118.
-
-Users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-53404" data-description="always-incorrect control flow implementation vulnerability in apache tomcat's rewrite valve meant that if the first condition in an or chain matched, subsequent non-or conditions were skipped.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.22, from 10.1.0-m1 through 10.1.55, from 9.0.0.m1 through 9.0.118, from 8.5.0 through 8.5.100. other versions that have reached end of support may also be affected.
-
-users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fix the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53404" target="_blank">CVE-2026-53404</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Always-Incorrect Control Flow Implementation vulnerability in Apache Tomcat's rewrite valve meant that if the first condition in an OR chain matched, subsequent non-OR conditions were skipped.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.22, from 10.1.0-M1 through 10.1.55, from 9.0.0.M1 through 9.0.118, from 8.5.0 through 8.5.100. Other versions that have reached end of support may also be affected.
-
-Users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fix the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-50229" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in the number guess example for apache tomcat.
-
-this issue affects apache tomcat: from 11.0.0-m1 through 11.0.22, from 10.1.0-m1 through 10.1.55, from 9.0.0.m1 through 9.0.118, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109. other versions that have reached end of support may also be affected.
-
-users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fix the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50229" target="_blank">CVE-2026-50229</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in the number guess example for Apache Tomcat.
-
-This issue affects Apache Tomcat: from 11.0.0-M1 through 11.0.22, from 10.1.0-M1 through 10.1.55, from 9.0.0.M1 through 9.0.118, from 8.5.0 through 8.5.100, from 7.0.0 through 7.0.109. Other versions that have reached end of support may also be affected.
-
-Users are recommended to upgrade to version 11.0.23, 10.1.56 or 9.0.119, which fix the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-41896" data-description="coolify is an open-source and self-hostable tool for managing servers, applications, and databases. prior to 4.0.0-beta.474, the hmac key is the application's manual_webhook_secret_github field, which is used by coolify's webhook endpoints to validate incoming requests, is nullable with no default — meaning newly created applications have a null webhook secret. php's hash_hmac() function silently coerces a null key to an empty string ''. so when the secret is null, the server computes hash_hmac('sha256', $payload, '') — a deterministic value that any attacker can calculate independently. by sending x-hub-signature-256: sha256=<hash_hmac('sha256', payload, '')>, an unauthenticated attacker can forge a valid signature and trigger deployments. this vulnerability is fixed in 4.0.0-beta.474.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41896" target="_blank">CVE-2026-41896</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-50254" data-description="an unauthenticated remote attacker can repeatedly send a single crafted connection request to leak memory. against storescp in its default single-process mode, memory grows quickly and the service is eventually killed, after which it stops accepting connections until an operator restarts it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50254" target="_blank">CVE-2026-50254</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Coolify is an open-source and self-hostable tool for managing servers, applications, and databases. Prior to 4.0.0-beta.474, the HMAC key is the application's manual_webhook_secret_github field, which is used by Coolify's webhook endpoints to validate incoming requests, is nullable with no default — meaning newly created applications have a null webhook secret. PHP's hash_hmac() function silently coerces a null key to an empty string ''. So when the secret is null, the server computes hash_hmac('sha256', $payload, '') — a deterministic value that any attacker can calculate independently. By sending X-Hub-Signature-256: sha256=<hash_hmac('sha256', payload, '')>, an unauthenticated attacker can forge a valid signature and trigger deployments. This vulnerability is fixed in 4.0.0-beta.474.</p>
+                    <p>An unauthenticated remote attacker can repeatedly send a single crafted connection request to leak memory. Against storescp in its default single-process mode, memory grows quickly and the service is eventually killed, after which it stops accepting connections until an operator restarts it.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-34597" data-description="coolify is an open-source and self-hostable tool for managing servers, applications, and databases. prior to 4.0.0-beta.470, a critical authenticated host remote code execution (rce) vulnerability was discovered in coolify. the flaw resides in the handling of user-defined build parameters for the nixpacks build pack. specifically, the install_command provided by a user is directly concatenated into a shell command string that is executed on the deployment host during the building phase. an attacker can leverage this to escape the intended build context and execute arbitrary commands with host-level privileges. this vulnerability is fixed in 4.0.0-beta.470.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-34597" target="_blank">CVE-2026-34597</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Coolify is an open-source and self-hostable tool for managing servers, applications, and databases. Prior to 4.0.0-beta.470, a critical Authenticated Host Remote Code Execution (RCE) vulnerability was discovered in Coolify. The flaw resides in the handling of user-defined build parameters for the Nixpacks build pack. Specifically, the install_command provided by a user is directly concatenated into a shell command string that is executed on the deployment host during the building phase. An attacker can leverage this to escape the intended build context and execute arbitrary commands with host-level privileges. This vulnerability is fixed in 4.0.0-beta.470.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-50003" data-description="a malicious or compromised server can make a dcmtk client using bit-preserving c-get storage mode write files outside the chosen output directory, using both relative (../) paths and absolute paths.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50003" target="_blank">CVE-2026-50003</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>A malicious or compromised server can make a DCMTK client using bit-preserving C-GET storage mode write files outside the chosen output directory, using both relative (../) paths and absolute paths.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-34594" data-description="coolify is an open-source and self-hostable tool for managing servers, applications, and databases. prior to 4.0.0-beta.471, an authenticated command injection vulnerability in the destination network management functionality allows users with destination management permissions to execute arbitrary commands as root on managed servers. the "network" parameter is passed directly to shell commands without proper sanitization, enabling full remote code execution on the host system. this vulnerability is fixed in 4.0.0-beta.471.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-34594" target="_blank">CVE-2026-34594</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Coolify is an open-source and self-hostable tool for managing servers, applications, and databases. Prior to 4.0.0-beta.471, an authenticated command injection vulnerability in the Destination Network Management functionality allows users with destination management permissions to execute arbitrary commands as root on managed servers. The "network" parameter is passed directly to shell commands without proper sanitization, enabling full remote code execution on the host system. This vulnerability is fixed in 4.0.0-beta.471.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-13758" data-description="cryptx versions before 0.088_001 for perl compare aead authentication tags in non-constant time in the streaming decrypt_done path.
-
-the decrypt_done($tag) form compares it against the computed tag with memne (memcmp() != 0), which short-circuits on the first differing byte, so its run time depends on the number of matching leading bytes. this affects all five aead modes: gcm, ccm, chacha20poly1305, eax and ocb. the one-shot *_decrypt_verify helpers are unaffected; they verify the tag inside libtomcrypt with a constant-time comparison.
-
-the timing difference is a tag-verification oracle. an attacker who can submit many candidate tags for the same nonce, ciphertext and associated data while measuring the timing precisely enough may recover the expected tag byte by byte and forge a message that verifies.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13758" target="_blank">CVE-2026-13758</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-06-29 16:16:43 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-37106" data-description="an issue in dokuwiki 2025-05-14b "librarian" 56.2 allows a remote attacker to execute arbitrary code via the register function in inc/auth.php">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-37106" target="_blank">CVE-2026-37106</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>CryptX versions before 0.088_001 for Perl compare AEAD authentication tags in non-constant time in the streaming decrypt_done path.
-
-The decrypt_done($tag) form compares it against the computed tag with memNE (memcmp() != 0), which short-circuits on the first differing byte, so its run time depends on the number of matching leading bytes. This affects all five AEAD modes: GCM, CCM, ChaCha20Poly1305, EAX and OCB. The one-shot *_decrypt_verify helpers are unaffected; they verify the tag inside libtomcrypt with a constant-time comparison.
-
-The timing difference is a tag-verification oracle. An attacker who can submit many candidate tags for the same nonce, ciphertext and associated data while measuring the timing precisely enough may recover the expected tag byte by byte and forge a message that verifies.</p>
+                    <p>An issue in DokuWiki 2025-05-14b "Librarian" 56.2 allows a remote attacker to execute arbitrary code via the register function in inc/auth.php</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-35505" data-description="an unauthenticated remote attacker can repeatedly send crafted connection requests to leak memory. in single-process deployments the memory grows until the service is killed and the port stops responding until restart.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-35505" target="_blank">CVE-2026-35505</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>An unauthenticated remote attacker can repeatedly send crafted connection requests to leak memory. In single-process deployments the memory grows until the service is killed and the port stops responding until restart.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11541" data-description="ibm websphere application server 9.0, and 8.5 and ibm websphere application server - liberty 17.0.0.3 through 26.0.0.6 are affected by an http request smuggling vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11541" target="_blank">CVE-2026-11541</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>IBM WebSphere Application Server 9.0, and 8.5 and IBM WebSphere Application Server - Liberty 17.0.0.3 through 26.0.0.6 are affected by an HTTP request smuggling vulnerability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-10585" data-description="a stored cross-site scripting vulnerability was identified in github enterprise server that allowed an authenticated attacker to execute arbitrary javascript in another user's browser by injecting a crafted payload into the title of a discussion in the q&a category. the answeredquestionstructureddatacomponent did not escape user-controlled discussion titles before embedding them in a <script type="application/ld+json"> block, allowing the title to break out of the script context. the injection was escalated to a full cross-site scripting attack on github enterprise server by leveraging jsonp callback support in the rest api to bypass the content security policy. this vulnerability affected all versions of github enterprise server prior to 3.21 and was fixed in versions 3.20.4, 3.19.8, 3.18.11, 3.17.17. this vulnerability was reported via the  github bug bounty program https://bounty.github.com/ .">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10585" target="_blank">CVE-2026-10585</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 17:16:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A stored cross-site scripting vulnerability was identified in GitHub Enterprise Server that allowed an authenticated attacker to execute arbitrary JavaScript in another user's browser by injecting a crafted payload into the title of a Discussion in the Q&A category. The AnsweredQuestionStructuredDataComponent did not escape user-controlled Discussion titles before embedding them in a <script type="application/ld+json"> block, allowing the title to break out of the script context. The injection was escalated to a full cross-site scripting attack on GitHub Enterprise Server by leveraging JSONP callback support in the REST API to bypass the Content Security Policy. This vulnerability affected all versions of GitHub Enterprise Server prior to 3.21 and was fixed in versions 3.20.4, 3.19.8, 3.18.11, 3.17.17. This vulnerability was reported via the  GitHub Bug Bounty program https://bounty.github.com/ .</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-9132" data-description="a missing authorization vulnerability was identified in github enterprise server that allowed an authenticated user to read source code from private repositories they did not have access to. the
+   copilot pull request description diff summary endpoint accepted a cross-repository comparison range and rendered the resulting diff without verifying that the requesting user was authorized to view
+   the target repository. exploitation required an authenticated account on the instance with read access to at least one repository to use as the comparison base. this vulnerability affected all
+   versions of github enterprise server prior to 3.21 and was fixed in versions 3.17.17, 3.18.11, 3.19.8, and 3.20.4. this vulnerability was reported via the github bug bounty program.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9132" target="_blank">CVE-2026-9132</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 16:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A missing authorization vulnerability was identified in GitHub Enterprise Server that allowed an authenticated user to read source code from private repositories they did not have access to. The
+   Copilot pull request description diff summary endpoint accepted a cross-repository comparison range and rendered the resulting diff without verifying that the requesting user was authorized to view
+   the target repository. Exploitation required an authenticated account on the instance with read access to at least one repository to use as the comparison base. This vulnerability affected all
+   versions of GitHub Enterprise Server prior to 3.21 and was fixed in versions 3.17.17, 3.18.11, 3.19.8, and 3.20.4. This vulnerability was reported via the GitHub Bug Bounty program.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-9106" data-description="a ui misrepresentation vulnerability was identified in github enterprise server that allowed an oauth application to gain unintended access to an organization's runner management. an attacker could exploit this by creating an oauth application requesting the manage_runners:org scope and directing a victim user to authorize it, as the scope was not displayed on the authorization consent screen. this vulnerability affected all versions of github enterprise server prior to 3.22 and was  fixed in versions 3.21.2, 3.20.4, 3.19.8, 3.18.11, 3.17.17. this vulnerability was reported via the github bug bounty program.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9106" target="_blank">CVE-2026-9106</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 16:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A UI misrepresentation vulnerability was identified in GitHub Enterprise Server that allowed an OAuth application to gain unintended access to an organization's runner management. An attacker could exploit this by creating an OAuth application requesting the manage_runners:org scope and directing a victim user to authorize it, as the scope was not displayed on the authorization consent screen. This vulnerability affected all versions of GitHub Enterprise Server prior to 3.22 and was  fixed in versions 3.21.2, 3.20.4, 3.19.8, 3.18.11, 3.17.17. This vulnerability was reported via the GitHub Bug Bounty program.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-44628" data-description="an unauthenticated attacker can crash the worklist server with a single crafted query when the server has a valid called ae title / storage directory, the expected lockfile, and at least one matching worklist record.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-44628" target="_blank">CVE-2026-44628</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 16:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>An unauthenticated attacker can crash the worklist server with a single crafted query when the server has a valid Called AE Title / storage directory, the expected lockfile, and at least one matching worklist record.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-13207" data-description="fuxa versions 1.3.1 and prior contain an authentication bypass vulnerability via dot-segment path normalization in the rest api. the api router fails to normalize dot-segment sequences before applying authentication middleware, allowing unauthenticated requests to access protected endpoints by prefixing paths with dot-segments such as /api/./users, /api/./roles, and /api/project/../users. these requests bypass authentication checks and return sensitive user and role data without credentials.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13207" target="_blank">CVE-2026-13207</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 16:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>FUXA versions 1.3.1 and prior contain an authentication bypass vulnerability via dot-segment path normalization in the REST API. The API router fails to normalize dot-segment sequences before applying authentication middleware, allowing unauthenticated requests to access protected endpoints by prefixing paths with dot-segments such as /api/./users, /api/./roles, and /api/project/../users. These requests bypass authentication checks and return sensitive user and role data without credentials.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11594" data-description="ibm websphere application server 9.0, and 8.5 is affected by a cross-site scripting vulnerability in the administrative console.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11594" target="_blank">CVE-2026-11594</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-06-30 16:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.5</p>
+                    <p>IBM WebSphere Application Server 9.0, and 8.5 is affected by a cross-site scripting vulnerability in the administrative console.</p>
                 </div>
         
             </div>
