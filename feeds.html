@@ -33,6 +33,42 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-13708" data-description="imager::file::jpeg versions before 1.003 for perl leak heap memory when reading a jpeg with repeated app13 markers in i_readjpeg_wiol.
+
+i_readjpeg_wiol walks the marker list libjpeg returns and, for each app13 marker, allocates a new buffer with *iptc_itext = mymalloc(...) and overwrites the previous pointer without freeing it. only the final payload is later turned into a perl scalar and freed, so a jpeg with n such markers leaks the first n-1 payloads on every read.
+
+in a long-lived process, such as an upload or thumbnailing service, repeated reads accumulate these leaks and exhaust available memory, a denial of service.
+
+the same handler ships bundled in the imager distribution, where versions before 1.032 are affected and the fix ships in 1.032.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13708" target="_blank">CVE-2026-13708</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-06 08:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Imager::File::JPEG versions before 1.003 for Perl leak heap memory when reading a JPEG with repeated APP13 markers in i_readjpeg_wiol.
+
+i_readjpeg_wiol walks the marker list libjpeg returns and, for each APP13 marker, allocates a new buffer with *iptc_itext = mymalloc(...) and overwrites the previous pointer without freeing it. Only the final payload is later turned into a Perl scalar and freed, so a JPEG with N such markers leaks the first N-1 payloads on every read.
+
+In a long-lived process, such as an upload or thumbnailing service, repeated reads accumulate these leaks and exhaust available memory, a denial of service.
+
+The same handler ships bundled in the Imager distribution, where versions before 1.032 are affected and the fix ships in 1.032.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-13705" data-description="imager versions before 1.032 for perl have a heap out-of-bounds read in the bundled imager::file::sgi reader via a 16-bit rle literal run in read_rgb_16_rle.
+
+read_rgb_16_rle guards each literal run with if (count > data_left), but count is a pixel count while every 16-bit sample consumes two bytes. the copy loop reads inp[0] * 256 + inp[1] and advances two bytes per pixel, so a run with data_left / 2 < count <= data_left passes the guard yet consumes 2 * count bytes and reads past the end of the buffer. the 8-bit path is unaffected because there one pixel is one byte.
+
+reading a crafted sgi image through imager->read triggers the over-read before the parser rejects the malformed image, which can crash the process.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13705" target="_blank">CVE-2026-13705</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-06 08:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Imager versions before 1.032 for Perl have a heap out-of-bounds read in the bundled Imager::File::SGI reader via a 16-bit RLE literal run in read_rgb_16_rle.
+
+read_rgb_16_rle guards each literal run with if (count > data_left), but count is a pixel count while every 16-bit sample consumes two bytes. The copy loop reads inp[0] * 256 + inp[1] and advances two bytes per pixel, so a run with data_left / 2 < count <= data_left passes the guard yet consumes 2 * count bytes and reads past the end of the buffer. The 8-bit path is unaffected because there one pixel is one byte.
+
+Reading a crafted SGI image through Imager->read triggers the over-read before the parser rejects the malformed image, which can crash the process.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-15668" data-description="a vulnerability was identified in gpac up to b40ce70f5. this issue affects the function sgpd_del_entry of the file src/isomedia/box_code_base.c of the component mp4box. such manipulation of the argument data leads to heap-based buffer overflow. local access is required to approach this attack. the exploit is publicly available and might be used. the name of the patch is f29f955f2a3b5e8e507caad3e52319f961bf37bf. it is advisable to implement a patch to correct this issue.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15668" target="_blank">CVE-2025-15668</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-06 07:16:39 CDT</p>
@@ -261,42 +297,6 @@ The camel-undertow HTTP server consumer exposes a muteException option that cont
 This issue affects Apache Camel: from 4.0.0 before 4.14.8, from 4.15.0 before 4.18.3, from 4.19.0 before 4.21.0.
 
 Users are recommended to upgrade to version 4.21.0, which fixes the issue. If users are on the 4.14.x LTS releases stream, then they are suggested to upgrade to 4.14.8. If users are on the 4.18.x releases stream, then they are suggested to upgrade to 4.18.3. For deployments that cannot upgrade immediately, set muteException=true explicitly on the camel-undertow consumer (for example undertow: http://0.0.0.0:8080/api?muteException=true , or globally via the camel.component.undertow.mute-exception=true property), so that processing errors no longer return the stack trace to the client; note that on affected releases this workaround does not cover Rest DSL consumers, whose binding ignores the option until the fix is applied.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55994" data-description="improper input validation, exposure of sensitive information to an unauthorized actor, server-side request forgery (ssrf) vulnerability in apache camel in iggy component.
-
-the camel-iggy consumer mapped the user-headers of inbound iggy messages into the camel exchange header map without applying any headerfilterstrategy (iggyfetchrecords copied the message user-headers straight into the exchange). because nothing blocked the camel header namespace, an actor able to publish to the consumed iggy stream/topic could set camel-internal control headers - including camelhttpuri (exchange.http_uri) - simply by supplying them as message user-headers. in a route where the iggy consumer feeds a downstream http producer, the injected camelhttpuri redirects the server-side http request to an attacker-chosen destination (server-side request forgery - for example to an internal service or a cloud metadata endpoint). in addition, the http producer resolves camel property placeholders on the resulting (attacker-controlled) uri, so placeholders embedded in the injected value - such as an environment-variable reference, an application property, or a vault reference - are resolved to their real values and sent to the attacker, disclosing environment variables, application properties and vault secrets.
-this issue affects apache camel: from 4.17.0 before 4.18.3, from 4.19.0 before 4.21.0.
-
-users are recommended to upgrade to version 4.21.0, which fixes the issue. if users are on the 4.18.x releases stream, then they are suggested to upgrade to 4.18.3. the fix adds a dedicated iggyheaderfilterstrategy (and a headerfilterstrategy endpoint option) that filters the camel header namespace case-insensitively on inbound mapping, so externally-supplied camel* / camel* headers are no longer copied into the exchange. for deployments that cannot upgrade immediately, strip the camel control headers from the inbound message before they reach any downstream producer (for example removeheaders('camel*') and removeheaders('camel*') at the start of the route), restrict who can publish to the consumed iggy stream/topic, and avoid bridging an untrusted consumer directly into an http producer whose target uri can be driven from message headers.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55994" target="_blank">CVE-2026-55994</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-06 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Input Validation, Exposure of Sensitive Information to an Unauthorized Actor, Server-Side Request Forgery (SSRF) vulnerability in Apache Camel in Iggy component.
-
-The camel-iggy consumer mapped the user-headers of inbound Iggy messages into the Camel Exchange header map without applying any HeaderFilterStrategy (IggyFetchRecords copied the message user-headers straight into the Exchange). Because nothing blocked the Camel header namespace, an actor able to publish to the consumed Iggy stream/topic could set Camel-internal control headers - including CamelHttpUri (Exchange.HTTP_URI) - simply by supplying them as message user-headers. In a route where the Iggy consumer feeds a downstream HTTP producer, the injected CamelHttpUri redirects the server-side HTTP request to an attacker-chosen destination (server-side request forgery - for example to an internal service or a cloud metadata endpoint). In addition, the HTTP producer resolves Camel property placeholders on the resulting (attacker-controlled) URI, so placeholders embedded in the injected value - such as an environment-variable reference, an application property, or a vault reference - are resolved to their real values and sent to the attacker, disclosing environment variables, application properties and vault secrets.
-This issue affects Apache Camel: from 4.17.0 before 4.18.3, from 4.19.0 before 4.21.0.
-
-Users are recommended to upgrade to version 4.21.0, which fixes the issue. If users are on the 4.18.x releases stream, then they are suggested to upgrade to 4.18.3. The fix adds a dedicated IggyHeaderFilterStrategy (and a headerFilterStrategy endpoint option) that filters the Camel header namespace case-insensitively on inbound mapping, so externally-supplied Camel* / camel* headers are no longer copied into the Exchange. For deployments that cannot upgrade immediately, strip the Camel control headers from the inbound message before they reach any downstream producer (for example removeHeaders('Camel*') and removeHeaders('camel*') at the start of the route), restrict who can publish to the consumed Iggy stream/topic, and avoid bridging an untrusted consumer directly into an HTTP producer whose target URI can be driven from message headers.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55993" data-description="improper input validation, exposure of sensitive information to an unauthorized actor, server-side request forgery (ssrf) vulnerability in apache camel in atmosphere websocket component.
-
-the camel-atmosphere-websocket consumer mapped inbound websocket query parameters into the camel exchange header map without applying any headerfilterstrategy (websocketconsumer.sendeventnotification() iterates the query-string map collected in websocketconsumer.service() and copies each entry into the exchange). because nothing blocked the camel header namespace, a client connecting to the websocket endpoint could set camel-internal control headers - including camelhttpuri (exchange.http_uri) - simply by supplying them as query parameters. in a route where the websocket consumer feeds a downstream http producer, the injected camelhttpuri redirects the server-side http request to an attacker-chosen destination (server-side request forgery - for example to an internal service or a cloud metadata endpoint). in addition, the http producer resolves camel property placeholders on the resulting (attacker-controlled) uri, so placeholders embedded in the injected value - such as an environment-variable reference, an application property, or a vault reference - are resolved to their real values and sent to the attacker, disclosing environment variables, application properties and vault secrets. when the websocket endpoint is exposed without authentication, this is reachable by an unauthenticated remote attacker.
-this issue affects apache camel: from 4.0.0 before 4.14.8, from 4.15.0 before 4.18.3, from 4.19.0 before 4.21.0.
-
-users are recommended to upgrade to version 4.21.0, which fixes the issue. if users are on the 4.14.x lts releases stream, then they are suggested to upgrade to 4.14.8. if users are on the 4.18.x releases stream, then they are suggested to upgrade to 4.18.3. the fix makes the consumer apply the headerfilterstrategy it already inherits from the http/servlet stack, filtering the camel header namespace case-insensitively on inbound mapping, so externally-supplied camel* / camel* headers are no longer copied into the exchange. for deployments that cannot upgrade immediately, strip the camel control headers from the inbound message before they reach any downstream producer (for example removeheaders('camel*') and removeheaders('camel*') at the start of the route), require authentication on the websocket endpoint, and avoid bridging an untrusted consumer directly into an http producer whose target uri can be driven from message headers.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55993" target="_blank">CVE-2026-55993</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-06 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Input Validation, Exposure of Sensitive Information to an Unauthorized Actor, Server-Side Request Forgery (SSRF) vulnerability in Apache Camel in Atmosphere Websocket Component.
-
-The camel-atmosphere-websocket consumer mapped inbound WebSocket query parameters into the Camel Exchange header map without applying any HeaderFilterStrategy (WebsocketConsumer.sendEventNotification() iterates the query-string map collected in WebsocketConsumer.service() and copies each entry into the Exchange). Because nothing blocked the Camel header namespace, a client connecting to the WebSocket endpoint could set Camel-internal control headers - including CamelHttpUri (Exchange.HTTP_URI) - simply by supplying them as query parameters. In a route where the WebSocket consumer feeds a downstream HTTP producer, the injected CamelHttpUri redirects the server-side HTTP request to an attacker-chosen destination (server-side request forgery - for example to an internal service or a cloud metadata endpoint). In addition, the HTTP producer resolves Camel property placeholders on the resulting (attacker-controlled) URI, so placeholders embedded in the injected value - such as an environment-variable reference, an application property, or a vault reference - are resolved to their real values and sent to the attacker, disclosing environment variables, application properties and vault secrets. When the WebSocket endpoint is exposed without authentication, this is reachable by an unauthenticated remote attacker.
-This issue affects Apache Camel: from 4.0.0 before 4.14.8, from 4.15.0 before 4.18.3, from 4.19.0 before 4.21.0.
-
-Users are recommended to upgrade to version 4.21.0, which fixes the issue. If users are on the 4.14.x LTS releases stream, then they are suggested to upgrade to 4.14.8. If users are on the 4.18.x releases stream, then they are suggested to upgrade to 4.18.3. The fix makes the consumer apply the HeaderFilterStrategy it already inherits from the HTTP/servlet stack, filtering the Camel header namespace case-insensitively on inbound mapping, so externally-supplied Camel* / camel* headers are no longer copied into the Exchange. For deployments that cannot upgrade immediately, strip the Camel control headers from the inbound message before they reach any downstream producer (for example removeHeaders('Camel*') and removeHeaders('camel*') at the start of the route), require authentication on the WebSocket endpoint, and avoid bridging an untrusted consumer directly into an HTTP producer whose target URI can be driven from message headers.</p>
                 </div>
         
             </div>
