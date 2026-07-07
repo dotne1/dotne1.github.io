@@ -33,6 +33,70 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-56812" data-description="improper check for unusual or exceptional conditions vulnerability in phoenixframework phoenix (presence javascript client) allows an attacker with ordinary channel access to cause a persistent client-side denial of service against every viewer of a presence channel topic.
+
+this vulnerability is associated with program files assets/js/phoenix/presence.js and program routines presence.syncstate and presence.syncdiff.
+
+the phoenix javascript presence client checks whether a presence already exists with a bare truthiness test (state[key]) instead of an own-property check. presence keys are attacker-controlled, because applications track presences under a username or id supplied by the client. a user who joins a channel choosing a key that is an object.prototype member name (__proto__, constructor, tostring, hasownproperty, and similar) makes that lookup return javascript's built-in object.prototype instead of undefined. because the prototype is truthy, the code treats it as an existing presence and reads .metas.map(...) off it, which throws an uncaught typeerror.
+
+the exception propagates out of the presence message handler, so the local state is never updated and onsync() never fires. because the malicious key is tracked on the server, it is re-pushed on every presence update and keeps re-throwing, so presence sync stays broken for every viewer of that channel topic until the attacker leaves. both syncstate and syncdiff use the same unsafe existence-check pattern. the impact is limited to the affected topic and is a read-time confusion of the prototype object, not a mutation of object.prototype (it is not prototype pollution).
+
+this issue affects phoenix: from 1.2.0 before 1.5.15, from 1.6.0 before 1.6.17, from 1.7.0 before 1.7.24, and from 1.8.0 before 1.8.9.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56812" target="_blank">CVE-2026-56812</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-07 11:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Check for Unusual or Exceptional Conditions vulnerability in phoenixframework phoenix (Presence JavaScript client) allows an attacker with ordinary channel access to cause a persistent client-side denial of service against every viewer of a presence channel topic.
+
+This vulnerability is associated with program files assets/js/phoenix/presence.js and program routines Presence.syncState and Presence.syncDiff.
+
+The Phoenix JavaScript presence client checks whether a presence already exists with a bare truthiness test (state[key]) instead of an own-property check. Presence keys are attacker-controlled, because applications track presences under a username or id supplied by the client. A user who joins a channel choosing a key that is an Object.prototype member name (__proto__, constructor, toString, hasOwnProperty, and similar) makes that lookup return JavaScript's built-in Object.prototype instead of undefined. Because the prototype is truthy, the code treats it as an existing presence and reads .metas.map(...) off it, which throws an uncaught TypeError.
+
+The exception propagates out of the presence message handler, so the local state is never updated and onSync() never fires. Because the malicious key is tracked on the server, it is re-pushed on every presence update and keeps re-throwing, so presence sync stays broken for every viewer of that channel topic until the attacker leaves. Both syncState and syncDiff use the same unsafe existence-check pattern. The impact is limited to the affected topic and is a read-time confusion of the prototype object, not a mutation of Object.prototype (it is not prototype pollution).
+
+This issue affects phoenix: from 1.2.0 before 1.5.15, from 1.6.0 before 1.6.17, from 1.7.0 before 1.7.24, and from 1.8.0 before 1.8.9.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56811" data-description="allocation of resources without limits or throttling vulnerability in phoenixframework phoenix (phoenix.socket module) allows an unauthenticated attacker to cause a denial of service against any endpoint that mounts a phoenix socket with a reachable channel transport (websocket or longpoll).
+
+this vulnerability is associated with program files lib/phoenix/socket.ex and program routine 'elixir.phoenix.socket':handle_in/4.
+
+phoenix transports do not limit the number of channels that a single transport process may join. every phx_join message a client sends over one connection starts a persistent channel process, and the socket process accepts an unbounded number of them. a single unauthenticated client can therefore open one websocket or longpoll connection and stream a large number of phx_join messages, spawning hundreds of thousands of channel processes over that one connection and eventually reaching the beam maximum process limit. once the process table is exhausted the virtual machine can no longer start new processes, denying service to legitimate traffic across the whole node. because the amplification happens inside a single connection, network-layer connection caps and rate limiting do not mitigate it.
+
+the fix adds a :max_channels_per_transport option (default 100) that bounds the number of channels a single transport process can join, forcing abusive clients to open many connections instead, where external load balancers and reverse proxies can throttle them.
+
+this issue affects phoenix: from 0.11.0 before 1.5.15, 1.6.17, 1.7.24, and 1.8.9.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56811" target="_blank">CVE-2026-56811</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-07 11:16:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling vulnerability in phoenixframework phoenix (Phoenix.Socket module) allows an unauthenticated attacker to cause a denial of service against any endpoint that mounts a Phoenix socket with a reachable channel transport (WebSocket or LongPoll).
+
+This vulnerability is associated with program files lib/phoenix/socket.ex and program routine 'Elixir.Phoenix.Socket':handle_in/4.
+
+Phoenix transports do not limit the number of channels that a single transport process may join. Every phx_join message a client sends over one connection starts a persistent channel process, and the socket process accepts an unbounded number of them. A single unauthenticated client can therefore open one WebSocket or LongPoll connection and stream a large number of phx_join messages, spawning hundreds of thousands of channel processes over that one connection and eventually reaching the BEAM maximum process limit. Once the process table is exhausted the virtual machine can no longer start new processes, denying service to legitimate traffic across the whole node. Because the amplification happens inside a single connection, network-layer connection caps and rate limiting do not mitigate it.
+
+The fix adds a :max_channels_per_transport option (default 100) that bounds the number of channels a single transport process can join, forcing abusive clients to open many connections instead, where external load balancers and reverse proxies can throttle them.
+
+This issue affects phoenix: from 0.11.0 before 1.5.15, 1.6.17, 1.7.24, and 1.8.9.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-14969" data-description="a flaw was found in 389-ds-base where the ldbm backend attribute encryption uses a hardcoded static initialization vector for aes-cbc and 3des-cbc operations, allowing an attacker with privileged filesystem access to detect plaintext equality across encrypted entries by comparing ciphertext blocks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14969" target="_blank">CVE-2026-14969</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-07 11:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
+                    <p>A flaw was found in 389-ds-base where the LDBM backend attribute encryption uses a hardcoded static initialization vector for AES-CBC and 3DES-CBC operations, allowing an attacker with privileged filesystem access to detect plaintext equality across encrypted entries by comparing ciphertext blocks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-14935" data-description="a logic vulnerability was found in gstreamer's webrtcbin component. the _check_sdp_crypto() function contains an inverted boolean condition that causes it to accept remote sdp offers or answers that lack the required a=fingerprint attribute, while incorrectly rejecting those that include it. an attacker with the ability to intercept and modify webrtc signaling messages could exploit this to bypass the sdp-level dtls certificate fingerprint binding, weakening defenses against man-in-the-middle attacks on media streams.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14935" target="_blank">CVE-2026-14935</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-07 11:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>A logic vulnerability was found in GStreamer's webrtcbin component. The _check_sdp_crypto() function contains an inverted boolean condition that causes it to accept remote SDP offers or answers that lack the required a=fingerprint attribute, while incorrectly rejecting those that include it. An attacker with the ability to intercept and modify WebRTC signaling messages could exploit this to bypass the SDP-level DTLS certificate fingerprint binding, weakening defenses against man-in-the-middle attacks on media streams.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-59709" data-description="ghostfolio's put /api/v1/portfolio/holding/:datasource/:symbol/tags endpoint fails to verify access.permissions field when processing the impersonation-id header, allowing read-only access grantees to modify portfolio holding tags. attackers with valid read-only share tokens can assign or remove tags on victim holdings, corrupting portfolio categorization and reports.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59709" target="_blank">CVE-2026-59709</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-07 10:16:49 CDT</p>
@@ -223,54 +287,6 @@ attackers able to influence module names passed to load could use that bug to ex
 Module names starting with "::" could be passed to the load function to specify arbitrary module paths.
 
 Attackers able to influence module names passed to load could use that bug to execute arbitrary code.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-11340" data-description="missing authorization vulnerability in havelsan inc. liman mys allows accessing functionality not properly constrained by acls.
-
-this issue affects liman mys: before release.master.1107.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11340" target="_blank">CVE-2026-11340</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-07 06:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
-                    <p>Missing Authorization vulnerability in HAVELSAN Inc. Liman MYS allows Accessing Functionality Not Properly Constrained by ACLs.
-
-This issue affects Liman MYS: before release.Master.1107.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-49487" data-description="in apache airflow before 3.3.0, the rest api task-instance detail and list
-endpoints returned a deferred task's trigger kwargs without masking. when a
-deferred operator passed a secret (for example a provider api key) into its
-trigger, any authenticated user with dag-scoped task-instance read access for
-that dag could read that secret in clear text while the task was deferred.
-users should upgrade to apache-airflow 3.3.0 or later, which masks sensitive
-values in trigger kwargs returned by the api.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49487" target="_blank">CVE-2026-49487</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-07 05:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>In Apache Airflow before 3.3.0, the REST API task-instance detail and list
-endpoints returned a deferred task's trigger kwargs without masking. When a
-deferred operator passed a secret (for example a provider API key) into its
-trigger, any authenticated user with DAG-scoped task-instance read access for
-that DAG could read that secret in clear text while the task was deferred.
-Users should upgrade to apache-airflow 3.3.0 or later, which masks sensitive
-values in trigger kwargs returned by the API.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-49296" data-description="before apache-airflow 3.3.0, a user authorized to read one dag could disclose the source of other dags co-located in the same source file. `get /api/v2/dagsources/{dag_id}` — and the equivalent dag-source view in the ui — returned the entire source file without redacting dags the caller was not authorized to read, bypassing per-dag read authorization. deployments that co-locate multiple dags in a single file and rely on per-dag access control to limit source visibility are affected; single-dag-per-file deployments are not. upgrade to apache-airflow 3.3.0 or later.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49296" target="_blank">CVE-2026-49296</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-07 05:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Before apache-airflow 3.3.0, a user authorized to read one Dag could disclose the source of other Dags co-located in the same source file. `GET /api/v2/dagSources/{dag_id}` — and the equivalent Dag-source view in the UI — returned the entire source file without redacting Dags the caller was not authorized to read, bypassing per-DAG read authorization. Deployments that co-locate multiple Dags in a single file and rely on per-DAG access control to limit source visibility are affected; single-Dag-per-file deployments are not. Upgrade to apache-airflow 3.3.0 or later.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-48892" data-description="the config api in apache airflow surfaced per-key secrets-backend overrides (environment variables like `airflow__secrets__backend_kwarg__secret_id` and `airflow__workers__secrets_backend_kwarg__secret_id`) as synthetic config options whose option names were not in `sensitive_config_values`, so the masker did not redact them. an authenticated ui/api user with config read permission could retrieve plaintext secrets-backend credentials (vault `role_id` / `secret_id`, etc.) from the config api output. affects deployments that configure secrets backends via per-key environment overrides. users are advised to upgrade to `apache-airflow` 3.3.0 or later.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48892" target="_blank">CVE-2026-48892</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-07 05:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>The Config API in Apache Airflow surfaced per-key secrets-backend overrides (environment variables like `AIRFLOW__SECRETS__BACKEND_KWARG__SECRET_ID` and `AIRFLOW__WORKERS__SECRETS_BACKEND_KWARG__SECRET_ID`) as synthetic config options whose option names were not in `sensitive_config_values`, so the masker did not redact them. An authenticated UI/API user with Config read permission could retrieve plaintext secrets-backend credentials (Vault `role_id` / `secret_id`, etc.) from the Config API output. Affects deployments that configure secrets backends via per-key environment overrides. Users are advised to upgrade to `apache-airflow` 3.3.0 or later.</p>
                 </div>
         
             </div>
