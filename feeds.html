@@ -33,6 +33,26 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-10660" data-description="the bluetooth bap broadcast assistant gatt client in subsys/bluetooth/audio/bap_broadcast_assistant.c reassembled remote broadcast receive state data into a single file-static net_buf_simple (att_buf, bt_att_max_attribute_len = 512 bytes) shared by all connection instances, while the busy flag, long-read handle, and reset/offset state were per-connection.
+
+when the device acts as a broadcast assistant connected to multiple scan delegator peripherals, notification and long-read callbacks from different connections interleave on the shared buffer: the append in notify_handler (net_buf_simple_add_mem at the not-busy branch) performs no tailroom check, so receive-state notifications from two or more delegators accumulate on the same 512-byte buffer and, with a sufficiently large configured att mtu (bt_l2cap_tx_mtu up to 2000) and two-to-three concurrent connections, write past the buffer into adjacent .bss (net_buf_simple_add only asserts in debug builds).
+
+even below the overflow threshold, one connection's net_buf_simple_reset zeroes the shared length while another connection's reassembly and gatt read offset are in flight, mixing one peer's data into another's parse. a malicious or compromised scan delegator (or two colluding peers) over ble can trigger this, causing out-of-bounds writes (memory corruption / denial of service) and cross-connection data corruption.
+
+the fix moves the buffer into the per-connection instance struct so each connection reassembles into its own buffer. affects zephyr releases shipping the broadcast assistant with the shared buffer, including v4.4.0 and earlier.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10660" target="_blank">CVE-2026-10660</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-11 12:16:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>The Bluetooth BAP Broadcast Assistant GATT client in subsys/bluetooth/audio/bap_broadcast_assistant.c reassembled remote Broadcast Receive State data into a single file-static net_buf_simple (att_buf, BT_ATT_MAX_ATTRIBUTE_LEN = 512 bytes) shared by all connection instances, while the BUSY flag, long-read handle, and reset/offset state were per-connection.
+
+When the device acts as a Broadcast Assistant connected to multiple Scan Delegator peripherals, notification and long-read callbacks from different connections interleave on the shared buffer: the append in notify_handler (net_buf_simple_add_mem at the not-busy branch) performs no tailroom check, so receive-state notifications from two or more delegators accumulate on the same 512-byte buffer and, with a sufficiently large configured ATT MTU (BT_L2CAP_TX_MTU up to 2000) and two-to-three concurrent connections, write past the buffer into adjacent .bss (net_buf_simple_add only asserts in debug builds).
+
+Even below the overflow threshold, one connection's net_buf_simple_reset zeroes the shared length while another connection's reassembly and GATT read offset are in flight, mixing one peer's data into another's parse. A malicious or compromised Scan Delegator (or two colluding peers) over BLE can trigger this, causing out-of-bounds writes (memory corruption / denial of service) and cross-connection data corruption.
+
+The fix moves the buffer into the per-connection instance struct so each connection reassembles into its own buffer. Affects Zephyr releases shipping the Broadcast Assistant with the shared buffer, including v4.4.0 and earlier.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-61870" data-description="imagemagick before 7.1.2-26 contains a memory leak vulnerability in the viff encoder when memory allocation fails. attackers can trigger allocation failures by processing specially crafted viff images to exhaust available memory and cause denial of service.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61870" target="_blank">CVE-2026-61870</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-11 09:16:24 CDT</p>
@@ -183,14 +203,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
                     <p>Capgo before 12.128.2 contains an information disclosure vulnerability in the find_apikey_by_value PostgreSQL function marked SECURITY DEFINER and executable by the anon role. Unauthenticated attackers can call this function via the /rest/v1/rpc/find_apikey_by_value endpoint to retrieve sensitive API key metadata including user_id, mode, org scoping, and expiration details when supplied a valid key value.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-56296" data-description="cap-go before 12.128.2 contains an information disclosure vulnerability in the public.transfer_app rpc function that returns distinct error messages for existing versus non-existing app ids. unauthenticated attackers can enumerate valid app ids by observing error message differences when calling transfer_app with only the publishable api key.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56296" target="_blank">CVE-2026-56296</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-11 09:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Cap-go before 12.128.2 contains an information disclosure vulnerability in the public.transfer_app RPC function that returns distinct error messages for existing versus non-existing app IDs. Unauthenticated attackers can enumerate valid app IDs by observing error message differences when calling transfer_app with only the publishable API key.</p>
                 </div>
         
             </div>
