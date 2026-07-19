@@ -33,714 +33,894 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-63874" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64186" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: mctp: usb: fix race between urb completion and rx_retry cancellation
+iommu/amd: remove latent out-of-bounds access in iommu debugfs
 
-it's possible that sequencing between setting ->stopped and cancelling
-the rx_retry work (in ndo_stop) could leave us with an urb queued:
+in iommu_mmio_write() and iommu_capability_write(), the variables
+dbg_mmio_offset and dbg_cap_offset are declared as int. however, they
+are populated using kstrtou32_from_user(). if a user provides a
+sufficiently large value, it can become a negative integer.
 
-    t1: ndo_stop                  t2: rx_retry_work
-    ------------                  ----------------
-                                  ld: ->stopped => false
-    st: ->stopped <= true
-    usb_kill_urb()
-                                  mctp_usb_rx_queue()
-                                    usb_submit_urb()
-    cancel_delayed_work_sync()
+prior to this patch, the amd iommu debugfs implementation was already
+protected by different mechanisms.
 
-that urb completion can then re-schedule rx_retry_work.
+1. #define ofs_in_sz 8 ensures the user string <= 8 bytes, so
+   e.g. 0xffffffff isn't a valid input.
 
-strenghen the sequencing between the stop (preventing another requeue)
-and the cancel by updating both atomically under a new rx lock. after
-setting ->rx_stopped, and cancelling pending work, we know that the
-requeue cannot occur, so all that's left is killing any pending urb.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63874" target="_blank">CVE-2026-63874</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:54 CDT</p>
+  if (cnt > ofs_in_sz)
+     return -einval;
+
+2. implicit type promotion in iommu_mmio_write(), dbg_mmio_offset is int
+   and iommu->mmio_phys_end is u64
+
+  if (dbg_mmio_offset > iommu->mmio_phys_end - sizeof(u64))
+      return -einval;
+
+3. the show handlers would currently catch the negative number and
+   refuse to perform the read.
+
+replace kstrtou32_from_user() with kstrtos32_from_user() to parse the
+input, and check for negative values to explicitly prevent out-of-bounds
+memory accesses directly in iommu_mmio_write() and
+iommu_capability_write().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64186" target="_blank">CVE-2026-64186</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:01 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: mctp: usb: fix race between urb completion and rx_retry cancellation
+iommu/amd: Remove latent out-of-bounds access in IOMMU debugfs
 
-It's possible that sequencing between setting ->stopped and cancelling
-the rx_retry work (in ndo_stop) could leave us with an urb queued:
+In iommu_mmio_write() and iommu_capability_write(), the variables
+dbg_mmio_offset and dbg_cap_offset are declared as int. However, they
+are populated using kstrtou32_from_user(). If a user provides a
+sufficiently large value, it can become a negative integer.
 
-    T1: ndo_stop                  T2: rx_retry_work
-    ------------                  ----------------
-                                  LD: ->stopped => false
-    ST: ->stopped <= true
-    usb_kill_urb()
-                                  mctp_usb_rx_queue()
-                                    usb_submit_urb()
-    cancel_delayed_work_sync()
+Prior to this patch, the AMD IOMMU debugfs implementation was already
+protected by different mechanisms.
 
-That urb completion can then re-schedule rx_retry_work.
+1. #define OFS_IN_SZ 8 ensures the user string <= 8 bytes, so
+   e.g. 0xffffffff isn't a valid input.
 
-Strenghen the sequencing between the stop (preventing another requeue)
-and the cancel by updating both atomically under a new rx lock. After
-setting ->rx_stopped, and cancelling pending work, we know that the
-requeue cannot occur, so all that's left is killing any pending urb.</p>
+  if (cnt > OFS_IN_SZ)
+     return -EINVAL;
+
+2. Implicit type promotion in iommu_mmio_write(), dbg_mmio_offset is int
+   and iommu->mmio_phys_end is u64
+
+  if (dbg_mmio_offset > iommu->mmio_phys_end - sizeof(u64))
+      return -EINVAL;
+
+3. The show handlers would currently catch the negative number and
+   refuse to perform the read.
+
+Replace kstrtou32_from_user() with kstrtos32_from_user() to parse the
+input, and check for negative values to explicitly prevent out-of-bounds
+memory accesses directly in iommu_mmio_write() and
+iommu_capability_write().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63873" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64185" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-accel/amdxdna: fix mm_struct reference leak in aie2_populate_range()
+sysfs: don't remove existing directory on update failure
 
-aie2_populate_range() jumps back to the again label without calling
-mmput(mm), leaking a reference to the mm_struct.
+when sysfs_update_group() is called for a named group and create_files()
+fails (e.g. -enomem), internal_create_group() calls kernfs_remove(kn) on
+the group directory.  in the update path, kn was obtained via
+kernfs_find_and_get() and refers to a directory that already existed
+before this call.  removing it silently destroys a sysfs group that the
+caller did not create.
 
-add the missing mmput() before jumping to again.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63873" target="_blank">CVE-2026-63873</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:54 CDT</p>
+only remove the directory if we created it ourselves.  on update failure
+the directory remains as it is left empty by remove_files() inside
+create_files(), but can be repopulated by a retry.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64185" target="_blank">CVE-2026-64185</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-accel/amdxdna: Fix mm_struct reference leak in aie2_populate_range()
+sysfs: don't remove existing directory on update failure
 
-aie2_populate_range() jumps back to the again label without calling
-mmput(mm), leaking a reference to the mm_struct.
+When sysfs_update_group() is called for a named group and create_files()
+fails (e.g. -ENOMEM), internal_create_group() calls kernfs_remove(kn) on
+the group directory.  In the update path, kn was obtained via
+kernfs_find_and_get() and refers to a directory that already existed
+before this call.  Removing it silently destroys a sysfs group that the
+caller did not create.
 
-Add the missing mmput() before jumping to again.</p>
+Only remove the directory if we created it ourselves.  On update failure
+the directory remains as it is left empty by remove_files() inside
+create_files(), but can be repopulated by a retry.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63872" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64184" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-esp: fix page frag reference leak on skb_to_sgvec failure
+mm/damon/sysfs-schemes: call missing mem_cgroup_iter_break()
 
-in esp_output_tail(), when esp->inplace is false, the old skb page frags
-are replaced with a new page from the xfrm page_frag cache. the source
-scatterlist (sg) is built from the old frags before the replacement, and
-esp_ssg_unref() is responsible for releasing the old page references
-after the crypto operation completes.
+damon_sysfs_memcg_path_to_id() breaks mem_cgroup_iter() loop without
+calling mem_cgroup_iter_break().  this leaks the cgroup reference.  fix
+the issue by calling mem_cgroup_iter_break() before the break.
 
-however, if the second skb_to_sgvec() call (which builds the destination
-scatterlist from the new page) fails, the code jumps to error_free which
-only calls kfree(tmp). the old page frag references captured in the
-source scatterlist are never released:
-
-  1. sg[] is built from old frags via skb_to_sgvec() (no extra get_page)
-  2. nr_frags is set to 1 and frag[0] is replaced with the new page
-  3. second skb_to_sgvec() fails -> goto error_free
-  4. kfree(tmp) frees the sg[] memory but old frags are not unref'd
-  5. kfree_skb() only releases frag[0] (the new page), not the old ones
-
-fix this by adding a bool parameter to esp_ssg_unref() that, when true,
-unconditionally unrefs the source scatterlist frags without checking
-req->src and req->dst, since those fields are not yet initialized by
-aead_request_set_crypt() at the point of the error. existing callers
-pass false to preserve the original behavior.
-
-the same issue exists in both esp4 and esp6 as the code is identical.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63872" target="_blank">CVE-2026-63872</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:54 CDT</p>
+the issue was discovered [1] by sashiko.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64184" target="_blank">CVE-2026-64184</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-esp: fix page frag reference leak on skb_to_sgvec failure
+mm/damon/sysfs-schemes: call missing mem_cgroup_iter_break()
 
-In esp_output_tail(), when esp->inplace is false, the old skb page frags
-are replaced with a new page from the xfrm page_frag cache. The source
-scatterlist (sg) is built from the old frags before the replacement, and
-esp_ssg_unref() is responsible for releasing the old page references
-after the crypto operation completes.
+damon_sysfs_memcg_path_to_id() breaks mem_cgroup_iter() loop without
+calling mem_cgroup_iter_break().  This leaks the cgroup reference.  Fix
+the issue by calling mem_cgroup_iter_break() before the break.
 
-However, if the second skb_to_sgvec() call (which builds the destination
-scatterlist from the new page) fails, the code jumps to error_free which
-only calls kfree(tmp). The old page frag references captured in the
-source scatterlist are never released:
-
-  1. sg[] is built from old frags via skb_to_sgvec() (no extra get_page)
-  2. nr_frags is set to 1 and frag[0] is replaced with the new page
-  3. Second skb_to_sgvec() fails -> goto error_free
-  4. kfree(tmp) frees the sg[] memory but old frags are not unref'd
-  5. kfree_skb() only releases frag[0] (the new page), not the old ones
-
-Fix this by adding a bool parameter to esp_ssg_unref() that, when true,
-unconditionally unrefs the source scatterlist frags without checking
-req->src and req->dst, since those fields are not yet initialized by
-aead_request_set_crypt() at the point of the error. Existing callers
-pass false to preserve the original behavior.
-
-The same issue exists in both esp4 and esp6 as the code is identical.</p>
+The issue was discovered [1] by Sashiko.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63871" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64183" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-bluetooth: iso: fix data-race on iso_pi fields in hci_get_route calls
+efi: allocate runtime workqueue before acpi init
 
-iso_connect_bis(), iso_connect_cis(), iso_listen_bis(), and
-iso_conn_big_sync() call hci_get_route() using iso_pi(sk)->dst,
-iso_pi(sk)->src, and iso_pi(sk)->src_type without holding lock_sock().
+since commit
 
-these fields may be modified concurrently by connect() or setsockopt()
-on the same socket, resulting in data-races reported by kcsan.
+  5894cf571e14 ("acpi/prmt: use efi runtime sandbox to invoke prm handlers")
 
-fix this by snapshotting the required fields under lock_sock() before
-calling hci_get_route().
+acpi prm calls are delegated to a workqueue which runs in a kernel
+thread, making it easier to detect and mitigate faulting memory accesses
+performed by the firmware.
 
-bug: kcsan: data-race in memcmp+0x45/0xb0
+rafael reports that such prm accesses may occur before efisubsys_init()
+executes, which is where the workqueue is allocated, leading to null
+pointer dereferences. since acpi_init() [which triggers the early prm
+accesses] executes as a subsys_initcall() as well, and has its own
+dependencies that may be sensitive to initcall ordering, deferring
+acpi_init() is not an option.
 
-race at unknown origin, with read to 0xffff8880122135cf of 1 bytes
-by task 333 on cpu 1:
- memcmp+0x45/0xb0
- hci_get_route+0x27e/0x490
- iso_connect_cis+0x4c/0xa10
- iso_sock_connect+0x60e/0xb30
- __sys_connect_file+0xbd/0xe0
- __sys_connect+0xe0/0x110
- __x64_sys_connect+0x40/0x50
- x64_sys_call+0xcad/0x1c60
- do_syscall_64+0x133/0x590
- entry_syscall_64_after_hwframe+0x77/0x7f">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63871" target="_blank">CVE-2026-63871</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:54 CDT</p>
+so instead, split off the workqueue allocation into its own postcore
+initcall, as this is the only missing piece to allow efi runtime calls
+to be made. this ensures that efi runtime call (including prm calls) are
+accessible to all code running at subsys_initcall() level.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64183" target="_blank">CVE-2026-64183</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Bluetooth: ISO: Fix data-race on iso_pi fields in hci_get_route calls
+efi: Allocate runtime workqueue before ACPI init
 
-iso_connect_bis(), iso_connect_cis(), iso_listen_bis(), and
-iso_conn_big_sync() call hci_get_route() using iso_pi(sk)->dst,
-iso_pi(sk)->src, and iso_pi(sk)->src_type without holding lock_sock().
+Since commit
 
-These fields may be modified concurrently by connect() or setsockopt()
-on the same socket, resulting in data-races reported by KCSAN.
+  5894cf571e14 ("acpi/prmt: Use EFI runtime sandbox to invoke PRM handlers")
 
-Fix this by snapshotting the required fields under lock_sock() before
-calling hci_get_route().
+ACPI PRM calls are delegated to a workqueue which runs in a kernel
+thread, making it easier to detect and mitigate faulting memory accesses
+performed by the firmware.
 
-BUG: KCSAN: data-race in memcmp+0x45/0xb0
+Rafael reports that such PRM accesses may occur before efisubsys_init()
+executes, which is where the workqueue is allocated, leading to NULL
+pointer dereferences. Since acpi_init() [which triggers the early PRM
+accesses] executes as a subsys_initcall() as well, and has its own
+dependencies that may be sensitive to initcall ordering, deferring
+acpi_init() is not an option.
 
-race at unknown origin, with read to 0xffff8880122135cf of 1 bytes
-by task 333 on cpu 1:
- memcmp+0x45/0xb0
- hci_get_route+0x27e/0x490
- iso_connect_cis+0x4c/0xa10
- iso_sock_connect+0x60e/0xb30
- __sys_connect_file+0xbd/0xe0
- __sys_connect+0xe0/0x110
- __x64_sys_connect+0x40/0x50
- x64_sys_call+0xcad/0x1c60
- do_syscall_64+0x133/0x590
- entry_SYSCALL_64_after_hwframe+0x77/0x7f</p>
+So instead, split off the workqueue allocation into its own postcore
+initcall, as this is the only missing piece to allow EFI runtime calls
+to be made. This ensures that EFI runtime call (including PRM calls) are
+accessible to all code running at subsys_initcall() level.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63870" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64182" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-ieee802154: 6lowpan: only accept ipv6 packets in lowpan_xmit()
+drivers/base/memory: fix memory block reference leak in poison accounting
 
-the aoe driver (or similar) generates a non-ipv6 packet
-(e.g., eth_p_aoe) and queues it for transmission via dev_queue_xmit()
-on a 6lowpan interface (configured by the user or test case).
+memblk_nr_poison_inc() and memblk_nr_poison_sub() look up a memory block
+via find_memory_block_by_id(), which acquires a reference to the memory
+block device.
 
-since the packet is not ipv6, the 6lowpan header_ops->create function
-(lowpan_header_create or header_create) returns early without initializing
-the lowpan_addr_info structure in the skb headroom.
-
-in the transmit function (lowpan_xmit), the driver calls lowpan_header
-(or setup_header) which unconditionally copies and uses the lowpan_addr_info
-from the headroom, which contains uninitialized data.
-
-fix this by dropping non ipv6 packets.
-
-a similar fix is needed in net/bluetooth/6lowpan.c bt_xmit().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63870" target="_blank">CVE-2026-63870</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+both helpers use the returned memory block without dropping that
+reference, leaking the device reference on each successful lookup.  drop
+the reference after updating nr_hwpoison.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64182" target="_blank">CVE-2026-64182</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ieee802154: 6lowpan: only accept IPv6 packets in lowpan_xmit()
+drivers/base/memory: fix memory block reference leak in poison accounting
 
-The aoe driver (or similar) generates a non-IPv6 packet
-(e.g., ETH_P_AOE) and queues it for transmission via dev_queue_xmit()
-on a 6LoWPAN interface (configured by the user or test case).
+memblk_nr_poison_inc() and memblk_nr_poison_sub() look up a memory block
+via find_memory_block_by_id(), which acquires a reference to the memory
+block device.
 
-Since the packet is not IPv6, the 6LoWPAN header_ops->create function
-(lowpan_header_create or header_create) returns early without initializing
-the lowpan_addr_info structure in the skb headroom.
-
-In the transmit function (lowpan_xmit), the driver calls lowpan_header
-(or setup_header) which unconditionally copies and uses the lowpan_addr_info
-from the headroom, which contains uninitialized data.
-
-Fix this by dropping non IPv6 packets.
-
-A similar fix is needed in net/bluetooth/6lowpan.c bt_xmit().</p>
+Both helpers use the returned memory block without dropping that
+reference, leaking the device reference on each successful lookup.  Drop
+the reference after updating nr_hwpoison.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63869" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64181" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-wifi: mac80211: limit injected antenna index in ieee80211_parse_tx_radiotap
+mm: fix __vm_normal_page() to handle missing support for pmd_special()/pud_special()
 
-when parsing the radiotap header of an injected frame,
-ieee80211_parse_tx_radiotap() uses the ieee80211_radiotap_antenna value
-directly as a shift count:
+on x86 32-bit with thp enabled, zap_huge_pmd() is seen to generate a
+"warning: mm/memory.c:735 at __vm_normal_page+0x6a/0x7d", from the
+vm_warn_on_once(is_zero_pfn(pfn) || is_huge_zero_pfn(pfn)); followed by
+"bug: bad rss-counter state"s, then later "bug: bad page state"s when
+reclaim gets to call shrink_huge_zero_folio_scan().
 
-	info->control.antennas |= bit(*iterator.this_arg);
+it's as if the _page_special bit never got set in the huge_zero pmd: and
+indeed, whereas pte_special() and pte_mkspecial() are subject to a
+dedicated config_arch_has_pte_special, pmd_special() and pmd_mkspecial()
+are subject to config_arch_supports_pmd_pfnmap, which is never enabled on
+any 32-bit architecture.
 
-*iterator.this_arg is an 8-bit value taken straight from the frame
-supplied by userspace, so bit() can be asked to shift by up to 255. that
-is undefined behaviour on the unsigned long and is reported by ubsan:
+while the problem was exposed through commit d80a9cb1a64a
+("mm/huge_memory: add and use normal_or_softleaf_folio_pmd()"), it was an
+oversight in commit af38538801c6 ("mm/memory: factor out common code from
+vm_normal_page_*()") and would result in other problems:
+* huge zero folio accounted in smaps, pagemap (page_is_file) and
+  numamaps as file-backed thp
+* folio_walk_start() returning the folio even without fw_zeropage set.
+  callers seem to tolerate that, though.
 
-  ubsan: shift-out-of-bounds in net/mac80211/tx.c:2174:30
-  shift exponent 235 is too large for 64-bit type 'unsigned long'
-  call trace:
-   ieee80211_parse_tx_radiotap+0xadb/0x1950 net/mac80211/tx.c:2174
-   ieee80211_monitor_start_xmit+0xb1f/0x1250 net/mac80211/tx.c:2451
-   ...
-   packet_sendmsg+0x3eb6/0x50f0 net/packet/af_packet.c:3109
+... and triggering the vm_warn_on_one(), although never reported so far.
 
-info->control.antennas is a 2-bit bitmap (u8 antennas:2), so only antenna
-indices 0 and 1 can ever be represented. ignore any larger value instead
-of shifting out of bounds.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63869" target="_blank">CVE-2026-63869</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+to fix it, teach vm_normal_page_pmd()/vm_normal_page_pud() to consider
+whether pmd_special/pud_special is actually implemented.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64181" target="_blank">CVE-2026-64181</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-wifi: mac80211: limit injected antenna index in ieee80211_parse_tx_radiotap
+mm: fix __vm_normal_page() to handle missing support for pmd_special()/pud_special()
 
-When parsing the radiotap header of an injected frame,
-ieee80211_parse_tx_radiotap() uses the IEEE80211_RADIOTAP_ANTENNA value
-directly as a shift count:
+On x86 32-bit with THP enabled, zap_huge_pmd() is seen to generate a
+"WARNING: mm/memory.c:735 at __vm_normal_page+0x6a/0x7d", from the
+VM_WARN_ON_ONCE(is_zero_pfn(pfn) || is_huge_zero_pfn(pfn)); followed by
+"BUG: Bad rss-counter state"s, then later "BUG: Bad page state"s when
+reclaim gets to call shrink_huge_zero_folio_scan().
 
-	info->control.antennas |= BIT(*iterator.this_arg);
+It's as if the _PAGE_SPECIAL bit never got set in the huge_zero pmd: and
+indeed, whereas pte_special() and pte_mkspecial() are subject to a
+dedicated CONFIG_ARCH_HAS_PTE_SPECIAL, pmd_special() and pmd_mkspecial()
+are subject to CONFIG_ARCH_SUPPORTS_PMD_PFNMAP, which is never enabled on
+any 32-bit architecture.
 
-*iterator.this_arg is an 8-bit value taken straight from the frame
-supplied by userspace, so BIT() can be asked to shift by up to 255. That
-is undefined behaviour on the unsigned long and is reported by UBSAN:
+While the problem was exposed through commit d80a9cb1a64a
+("mm/huge_memory: add and use normal_or_softleaf_folio_pmd()"), it was an
+oversight in commit af38538801c6 ("mm/memory: factor out common code from
+vm_normal_page_*()") and would result in other problems:
+* huge zero folio accounted in smaps, pagemap (PAGE_IS_FILE) and
+  numamaps as file-backed THP
+* folio_walk_start() returning the folio even without FW_ZEROPAGE set.
+  Callers seem to tolerate that, though.
 
-  UBSAN: shift-out-of-bounds in net/mac80211/tx.c:2174:30
-  shift exponent 235 is too large for 64-bit type 'unsigned long'
-  Call Trace:
-   ieee80211_parse_tx_radiotap+0xadb/0x1950 net/mac80211/tx.c:2174
-   ieee80211_monitor_start_xmit+0xb1f/0x1250 net/mac80211/tx.c:2451
-   ...
-   packet_sendmsg+0x3eb6/0x50f0 net/packet/af_packet.c:3109
+... and triggering the VM_WARN_ON_ONE(), although never reported so far.
 
-info->control.antennas is a 2-bit bitmap (u8 antennas:2), so only antenna
-indices 0 and 1 can ever be represented. Ignore any larger value instead
-of shifting out of bounds.</p>
+To fix it, teach vm_normal_page_pmd()/vm_normal_page_pud() to consider
+whether pmd_special/pud_special is actually implemented.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63868" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64180" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: garp: fix unsigned integer underflow in garp_pdu_parse_attr
+mm/memory_hotplug: fix memory block reference leak on remove
 
-the receive-side garp attribute parser computes dlen with reversed
-operands:
+patch series "mm: fix memory block leaks and locking", v2.
 
-        dlen = sizeof(*ga) - ga->len;
+this series fixes two memory block device reference leaks and one locking
+issue around the per-memory_block hwpoison counter.
 
-ga->len is the on-wire attribute length and includes the garp attribute
-header. for normal attributes with data, ga->len is larger than
-sizeof(*ga), so the subtraction underflows in unsigned arithmetic.
 
-the resulting value is later passed to garp_attr_lookup(), whose length
-argument is u8. after truncation, the parsed data length usually no
-longer matches the length stored for locally registered attributes, so
-received join/leave events are ignored. this breaks the garp receive path
-for common attributes, such as gvrp vlan registration attributes.
+this patch (of 2):
 
-compute the data length as the attribute length minus the header length.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63868" target="_blank">CVE-2026-63868</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+remove_memory_blocks_and_altmaps() looks up each memory block with
+find_memory_block(), which acquires a reference to the memory block
+device.
+
+that reference is never dropped on this path, resulting in a leaked device
+reference when removing memory blocks and their altmaps.  drop the
+reference after retrieving mem->altmap and clearing mem->altmap, before
+removing the memory block device.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64180" target="_blank">CVE-2026-64180</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: garp: fix unsigned integer underflow in garp_pdu_parse_attr
+mm/memory_hotplug: fix memory block reference leak on remove
 
-The receive-side GARP attribute parser computes dlen with reversed
-operands:
+Patch series "mm: Fix memory block leaks and locking", v2.
 
-        dlen = sizeof(*ga) - ga->len;
+This series fixes two memory block device reference leaks and one locking
+issue around the per-memory_block hwpoison counter.
 
-ga->len is the on-wire attribute length and includes the GARP attribute
-header. For normal attributes with data, ga->len is larger than
-sizeof(*ga), so the subtraction underflows in unsigned arithmetic.
 
-The resulting value is later passed to garp_attr_lookup(), whose length
-argument is u8. After truncation, the parsed data length usually no
-longer matches the length stored for locally registered attributes, so
-received Join/Leave events are ignored. This breaks the GARP receive path
-for common attributes, such as GVRP VLAN registration attributes.
+This patch (of 2):
 
-Compute the data length as the attribute length minus the header length.</p>
+remove_memory_blocks_and_altmaps() looks up each memory block with
+find_memory_block(), which acquires a reference to the memory block
+device.
+
+That reference is never dropped on this path, resulting in a leaked device
+reference when removing memory blocks and their altmaps.  Drop the
+reference after retrieving mem->altmap and clearing mem->altmap, before
+removing the memory block device.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63867" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64179" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-mptcp: close toctou race while computing rcv_wnd
+net: wwan: iosm: fix potential memory leaks in ipc_imem_init()
 
-the mptcp output path access locklessly the mptcp-level ack_seq
-in multiple times, using possibly different values for the data_ack
-in the dss option and to compute the announced rcv wnd for the same
-packet.
-
-refactor the cote to avoid inconsistencies which may confuse the
-peer. also ensure that the mptcp level rcv wnd is updated only when
-the egress packet actually contains a dss ack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63867" target="_blank">CVE-2026-63867</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+the memory allocated in ipc_protocol_init() is not freed on the error
+paths that follow in ipc_imem_init(). fix that by calling the
+corresponding release function ipc_protocol_deinit() in the error path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64179" target="_blank">CVE-2026-64179</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-mptcp: close TOCTOU race while computing rcv_wnd
+net: wwan: iosm: fix potential memory leaks in ipc_imem_init()
 
-The MPTCP output path access locklessly the MPTCP-level ack_seq
-in multiple times, using possibly different values for the data_ack
-in the DSS option and to compute the announced rcv wnd for the same
-packet.
-
-Refactor the cote to avoid inconsistencies which may confuse the
-peer. Also ensure that the MPTCP level rcv wnd is updated only when
-the egress packet actually contains a DSS ack.</p>
+The memory allocated in ipc_protocol_init() is not freed on the error
+paths that follow in ipc_imem_init(). Fix that by calling the
+corresponding release function ipc_protocol_deinit() in the error path.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63866" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64178" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-wifi: mt76: mt7996: clear wcid pointer in mt7996_mac_sta_deinit_link()
+bluetooth: bnep: fix uaf read of dev->name
 
-clear wcid pointer removing the sta link in mt7996_mac_sta_deinit_link
-routine.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63866" target="_blank">CVE-2026-63866</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+bnep_add_connection() needs to keep holding the bnep_session_sem while
+reading dev->name (just like bnep_get_connlist() does); otherwise the
+bnep_session() thread can concurrently free the net_device, which can for
+example be triggered by a concurrent bnep_del_connection().
+
+(this uaf is fairly uninteresting from a security perspective;
+calling bnep_add_connection() requires passing a capable(cap_net_admin)
+check. it also requires completely tearing down a netdev during a fairly
+tight race window.)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64178" target="_blank">CVE-2026-64178</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:18:00 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-wifi: mt76: mt7996: Clear wcid pointer in mt7996_mac_sta_deinit_link()
+Bluetooth: bnep: Fix UAF read of dev->name
 
-Clear WCID pointer removing the sta link in mt7996_mac_sta_deinit_link
-routine.</p>
+bnep_add_connection() needs to keep holding the bnep_session_sem while
+reading dev->name (just like bnep_get_connlist() does); otherwise the
+bnep_session() thread can concurrently free the net_device, which can for
+example be triggered by a concurrent bnep_del_connection().
+
+(This UAF is fairly uninteresting from a security perspective;
+calling bnep_add_connection() requires passing a capable(CAP_NET_ADMIN)
+check. It also requires completely tearing down a netdev during a fairly
+tight race window.)</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63865" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64177" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-bpf: drop task_to_inode and inet_conn_established from lsm sleepable hooks
+phonet/pep: disable bh around forwarded sk_receive_skb()
 
-bpf_lsm_task_to_inode() is called under rcu_read_lock() and
-bpf_lsm_inet_conn_established() is called from softirq context, so
-neither hook can be used by sleepable lsm programs.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63865" target="_blank">CVE-2026-63865</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+the networking receive path is usually run from softirq context, but
+protocols that take the socket lock may have packets stored in the
+backlog and processed later from process context. in that case
+release_sock() -> __release_sock() drops the slock with spin_unlock_bh()
+and then calls sk->sk_backlog_rcv() with bottom halves enabled.
+
+typical sk_backlog_rcv handlers process the socket whose backlog is
+being drained, so the bh state at entry is irrelevant for the slocks
+they touch. pep_do_rcv() is different: when the inbound skb targets an
+existing pep pipe, it forwards the skb to a different *child* socket
+via sk_receive_skb(). that helper takes the child slock with
+bh_lock_sock_nested(), which is just spin_lock_nested() and assumes bh
+is already off. the same child slock therefore ends up acquired with
+bh on (process path) and with bh off (softirq path):
+
+  process context                   softirq context
+  ---------------                   ---------------
+  release_sock(listener)            __netif_receive_skb()
+   __release_sock()                  phonet_rcv()
+    spin_unlock_bh()                  __sk_receive_skb(listener)
+    [bh now enabled]                  [bh already disabled]
+    sk_backlog_rcv:                   sk_backlog_rcv:
+     pep_do_rcv()                      pep_do_rcv()
+      sk_receive_skb(child)             sk_receive_skb(child)
+       bh_lock_sock_nested(child)        bh_lock_sock_nested(child)
+       => softirq-on-w                   => in-softirq-w
+
+lockdep flags this as inconsistent lock state, and it can become a real
+self-deadlock if a softirq on the same cpu tries to receive to the same
+child socket while its slock is held in the bh-enabled path:
+
+  warning: inconsistent lock state
+  inconsistent {softirq-on-w} -> {in-softirq-w} usage.
+   (slock-af_phonet/1){+.?.}-{3:3}, at: __sk_receive_skb+0x1cf/0x900
+    __sk_receive_skb              net/core/sock.c:563
+    sk_receive_skb                include/net/sock.h:2022 [inline]
+    pep_do_rcv                    net/phonet/pep.c:675
+    sk_backlog_rcv                include/net/sock.h:1190
+    __release_sock                net/core/sock.c:3216
+    release_sock                  net/core/sock.c:3815
+    pep_sock_accept               net/phonet/pep.c:879
+
+wrap the forwarded sk_receive_skb() in local_bh_disable() /
+local_bh_enable() so the child slock is always acquired with bh off.
+local_bh_disable() nests safely on the softirq path.
+
+discovered via in-house syzkaller fuzzing; the same root cause also
+on the linux-6.1.y syzbot dashboard as extid 44f0626dd6284f02663c.
+reproduced under kasan + lockdep + prove_locking, reproducer:
+https://pastebin.com/a3t8xzcr">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64177" target="_blank">CVE-2026-64177</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-bpf: Drop task_to_inode and inet_conn_established from lsm sleepable hooks
+phonet/pep: disable BH around forwarded sk_receive_skb()
 
-bpf_lsm_task_to_inode() is called under rcu_read_lock() and
-bpf_lsm_inet_conn_established() is called from softirq context, so
-neither hook can be used by sleepable LSM programs.</p>
+The networking receive path is usually run from softirq context, but
+protocols that take the socket lock may have packets stored in the
+backlog and processed later from process context. In that case
+release_sock() -> __release_sock() drops the slock with spin_unlock_bh()
+and then calls sk->sk_backlog_rcv() with bottom halves enabled.
+
+Typical sk_backlog_rcv handlers process the socket whose backlog is
+being drained, so the BH state at entry is irrelevant for the slocks
+they touch. pep_do_rcv() is different: when the inbound skb targets an
+existing PEP pipe, it forwards the skb to a different *child* socket
+via sk_receive_skb(). That helper takes the child slock with
+bh_lock_sock_nested(), which is just spin_lock_nested() and assumes BH
+is already off. The same child slock therefore ends up acquired with
+BH on (process path) and with BH off (softirq path):
+
+  process context                   softirq context
+  ---------------                   ---------------
+  release_sock(listener)            __netif_receive_skb()
+   __release_sock()                  phonet_rcv()
+    spin_unlock_bh()                  __sk_receive_skb(listener)
+    [BH now ENABLED]                  [BH already disabled]
+    sk_backlog_rcv:                   sk_backlog_rcv:
+     pep_do_rcv()                      pep_do_rcv()
+      sk_receive_skb(child)             sk_receive_skb(child)
+       bh_lock_sock_nested(child)        bh_lock_sock_nested(child)
+       => SOFTIRQ-ON-W                   => IN-SOFTIRQ-W
+
+Lockdep flags this as inconsistent lock state, and it can become a real
+self-deadlock if a softirq on the same CPU tries to receive to the same
+child socket while its slock is held in the BH-enabled path:
+
+  WARNING: inconsistent lock state
+  inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
+   (slock-AF_PHONET/1){+.?.}-{3:3}, at: __sk_receive_skb+0x1cf/0x900
+    __sk_receive_skb              net/core/sock.c:563
+    sk_receive_skb                include/net/sock.h:2022 [inline]
+    pep_do_rcv                    net/phonet/pep.c:675
+    sk_backlog_rcv                include/net/sock.h:1190
+    __release_sock                net/core/sock.c:3216
+    release_sock                  net/core/sock.c:3815
+    pep_sock_accept               net/phonet/pep.c:879
+
+Wrap the forwarded sk_receive_skb() in local_bh_disable() /
+local_bh_enable() so the child slock is always acquired with BH off.
+local_bh_disable() nests safely on the softirq path.
+
+Discovered via in-house syzkaller fuzzing; the same root cause also
+on the linux-6.1.y syzbot dashboard as extid 44f0626dd6284f02663c.
+Reproduced under KASAN + LOCKDEP + PROVE_LOCKING, reproducer:
+https://pastebin.com/A3t8xzCR</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63864" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64176" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-bpf: propagate error from visit_tailcall_insn
+wifi: iwlwifi: mvm: fix driver-set tx rates on old devices
 
-commit e40f5a6bf88a ("bpf: correct stack liveness for tail calls") added
-visit_tailcall_insn() but did not check its return value.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63864" target="_blank">CVE-2026-63864</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+on old devices such as 7265d, rates are still encoded in version 1
+format, which doesn't use the cck/ofdm rate index (0-3/0-7) but
+rather their plcp value (e.g. 10 for 1 mbps cck rate.)
+
+while introducing v3 rates, i changed the driver from internally
+handling v1 rates and converting to v2, to internally handling v3
+and converting to v1 or v2 according to the firmware. i accordingly
+changed the code in iwl_mvm_mac80211_idx_to_hwrate() to no longer
+have different values for different apis. this was correct.
+
+however, i later reverted this part of the change, because it was
+reported that i had broken beacon rates, causing a fw assert/crash.
+this caused tx_cmd rates to be set incorrectly, potentially causing
+a warning when reported back from the device as having been used.
+
+fix this (hopefully correctly now) by handling beacon rates in the
+tx_cmd that's embedded in the beacon template command separately.
+restore iwl_mvm_mac80211_idx_to_hwrate() to return only the rate
+index, not plcp value, fixing the real tx_cmd.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64176" target="_blank">CVE-2026-64176</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-bpf: Propagate error from visit_tailcall_insn
+wifi: iwlwifi: mvm: fix driver-set TX rates on old devices
 
-Commit e40f5a6bf88a ("bpf: correct stack liveness for tail calls") added
-visit_tailcall_insn() but did not check its return value.</p>
+On old devices such as 7265D, rates are still encoded in version 1
+format, which doesn't use the CCK/OFDM rate index (0-3/0-7) but
+rather their PLCP value (e.g. 10 for 1 Mbps CCK rate.)
+
+While introducing v3 rates, I changed the driver from internally
+handling v1 rates and converting to v2, to internally handling v3
+and converting to v1 or v2 according to the firmware. I accordingly
+changed the code in iwl_mvm_mac80211_idx_to_hwrate() to no longer
+have different values for different APIs. This was correct.
+
+However, I later reverted this part of the change, because it was
+reported that I had broken beacon rates, causing a FW assert/crash.
+This caused TX_CMD rates to be set incorrectly, potentially causing
+a warning when reported back from the device as having been used.
+
+Fix this (hopefully correctly now) by handling beacon rates in the
+TX_CMD that's embedded in the beacon template command separately.
+Restore iwl_mvm_mac80211_idx_to_hwrate() to return only the rate
+index, not PLCP value, fixing the real TX_CMD.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63863" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64175" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/gpusvm: fix unbalanced unlock in drm_gpusvm_scan_mm()
+wifi: iwlwifi: mld: stop tx during firmware restart
 
-there is a unbalanced lock/unlock to gpusvm notifier lock:
-[  931.045868] =====================================
-[  931.046509] warning: bad unlock balance detected!
-[  931.047149] 6.19.0-rc6+xe-**************** #9 tainted: g     u
-[  931.048150] -------------------------------------
-[  931.048790] kworker/u5:0/51 is trying to release lock (&gpusvm->notifier_lock) at:
-[  931.049801] [<ffffffffa090c0d8>] drm_gpusvm_scan_mm+0x188/0x460 [drm_gpusvm_helper]
-[  931.050802] but there are no more locks to release!
-[  931.051463]
+when iwlwifi firmware crashes (e.g., nmi_interrupt_unknown on intel
+be201/wi-fi 7), iwl_mld_nic_error() sets mld->fw_status.in_hw_restart
+to true. however, iwl_mld_tx_from_txq() does not check this flag before
+dequeuing frames from mac80211 and pushing them to the transport layer.
 
-the drm_gpusvm_notifier_unlock() sits under err_free label and the
-first jump to err_free is just before calling the
-drm_gpusvm_notifier_lock() causing unbalanced unlock.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63863" target="_blank">CVE-2026-63863</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+since the firmware is dead, iwl_trans_tx() returns -eio for each frame,
+which then gets freed immediately. under high-throughput conditions
+(e.g., tailscale udp traffic or active ssh sessions), this creates a
+tight dequeue-send-fail-free loop that wastes cpu cycles and generates
+rapid skb allocation churn, leading to memory pressure from slab
+fragmentation.
+
+the rx path already has this guard (iwl_mld_rx_mpdu checks
+in_hw_restart at rx.c:1906), and so does the txq allocation worker
+(iwl_mld_add_txqs_wk at tx.c:156). add the same guard to
+iwl_mld_tx_from_txq() to stop all tx during firmware restart.
+
+frames left in mac80211's txqs are naturally drained after restart
+completes, when queue reallocation triggers iwl_mld_tx_from_txq()
+via iwl_mld_add_txq_list(), or when new upper-layer traffic invokes
+wake_tx_queue.
+
+tested on asus zenbook 14 ux3405ca with intel be201 (wi-fi 7) on
+kernel 6.19.5 where the firmware crashes approximately every 10-15
+minutes under tailscale traffic.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64175" target="_blank">CVE-2026-64175</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/gpusvm: Fix unbalanced unlock in drm_gpusvm_scan_mm()
+wifi: iwlwifi: mld: stop TX during firmware restart
 
-There is a unbalanced lock/unlock to gpusvm notifier lock:
-[  931.045868] =====================================
-[  931.046509] WARNING: bad unlock balance detected!
-[  931.047149] 6.19.0-rc6+xe-**************** #9 Tainted: G     U
-[  931.048150] -------------------------------------
-[  931.048790] kworker/u5:0/51 is trying to release lock (&gpusvm->notifier_lock) at:
-[  931.049801] [<ffffffffa090c0d8>] drm_gpusvm_scan_mm+0x188/0x460 [drm_gpusvm_helper]
-[  931.050802] but there are no more locks to release!
-[  931.051463]
+When iwlwifi firmware crashes (e.g., NMI_INTERRUPT_UNKNOWN on Intel
+BE201/Wi-Fi 7), iwl_mld_nic_error() sets mld->fw_status.in_hw_restart
+to true. However, iwl_mld_tx_from_txq() does not check this flag before
+dequeuing frames from mac80211 and pushing them to the transport layer.
 
-The drm_gpusvm_notifier_unlock() sits under err_free label and the
-first jump to err_free is just before calling the
-drm_gpusvm_notifier_lock() causing unbalanced unlock.</p>
+Since the firmware is dead, iwl_trans_tx() returns -EIO for each frame,
+which then gets freed immediately. Under high-throughput conditions
+(e.g., Tailscale UDP traffic or active SSH sessions), this creates a
+tight dequeue-send-fail-free loop that wastes CPU cycles and generates
+rapid skb allocation churn, leading to memory pressure from slab
+fragmentation.
+
+The RX path already has this guard (iwl_mld_rx_mpdu checks
+in_hw_restart at rx.c:1906), and so does the TXQ allocation worker
+(iwl_mld_add_txqs_wk at tx.c:156). Add the same guard to
+iwl_mld_tx_from_txq() to stop all TX during firmware restart.
+
+Frames left in mac80211's TXQs are naturally drained after restart
+completes, when queue reallocation triggers iwl_mld_tx_from_txq()
+via iwl_mld_add_txq_list(), or when new upper-layer traffic invokes
+wake_tx_queue.
+
+Tested on ASUS Zenbook 14 UX3405CA with Intel BE201 (Wi-Fi 7) on
+kernel 6.19.5 where the firmware crashes approximately every 10-15
+minutes under Tailscale traffic.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63862" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64174" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-pci: mediatek-gen3: prevent leaking irq domains when irq not found
+wifi: cfg80211: advance loop vars in cfg80211_merge_profile()
 
-in mtk_pcie_setup_irq(), the irq domains are allocated before the
-controller's irq is fetched. if the latter fails, the function
-directly returns an error, without cleaning up the allocated domains.
+cfg80211_merge_profile() reassembles a multi-bssid non-transmitted bss
+profile that has been split across multiple consecutive mbssid elements.
+its while-loop calls
 
-hence, reverse the order so that the irq domains are allocated after the
-controller's irq is found.
+	cfg80211_get_profile_continuation(ie, ielen, mbssid_elem, sub_elem)
 
-this was flagged by sashiko during a review of "[patch v6 0/7] pci:
-mediatek-gen3: add power control support".">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63862" target="_blank">CVE-2026-63862</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:53 CDT</p>
+but never advances mbssid_elem or sub_elem inside the body.  each
+iteration therefore searches for a continuation that follows the same
+fixed pair; the helper returns the same next_mbssid; and the same
+next_sub bytes are memcpy()'d into merged_ie at a growing offset until
+the buffer fills.
+
+advance both mbssid_elem and sub_elem to the just-consumed continuation
+so the next call to cfg80211_get_profile_continuation() searches for a
+further continuation beyond it (or returns null when none exists).
+
+a specially-crafted malicious beacon can take advantage of this bug
+to cause the kernel to spend an excessive amount of time in
+cfg80211_merge_profile (up to as much as 2ms per beacon received),
+which could theoretically be abused in some way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64174" target="_blank">CVE-2026-64174</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-PCI: mediatek-gen3: Prevent leaking IRQ domains when IRQ not found
+wifi: cfg80211: advance loop vars in cfg80211_merge_profile()
 
-In mtk_pcie_setup_irq(), the IRQ domains are allocated before the
-controller's IRQ is fetched. If the latter fails, the function
-directly returns an error, without cleaning up the allocated domains.
+cfg80211_merge_profile() reassembles a Multi-BSSID non-transmitted BSS
+profile that has been split across multiple consecutive MBSSID elements.
+Its while-loop calls
 
-Hence, reverse the order so that the IRQ domains are allocated after the
-controller's IRQ is found.
+	cfg80211_get_profile_continuation(ie, ielen, mbssid_elem, sub_elem)
 
-This was flagged by Sashiko during a review of "[PATCH v6 0/7] PCI:
-mediatek-gen3: add power control support".</p>
+but never advances mbssid_elem or sub_elem inside the body.  Each
+iteration therefore searches for a continuation that follows the same
+fixed pair; the helper returns the same next_mbssid; and the same
+next_sub bytes are memcpy()'d into merged_ie at a growing offset until
+the buffer fills.
+
+Advance both mbssid_elem and sub_elem to the just-consumed continuation
+so the next call to cfg80211_get_profile_continuation() searches for a
+further continuation beyond it (or returns NULL when none exists).
+
+A specially-crafted malicious beacon can take advantage of this bug
+to cause the kernel to spend an excessive amount of time in
+cfg80211_merge_profile (up to as much as 2ms per beacon received),
+which could theoretically be abused in some way.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63861" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64173" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-spi: mtk-snfi: unregister ecc engine on probe failure and remove() callback
+tracing: do not call map->ops->elt_free() if elt_alloc() fails
 
-mtk_snand_probe() registers the on-host nand ecc engine, but teardown was
-missing from both probe unwind and remove-time cleanup. add a devm cleanup
-action after successful registration so
-nand_ecc_unregister_on_host_hw_engine() runs automatically on probe
-failures and during device removal.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63861" target="_blank">CVE-2026-63861</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+in paths where tracing_map_elt_alloc() failed to allocate objects,
+the map->ops->elt_alloc() call was never successful. in this case,
+map->ops->elt_free() should not be called.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64173" target="_blank">CVE-2026-64173</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-spi: mtk-snfi: unregister ECC engine on probe failure and remove() callback
+tracing: Do not call map->ops->elt_free() if elt_alloc() fails
 
-mtk_snand_probe() registers the on-host NAND ECC engine, but teardown was
-missing from both probe unwind and remove-time cleanup. Add a devm cleanup
-action after successful registration so
-nand_ecc_unregister_on_host_hw_engine() runs automatically on probe
-failures and during device removal.</p>
+In paths where tracing_map_elt_alloc() failed to allocate objects,
+the map->ops->elt_alloc() call was never successful. In this case,
+map->ops->elt_free() should not be called.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63860" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64172" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-rdma/core: prefer nla_nul_string
+kvm: svm: disable avic ipi virtualization on hygon family 18h (erratum #1235)
 
-these attributes are evaluated as c-string (passed to strcmp), but
-nla_string doesn't check for the presence of a \0 terminator.
+hygon family 18h cpus are derived from amd family 17h (zen1) silicon and
+share the same erratum #1235: hardware may read a stale isrunning=1 bit
+during icr write emulation and silently fail to generate an
+avic_ipi_failure_target_not_running vm-exit on the sending vcpu.
 
-either this needs to switch to nla_strcmp() and needs to adjust printf fmt
-specifier to not use plain %s, or this needs to use nla_nul_string.
+the absence of the vm-exit causes kvm to miss the required wakeup of
+blocking target vcpus, leading to hung vcpus and unbounded delays in
+guest execution.
 
-as the code has been this way for long time, it seems to me that userspace
-does include the terminating nul, even tough its not enforced so far, and
-thus nla_nul_string use is the simpler solution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63860" target="_blank">CVE-2026-63860</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+extend the existing amd family 17h erratum #1235 workaround to also cover
+hygon family 18h.  with ipi virtualization disabled, kvm never sets
+isrunning=1 in the physical id table, so every non-self ipi generates a
+vm-exit and is correctly emulated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64172" target="_blank">CVE-2026-64172</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-RDMA/core: Prefer NLA_NUL_STRING
+KVM: SVM: Disable AVIC IPI virtualization on Hygon Family 18h (erratum #1235)
 
-These attributes are evaluated as c-string (passed to strcmp), but
-NLA_STRING doesn't check for the presence of a \0 terminator.
+Hygon Family 18h CPUs are derived from AMD Family 17h (Zen1) silicon and
+share the same erratum #1235: hardware may read a stale IsRunning=1 bit
+during ICR write emulation and silently fail to generate an
+AVIC_IPI_FAILURE_TARGET_NOT_RUNNING VM-Exit on the sending vCPU.
 
-Either this needs to switch to nla_strcmp() and needs to adjust printf fmt
-specifier to not use plain %s, or this needs to use NLA_NUL_STRING.
+The absence of the VM-Exit causes KVM to miss the required wakeup of
+blocking target vCPUs, leading to hung vCPUs and unbounded delays in
+guest execution.
 
-As the code has been this way for long time, it seems to me that userspace
-does include the terminating nul, even tough its not enforced so far, and
-thus NLA_NUL_STRING use is the simpler solution.</p>
+Extend the existing AMD Family 17h erratum #1235 workaround to also cover
+Hygon Family 18h.  With IPI virtualization disabled, KVM never sets
+IsRunning=1 in the Physical ID table, so every non-self IPI generates a
+VM-Exit and is correctly emulated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63859" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64171" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: airoha: add missing bits in airoha_qdma_cleanup_tx_queue()
+i2c: tegra: fix pm_runtime leak on mutex_lock failure
 
-similar to airoha_qdma_cleanup_rx_queue(), reset dma tx descriptors in
-airoha_qdma_cleanup_tx_queue routine. moreover, reset tx_dma_idx to
-tx_cpu_idx to notify the nic the qdma tx ring is empty.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63859" target="_blank">CVE-2026-63859</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+if tegra_i2c_mutex_lock() fails, the function returns without calling
+pm_runtime_put(), leaking the runtime pm reference acquired by the
+preceding pm_runtime_get_sync(). this prevents the device from ever
+entering runtime suspend.
+
+add the missing pm_runtime_put() before returning on lock failure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64171" target="_blank">CVE-2026-64171</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: airoha: Add missing bits in airoha_qdma_cleanup_tx_queue()
+i2c: tegra: fix pm_runtime leak on mutex_lock failure
 
-Similar to airoha_qdma_cleanup_rx_queue(), reset DMA TX descriptors in
-airoha_qdma_cleanup_tx_queue routine. Moreover, reset TX_DMA_IDX to
-TX_CPU_IDX to notify the NIC the QDMA TX ring is empty.</p>
+If tegra_i2c_mutex_lock() fails, the function returns without calling
+pm_runtime_put(), leaking the runtime PM reference acquired by the
+preceding pm_runtime_get_sync(). This prevents the device from ever
+entering runtime suspend.
+
+Add the missing pm_runtime_put() before returning on lock failure.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63858" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64170" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-netfilter: nf_tables: add hook transactions for device deletions
+spi: qup: fix error pointer deref after dma setup failure
 
-restore the flag that indicates that the hook is going away, ie.
-nft_hook_remove, but add a new transaction object to track deletion
-of hooks without altering the basechain/flowtable hook_list during
-the preparation phase.
+the driver falls back to pio mode if dma setup fails during probe.
 
-the existing approach that moves the hook from the basechain/flowtable
-hook_list to transaction hook_list breaks netlink dump path readers
-of this rcu-protected list.
+make sure to the clear the dma channel pointers on setup failure to
+avoid dereferencing an error pointer (or attempting to release a channel
+a second time) on later probe errors or driver unbind.
 
-it should be possible use an array for nft_trans_hook to store the
-deleted hooks to compact the representation but i am not expecting
-many hook object, specially now that wildcard support for devices
-is in place.
-
-note that the nft_trans_chain_hooks() list contains a list of struct
-nft_trans_hook objects for delchain and delflowtable commands, while
-this list stores struct nft_hook objects for newchain and newflowtable.
-note that new commands can be updated to use nft_trans_hook for
-consistency.
-
-this patch also adapts the event notification path to deal with the list
-of hook transactions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63858" target="_blank">CVE-2026-63858</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+this issue was flagged by sashiko when reviewing a devres allocation
+conversion patch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64170" target="_blank">CVE-2026-64170</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-netfilter: nf_tables: add hook transactions for device deletions
+spi: qup: fix error pointer deref after DMA setup failure
 
-Restore the flag that indicates that the hook is going away, ie.
-NFT_HOOK_REMOVE, but add a new transaction object to track deletion
-of hooks without altering the basechain/flowtable hook_list during
-the preparation phase.
+The driver falls back to PIO mode if DMA setup fails during probe.
 
-The existing approach that moves the hook from the basechain/flowtable
-hook_list to transaction hook_list breaks netlink dump path readers
-of this RCU-protected list.
+Make sure to the clear the DMA channel pointers on setup failure to
+avoid dereferencing an error pointer (or attempting to release a channel
+a second time) on later probe errors or driver unbind.
 
-It should be possible use an array for nft_trans_hook to store the
-deleted hooks to compact the representation but I am not expecting
-many hook object, specially now that wildcard support for devices
-is in place.
-
-Note that the nft_trans_chain_hooks() list contains a list of struct
-nft_trans_hook objects for DELCHAIN and DELFLOWTABLE commands, while
-this list stores struct nft_hook objects for NEWCHAIN and NEWFLOWTABLE.
-Note that new commands can be updated to use nft_trans_hook for
-consistency.
-
-This patch also adapts the event notification path to deal with the list
-of hook transactions.</p>
+This issue was flagged by Sashiko when reviewing a devres allocation
+conversion patch.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63857" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64169" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: airoha: do not read uninitialized fragment address in airoha_dev_xmit()
+spi: ep93xx: fix error pointer deref after dma setup failure
 
-the transmit loop in airoha_dev_xmit() reads fragment address and length
-during its final iteration, when the loop index equals
-skb_shinfo(skb)->nr_frags, at which point the fragment data is
-uninitialized. while these values are never consumed, the read itself is
-unsafe and may trigger a page fault. fix this by avoiding the fragment
-read on the last iteration.
-additionally, move the skb pointer from the first to the last used packet
-descriptor, so that airoha_qdma_tx_napi_poll() defers freeing the skb
-until the final descriptor is processed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63857" target="_blank">CVE-2026-63857</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+the driver falls back to pio mode if dma setup fails during probe.
+
+make sure to the clear the dma channel pointers on setup failure to
+avoid dereferencing an error pointer on later probe errors or driver
+unbind.
+
+this issue was flagged by sashiko when reviewing a devres allocation
+conversion patch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64169" target="_blank">CVE-2026-64169</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: airoha: Do not read uninitialized fragment address in airoha_dev_xmit()
+spi: ep93xx: fix error pointer deref after DMA setup failure
 
-The transmit loop in airoha_dev_xmit() reads fragment address and length
-during its final iteration, when the loop index equals
-skb_shinfo(skb)->nr_frags, at which point the fragment data is
-uninitialized. While these values are never consumed, the read itself is
-unsafe and may trigger a page fault. Fix this by avoiding the fragment
-read on the last iteration.
-Additionally, move the skb pointer from the first to the last used packet
-descriptor, so that airoha_qdma_tx_napi_poll() defers freeing the skb
-until the final descriptor is processed.</p>
+The driver falls back to PIO mode if DMA setup fails during probe.
+
+Make sure to the clear the DMA channel pointers on setup failure to
+avoid dereferencing an error pointer on later probe errors or driver
+unbind.
+
+This issue was flagged by Sashiko when reviewing a devres allocation
+conversion patch.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63856" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64168" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/amdgpu/vcn: set no_user_fence for vcn v2.0 enc/dec rings
+spi: sprd: fix error pointer deref after dma setup failure
 
-vcn encoder and decoder rings do not support 64-bit user fence writes,
-reject cs submissions with user fences.
+the driver falls back to pio mode if dma setup fails during probe.
 
-(cherry picked from commit e2b5499fca55f1a32960a311bbb62e35891eaf73)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63856" target="_blank">CVE-2026-63856</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+make sure to check the dma.enabled flag before trying to release the dma
+channels also on late probe errors to avoid dereferencing an error
+pointer (or attempting to release a channel a second time).
+
+this issue was flagged by sashiko when reviewing a devres allocation
+conversion patch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64168" target="_blank">CVE-2026-64168</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:58 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/amdgpu/vcn: set no_user_fence for VCN v2.0 enc/dec rings
+spi: sprd: fix error pointer deref after DMA setup failure
 
-VCN encoder and decoder rings do not support 64-bit user fence writes,
-reject CS submissions with user fences.
+The driver falls back to PIO mode if DMA setup fails during probe.
 
-(cherry picked from commit e2b5499fca55f1a32960a311bbb62e35891eaf73)</p>
+Make sure to check the dma.enabled flag before trying to release the DMA
+channels also on late probe errors to avoid dereferencing an error
+pointer (or attempting to release a channel a second time).
+
+This issue was flagged by Sashiko when reviewing a devres allocation
+conversion patch.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63855" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-64167" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/amdgpu/vcn: set no_user_fence for vcn v2.5 enc/dec rings
+kho: skip kho for crash kernel
 
-vcn encoder and decoder rings do not support 64-bit user fence writes,
-reject cs submissions with user fences.
+kho_fill_kimage() unconditionally populates the kimage with kho
+metadata for every kexec image type. when the image is a crash kernel,
+this can be problematic as the crash kernel can run in a small reserved
+region and the kho scratch areas can sit outside it.
+the crash kernel then faults during kho_memory_init() when it
+tries phys_to_virt() on the kho fdt address:
 
-(cherry picked from commit efc9dd5590894109bce9a0bfe1fa5592dd6b20b1)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63855" target="_blank">CVE-2026-63855</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 10:16:52 CDT</p>
+  unable to handle kernel paging request at virtual address xxxxxxxx
+  ...
+    fdt_offset_ptr+...
+    fdt_check_node_offset_+...
+    fdt_first_property_offset+...
+    fdt_get_property_namelen_+...
+    fdt_getprop+...
+    kho_memory_init+...
+    mm_core_init+...
+    start_kernel+...
+
+kho_locate_mem_hole() already skips kho logic for kexec_type_crash
+images, but kho_fill_kimage() was missing the same guard. as
+kho_fill_kimage() is the single point that populates image->kho.fdt
+and image->kho.scratch, fixing it here is sufficient for both arm64
+and x86 as the fdt and boot_params path are bailing out when these
+fields are unset.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64167" target="_blank">CVE-2026-64167</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 11:17:58 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/amdgpu/vcn: set no_user_fence for VCN v2.5 enc/dec rings
+kho: skip KHO for crash kernel
 
-VCN encoder and decoder rings do not support 64-bit user fence writes,
-reject CS submissions with user fences.
+kho_fill_kimage() unconditionally populates the kimage with KHO
+metadata for every kexec image type. When the image is a crash kernel,
+this can be problematic as the crash kernel can run in a small reserved
+region and the KHO scratch areas can sit outside it.
+The crash kernel then faults during kho_memory_init() when it
+tries phys_to_virt() on the KHO FDT address:
 
-(cherry picked from commit efc9dd5590894109bce9a0bfe1fa5592dd6b20b1)</p>
+  Unable to handle kernel paging request at virtual address xxxxxxxx
+  ...
+    fdt_offset_ptr+...
+    fdt_check_node_offset_+...
+    fdt_first_property_offset+...
+    fdt_get_property_namelen_+...
+    fdt_getprop+...
+    kho_memory_init+...
+    mm_core_init+...
+    start_kernel+...
+
+kho_locate_mem_hole() already skips KHO logic for KEXEC_TYPE_CRASH
+images, but kho_fill_kimage() was missing the same guard. As
+kho_fill_kimage() is the single point that populates image->kho.fdt
+and image->kho.scratch, fixing it here is sufficient for both arm64
+and x86 as the FDT and boot_params path are bailing out when these
+fields are unset.</p>
                 </div>
         
             </div>
