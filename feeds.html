@@ -33,6 +33,312 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-53380" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+media: rzv2h-ivc: fix concurrent buffer list access
+
+the list of buffers (`rzv2h_ivc::buffers.queue`) is protected by a
+spinlock (`rzv2h_ivc::buffers.lock`). however, in
+`rzv2h_ivc_transfer_buffer()`, which runs in a separate workqueue, the
+`list_del()` call is executed without holding the spinlock, which makes
+it possible for the list to be concurrently modified
+
+fix that by removing a buffer from the list in the lock protected section.
+
+[assign ivc->buffers.curr in critical section as reported by barnabas]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53380" target="_blank">CVE-2026-53380</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+media: rzv2h-ivc: Fix concurrent buffer list access
+
+The list of buffers (`rzv2h_ivc::buffers.queue`) is protected by a
+spinlock (`rzv2h_ivc::buffers.lock`). However, in
+`rzv2h_ivc_transfer_buffer()`, which runs in a separate workqueue, the
+`list_del()` call is executed without holding the spinlock, which makes
+it possible for the list to be concurrently modified
+
+Fix that by removing a buffer from the list in the lock protected section.
+
+[assign ivc->buffers.curr in critical section as reported by Barnabas]</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53379" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+media: i2c: ov8856: free control handler on error in ov8856_init_controls()
+
+the control handler wasn't freed if adding controls failed, add an error
+exit label and convert the existing error return to use it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53379" target="_blank">CVE-2026-53379</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+media: i2c: ov8856: free control handler on error in ov8856_init_controls()
+
+The control handler wasn't freed if adding controls failed, add an error
+exit label and convert the existing error return to use it.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53378" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/colorop: fix blob property reference tracking in state lifecycle
+
+the colorop state blob property handling had memory leaks during state
+duplication, destruction, and reset operations. the implementation
+failed to follow the established pattern from drm_crtc's handling of
+degamma/gamma blob properties.
+
+issues fixed:
+- drm_colorop_atomic_destroy_state() was freeing state memory without
+  releasing the blob reference, causing a leak
+- drm_colorop_reset() was directly freeing old state with kfree()
+  instead of properly destroying it, leaking blob references
+- drm_colorop_cleanup() had duplicate blob cleanup code
+
+changes:
+- add __drm_atomic_helper_colorop_destroy_state() helper to properly
+  release blob references before freeing state memory
+- update drm_colorop_atomic_destroy_state() to call the helper
+- fix drm_colorop_reset() to use drm_colorop_atomic_destroy_state()
+  for proper cleanup of old state
+- simplify drm_colorop_cleanup() to use the common destruction path
+
+this matches the well-tested pattern used by drm_crtc since 2016 and
+ensures proper reference counting throughout the state lifecycle.
+
+co-developed by claude sonnet 4.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53378" target="_blank">CVE-2026-53378</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/colorop: Fix blob property reference tracking in state lifecycle
+
+The colorop state blob property handling had memory leaks during state
+duplication, destruction, and reset operations. The implementation
+failed to follow the established pattern from drm_crtc's handling of
+DEGAMMA/GAMMA blob properties.
+
+Issues fixed:
+- drm_colorop_atomic_destroy_state() was freeing state memory without
+  releasing the blob reference, causing a leak
+- drm_colorop_reset() was directly freeing old state with kfree()
+  instead of properly destroying it, leaking blob references
+- drm_colorop_cleanup() had duplicate blob cleanup code
+
+Changes:
+- Add __drm_atomic_helper_colorop_destroy_state() helper to properly
+  release blob references before freeing state memory
+- Update drm_colorop_atomic_destroy_state() to call the helper
+- Fix drm_colorop_reset() to use drm_colorop_atomic_destroy_state()
+  for proper cleanup of old state
+- Simplify drm_colorop_cleanup() to use the common destruction path
+
+This matches the well-tested pattern used by drm_crtc since 2016 and
+ensures proper reference counting throughout the state lifecycle.
+
+Co-developed by Claude Sonnet 4.5.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53377" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/msm: always recover the gpu
+
+previously, in case there was no more work to do, recover worker
+wouldn't trigger recovery and would instead rely on the gpu going to
+sleep and then resuming when more work is submitted.
+
+recover_worker will first increment the fence of the hung ring so, if
+there's only one job submitted to a ring and that causes an hang, it
+will early out.
+
+there's no guarantee that the gpu will suspend and resume before more
+work is submitted and if the gpu is in a hung state it will stay in that
+state and probably trigger a timeout again.
+
+just stop checking and always recover the gpu.
+
+patchwork: https://patchwork.freedesktop.org/patch/704066/">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53377" target="_blank">CVE-2026-53377</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/msm: always recover the gpu
+
+Previously, in case there was no more work to do, recover worker
+wouldn't trigger recovery and would instead rely on the gpu going to
+sleep and then resuming when more work is submitted.
+
+Recover_worker will first increment the fence of the hung ring so, if
+there's only one job submitted to a ring and that causes an hang, it
+will early out.
+
+There's no guarantee that the gpu will suspend and resume before more
+work is submitted and if the gpu is in a hung state it will stay in that
+state and probably trigger a timeout again.
+
+Just stop checking and always recover the gpu.
+
+Patchwork: https://patchwork.freedesktop.org/patch/704066/</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53376" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/amdkfd: add upper bound check for num_of_nodes
+
+drm/amdkfd: add upper bound check for num_of_nodes
+in kfd_ioctl_get_process_apertures_new.
+
+(cherry picked from commit 98ff46a5ea090c14d2cdb4f5b993b05d74f3949f)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53376" target="_blank">CVE-2026-53376</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/amdkfd: Add upper bound check for num_of_nodes
+
+drm/amdkfd: Add upper bound check for num_of_nodes
+in kfd_ioctl_get_process_apertures_new.
+
+(cherry picked from commit 98ff46a5ea090c14d2cdb4f5b993b05d74f3949f)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53375" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/amdgpu/vce: prevent partial address patches
+
+in the case that only one of lo/hi is valid, the patching could result
+in a bad address written to in fw.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53375" target="_blank">CVE-2026-53375</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/amdgpu/vce: Prevent partial address patches
+
+In the case that only one of lo/hi is valid, the patching could result
+in a bad address written to in FW.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53374" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/amdgpu: zero-initialize gart table on allocation
+
+gart tlb is flushed after unmapping but not after mapping. since
+amdgpu_bo_create_kernel() does not zero-initialize the buffer, when a
+single pte is written the tlb may speculatively load other uninitialized
+entries from the same cacheline. those garbage entries can appear valid,
+and a subsequent write to another pte in the same cacheline may cause the
+gpu to use a stale garbage pte from the tlb.
+
+fix this by calling memset_io() to zero-initialize the gart table with
+gart_pte_flags immediately after allocation.
+
+using amdgpu_gem_create_vram_cleared, sdma-based clear will not work
+since sdma needs gart to be initialized to work.
+
+(cherry picked from commit d9af8263b82b6eaa60c5718e0c6631c5037e4b24)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53374" target="_blank">CVE-2026-53374</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/amdgpu: zero-initialize GART table on allocation
+
+GART TLB is flushed after unmapping but not after mapping. Since
+amdgpu_bo_create_kernel() does not zero-initialize the buffer, when a
+single PTE is written the TLB may speculatively load other uninitialized
+entries from the same cacheline. Those garbage entries can appear valid,
+and a subsequent write to another PTE in the same cacheline may cause the
+GPU to use a stale garbage PTE from the TLB.
+
+Fix this by calling memset_io() to zero-initialize the GART table with
+gart_pte_flags immediately after allocation.
+
+Using AMDGPU_GEM_CREATE_VRAM_CLEARED, SDMA-based clear will not work
+since SDMA needs GART to be initialized to work.
+
+(cherry picked from commit d9af8263b82b6eaa60c5718e0c6631c5037e4b24)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-53373" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mm/vma: do not try to unmap a vma if mmap_prepare() invoked from mmap()
+
+the mmap_prepare hook functionality includes the ability to invoke
+mmap_prepare() from the mmap() hook of existing 'stacked' drivers, that is
+ones which are capable of calling the mmap hooks of other drivers/file
+systems (e.g.  overlayfs, shm).
+
+as part of the mmap_prepare action functionality, we deal with errors by
+unmapping the vma should one arise.  this works in the usual mmap_prepare
+case, as we invoke this action at the last moment, when the vma is
+established in the maple tree.
+
+however, the mmap() hook passes a not-fully-established vma pointer to the
+caller (which is the motivation behind the mmap_prepare() work), which is
+detached.
+
+so attempting to unmap a vma in this state will be problematic, with the
+most obvious symptom being a warning in vma_mark_detached(), because the
+vma is already detached.
+
+it's also unncessary - the mmap() handler will clean up the vma on error.
+
+so to fix this issue, this patch propagates whether or not an mmap action
+is being completed via the compatibility layer or directly.
+
+if the former, then we do not attempt vma cleanup, if the latter, then we
+do.
+
+this patch also updates the userland vma tests to reflect the change.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53373" target="_blank">CVE-2026-53373</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-19 06:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mm/vma: do not try to unmap a VMA if mmap_prepare() invoked from mmap()
+
+The mmap_prepare hook functionality includes the ability to invoke
+mmap_prepare() from the mmap() hook of existing 'stacked' drivers, that is
+ones which are capable of calling the mmap hooks of other drivers/file
+systems (e.g.  overlayfs, shm).
+
+As part of the mmap_prepare action functionality, we deal with errors by
+unmapping the VMA should one arise.  This works in the usual mmap_prepare
+case, as we invoke this action at the last moment, when the VMA is
+established in the maple tree.
+
+However, the mmap() hook passes a not-fully-established VMA pointer to the
+caller (which is the motivation behind the mmap_prepare() work), which is
+detached.
+
+So attempting to unmap a VMA in this state will be problematic, with the
+most obvious symptom being a warning in vma_mark_detached(), because the
+VMA is already detached.
+
+It's also unncessary - the mmap() handler will clean up the VMA on error.
+
+So to fix this issue, this patch propagates whether or not an mmap action
+is being completed via the compatibility layer or directly.
+
+If the former, then we do not attempt VMA cleanup, if the latter, then we
+do.
+
+This patch also updates the userland VMA tests to reflect the change.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-16229" data-description="a flaw has been found in itsourcecode courier management system up to 1.0. affected by this vulnerability is an unknown functionality of the file /index.php. executing a manipulation of the argument page can lead to cross site scripting. it is possible to launch the attack remotely. the exploit has been published and may be used.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16229" target="_blank">CVE-2026-16229</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-19 05:16:32 CDT</p>
@@ -343,70 +649,6 @@ search check.
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
                     <p>A vulnerability was identified in jxxghp MoviePilot up to 2.13.5. The affected element is an unknown function of the file /jxxghp/MoviePilot of the component Application API. The manipulation leads to improper authorization. Remote exploitation of the attack is possible. The identifier of the patch is dc2b6910a423b3bfadeffaa303e1ba75cfb33900. Applying a patch is the recommended action to fix this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16223" data-description="a vulnerability was determined in 1panel-dev cordyscrm up to 1.4.1. impacted is the function getsqlbotsrc of the file backend/crm/src/main/java/cn/cordys/crm/system/service/integrationconfigservice.java of the component third party edit endpoint. executing a manipulation of the argument appsecret can lead to server-side request forgery. the attack may be launched remotely. the exploit has been publicly disclosed and may be utilized.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16223" target="_blank">CVE-2026-16223</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 03:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was determined in 1Panel-dev CordysCRM up to 1.4.1. Impacted is the function getSqlBotSrc of the file backend/crm/src/main/java/cn/cordys/crm/system/service/IntegrationConfigService.java of the component Third Party Edit Endpoint. Executing a manipulation of the argument appSecret can lead to server-side request forgery. The attack may be launched remotely. The exploit has been publicly disclosed and may be utilized.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16222" data-description="a vulnerability was found in 1panel-dev cordyscrm up to 1.4.1. this issue affects some unknown processing of the file backend/crm/src/main/java/cn/cordys/crm/integration/sso/service/tokenservice.java of the component third party endpoint. performing a manipulation of the argument mkaddress results in server-side request forgery. the attack may be initiated remotely. the exploit has been made public and could be used. the project closed the issue report, stating that this is not the official way to report a security vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16222" target="_blank">CVE-2026-16222</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was found in 1Panel-dev CordysCRM up to 1.4.1. This issue affects some unknown processing of the file backend/crm/src/main/java/cn/cordys/crm/integration/sso/service/TokenService.java of the component Third Party Endpoint. Performing a manipulation of the argument mkAddress results in server-side request forgery. The attack may be initiated remotely. The exploit has been made public and could be used. The project closed the issue report, stating that this is not the official way to report a security vulnerability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16220" data-description="a vulnerability has been found in code-projects online examination system 1.0. this vulnerability affects unknown code of the file /account.php?q=quiz. such manipulation of the argument eid/n/t leads to cross site scripting. the attack can be launched remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16220" target="_blank">CVE-2026-16220</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 02:16:49 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability has been found in code-projects Online Examination System 1.0. This vulnerability affects unknown code of the file /account.php?q=quiz. Such manipulation of the argument eid/n/t leads to cross site scripting. The attack can be launched remotely. The exploit has been disclosed to the public and may be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16219" data-description="a flaw has been found in croogo cms up to 4.0.7. this affects the function filemanager::iseditable of the file filemanager/src/utility/filemanager.php of the component admin file manager. this manipulation causes path traversal. the attack can be initiated remotely. the exploit has been published and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16219" target="_blank">CVE-2026-16219</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 02:16:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A flaw has been found in Croogo CMS up to 4.0.7. This affects the function FileManager::isEditable of the file FileManager/src/Utility/FileManager.php of the component Admin File Manager. This manipulation causes path traversal. The attack can be initiated remotely. The exploit has been published and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16218" data-description="a vulnerability was detected in hunvreus devpush up to 0.4.6. affected by this issue is the function reset_storage of the file app/workers/tasks/storage.py of the component storage reset failure handler. the manipulation results in improper check or handling of exceptional conditions. a high complexity level is associated with this attack. the exploitation is known to be difficult. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16218" target="_blank">CVE-2026-16218</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 01:17:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.6</p>
-                    <p>A vulnerability was detected in hunvreus devpush up to 0.4.6. Affected by this issue is the function reset_storage of the file app/workers/tasks/storage.py of the component Storage Reset Failure Handler. The manipulation results in improper check or handling of exceptional conditions. A high complexity level is associated with this attack. The exploitation is known to be difficult. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16217" data-description="a security vulnerability has been detected in guohongze adminset up to 0.61. affected by this vulnerability is an unknown functionality of the file delivery/deli.py of the component delivery deployment endpoint. the manipulation of the argument project_id leads to authorization bypass. it is possible to initiate the attack remotely. the exploit has been disclosed publicly and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16217" target="_blank">CVE-2026-16217</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 01:17:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security vulnerability has been detected in guohongze adminset up to 0.61. Affected by this vulnerability is an unknown functionality of the file delivery/deli.py of the component Delivery Deployment Endpoint. The manipulation of the argument project_id leads to authorization bypass. It is possible to initiate the attack remotely. The exploit has been disclosed publicly and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16216" data-description="a weakness has been identified in geex-arts django-jet up to 1.0.8. affected is an unknown function of the component oauth handler. executing a manipulation can lead to cross-site request forgery. the attack may be performed from remote. the exploit has been made available to the public and could be used for attacks. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16216" target="_blank">CVE-2026-16216</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 01:17:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A weakness has been identified in geex-arts django-jet up to 1.0.8. Affected is an unknown function of the component OAuth Handler. Executing a manipulation can lead to cross-site request forgery. The attack may be performed from remote. The exploit has been made available to the public and could be used for attacks. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16215" data-description="a security flaw has been discovered in geex-arts django-jet up to 1.0.8. this impacts an unknown function of the component oauth credential revoke handler. performing a manipulation results in missing authorization. the attack is possible to be carried out remotely. the exploit has been released to the public and may be used for attacks. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16215" target="_blank">CVE-2026-16215</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-19 00:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A security flaw has been discovered in geex-arts django-jet up to 1.0.8. This impacts an unknown function of the component OAuth Credential Revoke Handler. Performing a manipulation results in missing authorization. The attack is possible to be carried out remotely. The exploit has been released to the public and may be used for attacks. The project was informed of the problem early through an issue report but has not responded yet.</p>
                 </div>
         
             </div>
