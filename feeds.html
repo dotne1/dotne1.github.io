@@ -33,6 +33,246 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-63317" data-description="arbitrary class instantiation via xml feature generator descriptor and format name in apache opennlp
+
+versions affected: 
+
+- before 2.5.10
+- before 3.0.0-m5
+
+description: 
+
+three code paths in apache opennlp load a class by its fully-qualified name via class.forname() and invoke its no-arg constructor without any prior validation of the class name or its type. 
+
+the affected paths are: 
+
+(1) generatorfactory, which reads the class attribute of generator elements in an xml feature generator descriptor; such descriptors are embedded as artifacts in model archives (e.g. tokennamefinder and postagger models) and are parsed during model loading, so an attacker who can supply a crafted model archive controls the class name directly. 
+
+(2) streamfactoryregistry.getfactory(class, string), which falls back to interpreting an unregistered format name as the fully-qualified class name of an objectstreamfactory; this is exploitable in applications that pass untrusted format names (e.g. exposing the -format parameter of the command-line tooling to external input). 
+
+(3) stringinterners, which instantiates the interner implementation named by the opennlp.interner.class system property; this value is normally deployer-controlled, so it is hardened as defense in depth rather than being independently attacker-reachable.
+
+exploitation requires a class with attacker-useful side effects in its static initializer or no-arg constructor (jndi lookup, outbound network i/o, filesystem access) to be present on the classpath, so this is not drop-in remote code execution. t
+
+mitigation: 
+
+upgrade to a fixed release. 
+
+the fix routes all three paths through extensionloader.instantiateextension(...), which consults a package-prefix allowlist before class.forname() is invoked, so a disallowed class is never loaded, initialized, or constructed. 
+classes under the opennlp. prefix remain permitted by default. deployments that load models referencing feature generator factories, object stream factories, or string interners outside opennlp.* must opt those packages in, either programmatically via extensionloader.registerallowedpackage(string) before the first model load, or by setting the opennlp_ext_allowed_packages system property to a comma-separated list of allowed package prefixes. 
+
+users who cannot upgrade immediately should ensure all model files and format names are sourced from trusted origins and should audit their classpath for classes with side-effecting static initializers or constructors.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63317" target="_blank">CVE-2026-63317</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Arbitrary Class Instantiation via XML Feature Generator Descriptor and Format Name in Apache OpenNLP
+
+Versions Affected: 
+
+- before 2.5.10
+- before 3.0.0-M5
+
+Description: 
+
+Three code paths in Apache OpenNLP load a class by its fully-qualified name via Class.forName() and invoke its no-arg constructor without any prior validation of the class name or its type. 
+
+The affected paths are: 
+
+(1) GeneratorFactory, which reads the class attribute of generator elements in an XML feature generator descriptor; such descriptors are embedded as artifacts in model archives (e.g. TokenNameFinder and POSTagger models) and are parsed during model loading, so an attacker who can supply a crafted model archive controls the class name directly. 
+
+(2) StreamFactoryRegistry.getFactory(Class, String), which falls back to interpreting an unregistered format name as the fully-qualified class name of an ObjectStreamFactory; this is exploitable in applications that pass untrusted format names (e.g. exposing the -format parameter of the command-line tooling to external input). 
+
+(3) StringInterners, which instantiates the interner implementation named by the opennlp.interner.class system property; this value is normally deployer-controlled, so it is hardened as defense in depth rather than being independently attacker-reachable.
+
+Exploitation requires a class with attacker-useful side effects in its static initializer or no-arg constructor (JNDI lookup, outbound network I/O, filesystem access) to be present on the classpath, so this is not drop-in remote code execution. T
+
+Mitigation: 
+
+Upgrade to a fixed release. 
+
+The fix routes all three paths through ExtensionLoader.instantiateExtension(...), which consults a package-prefix allowlist before Class.forName() is invoked, so a disallowed class is never loaded, initialized, or constructed. 
+Classes under the opennlp. prefix remain permitted by default. Deployments that load models referencing feature generator factories, object stream factories, or string interners outside opennlp.* must opt those packages in, either programmatically via ExtensionLoader.registerAllowedPackage(String) before the first model load, or by setting the OPENNLP_EXT_ALLOWED_PACKAGES system property to a comma-separated list of allowed package prefixes. 
+
+Users who cannot upgrade immediately should ensure all model files and format names are sourced from trusted origins and should audit their classpath for classes with side-effecting static initializers or constructors.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56392" data-description="gnu coreutils unexpand is vulnerable to a heap-based buffer overflow due to an integer overflow during buffer allocation when processing large tab stop (-t) values. the multiplication used to calculate the allocation size can wrap around, resulting in an undersized buffer.
+when processing crafted input, subsequent writes exceed the allocated memory, leading to an out‑of‑bounds heap write.
+
+when running gnu coreutils unexpand with attacker-provided large tab stop (-t) arguments, this behavior leads to a crash and potentially achieve a heap write primitive depending on memory layout.
+
+
+
+
+
+
+
+
+
+
+this issue has been fixed in the commit b60a159fdc5bfcf9988d3a4cb6f53abe8ad5d35d">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56392" target="_blank">CVE-2026-56392</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>GNU coreutils unexpand is vulnerable to a heap-based buffer overflow due to an integer overflow during buffer allocation when processing large tab stop (-t) values. The multiplication used to calculate the allocation size can wrap around, resulting in an undersized buffer.
+When processing crafted input, subsequent writes exceed the allocated memory, leading to an out‑of‑bounds heap write.
+
+When running GNU coreutils unexpand with attacker-provided large tab stop (-t) arguments, this behavior leads to a crash and potentially achieve a heap write primitive depending on memory layout.
+
+
+
+
+
+
+
+
+
+
+This issue has been fixed in the commit b60a159fdc5bfcf9988d3a4cb6f53abe8ad5d35d</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-56391" data-description="gnu coreutils uniq is vulnerable to an out‑of‑bounds read due to incorrect handling of multibyte input when the -w (--check-chars) option is used. the find_field() function miscalculates the byte length of characters by repeatedly processing a fixed pointer instead of advancing through the input, resulting in an inflated length value. 
+this incorrect length is later used in a memcmp operation, causing reads beyond the allocated buffer when processing crafted multibyte input.
+
+when running gnu coreutils uniq with attacker-provided arguments, this behavior leads to a crash and potential adjacent heap memory exposure.
+
+
+this issue has been fixed in the commit d64e35a8a4c0e4608321433e0d84d917e4e36371.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56391" target="_blank">CVE-2026-56391</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>GNU coreutils uniq is vulnerable to an out‑of‑bounds read due to incorrect handling of multibyte input when the -w (--check-chars) option is used. The find_field() function miscalculates the byte length of characters by repeatedly processing a fixed pointer instead of advancing through the input, resulting in an inflated length value. 
+This incorrect length is later used in a memcmp operation, causing reads beyond the allocated buffer when processing crafted multibyte input.
+
+When running GNU coreutils uniq with attacker-provided arguments, this behavior leads to a crash and potential adjacent heap memory exposure.
+
+
+This issue has been fixed in the commit d64e35a8a4c0e4608321433e0d84d917e4e36371.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-49745" data-description="kernel software installed and running inside a guest vm may post improper commands to the gpu firmware to trigger a write of data outside the guest's virtualised gpu memory.
+
+
+
+software installed and run under a guest vm can send commands to the gpu which result in out of bounds memory accesses. these can be used to escalate privileges.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49745" target="_blank">CVE-2026-49745</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Kernel software installed and running inside a Guest VM may post improper commands to the GPU Firmware to trigger a write of data outside the Guest's virtualised GPU memory.
+
+
+
+Software installed and run under a Guest VM can send commands to the GPU which result in out of bounds memory accesses. These can be used to escalate privileges.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-49744" data-description="kernel software installed and running inside a guest vm may post improper commands to the gpu firmware to trigger a write of data outside the guest's virtualised gpu memory.
+
+
+
+out of bounds accesses triggered by malware introduced to a guest kmd could allow privilege escalation which escapes virtualization boundaries.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49744" target="_blank">CVE-2026-49744</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Kernel software installed and running inside a Guest VM may post improper commands to the GPU Firmware to trigger a write of data outside the Guest's virtualised GPU memory.
+
+
+
+Out of bounds accesses triggered by malware introduced to a Guest KMD could allow privilege escalation which escapes virtualization boundaries.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-49743" data-description="software installed and run as a non-privileged user may conduct improper gpu system calls to manipulate the lifetimes of synchronisation objects in the kernel, leading to read/write uafs.
+
+
+
+during workload submission involving a fence exported by the gpu driver, the reference count of the underlying synchronisation primitive is not properly incremented. this can be exploited, by destroying the exported fence and prematurely release the underlying primitive, resulting in a potential use-after-free condition.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49743" target="_blank">CVE-2026-49743</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Software installed and run as a non-privileged user may conduct improper GPU system calls to manipulate the lifetimes of synchronisation objects in the kernel, leading to read/write UAFs.
+
+
+
+During workload submission involving a fence exported by the GPU driver, the reference count of the underlying synchronisation primitive is not properly incremented. This can be exploited, by destroying the exported fence and prematurely release the underlying primitive, resulting in a potential use-after-free condition.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-24727" data-description="an unrestricted upload of file with dangerous type vulnerability in the e-paper draft upload function of sunnet corporate training management system through v10.3 allows remote authenticated users with administrator privileges to execute arbitrary commands by uploading a crafted zip archive containing a server-executable file.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-24727" target="_blank">CVE-2026-24727</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An unrestricted upload of file with dangerous type vulnerability in the e-paper draft upload function of SUNNET Corporate Training Management System through v10.3 allows remote authenticated users with administrator privileges to execute arbitrary commands by uploading a crafted ZIP archive containing a server-executable file.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15821" data-description="the suredash – community, courses & member dashboard plugin for wordpress is vulnerable to stored cross-site scripting via shortcode attributes in all versions up to, and including, 1.10.0 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15821" target="_blank">CVE-2026-15821</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>The SureDash – Community, Courses & Member Dashboard plugin for WordPress is vulnerable to Stored Cross-Site Scripting via Shortcode Attributes in all versions up to, and including, 1.10.0 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15739" data-description="the rich showcase for google reviews plugin for wordpress is vulnerable to stored cross-site scripting via 'pagination' shortcode attribute in all versions up to, and including, 6.9.9 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15739" target="_blank">CVE-2026-15739</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>The Rich Showcase for Google Reviews plugin for WordPress is vulnerable to Stored Cross-Site Scripting via 'pagination' Shortcode Attribute in all versions up to, and including, 6.9.9 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15704" data-description="in eclipse basyx go components versions up to and including 1.0.0, abac-enabled deployments are vulnerable to an authorization bypass caused by inconsistent trailing-slash handling between the abac middleware and the http router.
+
+
+
+the shared router configuration used chi's `middleware.stripslashes`, so a request such as `get /shells/` was dispatched to the registered `get /shells` route. however, the abac middleware evaluated the original request path including the trailing slash. if abac route lookup did not find a matching slash-suffixed route, the request was passed onward and the router then stripped the slash and executed the protected handler without the intended abac authorization decision and without the expected abac query filters.
+
+
+
+an unauthenticated or unauthorized network attacker could append a trailing slash to protected api routes to reach handlers that should have been denied by abac policy. depending on the exposed component, http method, and deployed policy, this could allow unauthorized read, create, update, delete, or upload operations.
+
+
+
+the issue affects abac-enabled deployments of services that use the shared router and abac middleware, including aas repository, submodel repository, aas registry, submodel registry, concept description repository, discovery, aas environment upload, and related services. the issue is fixed in eclipse basyx go components v1.0.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15704" target="_blank">CVE-2026-15704</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>In Eclipse BaSyx Go Components versions up to and including 1.0.0, ABAC-enabled deployments are vulnerable to an authorization bypass caused by inconsistent trailing-slash handling between the ABAC middleware and the HTTP router.
+
+
+
+The shared router configuration used Chi's `middleware.StripSlashes`, so a request such as `GET /shells/` was dispatched to the registered `GET /shells` route. However, the ABAC middleware evaluated the original request path including the trailing slash. If ABAC route lookup did not find a matching slash-suffixed route, the request was passed onward and the router then stripped the slash and executed the protected handler without the intended ABAC authorization decision and without the expected ABAC query filters.
+
+
+
+An unauthenticated or unauthorized network attacker could append a trailing slash to protected API routes to reach handlers that should have been denied by ABAC policy. Depending on the exposed component, HTTP method, and deployed policy, this could allow unauthorized read, create, update, delete, or upload operations.
+
+
+
+The issue affects ABAC-enabled deployments of services that use the shared router and ABAC middleware, including AAS Repository, Submodel Repository, AAS Registry, Submodel Registry, Concept Description Repository, Discovery, AAS Environment upload, and related services. The issue is fixed in Eclipse BaSyx Go Components v1.0.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15346" data-description="the vikbooking hotel booking engine & pms plugin for wordpress is vulnerable to reflected cross-site scripting via the 'category_id' parameter in all versions up to, and including, 1.8.13 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that execute if they can successfully trick a user into performing an action such as clicking on a link. this is limited to browsers that support access keys as the injection is in a hidden element.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15346" target="_blank">CVE-2026-15346</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>The VikBooking Hotel Booking Engine & PMS plugin for WordPress is vulnerable to Reflected Cross-Site Scripting via the 'category_id' parameter in all versions up to, and including, 1.8.13 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that execute if they can successfully trick a user into performing an action such as clicking on a link. This is limited to browsers that support access keys as the injection is in a hidden element.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12702" data-description="in affected versions of octopus deploy insufficient checks on the project trigger actions allows an unauthorized user to trigger a deployment.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12702" target="_blank">CVE-2026-12702</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-24 04:16:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In affected versions of Octopus Deploy Insufficient checks on the project trigger actions allows an unauthorized user to trigger a deployment.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-16910" data-description="a flaw was found in red hat quay's notification webhook feature. the slack and generic webhook notification handlers accept user-supplied urls without ssrf validation, allowing a repository administrator to make the quay worker issue post requests to internal network addresses or cloud infrastructure endpoints that should not be reachable from the application.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16910" target="_blank">CVE-2026-16910</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-24 03:16:26 CDT</p>
@@ -105,102 +345,6 @@ location.</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>The Cozy Blocks – Page Builder for Gutenberg Editor & FSE with 600+ Patterns, 58 Blocks & Templates plugin for WordPress is vulnerable to Stored Cross-Site Scripting via 'icon.view' Block Attribute in all versions up to, and including, 2.2.11 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15333" data-description="the cozy blocks – page builder for gutenberg editor & fse with 600+ patterns, 58 blocks & templates plugin for wordpress is vulnerable to stored cross-site scripting via 'cozycustomfont' block attribute in all versions up to, and including, 2.2.11 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15333" target="_blank">CVE-2026-15333</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 03:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Cozy Blocks – Page Builder for Gutenberg Editor & FSE with 600+ Patterns, 58 Blocks & Templates plugin for WordPress is vulnerable to Stored Cross-Site Scripting via 'cozyCustomFont' Block Attribute in all versions up to, and including, 2.2.11 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12654" data-description="the payment plugins for stripe woocommerce plugin for wordpress is vulnerable to authorization bypass in all versions up to, and including, 4.0.7. this is due to the plugin not properly verifying that a user is authorized to perform an action. this makes it possible for unauthenticated attackers to mark arbitrary pending asynchronous woocommerce orders as paid by forging a charge.pending event with attacker-controlled metadata.order_id, metadata.gateway_id, and a charge object carrying status=succeeded and captured=true, triggering payment_complete() and downstream fulfillment flows with an attacker-supplied transaction id. exploitation requires the merchant to have left the webhook_secret_test or webhook_secret_live option blank, which is the plugin's default state until a stripe-issued whsec_ value is manually configured; once a non-empty secret is set, the signature verification cannot be bypassed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12654" target="_blank">CVE-2026-12654</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 03:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Payment Plugins for Stripe WooCommerce plugin for WordPress is vulnerable to authorization bypass in all versions up to, and including, 4.0.7. This is due to the plugin not properly verifying that a user is authorized to perform an action. This makes it possible for unauthenticated attackers to mark arbitrary pending asynchronous WooCommerce orders as paid by forging a charge.pending event with attacker-controlled metadata.order_id, metadata.gateway_id, and a charge object carrying status=succeeded and captured=true, triggering payment_complete() and downstream fulfillment flows with an attacker-supplied transaction ID. Exploitation requires the merchant to have left the webhook_secret_test or webhook_secret_live option blank, which is the plugin's default state until a Stripe-issued whsec_ value is manually configured; once a non-empty secret is set, the signature verification cannot be bypassed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-14603" data-description="the wowoptin: next-gen popup maker  wordpress plugin before 1.4.38 does not have proper authorization on a rest endpoint, allowing unauthenticated users to disable all of the site's opt-in forms and insert new template-based opt-in rows into the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14603" target="_blank">CVE-2026-14603</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The WowOptin: Next-Gen Popup Maker  WordPress plugin before 1.4.38 does not have proper authorization on a REST endpoint, allowing unauthenticated users to disable all of the site's opt-in forms and insert new template-based opt-in rows into the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-14172" data-description="rapid7 insightvm, nexpose, and the insight agent execute discovered executables during authenticated assessment without validating file ownership, allowing a local low-privileged user to run code as the scan credential (scan engine) or as root/system (insight agent). fixed in scan engine content 1.1.3935 and insight agent content component 0.0.245.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14172" target="_blank">CVE-2026-14172</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Rapid7 InsightVM, Nexpose, and the Insight Agent execute discovered executables during authenticated assessment without validating file ownership, allowing a local low-privileged user to run code as the scan credential (Scan Engine) or as root/SYSTEM (Insight Agent). Fixed in Scan Engine content 1.1.3935 and Insight Agent content component 0.0.245.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12981" data-description="the cafehaus api wordpress plugin through 1.0.0 does not have any authentication or authorisation when updating user passwords, allowing unauthenticated attackers to set the password of any user, including administrators, and fully take over their accounts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12981" target="_blank">CVE-2026-12981</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The CAFEHAUS API WordPress plugin through 1.0.0 does not have any authentication or authorisation when updating user passwords, allowing unauthenticated attackers to set the password of any user, including administrators, and fully take over their accounts.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12877" data-description="the project management, bug and issue tracking plugin  wordpress plugin before 5.1.0 does not sanitise and escape user supplied input before using it in a sql query, allowing unauthenticated attackers to perform sql injection attacks. this is exploitable in the project management, bug and issue tracking plugin  wordpress plugin before 5.1.0's standard front-end issue-tracker configuration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12877" target="_blank">CVE-2026-12877</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Project Management, Bug and Issue Tracking Plugin  WordPress plugin before 5.1.0 does not sanitise and escape user supplied input before using it in a SQL query, allowing unauthenticated attackers to perform SQL injection attacks. This is exploitable in the Project Management, Bug and Issue Tracking Plugin  WordPress plugin before 5.1.0's standard front-end issue-tracker configuration.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12690" data-description="the profilegrid  wordpress plugin before 5.9.9.7 does not perform a capability check on its license management actions, relying only on a nonce that is exposed to any logged-in user, allowing authenticated users with subscriber-level access and above to overwrite the site's premium license settings.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12690" target="_blank">CVE-2026-12690</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The ProfileGrid  WordPress plugin before 5.9.9.7 does not perform a capability check on its license management actions, relying only on a nonce that is exposed to any logged-in user, allowing authenticated users with Subscriber-level access and above to overwrite the site's premium license settings.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12689" data-description="the profilegrid  wordpress plugin before 5.9.9.7 does not perform any authorization or ownership check on some of its private-message thread actions, allowing authenticated users with subscriber-level access and above to soft-delete, tamper with the metadata of, and mark as read other users' private message threads.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12689" target="_blank">CVE-2026-12689</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The ProfileGrid  WordPress plugin before 5.9.9.7 does not perform any authorization or ownership check on some of its private-message thread actions, allowing authenticated users with Subscriber-level access and above to soft-delete, tamper with the metadata of, and mark as read other users' private message threads.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12688" data-description="the profilegrid  wordpress plugin before 5.9.9.7 does not verify paypal ipn notifications before granting paid group membership, allowing unauthenticated attackers to forge a payment notification and mark any user as a paid member of any group without any payment being made.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12688" target="_blank">CVE-2026-12688</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The ProfileGrid  WordPress plugin before 5.9.9.7 does not verify PayPal IPN notifications before granting paid group membership, allowing unauthenticated attackers to forge a payment notification and mark any user as a paid member of any group without any payment being made.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12497" data-description="the paid membership plugin, ecommerce, user registration form, login form, user profile & restrict content  wordpress plugin before 4.16.18 does not consistently enforce the role restriction configured on its front-end registration role-selection field. the set of roles offered to the visitor and the set of roles the registration handler accepts are derived by two different parsers, and for some valid ways of configuring the offered roles the handler ignores the restriction and falls back to accepting any non-administrator role. combined with the absence of a nonce on the public registration handler, this allows an unauthenticated visitor to register an account with a higher role, such as editor or author, than the form was configured to offer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12497" target="_blank">CVE-2026-12497</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 02:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Paid Membership Plugin, Ecommerce, User Registration Form, Login Form, User Profile & Restrict Content  WordPress plugin before 4.16.18 does not consistently enforce the role restriction configured on its front-end registration role-selection field. The set of roles offered to the visitor and the set of roles the registration handler accepts are derived by two different parsers, and for some valid ways of configuring the offered roles the handler ignores the restriction and falls back to accepting any non-administrator role. Combined with the absence of a nonce on the public registration handler, this allows an unauthenticated visitor to register an account with a higher role, such as Editor or Author, than the form was configured to offer.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16870" data-description="multiple security vulnerabilities in snowflake libsnowflakeclient versions prior to 2.9.2 could allow remote code execution and credential exfiltration. a stack-based buffer overflow in the file download path could allow remote code execution on a victim host. an attacker could exploit this by uploading a file with a crafted encryption metadata field to a shared internal stage that a victim process later downloads, and impact would be limited to deployments where principals with different privilege levels share the same internal stage. a related out-of-bounds write in the same download path could allow memory corruption with attacker-controlled write primitives. an attacker may exploit this through a crafted initialization vector metadata field on a shared stage, and impact would be limited by the same stage-write precondition. improper validation of connection parameters could allow an attacker-controlled input to redirect outbound authentication requests — including credentials and tokens — to an attacker-controlled endpoint. impact is limited to embedding deployments where a lower-privileged principal can influence connection configuration while higher-privileged service credentials are in use. the fix is available in snowflake libsnowflakeclient version 2.9.2. users must manually upgrade.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16870" target="_blank">CVE-2026-16870</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 01:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Multiple security vulnerabilities in Snowflake libsnowflakeclient versions prior to 2.9.2 could allow remote code execution and credential exfiltration. A stack-based buffer overflow in the file download path could allow remote code execution on a victim host. An attacker could exploit this by uploading a file with a crafted encryption metadata field to a shared internal stage that a victim process later downloads, and impact would be limited to deployments where principals with different privilege levels share the same internal stage. A related out-of-bounds write in the same download path could allow memory corruption with attacker-controlled write primitives. An attacker may exploit this through a crafted initialization vector metadata field on a shared stage, and impact would be limited by the same stage-write precondition. Improper validation of connection parameters could allow an attacker-controlled input to redirect outbound authentication requests — including credentials and tokens — to an attacker-controlled endpoint. Impact is limited to embedding deployments where a lower-privileged principal can influence connection configuration while higher-privileged service credentials are in use. The fix is available in Snowflake libsnowflakeclient version 2.9.2. Users must manually upgrade.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66141" data-description="exim before 4.99.5 allows .forward privilege escalation because force_command for a pipe transport is mishandled.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66141" target="_blank">CVE-2026-66141</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-24 00:16:49 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>Exim before 4.99.5 allows .forward privilege escalation because force_command for a pipe transport is mishandled.</p>
                 </div>
         
             </div>
