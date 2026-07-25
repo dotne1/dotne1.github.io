@@ -33,6 +33,26 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-10681" data-description="in zephyr's userspace dynamic-objects subsystem, thread_idx_alloc() in kernel/userspace/userspace.c allocated a new thread permission index from the global _thread_idx_map[] bitmap without holding lists_lock.
+
+on smp systems, two user-mode threads invoking the k_object_alloc(k_obj_thread) syscall concurrently can both observe the same low free bit, perform the same non-atomic rmw to clear it, and return the identical tidx.
+
+the two newly created k_obj_thread objects are then assigned the same thread_id, so the two user threads alias a single bit position in every kernel object's perms[] bitfield: any subsequent grant of access on a kernel object to one thread is implicitly a grant to the other, defeating userspace acl isolation. a secondary lost-update window between the unlocked &=~bit() in alloc and the locked |= bit() in thread_idx_free() can also leak entries from the thread-index pool.
+
+the defect is reachable from any user-mode thread via the unrestricted __syscall k_object_alloc and is gated on config_userspace, config_dynamic_objects, and config_smp. the flaw was introduced when the per-thread permission index was added in 2018 and is present in every release up to and including v4.4.0. fixed by holding lists_lock across the bitmap rmw and the permissions clear (and inlining the obj_list traversal that previously took the lock itself).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10681" target="_blank">CVE-2026-10681</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-25 09:16:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>In Zephyr's userspace dynamic-objects subsystem, thread_idx_alloc() in kernel/userspace/userspace.c allocated a new thread permission index from the global _thread_idx_map[] bitmap without holding lists_lock.
+
+On SMP systems, two user-mode threads invoking the k_object_alloc(K_OBJ_THREAD) syscall concurrently can both observe the same low free bit, perform the same non-atomic RMW to clear it, and return the identical tidx.
+
+The two newly created K_OBJ_THREAD objects are then assigned the same thread_id, so the two user threads alias a single bit position in every kernel object's perms[] bitfield: any subsequent grant of access on a kernel object to one thread is implicitly a grant to the other, defeating userspace ACL isolation. A secondary lost-update window between the unlocked &=~BIT() in alloc and the locked |= BIT() in thread_idx_free() can also leak entries from the thread-index pool.
+
+The defect is reachable from any user-mode thread via the unrestricted __syscall k_object_alloc and is gated on CONFIG_USERSPACE, CONFIG_DYNAMIC_OBJECTS, and CONFIG_SMP. The flaw was introduced when the per-thread permission index was added in 2018 and is present in every release up to and including v4.4.0. Fixed by holding lists_lock across the bitmap RMW and the permissions clear (and inlining the obj_list traversal that previously took the lock itself).</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-66013" data-description="openremote before 1.26.2 contains an authentication bypass vulnerability in the console registration api that allows unauthenticated attackers to update existing console assets by supplying a known asset identifier. attackers can overwrite push notification tokens and console metadata without authentication or ownership validation, redirecting notifications or denying delivery to legitimate consoles.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66013" target="_blank">CVE-2026-66013</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-25 06:17:19 CDT</p>
@@ -771,96 +791,6 @@ Gate the writability check on pte_present() so the lockless re-check only
 inspects present-PTE bits when the entry is actually present.  The
 non-present, non-marker case returns "don't wait" and lets the fault path
 retry.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64513" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-kvm: x86: unconditionally recompute cr8 intercept on ppr update
-
-the tpr_threshold field in the vmcs is used by vmx to induce vm exits
-when the guest's virtual tpr falls under the specified threshold,
-allowing kvm to inject previously masked interrupts.
-
-kvm handles these vm exits in handle_tpr_below_threshold().
-commit eb90f3417a0c ("kvm: vmx: speed up tpr below threshold vmexits")
-optimized this function by calling apic_update_ppr() instead of raising
-kvm_req_event. apic_update_ppr() then raises kvm_req_event if there is
-a pending, deliverable interrupt.
-
-however, if there are no new interrupts pending, apic_update_ppr() does
-not issue the request. thus, kvm_lapic_update_cr8_intercept() and
-vmx_update_cr8_intercept() are not called before vm entry, which results
-in a high, stale tpr_threshold. this is problematic due to the following
-sentence in 28.2.1.1 "vm-execution control fields" in the sdm:
-
-  the following check is performed if the “use tpr shadow” vm-execution
-  control is 1 and the “virtualize apic accesses” and “virtual-interrupt
-  delivery” vm-execution controls are both 0: the value of bits 3:0 of
-  the tpr threshold vm-execution control field should not be greater
-  than the value of bits 7:4 of vtpr.
-
-this error condition is typically not observed when kvm runs on a bare
-metal system because modern processors support apicv, which enables
-virtual-interrupt delivery, and which kvm uses when possible. this
-causes the processor to no longer generate tpr-below-threshold exits
-and to no longer check tpr_threshold on entry. however, when running
-on older platforms, or under nested virtualization on a hypervisor that
-does not support virtual-interrupt delivery and enforces this check
-(like hyper-v) this can cause a vm entry failure with hardware error
-0x7, as seen in [1].
-
-call kvm_lapic_update_cr8_intercept() if apic_update_ppr() does not
-find a deliverable interrupt (and thus does not raise kvm_req_event).
-remove calls to kvm_lapic_update_cr8_intercept() on paths that end up in
-apic_update_ppr(), as they now become redundant. this ensures that any
-path that updates the guest's ppr also figures out if kvm needs to wait
-for a tpr change (using tpr_threshold on vmx or cr8 intercepts on svm).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64513" target="_blank">CVE-2026-64513</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-25 05:17:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-KVM: x86: Unconditionally recompute CR8 intercept on PPR update
-
-The TPR_THRESHOLD field in the VMCS is used by VMX to induce VM exits
-when the guest's virtual TPR falls under the specified threshold,
-allowing KVM to inject previously masked interrupts.
-
-KVM handles these VM exits in handle_tpr_below_threshold().
-Commit eb90f3417a0c ("KVM: vmx: speed up TPR below threshold vmexits")
-optimized this function by calling apic_update_ppr() instead of raising
-KVM_REQ_EVENT. apic_update_ppr() then raises KVM_REQ_EVENT if there is
-a pending, deliverable interrupt.
-
-However, if there are no new interrupts pending, apic_update_ppr() does
-not issue the request. Thus, kvm_lapic_update_cr8_intercept() and
-vmx_update_cr8_intercept() are not called before VM entry, which results
-in a high, stale TPR_THRESHOLD. This is problematic due to the following
-sentence in 28.2.1.1 "VM-Execution Control Fields" in the SDM:
-
-  The following check is performed if the “use TPR shadow” VM-execution
-  control is 1 and the “virtualize APIC accesses” and “virtual-interrupt
-  delivery” VM-execution controls are both 0: the value of bits 3:0 of
-  the TPR threshold VM-execution control field should not be greater
-  than the value of bits 7:4 of VTPR.
-
-This error condition is typically not observed when KVM runs on a bare
-metal system because modern processors support APICv, which enables
-virtual-interrupt delivery, and which KVM uses when possible. This
-causes the processor to no longer generate TPR-below-threshold exits
-and to no longer check TPR_THRESHOLD on entry. However, when running
-on older platforms, or under nested virtualization on a hypervisor that
-does not support virtual-interrupt delivery and enforces this check
-(like Hyper-V) this can cause a VM entry failure with hardware error
-0x7, as seen in [1].
-
-Call kvm_lapic_update_cr8_intercept() if apic_update_ppr() does not
-find a deliverable interrupt (and thus does not raise KVM_REQ_EVENT).
-Remove calls to kvm_lapic_update_cr8_intercept() on paths that end up in
-apic_update_ppr(), as they now become redundant. This ensures that any
-path that updates the guest's PPR also figures out if KVM needs to wait
-for a TPR change (using TPR_THRESHOLD on VMX or CR8 intercepts on SVM).</p>
                 </div>
         
             </div>
