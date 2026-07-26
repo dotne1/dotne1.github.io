@@ -33,6 +33,22 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-17497" data-description="notegen before 0.32.0 grants the tauri shell plugin shell:allow-execute capability for bash, python, and python3 with arbitrary arguments in the default desktop capabilities. javascript running in the application webview can therefore invoke plugin:shell|execute to run attacker-controlled operating system commands with the privileges of the notegen process. in combination with script execution in the webview (for example via chat xss), this enables full remote code execution on the user's machine.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17497" target="_blank">CVE-2026-17497</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-26 10:16:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
+                    <p>NoteGen before 0.32.0 grants the Tauri shell plugin shell:allow-execute capability for bash, python, and python3 with arbitrary arguments in the default desktop capabilities. JavaScript running in the application webview can therefore invoke plugin:shell|execute to run attacker-controlled operating system commands with the privileges of the NoteGen process. In combination with script execution in the webview (for example via chat XSS), this enables full remote code execution on the user's machine.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-17496" data-description="notegen before 0.32.0 renders ai chat responses with markdown-it configured with html:true and injects the result into the dom via dangerouslysetinnerhtml in chat-preview, without html sanitization and with csp set to null. attacker-controlled content that reaches the model prompt (for example a malicious skill reference.md that instructs the model to emit html) can cause the model response to include executable markup such as an img onerror handler. when the user views the chat response, that markup runs as javascript in the privileged tauri webview, enabling arbitrary script execution in the application context (cross-site scripting).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17496" target="_blank">CVE-2026-17496</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-26 10:16:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>NoteGen before 0.32.0 renders AI chat responses with markdown-it configured with html:true and injects the result into the DOM via dangerouslySetInnerHTML in chat-preview, without HTML sanitization and with CSP set to null. Attacker-controlled content that reaches the model prompt (for example a malicious skill REFERENCE.md that instructs the model to emit HTML) can cause the model response to include executable markup such as an img onerror handler. When the user views the chat response, that markup runs as JavaScript in the privileged Tauri webview, enabling arbitrary script execution in the application context (cross-site scripting).</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-17459" data-description="a vulnerability was determined in perwendel spark up to 2.9.4. this vulnerability affects the function staticfiles.externallocation of the file src/main/java/spark/resource/externalresourcehandler.jav of the component sparkjava. executing a manipulation can lead to symlink following. it is possible to launch the attack remotely. the exploit has been publicly disclosed and may be utilized. the project was informed of the problem early through an issue report but has not responded yet.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17459" target="_blank">CVE-2026-17459</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-26 06:16:58 CDT</p>
@@ -551,122 +567,6 @@ ethtool: tsconfig: fix missing ethnl_ops_complete()
 
 tsconfig_prepare_data() calls ethnl_ops_begin(), we need to call
 ethnl_ops_complete() before returning the error.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64525" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xfrm: move policy_bydst rcu sync from per-netns .exit to .pre_exit
-
-the struct pernet_operations docstring in include/net/net_namespace.h
-explicitly warns against blocking rcu primitives in .exit handlers:
-
-    exit methods using blocking rcu primitives, such as
-    synchronize_rcu(), should be implemented via exit_batch.
-    [...]
-    please, avoid synchronize_rcu() at all, where it's possible.
-
-    note that a combination of pre_exit() and exit() can
-    be used, since a synchronize_rcu() is guaranteed between
-    the calls.
-
-xfrm_policy_fini() violates this: it calls synchronize_rcu() before
-freeing the policy_bydst hash tables (so no rcu reader is mid-
-traversal at free time), but runs from xfrm_net_ops.exit -- once per
-namespace -- so a cleanup_net() of n namespaces pays n full rcu
-grace periods serially.
-
-use the documented pre_exit/exit split. move the policy flush (and
-the workqueue drains it depends on) into a new .pre_exit handler;
-xfrm_policy_fini() then runs in .exit and frees the hash tables
-after the synchronize_rcu_expedited() that cleanup_net() guarantees
-between the two phases. providing o(1) rcu grace periods per batch
-instead of o(n).
-
-observed on linux 6.18 with a workload doing unshare(clone_newnet)
-at ~13/sec sustained: cleanup_net() and the netns_wq rescuer kthread
-both stuck in xfrm_policy_fini()'s synchronize_rcu(), >300k struct
-net accumulated in the cleanup queue, percpu in /proc/meminfo climbed
-to 130+ gb on 256-cpu hosts, and memcg ooms followed. setup_net and
-__put_net counts were balanced, ruling out a refcount leak.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64525" target="_blank">CVE-2026-64525</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-25 05:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xfrm: move policy_bydst RCU sync from per-netns .exit to .pre_exit
-
-The struct pernet_operations docstring in include/net/net_namespace.h
-explicitly warns against blocking RCU primitives in .exit handlers:
-
-    Exit methods using blocking RCU primitives, such as
-    synchronize_rcu(), should be implemented via exit_batch.
-    [...]
-    Please, avoid synchronize_rcu() at all, where it's possible.
-
-    Note that a combination of pre_exit() and exit() can
-    be used, since a synchronize_rcu() is guaranteed between
-    the calls.
-
-xfrm_policy_fini() violates this: it calls synchronize_rcu() before
-freeing the policy_bydst hash tables (so no RCU reader is mid-
-traversal at free time), but runs from xfrm_net_ops.exit -- once per
-namespace -- so a cleanup_net() of N namespaces pays N full RCU
-grace periods serially.
-
-Use the documented pre_exit/exit split. Move the policy flush (and
-the workqueue drains it depends on) into a new .pre_exit handler;
-xfrm_policy_fini() then runs in .exit and frees the hash tables
-after the synchronize_rcu_expedited() that cleanup_net() guarantees
-between the two phases. Providing O(1) RCU grace periods per batch
-instead of O(N).
-
-Observed on Linux 6.18 with a workload doing unshare(CLONE_NEWNET)
-at ~13/sec sustained: cleanup_net() and the netns_wq rescuer kthread
-both stuck in xfrm_policy_fini()'s synchronize_rcu(), >300k struct
-net accumulated in the cleanup queue, Percpu in /proc/meminfo climbed
-to 130+ GB on 256-CPU hosts, and memcg OOMs followed. setup_net and
-__put_net counts were balanced, ruling out a refcount leak.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64524" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-drm/hyperv: validate resolution_count and fix win8 fallback
-
-a synthvid_resolution_response with resolution_count > 64 walks past
-the supported_resolution[synthvid_max_resolution_count] array in the
-parse loop. bound resolution_count against the array size, folded
-into the existing zero-check.
-
-when the win10 resolution probe fails, the caller in
-hyperv_connect_vsp() left hv->screen_*_max / preferred_* unpopulated,
-which sets mode_config.max_width / max_height to 0 and makes
-drm_internal_framebuffer_create() reject every userspace framebuffer
-with -einval. the pre-win10 branch had the same gap for
-preferred_width / preferred_height. use a single post-probe fallback
-guarded by screen_width_max == 0 so both paths converge on the win8
-defaults.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64524" target="_blank">CVE-2026-64524</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-25 05:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-drm/hyperv: validate resolution_count and fix WIN8 fallback
-
-A SYNTHVID_RESOLUTION_RESPONSE with resolution_count > 64 walks past
-the supported_resolution[SYNTHVID_MAX_RESOLUTION_COUNT] array in the
-parse loop. Bound resolution_count against the array size, folded
-into the existing zero-check.
-
-When the WIN10 resolution probe fails, the caller in
-hyperv_connect_vsp() left hv->screen_*_max / preferred_* unpopulated,
-which sets mode_config.max_width / max_height to 0 and makes
-drm_internal_framebuffer_create() reject every userspace framebuffer
-with -EINVAL. The pre-WIN10 branch had the same gap for
-preferred_width / preferred_height. Use a single post-probe fallback
-guarded by screen_width_max == 0 so both paths converge on the WIN8
-defaults.</p>
                 </div>
         
             </div>
