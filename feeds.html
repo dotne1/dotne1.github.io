@@ -33,6 +33,106 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-65624" data-description="allocation of resources without limits or throttling vulnerability in ninenines cowboy allows an unauthenticated remote attacker to exhaust connection process memory over http/1.1.
+
+the http/1.1 handler in cowboy_http enforces the max_headers limit by counting the number of distinct header names in a map (maps:size(headers)). when a request contains multiple header lines with the same name, the values are concatenated into a single ever-growing binary stored under that one map key (", " for regular headers, "; " for cookies), so the map size stays at one and the max_headers cap (default 100) is never reached. because no accumulator bounds the total number of header lines or the total byte size of the header block (only per-line max_header_name_length and max_header_value_length apply), an unauthenticated client can send an arbitrary number of header lines with the same name and grow the connection process's binary memory to arbitrary size within the request window.
+
+the impact per connection is bounded by request_timeout (default 5 seconds, not reset by header data), and by max_heap_size when set (the offending connection process is killed once its heap grows past the limit). when max_heap_size is left at the default (unset), sustained abuse can drive the erlang vm into out-of-memory conditions.
+
+this issue affects cowboy from 2.0.0-pre.4 before 2.18.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65624" target="_blank">CVE-2026-65624</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling vulnerability in ninenines cowboy allows an unauthenticated remote attacker to exhaust connection process memory over HTTP/1.1.
+
+The HTTP/1.1 handler in cowboy_http enforces the max_headers limit by counting the number of distinct header names in a map (maps:size(Headers)). When a request contains multiple header lines with the same name, the values are concatenated into a single ever-growing binary stored under that one map key (", " for regular headers, "; " for cookies), so the map size stays at one and the max_headers cap (default 100) is never reached. Because no accumulator bounds the total number of header lines or the total byte size of the header block (only per-line max_header_name_length and max_header_value_length apply), an unauthenticated client can send an arbitrary number of header lines with the same name and grow the connection process's binary memory to arbitrary size within the request window.
+
+The impact per connection is bounded by request_timeout (default 5 seconds, not reset by header data), and by max_heap_size when set (the offending connection process is killed once its heap grows past the limit). When max_heap_size is left at the default (unset), sustained abuse can drive the Erlang VM into out-of-memory conditions.
+
+This issue affects cowboy from 2.0.0-pre.4 before 2.18.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59248" data-description="allocation of resources without limits vulnerability in ninenines cowlib allows an unauthenticated remote http/2 or http/3 peer to exhaust memory on the vulnerable server (or client) and cause a denial of service.
+
+the hpack and qpack prefixed-integer decoder cow_hpack_common:dec_big_int/3 in src/cow_hpack_common.hrl (invoked from cow_hpack:decode/2 in src/cow_hpack.erl and from cow_qpack:decode_field_section/3 in src/cow_qpack.erl) reads continuation octets until it sees one whose high bit is clear, evaluating int + (value bsl m) at each step with the shift m growing by seven per octet. no limit is enforced on the number of continuation octets, on the resulting bit width, or on the value; the decoder consumes whatever encoded length the peer supplies.
+
+because erlang integers are immutable, each intermediate value bsl m and each accumulator update allocates a fresh bignum whose digit width grows linearly with the number of octets processed so far. summed across the whole decode, the transient bignum digit materialization is on the order of the square of the encoded length. a single maximal hpack indexed representation carried inside one http/2 headers plus one continuation frame at cowboy's default max_frame_size_received can force hundreds of megabytes of transient allocation and garbage-collection churn before the resulting header-table index is rejected as invalid. repeated or concurrent connections multiply the pressure and can drive the erlang vm to memory exhaustion.
+
+cowlib is the http parser used by cowboy, rabbitmq's management plugin, and other erlang and elixir http/2 and http/3 servers and clients, so any exposed endpoint that accepts hpack or qpack from an untrusted peer is reachable.
+
+this issue affects cowlib: from 2.0.0 before 2.19.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59248" target="_blank">CVE-2026-59248</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of resources without limits vulnerability in ninenines cowlib allows an unauthenticated remote HTTP/2 or HTTP/3 peer to exhaust memory on the vulnerable server (or client) and cause a denial of service.
+
+The HPACK and QPACK prefixed-integer decoder cow_hpack_common:dec_big_int/3 in src/cow_hpack_common.hrl (invoked from cow_hpack:decode/2 in src/cow_hpack.erl and from cow_qpack:decode_field_section/3 in src/cow_qpack.erl) reads continuation octets until it sees one whose high bit is clear, evaluating Int + (Value bsl M) at each step with the shift M growing by seven per octet. No limit is enforced on the number of continuation octets, on the resulting bit width, or on the value; the decoder consumes whatever encoded length the peer supplies.
+
+Because Erlang integers are immutable, each intermediate Value bsl M and each accumulator update allocates a fresh bignum whose digit width grows linearly with the number of octets processed so far. Summed across the whole decode, the transient bignum digit materialization is on the order of the square of the encoded length. A single maximal HPACK indexed representation carried inside one HTTP/2 HEADERS plus one CONTINUATION frame at Cowboy's default max_frame_size_received can force hundreds of megabytes of transient allocation and garbage-collection churn before the resulting header-table index is rejected as invalid. Repeated or concurrent connections multiply the pressure and can drive the Erlang VM to memory exhaustion.
+
+Cowlib is the HTTP parser used by Cowboy, RabbitMQ's management plugin, and other Erlang and Elixir HTTP/2 and HTTP/3 servers and clients, so any exposed endpoint that accepts HPACK or QPACK from an untrusted peer is reachable.
+
+This issue affects cowlib: from 2.0.0 before 2.19.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58246" data-description="sap netweaver application server for abap and abap platform writes sensitive session identifier information into a diagnostic trace when the trace is activated by a privileged user. an attacker with access to the resulting trace data could obtain identifiers that allow impersonation of legitimate users during their validity period. this leads to high impact on confidentiality. integrity and availability are not impacted.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58246" target="_blank">CVE-2026-58246</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:49 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>SAP NetWeaver Application Server for ABAP and ABAP Platform writes sensitive session identifier information into a diagnostic trace when the trace is activated by a privileged user. An attacker with access to the resulting trace data could obtain identifiers that allow impersonation of legitimate users during their validity period. This leads to high impact on confidentiality. Integrity and availability are not impacted.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16462" data-description="in procon-web scada the endpoint 'getgriddata' is not properly sanitized. this allows a remote unauthenticated attacker to execute arbitrary sql commands.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16462" target="_blank">CVE-2026-16462</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>In PROCON-WEB SCADA the endpoint 'GetGridData' is not properly sanitized. This allows a remote unauthenticated attacker to execute arbitrary SQL commands.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-14785" data-description="the web directory free plugin for wordpress is vulnerable to generic sql injection via the 'levels' parameter in all versions up to, and including, 1.7.13 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14785" target="_blank">CVE-2026-14785</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>The Web Directory Free plugin for WordPress is vulnerable to generic SQL Injection via the 'levels' parameter in all versions up to, and including, 1.7.13 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for unauthenticated attackers to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-14328" data-description="the eazy plugin manager – powerful plugin management solution for wordpress plugin for wordpress is vulnerable to privilege escalation in all versions up to, and including, 4.4.1. this is due to insufficient authorization on the `wp_ajax_pos_get_option` ajax handler, which verifies only a nonce that is localized to every logged-in admin-area user via `admin_enqueue_scripts` — without any capability check — before returning the value of any arbitrary wordpress option via `get_option()`, combined with the `admin_login_endpoint_handler` rest endpoint (`get /wp-json/epm/v1/admin/login`) being registered as publicly accessible and authenticating callers solely by a whirlpool hash of values stored in those same options. this makes it possible for authenticated attackers, with subscriber-level access and above, to read the `site_url`, `connection_key`, and `remote_user_id` values stored in the `eazywp_connecting_info` and `eazywp_connection` options, compute the required `auth_key`, call the `admin/login` rest endpoint to obtain administrator authentication cookies, and fully take over the site. exploitation requires the plugin's remote connection feature to have been configured, as the `eazywp_connecting_info` and `eazywp_connection` options must be populated with valid credentials.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14328" target="_blank">CVE-2026-14328</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>The Eazy Plugin Manager – Powerful Plugin Management Solution for WordPress plugin for WordPress is vulnerable to Privilege Escalation in all versions up to, and including, 4.4.1. This is due to insufficient authorization on the `wp_ajax_pos_get_option` AJAX handler, which verifies only a nonce that is localized to every logged-in admin-area user via `admin_enqueue_scripts` — without any capability check — before returning the value of any arbitrary WordPress option via `get_option()`, combined with the `admin_login_endpoint_handler` REST endpoint (`GET /wp-json/epm/v1/admin/login`) being registered as publicly accessible and authenticating callers solely by a whirlpool hash of values stored in those same options. This makes it possible for authenticated attackers, with Subscriber-level access and above, to read the `site_url`, `connection_key`, and `remote_user_id` values stored in the `eazywp_connecting_info` and `eazywp_connection` options, compute the required `auth_key`, call the `admin/login` REST endpoint to obtain Administrator authentication cookies, and fully take over the site. Exploitation requires the plugin's remote connection feature to have been configured, as the `eazywp_connecting_info` and `eazywp_connection` options must be populated with valid credentials.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11841" data-description="an attacker may perform unauthenticated read and write operations on sensitive filesystem areas via the appengine fileaccess over http due to improper access restrictions. a critical filesystem directory was unintentionally exposed through the http-based file access feature, allowing access without authentication. this includes device parameter files, enabling an attacker to read and modify application settings, including customer-defined passwords. additionally, exposure of the custom application directory may allow execution of arbitrary lua code within the sandboxed appengine environment.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11841" target="_blank">CVE-2026-11841</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.4</p>
+                    <p>An attacker may perform unauthenticated read and write operations on sensitive filesystem areas via the AppEngine Fileaccess over HTTP due to improper access restrictions. A critical filesystem directory was unintentionally exposed through the HTTP-based file access feature, allowing access without authentication. This includes device parameter files, enabling an attacker to read and modify application settings, including customer-defined passwords. Additionally, exposure of the custom application directory may allow execution of arbitrary Lua code within the sandboxed AppEngine environment.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11598" data-description="the shortcodify plugin for wordpress is vulnerable to stored cross-site scripting via 'name' shortcode attribute in all versions up to, and including, 1.4.3 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11598" target="_blank">CVE-2026-11598</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
+                    <p>The Shortcodify plugin for WordPress is vulnerable to Stored Cross-Site Scripting via 'name' Shortcode Attribute in all versions up to, and including, 1.4.3 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-10207" data-description="the pickplugins question answer plugin for wordpress is vulnerable to sql injection in versions up to and including 1.2.73. this is due to insufficient sanitization of user-supplied input via the 'id' get parameter in the user profile template combined with the use of wp_unslash() which removes wordpress's magic quotes protection, followed by direct concatenation into a sql query without proper escaping or prepared statements in the qa_user_profile_card() function. this makes it possible for unauthenticated attackers to append additional sql queries into existing queries, which can be used to extract sensitive information from the database.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10207" target="_blank">CVE-2026-10207</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-28 05:16:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>The PickPlugins Question Answer plugin for WordPress is vulnerable to SQL Injection in versions up to and including 1.2.73. This is due to insufficient sanitization of user-supplied input via the 'id' GET parameter in the user profile template combined with the use of wp_unslash() which removes WordPress's magic quotes protection, followed by direct concatenation into a SQL query without proper escaping or prepared statements in the qa_user_profile_card() function. This makes it possible for unauthenticated attackers to append additional SQL queries into existing queries, which can be used to extract sensitive information from the database.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-9680" data-description="improper exposure of the mcp server in alibabacloud-rds-openapi-mcp-server allows remote attackers to invoke exposed mcp tools via network access to an mcp endpoint listening on all network interfaces by default.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9680" target="_blank">CVE-2026-9680</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-28 04:16:42 CDT</p>
@@ -123,84 +223,6 @@ This issue affects News Theme V8: through 16.06.2026.</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
                     <p>A low privileged remote attacker can gain administrator privileges due to missing authorization at the insert path of the configuration table resulting in gaining full system access.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-14167" data-description="a low privileged remote attacker can perform privileged configuration changes reserved for the administrator level including permission management due to incorrect authorization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14167" target="_blank">CVE-2026-14167</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A low privileged remote attacker can perform privileged configuration changes reserved for the administrator level including permission management due to incorrect authorization.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-13161" data-description="the truebooker – appointment booking and scheduler system plugin for wordpress is vulnerable to generic sql injection via the 'alldata[truebooker_user]' parameter in all versions up to, and including, 1.2.2 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database. the check_ajax_referer() nonce guard does not constitute an authentication or authorization barrier because the nonce is exposed to unauthenticated visitors on truebooker front-end booking pages; exploitation additionally requires that the required booking fields (category, service, person, date, and time slot) be present in the alldata post parameter so that execution reaches the vulnerable sql query branch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13161" target="_blank">CVE-2026-13161</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The TrueBooker – Appointment Booking and Scheduler System plugin for WordPress is vulnerable to generic SQL Injection via the 'alldata[truebooker_user]' parameter in all versions up to, and including, 1.2.2 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for unauthenticated attackers to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. The check_ajax_referer() nonce guard does not constitute an authentication or authorization barrier because the nonce is exposed to unauthenticated visitors on TrueBooker front-end booking pages; exploitation additionally requires that the required booking fields (category, service, person, date, and time slot) be present in the alldata POST parameter so that execution reaches the vulnerable SQL query branch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12800" data-description="the premium packages – sell digital products securely plugin for wordpress is vulnerable to sql injection via the 'code' parameter of the post /wp-json/wpdmpp/v1/cart/coupon rest api endpoint in versions up to, and including, 6.2.0. this is due to insufficient escaping on the user-supplied parameter, which is interpolated directly into a raw sql query string in the couponcodes::find() method without use of $wpdb->prepare() or esc_sql(). this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12800" target="_blank">CVE-2026-12800</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The Premium Packages – Sell Digital Products Securely plugin for WordPress is vulnerable to SQL Injection via the 'code' parameter of the POST /wp-json/wpdmpp/v1/cart/coupon REST API endpoint in versions up to, and including, 6.2.0. This is due to insufficient escaping on the user-supplied parameter, which is interpolated directly into a raw SQL query string in the CouponCodes::find() method without use of $wpdb->prepare() or esc_sql(). This makes it possible for unauthenticated attackers to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-55977" data-description="successful exploitation of this vulnerability
-could allow an attacker with local network access to bypass the application's
-rate-limiting mechanism, enabling brute-forcing of the screen-sharing code and
-potentially displaying harmful content on the affected screen.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55977" target="_blank">CVE-2026-55977</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 03:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>Successful exploitation of this vulnerability
-could allow an attacker with local network access to bypass the application's
-rate-limiting mechanism, enabling brute-forcing of the screen-sharing code and
-potentially displaying harmful content on the affected screen.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15730" data-description="the gamipress – gamification plugin to reward points, achievements, badges & ranks in wordpress plugin for wordpress is vulnerable to stored cross-site scripting via 'heading_size' shortcode attribute in all versions up to, and including, 7.9.9.1 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. the wp_kses_post filter applied at post save does not neutralize this payload because only the inert shortcode text is stored in post_content; the dangerous html is synthesized at render time by the shortcode handler, entirely bypassing save-time sanitization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15730" target="_blank">CVE-2026-15730</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 03:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The GamiPress – Gamification plugin to reward points, achievements, badges & ranks in WordPress plugin for WordPress is vulnerable to Stored Cross-Site Scripting via 'heading_size' Shortcode Attribute in all versions up to, and including, 7.9.9.1 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. The wp_kses_post filter applied at post save does not neutralize this payload because only the inert shortcode text is stored in post_content; the dangerous HTML is synthesized at render time by the shortcode handler, entirely bypassing save-time sanitization.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15673" data-description="the sms alert – sms & otp for woocommerce, order notifications & abandoned cart recovery plugin for wordpress is vulnerable to generic sql injection via 'checkout_payment_plans' and 'order_status' settings in all versions up to, and including, 3.9.7 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for authenticated attackers, with administrator-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database. this is a second-order sql injection: the malicious payload is stored in the 'checkout_payment_plans' and 'order_status' settings via update_option() and executed later when the cod_to_prepaid_cart_notification_sendsms_hook wp-cron event fires sa_codtoprepaid::sendsms().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15673" target="_blank">CVE-2026-15673</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 03:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
-                    <p>The SMS Alert – SMS & OTP for WooCommerce, Order Notifications & Abandoned Cart Recovery plugin for WordPress is vulnerable to generic SQL Injection via 'checkout_payment_plans' and 'order_status' Settings in all versions up to, and including, 3.9.7 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with administrator-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. This is a second-order SQL injection: the malicious payload is stored in the 'checkout_payment_plans' and 'order_status' settings via update_option() and executed later when the cod_to_prepaid_cart_notification_sendsms_hook WP-Cron event fires SA_CodTOPrepaid::sendSms().</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15671" data-description="the sms alert – sms & otp for woocommerce, order notifications & abandoned cart recovery plugin for wordpress is vulnerable to generic sql injection via the 'id' parameter in all versions up to, and including, 3.9.7 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for authenticated attackers, with administrator-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15671" target="_blank">CVE-2026-15671</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 03:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>The SMS Alert – SMS & OTP for WooCommerce, Order Notifications & Abandoned Cart Recovery plugin for WordPress is vulnerable to generic SQL Injection via the 'id' parameter in all versions up to, and including, 3.9.7 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with administrator-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15670" data-description="the sms alert – sms & otp for woocommerce, order notifications & abandoned cart recovery plugin for wordpress is vulnerable to time-based sql injection via the 'orderby' parameter in all versions up to, and including, 3.9.7 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for authenticated attackers, with administrator-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15670" target="_blank">CVE-2026-15670</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 03:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>The SMS Alert – SMS & OTP for WooCommerce, Order Notifications & Abandoned Cart Recovery plugin for WordPress is vulnerable to time-based SQL Injection via the 'orderby' parameter in all versions up to, and including, 3.9.7 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with administrator-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15014" data-description="the sms alert – sms & otp for woocommerce, order notifications & abandoned cart recovery plugin for wordpress is vulnerable to authentication bypass leading to account takeover in all versions up to, and including, 3.9.7 via the `billing_phone` parameter. this is due to the `processregistration()` function using a phone-unbound `$_session['sa_mobile_verified']` boolean flag as the sole gate before issuing an authentication cookie — the flag is set to `true` after any successful otp validation without being bound to the specific phone number that was verified. this makes it possible for unauthenticated attackers to complete otp verification for a phone number they control, then resubmit the registration request with a victim's `billing_phone` value to have `wp_set_auth_cookie()` called for the resolved victim account, enabling full authentication as any existing wordpress user whose registered phone number is known or guessable, including administrators.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15014" target="_blank">CVE-2026-15014</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-28 03:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>The SMS Alert – SMS & OTP for WooCommerce, Order Notifications & Abandoned Cart Recovery plugin for WordPress is vulnerable to Authentication Bypass leading to Account Takeover in all versions up to, and including, 3.9.7 via the `billing_phone` parameter. This is due to the `processRegistration()` function using a phone-unbound `$_SESSION['sa_mobile_verified']` boolean flag as the sole gate before issuing an authentication cookie — the flag is set to `true` after any successful OTP validation without being bound to the specific phone number that was verified. This makes it possible for unauthenticated attackers to complete OTP verification for a phone number they control, then resubmit the registration request with a victim's `billing_phone` value to have `wp_set_auth_cookie()` called for the resolved victim account, enabling full authentication as any existing WordPress user whose registered phone number is known or guessable, including administrators.</p>
                 </div>
         
             </div>
