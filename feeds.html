@@ -33,164 +33,400 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-8339" data-description="a sql injection vulnerability exists in the coverity connect soap api for versions between 2024.6.0 and 2026.3.0 (inclusive). a malicious, authenticated threat actor who sends a specially crafted payload can achieve full read access to database contents and other unauthorized commands.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8339" target="_blank">CVE-2026-8339</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A SQL injection vulnerability exists in the Coverity Connect SOAP API for versions between 2024.6.0 and 2026.3.0 (inclusive). A malicious, authenticated threat actor who sends a specially crafted payload can achieve full read access to database contents and other unauthorized commands.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-8338" data-description="a spring security authentication and authorization bypass exists in coverity connect versions between 2023.6.0 and 2026.3.0. an unauthenticated malicious threat actor that can send a specially crafted http request is able to bypass authentication and authorization controls on certain api endpoints to access data within coverity.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8338" target="_blank">CVE-2026-8338</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A Spring Security authentication and authorization bypass exists in Coverity Connect versions between 2023.6.0 and 2026.3.0. An unauthenticated malicious threat actor that can send a specially crafted HTTP request is able to bypass authentication and authorization controls on certain API endpoints to access data within Coverity.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-67194" data-description="courier imap before 6.0.1 and courier mail server before 2.0.2 allow authenticated imap users to crash the imapd process via deeply nested parenthesized search queries. the search command parser (alloc_search_key in searchinfo.c) recursively descends on nested parenthesized groups through a mutual recursion chain with alloc_search_andlist() and alloc_search_notkey(), with no depth limit. courier imap has no overall command line length limit, making exploitation trivial. a single imap command with ~2500 nested parentheses overflows the 8mb default stack, causing sigsegv.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67194" target="_blank">CVE-2026-67194</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Courier IMAP before 6.0.1 and Courier Mail Server before 2.0.2 allow authenticated IMAP users to crash the imapd process via deeply nested parenthesized SEARCH queries. The SEARCH command parser (alloc_search_key in searchinfo.C) recursively descends on nested parenthesized groups through a mutual recursion chain with alloc_search_andlist() and alloc_search_notkey(), with no depth limit. Courier IMAP has no overall command line length limit, making exploitation trivial. A single IMAP command with ~2500 nested parentheses overflows the 8MB default stack, causing SIGSEGV.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-64560" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+posix-cpu-timers: prevent uaf caused by non-leader exec() race
+
+wongi and jungwoo decoded and reported a non-leader exec() related race
+which can result in an uaf:
+
+ sys_timer_delete()			exec()
+   posix_cpu_timer_del()
+   // observes old leader
+   p = pid_task(pid, pid_type);		de_thread()
+   					  switch_leader();
+					  release_task(old_leader)
+					    __exit_signal(old_leader)
+					      sighand = lock(old_leader, sighand);
+					      posix_cpu_timers*_exit();
+   sighand = lock_task_sighand(p)	      unhash_task(old_leader);
+     sh = lock(p, sighand)	    	      old_leader->sighand = null;
+					      unlock(sighand);
+     (p->sighand == null)
+	unlock(sh)
+	return null;
+
+   // returns without action
+   if(!sighand)
+      return 0;
+   free_posix_timer();
+
+this is "harmless" unless the deleted timer was armed and enqueued in
+p->signal because on exec() a tgid targeted timer is inherited.
+
+as sys_timer_delete() freed the underlying posix timer object
+run_posix_cpu_timers() or any timerqueue related add/delete operations on
+other timers will access the freed object's timerqueue node, which results
+in an uaf.
+
+there is a similar problem vs. posix_cpu_timer_set(). for regular posix
+timers it just transiently returns -esrch to user space, but for the use
+case in do_cpu_nanosleep() it's the same uaf just that the k_itimer is
+allocated on the stack.
+
+also posix_cpu_timer_rearm() fails to rearm the timer, which means it stops
+to expire.
+
+while debating solutions frederic pointed out another problem:
+
+   posix_cpu_timer_del(tmr)
+					__exit_signal(p)
+					  posix_cpu_timers*_exit(p);
+					  unhash_task(p);
+					  p->sighand = null;
+     sh = lock_task_sighand(p)
+        sighand = p->sighand;
+	if (!sighand)
+	    return null;
+	lock(sighand);
+
+     if (!sh)
+	warn_on_once(timer_queued(tmr));
+
+on weakly ordered architectures it is not guaranteed that
+posix_cpu_timer_del() will observe the stores in posix_cpu_timers*_exit()
+when p->sighand is observed as null, which means the warn() can be a false
+positive.
+
+solve these issues by:
+
+  1) changing the store in __exit_signal() to smp_store_release().
+
+  2) adding a smp_acquire__after_ctrl_dep() into the !sighand path
+     of lock_task_sighand().
+
+  3) creating a helper function for looking up the task and locking sighand
+     which does not return when sighand == null. instead it retries the
+     task lookup and only if that fails it gives up.
+
+  4) using that helper in the three affected functions.
+
+#1/#2 ensures that the reader side which observes sighand == null also
+observes all preceeding stores, i.e. the stores in posix_cpu_timers*_exit()
+and the ones in unhash_task().
+
+#3 ensures that the above described non-leader exec() situation is handled
+gracefully. when the task lookup returns the old leader, but sighand ==
+null then it retries. in the non-leader exec() case the subsequent task
+lookup will observe the new leader due to #1/#2. in normal exit() scenarios
+the subsequent lookup fails.
+
+when the task lookup fails, the function also checks whether the timer is
+still enqueued and issues a warning if that's the case. unfortunately there
+is nothing which can be done about it, but as the task is already not
+longer visible the timer should not be accessed anymore. this check also
+requires memory ordering, which is not provided when the first lookup
+fails. to achieve that the check is preceeded by a smp_rmb() which pairs
+with the smp_wmb() in write_seqlock() in __exit_signal(). that ensures that
+the stores in posix_cpu_timers*_exit() are visible.
+
+the history of the non-leader exec() issue goes back to the early days of
+posix cpu timers, which stored a pointer to the group leader task in the
+timer. that obviously fails when a non-leader exec() switches the leader.
+commit e0a70217107e ("posix-cpu-timers: workaround to suppress the problems
+with mt exec") added a temporary workaround for that in 2010 which surv
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64560" target="_blank">CVE-2026-64560</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+posix-cpu-timers: Prevent UAF caused by non-leader exec() race
+
+Wongi and Jungwoo decoded and reported a non-leader exec() related race
+which can result in an UAF:
+
+ sys_timer_delete()			exec()
+   posix_cpu_timer_del()
+   // Observes old leader
+   p = pid_task(pid, pid_type);		de_thread()
+   					  switch_leader();
+					  release_task(old_leader)
+					    __exit_signal(old_leader)
+					      sighand = lock(old_leader, sighand);
+					      posix_cpu_timers*_exit();
+   sighand = lock_task_sighand(p)	      unhash_task(old_leader);
+     sh = lock(p, sighand)	    	      old_leader->sighand = NULL;
+					      unlock(sighand);
+     (p->sighand == NULL)
+	unlock(sh)
+	return NULL;
+
+   // Returns without action
+   if(!sighand)
+      return 0;
+   free_posix_timer();
+
+This is "harmless" unless the deleted timer was armed and enqueued in
+p->signal because on exec() a TGID targeted timer is inherited.
+
+As sys_timer_delete() freed the underlying posix timer object
+run_posix_cpu_timers() or any timerqueue related add/delete operations on
+other timers will access the freed object's timerqueue node, which results
+in an UAF.
+
+There is a similar problem vs. posix_cpu_timer_set(). For regular posix
+timers it just transiently returns -ESRCH to user space, but for the use
+case in do_cpu_nanosleep() it's the same UAF just that the k_itimer is
+allocated on the stack.
+
+Also posix_cpu_timer_rearm() fails to rearm the timer, which means it stops
+to expire.
+
+While debating solutions Frederic pointed out another problem:
+
+   posix_cpu_timer_del(tmr)
+					__exit_signal(p)
+					  posix_cpu_timers*_exit(p);
+					  unhash_task(p);
+					  p->sighand = NULL;
+     sh = lock_task_sighand(p)
+        sighand = p->sighand;
+	if (!sighand)
+	    return NULL;
+	lock(sighand);
+
+     if (!sh)
+	WARN_ON_ONCE(timer_queued(tmr));
+
+On weakly ordered architectures it is not guaranteed that
+posix_cpu_timer_del() will observe the stores in posix_cpu_timers*_exit()
+when p->sighand is observed as NULL, which means the WARN() can be a false
+positive.
+
+Solve these issues by:
+
+  1) Changing the store in __exit_signal() to smp_store_release().
+
+  2) Adding a smp_acquire__after_ctrl_dep() into the !sighand path
+     of lock_task_sighand().
+
+  3) Creating a helper function for looking up the task and locking sighand
+     which does not return when sighand == NULL. Instead it retries the
+     task lookup and only if that fails it gives up.
+
+  4) Using that helper in the three affected functions.
+
+#1/#2 ensures that the reader side which observes sighand == NULL also
+observes all preceeding stores, i.e. the stores in posix_cpu_timers*_exit()
+and the ones in unhash_task().
+
+#3 ensures that the above described non-leader exec() situation is handled
+gracefully. When the task lookup returns the old leader, but sighand ==
+NULL then it retries. In the non-leader exec() case the subsequent task
+lookup will observe the new leader due to #1/#2. In normal exit() scenarios
+the subsequent lookup fails.
+
+When the task lookup fails, the function also checks whether the timer is
+still enqueued and issues a warning if that's the case. Unfortunately there
+is nothing which can be done about it, but as the task is already not
+longer visible the timer should not be accessed anymore. This check also
+requires memory ordering, which is not provided when the first lookup
+fails. To achieve that the check is preceeded by a smp_rmb() which pairs
+with the smp_wmb() in write_seqlock() in __exit_signal(). That ensures that
+the stores in posix_cpu_timers*_exit() are visible.
+
+The history of the non-leader exec() issue goes back to the early days of
+posix CPU timers, which stored a pointer to the group leader task in the
+timer. That obviously fails when a non-leader exec() switches the leader.
+commit e0a70217107e ("posix-cpu-timers: workaround to suppress the problems
+with mt exec") added a temporary workaround for that in 2010 which surv
+---truncated---</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-64559" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+s390/pkey: check length in pkey_verifyprotk ioctl
+
+explicitly check the buffer length request structure provided by
+user-space and fail, if it exceeds the buffer size.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64559" target="_blank">CVE-2026-64559</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+s390/pkey: Check length in PKEY_VERIFYPROTK ioctl
+
+Explicitly check the buffer length request structure provided by
+user-space and fail, if it exceeds the buffer size.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-64558" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+s390/pkey: check length in pkey_pckmo handler implementation
+
+explicitly check the length of the target buffer in the pkey_pckmo
+implementation of the key_to_protkey() handler function. the handler
+function fails, if the generated output data exceeds the length of the
+provided target buffer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64558" target="_blank">CVE-2026-64558</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+s390/pkey: Check length in pkey_pckmo handler implementation
+
+Explicitly check the length of the target buffer in the pkey_pckmo
+implementation of the key_to_protkey() handler function. The handler
+function fails, if the generated output data exceeds the length of the
+provided target buffer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-54727" data-description="proot-distro is a utility for managing proot containers. prior to version 5.1.6, proot-distro restore accepted hardlink entries whose linkname referenced another installed container and did not verify that the hardlink source container matched the destination container being restored, allowing a crafted restore archive to copy files between otherwise isolated containers. this issue is fixed in version 5.1.6.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54727" target="_blank">CVE-2026-54727</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>proot-distro is a utility for managing proot containers. Prior to version 5.1.6, proot-distro restore accepted hardlink entries whose linkname referenced another installed container and did not verify that the hardlink source container matched the destination container being restored, allowing a crafted restore archive to copy files between otherwise isolated containers. This issue is fixed in version 5.1.6.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-54693" data-description="zitadel is an open source identity management platform. from 2.43.0 through 2.71.19, from 3.0.0 until 3.4.11, and from 4.0.0 until 4.15.1, the email and phone self-management api paths in internal/command/user_v2_email.go, internal/command/user_v2_phone.go, and internal/command/user_v2_human.go allowed users to request returned verification codes without the required permission, allowing users to claim ownership of email addresses or phone numbers they do not control and bypass email-based or phone-based security policies. this issue is fixed in versions 3.4.11 and 4.15.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54693" target="_blank">CVE-2026-54693</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>ZITADEL is an open source identity management platform. From 2.43.0 through 2.71.19, from 3.0.0 until 3.4.11, and from 4.0.0 until 4.15.1, the email and phone self-management API paths in internal/command/user_v2_email.go, internal/command/user_v2_phone.go, and internal/command/user_v2_human.go allowed users to request returned verification codes without the required permission, allowing users to claim ownership of email addresses or phone numbers they do not control and bypass email-based or phone-based security policies. This issue is fixed in versions 3.4.11 and 4.15.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-54680" data-description="logging operator automates the deployment and configuration of kubernetes logging pipelines. prior to 6.6.0, the fluentd configuration renderer fluentrender in pkg/sdk/logging/model/render/fluent.go writes crd strings such as flow record_transformer.records values directly into fluent.conf without escaping, allowing a user who can create flow resources to inject a fluentd <match **> block using @type exec and execute arbitrary commands inside the fluentd aggregator. this issue is fixed in version 6.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54680" target="_blank">CVE-2026-54680</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
+                    <p>Logging operator automates the deployment and configuration of Kubernetes logging pipelines. Prior to 6.6.0, the Fluentd configuration renderer FluentRender in pkg/sdk/logging/model/render/fluent.go writes CRD strings such as Flow record_transformer.records values directly into fluent.conf without escaping, allowing a user who can create Flow resources to inject a Fluentd <match **> block using @type exec and execute arbitrary commands inside the Fluentd aggregator. This issue is fixed in version 6.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-54574" data-description="proot-distro is a utility for managing proot containers. prior to version 5.1.5, proot-distro install extracted plain tarball root filesystems through _extract_plain_tar() in proot_distro/commands/install.py and docker layers through _apply_layer() in proot_distro/helpers/docker.py without validating archive-controlled symlink targets in member.linkname, allowing a malicious archive to plant an absolute host-path symlink and write files through it onto the host filesystem. this issue is fixed in version 5.1.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54574" target="_blank">CVE-2026-54574</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>proot-distro is a utility for managing proot containers. Prior to version 5.1.5, proot-distro install extracted plain tarball root filesystems through _extract_plain_tar() in proot_distro/commands/install.py and Docker layers through _apply_layer() in proot_distro/helpers/docker.py without validating archive-controlled symlink targets in member.linkname, allowing a malicious archive to plant an absolute host-path symlink and write files through it onto the host filesystem. This issue is fixed in version 5.1.5.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-52791" data-description="fuse-overlayfs is an implementation of overlayfs in fuse for rootless containers. prior to 1.17, the release-1.x c branch preserves suid and sgid mode bits in main.c during open(o_trunc) and truncate handling on a copied-up file, allowing a low-privileged process to leave the upper-layer file with mode 4777. this issue is fixed in version 1.17.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52791" target="_blank">CVE-2026-52791</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>fuse-overlayfs is an implementation of overlayfs in FUSE for rootless containers. Prior to 1.17, the release-1.x C branch preserves SUID and SGID mode bits in main.c during open(O_TRUNC) and truncate handling on a copied-up file, allowing a low-privileged process to leave the upper-layer file with mode 4777. This issue is fixed in version 1.17.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-51992" data-description="sql injection vulnerability in clickhouse server versions <= 26.3.9.8 allows a remote attacker to execute arbitrary code via the create dictionaries function.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-51992" target="_blank">CVE-2026-51992</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>SQL Injection vulnerability in ClickHouse Server Versions <= 26.3.9.8 allows a remote attacker to execute arbitrary code via the create dictionaries function.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-20316" data-description="a vulnerability in the web interface of cisco secure firewall management center (fmc) software could allow an unauthenticated, remote attacker to log in to an affected device using a low-privileged account to access sensitive data within the impacted systems.
+
+this vulnerability is due to the presence of static user credentials for a low-privileged&nbsp;account. an attacker could exploit this vulnerability by using the account to log in to an affected system. a successful exploit could allow the attacker to log in to the affected system and access sensitive data as the low-privileged user.&nbsp;
+note:&nbsp;if the fmc management interface does not have public internet access, the attack surface that is associated with this vulnerability is reduced.&nbsp;&nbsp;
+cisco has assigned this security advisory a security impact rating (sir) of high rather than medium as the score indicates. the reason is that this vulnerability can be used with other cisco secure fmc software vulnerabilities to elevate privileges.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-20316" target="_blank">CVE-2026-20316</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability in the web interface of Cisco Secure Firewall Management Center (FMC) Software could allow an unauthenticated, remote attacker to log in to an affected device using a low-privileged account to access sensitive data within the impacted systems.
+
+This vulnerability is due to the presence of static user credentials for a low-privileged&nbsp;account. An attacker could exploit this vulnerability by using the account to log in to an affected system. A successful exploit could allow the attacker to log in to the affected system and access sensitive data as the low-privileged user.&nbsp;
+Note:&nbsp;If the FMC management interface does not have public internet access, the attack surface that is associated with this vulnerability is reduced.&nbsp;&nbsp;
+Cisco has assigned this security advisory a Security Impact Rating (SIR) of High rather than Medium as the score indicates. The reason is that this vulnerability can be used with other Cisco Secure FMC Software vulnerabilities to elevate privileges.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18257" data-description="improper validity period check for root issuer certificate in cyclonecrypto cryptographic wrapper of s2opc allows a certificate issued by this root issuer to be considered trusted">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18257" target="_blank">CVE-2026-18257</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.6</p>
+                    <p>Improper validity period check for root issuer certificate in CycloneCrypto cryptographic wrapper of S2OPC allows a certificate issued by this root issuer to be considered trusted</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18255" data-description="a flaw was found in quay. a user configured in global_readonly_super_users is able to view robot account tokens for repositories they are not a member of, allowing an attacker with read-only superuser privileges to impersonate any robot account.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18255" target="_blank">CVE-2026-18255</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
+                    <p>A flaw was found in Quay. A user configured in GLOBAL_READONLY_SUPER_USERS is able to view robot account tokens for repositories they are not a member of, allowing an attacker with read-only superuser privileges to impersonate any robot account.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16729" data-description="undici's setcookie function does not fully sanitize cookie attributes. in undici before 6.28.0, from 7.0.0 up to before 7.29.0, and from 8.0.0 up to before 8.9.0, a domain value is not checked for semicolons and entries in the unparsed array are not sanitized, so attacker-influenced input can inject additional cookie attributes. for example, a domain value containing a semicolon can append attributes such as samesite, and an unparsed entry can inject attributes such as httponly, without the caller setting them. applications that pass user-controlled input to these fields, such as multi-tenant or reverse-proxy servers that scope session cookies to a tenant-supplied domain, can have samesite csrf protections bypassed, or the secure, httponly, and samesite attributes forced, stripped, or overridden. the issue is fixed in undici 6.28.0, 7.29.0, and 8.9.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16729" target="_blank">CVE-2026-16729</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
+                    <p>undici's setCookie function does not fully sanitize cookie attributes. In undici before 6.28.0, from 7.0.0 up to before 7.29.0, and from 8.0.0 up to before 8.9.0, a domain value is not checked for semicolons and entries in the unparsed array are not sanitized, so attacker-influenced input can inject additional cookie attributes. For example, a domain value containing a semicolon can append attributes such as SameSite, and an unparsed entry can inject attributes such as HttpOnly, without the caller setting them. Applications that pass user-controlled input to these fields, such as multi-tenant or reverse-proxy servers that scope session cookies to a tenant-supplied domain, can have SameSite CSRF protections bypassed, or the Secure, HttpOnly, and SameSite attributes forced, stripped, or overridden. The issue is fixed in undici 6.28.0, 7.29.0, and 8.9.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15144" data-description="@fastify/rate-limit before 11.2.0 keys rate-limit buckets by the verbatim client ip string returned from request.ip. because a single ipv6 client can control a large address range (a /64 holds 2^64 distinct addresses) and the same address has multiple valid textual representations, an ipv6 capable client can defeat the rate-limit boundary by rotating addresses or by rewriting the same address in different forms. applications that use @fastify/rate-limit to protect endpoints such as authentication, password reset, otp delivery, or expensive api calls can be bypassed by ipv6 clients behind a proxy that surfaces ipv6 to the origin when trustproxy is enabled. the issue is fixed in @fastify/rate-limit 11.2.0, where the default key generator normalizes ipv6 addresses to their canonical form, collapses ipv4 mapped ipv6 to ipv4, and applies a configurable prefix mask (default /64) via a new ipv6subnet option.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15144" target="_blank">CVE-2026-15144</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>@fastify/rate-limit before 11.2.0 keys rate-limit buckets by the verbatim client IP string returned from request.ip. Because a single IPv6 client can control a large address range (a /64 holds 2^64 distinct addresses) and the same address has multiple valid textual representations, an IPv6 capable client can defeat the rate-limit boundary by rotating addresses or by rewriting the same address in different forms. Applications that use @fastify/rate-limit to protect endpoints such as authentication, password reset, OTP delivery, or expensive API calls can be bypassed by IPv6 clients behind a proxy that surfaces IPv6 to the origin when trustProxy is enabled. The issue is fixed in @fastify/rate-limit 11.2.0, where the default key generator normalizes IPv6 addresses to their canonical form, collapses IPv4 mapped IPv6 to IPv4, and applies a configurable prefix mask (default /64) via a new ipv6Subnet option.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-13697" data-description="undici's cache interceptor mishandles malformed cache-control private directives. in undici 7.0.0 up to before 7.29.0 and 8.0.0 up to before 8.9.0, a response carrying a degenerate qualified private directive, such as private set to an empty value, can be stored in the default shared cache and later served to a different caller with the same cache key, disclosing private response bodies and headers including set-cookie. separately, a cache-control header that combines an unqualified private directive with a qualified one triggers an uncaught typeerror in the cache-control parser, which rejects the request and, depending on the consumer's error handling, can terminate the process. both issues affect applications using the cache interceptor in shared mode, including the default configuration. the issues are fixed in undici 7.29.0 and 8.9.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13697" target="_blank">CVE-2026-13697</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>undici's cache interceptor mishandles malformed Cache-Control private directives. In undici 7.0.0 up to before 7.29.0 and 8.0.0 up to before 8.9.0, a response carrying a degenerate qualified private directive, such as private set to an empty value, can be stored in the default shared cache and later served to a different caller with the same cache key, disclosing private response bodies and headers including Set-Cookie. Separately, a Cache-Control header that combines an unqualified private directive with a qualified one triggers an uncaught TypeError in the cache-control parser, which rejects the request and, depending on the consumer's error handling, can terminate the process. Both issues affect applications using the cache interceptor in shared mode, including the default configuration. The issues are fixed in undici 7.29.0 and 8.9.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-60931" data-description="an insecure direct object reference (idor) in the employee compensation view function of infor global hr v11.24.10.01.33 allows unauthorized attackers to arbitrarily view the compensation information of other employees via a crafted get request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-60931" target="_blank">CVE-2025-60931</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-07-29 12:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An Insecure Direct Object Reference (IDOR) in the Employee Compensation View function of Infor Global HR v11.24.10.01.33 allows unauthorized attackers to arbitrarily view the compensation information of other employees via a crafted GET request.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-67193" data-description="xlight ftp server before 3.9.5 contains an information disclosure vulnerability that allows unauthenticated attackers to obtain the server's current gettickcount() value by sending a user command with a username ending in the :adm suffix. attackers can trigger the admin protocol path within the standard ftp listener pre-authentication to leak timing information from the ftp 331 response without requiring a separate port or configuration change.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67193" target="_blank">CVE-2026-67193</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-07-29 11:17:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 5.3</p>
                     <p>Xlight FTP Server before 3.9.5 contains an information disclosure vulnerability that allows unauthenticated attackers to obtain the server's current GetTickCount() value by sending a USER command with a username ending in the :adm suffix. Attackers can trigger the admin protocol path within the standard FTP listener pre-authentication to leak timing information from the FTP 331 response without requiring a separate port or configuration change.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67192" data-description="xlight ftp server before 3.9.5 contains a pre-authentication stack buffer overflow vulnerability that allows unauthenticated attackers to corrupt stack memory by sending malformed ssh packets when a gcm cipher is negotiated. attackers can craft packets with an unvalidated length field passed directly to the gcm decrypt function, overwriting the stack cookie and return address to potentially achieve remote code execution before any authentication occurs.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67192" target="_blank">CVE-2026-67192</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Xlight FTP Server before 3.9.5 contains a pre-authentication stack buffer overflow vulnerability that allows unauthenticated attackers to corrupt stack memory by sending malformed SSH packets when a GCM cipher is negotiated. Attackers can craft packets with an unvalidated length field passed directly to the GCM decrypt function, overwriting the stack cookie and return address to potentially achieve remote code execution before any authentication occurs.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67191" data-description="xlight ftp server before 3.9.5 contains a pre-authentication heap buffer overflow vulnerability that allows remote unauthenticated attackers to write past the end of a heap buffer by sending a malformed ssh client identification string. a logic error in the recv loop's termination condition uses an incorrect or operator where an and operator is required, enabling exploitation on any ssh or sftp connection before authentication occurs.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67191" target="_blank">CVE-2026-67191</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Xlight FTP Server before 3.9.5 contains a pre-authentication heap buffer overflow vulnerability that allows remote unauthenticated attackers to write past the end of a heap buffer by sending a malformed SSH client identification string. A logic error in the recv loop's termination condition uses an incorrect OR operator where an AND operator is required, enabling exploitation on any SSH or SFTP connection before authentication occurs.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67188" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67188" target="_blank">CVE-2026-67188</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66051" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66051" target="_blank">CVE-2026-66051</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:56 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-60113" data-description="ammos instrument toolkit (ait) deep space network (dsn) interface before 2.2.2 contains a missing authentication vulnerability in the space link extension (sle) interface manager that allows unauthenticated network attackers to access seven unprotected api routes by sending direct http requests with no credentials. attackers can reach the exposed sle endpoints to start or stop deep space network communication sessions, retrieve telemetry frame data, and inject arbitrary frames into active spacecraft links.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-60113" target="_blank">CVE-2026-60113</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>AMMOS Instrument Toolkit (AIT) Deep Space Network (DSN) Interface before 2.2.2 contains a missing authentication vulnerability in the Space Link Extension (SLE) interface manager that allows unauthenticated network attackers to access seven unprotected API routes by sending direct HTTP requests with no credentials. Attackers can reach the exposed SLE endpoints to start or stop Deep Space Network communication sessions, retrieve telemetry frame data, and inject arbitrary frames into active spacecraft links.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-60112" data-description="ammos instrument toolkit (ait) gui before 2.5.1 contains a missing authentication vulnerability that allows any unauthenticated network attacker to obtain a valid session and issue arbitrary spacecraft commands by calling sessions.create() without any credential check. attackers can exploit the unauthenticated session issuance in sessions.create() and subsequently invoke handle_cmd() to forward arbitrary commands directly to the ait command bus without any authentication gate between session creation and command dispatch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-60112" target="_blank">CVE-2026-60112</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>AMMOS Instrument Toolkit (AIT) GUI before 2.5.1 contains a missing authentication vulnerability that allows any unauthenticated network attacker to obtain a valid session and issue arbitrary spacecraft commands by calling Sessions.create() without any credential check. Attackers can exploit the unauthenticated session issuance in Sessions.create() and subsequently invoke handle_cmd() to forward arbitrary commands directly to the AIT command bus without any authentication gate between session creation and command dispatch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-54735" data-description="prebid server is an open-source solution for running real-time advertising auctions in the cloud. prior to version 4.4.0, certain bidder adapters in prebid server interpolate user-supplied parameters into outbound request urls without properly validating host and subdomain values, allowing crafted bid request parameters to cause server-side requests to unintended destinations and potentially expose internal network services or sensitive server endpoints. this issue is fixed in version 4.4.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54735" target="_blank">CVE-2026-54735</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>Prebid Server is an open-source solution for running real-time advertising auctions in the cloud. Prior to version 4.4.0, certain bidder adapters in Prebid Server interpolate user-supplied parameters into outbound request URLs without properly validating host and subdomain values, allowing crafted bid request parameters to cause server-side requests to unintended destinations and potentially expose internal network services or sensitive server endpoints. This issue is fixed in version 4.4.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-54082" data-description="verapdf validation model is an implementation of the verapdf validation model. from 1.25.73 until 1.30.2 and 1.31.71, verapdf-validation contains an xml external entity vulnerability in pdfavalidator.validate(...) and gfpdacroform.getdynamicrender(), where default documentbuilderfactory parsing of rich-text annotation or form-field values and xfa configurations in untrusted pdfs can allow local file disclosure and outbound network requests. this issue is fixed in versions 1.30.2 and 1.31.71.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54082" target="_blank">CVE-2026-54082</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>veraPDF validation model is an implementation of the veraPDF validation model. From 1.25.73 until 1.30.2 and 1.31.71, veraPDF-validation contains an XML External Entity vulnerability in PDFAValidator.validate(...) and GFPDAcroForm.getdynamicRender(), where default DocumentBuilderFactory parsing of rich-text annotation or form-field values and XFA configurations in untrusted PDFs can allow local file disclosure and outbound network requests. This issue is fixed in versions 1.30.2 and 1.31.71.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-54081" data-description="verapdf pdf parser is a pdf parser for verapdf. prior to 1.30.2 and 1.31.23, verapdf-parser contains a denial-of-service vulnerability in verapdf-parser/src/main/java/org/verapdf/pd/font/type1/type1fontprogram.java and verapdf-parser/src/main/java/org/verapdf/parser/postscript/psoperator.java, where a crafted type 1 font /fontdescriptor /fontfile program can execute unbounded postscript array allocation, a zero-increment for loop, or self-recursive toexecute user dictionary lookups and exhaust validator memory, cpu, or stack. this issue is fixed in versions 1.30.2 and 1.31.23.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54081" target="_blank">CVE-2026-54081</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>veraPDF PDF parser is a PDF parser for veraPDF. Prior to 1.30.2 and 1.31.23, veraPDF-parser contains a denial-of-service vulnerability in veraPDF-parser/src/main/java/org/verapdf/pd/font/type1/Type1FontProgram.java and veraPDF-parser/src/main/java/org/verapdf/parser/postscript/PSOperator.java, where a crafted Type 1 font /FontDescriptor /FontFile program can execute unbounded PostScript array allocation, a zero-increment for loop, or self-recursive toExecute user dictionary lookups and exhaust validator memory, CPU, or stack. This issue is fixed in versions 1.30.2 and 1.31.23.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-54080" data-description="verapdf pdf parser is a pdf parser for verapdf. prior to 1.30.2 and 1.31.23, verapdf-parser contains a denial-of-service vulnerability in verapdf-parser/src/main/java/org/verapdf/pd/font/cmap/cmapparser.java and verapdf-parser/src/main/java/org/verapdf/parser/postscript/psoperator.java, where a crafted type 0 font /encoding or /tounicode cmap stream can execute unbounded postscript array allocation or a zero-increment for loop and exhaust validator memory or cpu. this issue is fixed in versions 1.30.2 and 1.31.23.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54080" target="_blank">CVE-2026-54080</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>veraPDF PDF parser is a PDF parser for veraPDF. Prior to 1.30.2 and 1.31.23, veraPDF-parser contains a denial-of-service vulnerability in veraPDF-parser/src/main/java/org/verapdf/pd/font/cmap/CMapParser.java and veraPDF-parser/src/main/java/org/verapdf/parser/postscript/PSOperator.java, where a crafted Type 0 font /Encoding or /ToUnicode CMap stream can execute unbounded PostScript array allocation or a zero-increment for loop and exhaust validator memory or CPU. This issue is fixed in versions 1.30.2 and 1.31.23.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-54079" data-description="verapdf validation provides pdf/a and pdf/ua validation, feature reporting, and metadata repair. from 1.17.35 until 1.30.2 and 1.31.71, verapdf-validation contains an xml external entity (xxe) vulnerability in validation-model/src/main/java/org/verapdf/gf/model/impl/pd/gfpdacroform.java in the getdynamicrender() method, where a crafted pdf containing a malicious xfa stream can cause external entity expansion during pdf/ua-1 validation and allow local file disclosure or outbound server-side requests. this issue is fixed in versions 1.30.2 and 1.31.71.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54079" target="_blank">CVE-2026-54079</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>veraPDF validation provides PDF/A and PDF/UA validation, feature reporting, and metadata repair. From 1.17.35 until 1.30.2 and 1.31.71, veraPDF-validation contains an XML External Entity (XXE) vulnerability in validation-model/src/main/java/org/verapdf/gf/model/impl/pd/GFPDAcroForm.java in the getdynamicRender() method, where a crafted PDF containing a malicious XFA stream can cause external entity expansion during PDF/UA-1 validation and allow local file disclosure or outbound server-side requests. This issue is fixed in versions 1.30.2 and 1.31.71.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-54078" data-description="verapdf validation model is an implementation of the verapdf validation model. from 1.25.73 until 1.30.2 and 1.31.71, verapdf-validation contains an xml external entity (xxe) vulnerability in validation-model/src/main/java/org/verapdf/gf/model/tools/dictionarykeyshelper.java in getrichtextstringorstreamentrystringrepresentation(), where a crafted pdf containing a malicious rich-text /rc or /rv entry can cause external entity expansion and reflect local file contents into the validation report. this issue is fixed in versions 1.30.2 and 1.31.71.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54078" target="_blank">CVE-2026-54078</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>veraPDF validation model is an implementation of the veraPDF validation model. From 1.25.73 until 1.30.2 and 1.31.71, veraPDF-validation contains an XML External Entity (XXE) vulnerability in validation-model/src/main/java/org/verapdf/gf/model/tools/DictionaryKeysHelper.java in getRichTextStringOrStreamEntryStringRepresentation(), where a crafted PDF containing a malicious rich-text /RC or /RV entry can cause external entity expansion and reflect local file contents into the validation report. This issue is fixed in versions 1.30.2 and 1.31.71.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-50558" data-description="penelope shell handler is a post-exploitation shell handler for authorized security testing. prior to 0.20.0, the unix download() implementation in penelope.py used tar.extractall(local_download_folder) on tar archives returned by remote sessions without validating member paths, allowing a malicious or compromised session to write files outside the intended download directory and potentially overwrite ~/.penelope/peneloperc. this issue is fixed in version 0.20.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50558" target="_blank">CVE-2026-50558</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>Penelope Shell Handler is a post-exploitation shell handler for authorized security testing. Prior to 0.20.0, the Unix download() implementation in penelope.py used tar.extractall(local_download_folder) on tar archives returned by remote sessions without validating member paths, allowing a malicious or compromised session to write files outside the intended download directory and potentially overwrite ~/.penelope/peneloperc. This issue is fixed in version 0.20.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-17550" data-description="a maliciously crafted dwg or dxf file, when parsed through autodesk autocad, can force an out-of-bounds read vulnerability. a malicious actor can leverage this vulnerability to cause a crash or disclose sensitive information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17550" target="_blank">CVE-2026-17550</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A maliciously crafted DWG or DXF file, when parsed through Autodesk AutoCAD, can force an Out-of-Bounds Read vulnerability. A malicious actor can leverage this vulnerability to cause a crash or disclose sensitive information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16543" data-description="kong operator's embedded kong kubernetes ingress controller (kic) allows a user with namespace-scoped secret creation privileges to cause a cluster-wide ingress configuration denial of service. the embedded kic collects ca-certificate secrets across all watched namespaces using a label selector alone, without ingress-class or namespace restrictions. the ca-certificate primary key is derived from a user-supplied field in the secret. duplicate ca-certificate ids cause kong gateway to reject the entire configuration document and halting all ingress changes cluster-wide.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16543" target="_blank">CVE-2026-16543</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Kong Operator's embedded Kong Kubernetes Ingress Controller (KIC) allows a user with namespace-scoped Secret creation privileges to cause a cluster-wide ingress configuration denial of service. The embedded KIC collects CA-certificate Secrets across all watched namespaces using a label selector alone, without ingress-class or namespace restrictions. The CA-certificate primary key is derived from a user-supplied field in the Secret. Duplicate CA-certificate IDs cause Kong Gateway to reject the entire configuration document and halting all ingress changes cluster-wide.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16465" data-description="a maliciously crafted dwg or dxf file, when parsed through autodesk autocad, can force an out-of-bounds read vulnerability. a malicious actor can leverage this vulnerability to cause a crash or disclose sensitive information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16465" target="_blank">CVE-2026-16465</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>A maliciously crafted DWG or DXF file, when parsed through Autodesk AutoCAD, can force an Out-of-Bounds Read vulnerability. A malicious actor can leverage this vulnerability to cause a crash or disclose sensitive information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16463" data-description="a maliciously crafted dxf file, when parsed through autodesk autocad, can force a heap-based overflow vulnerability. a malicious actor can leverage this vulnerability to cause a crash, read sensitive data, or execute arbitrary code in the context of the current process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16463" target="_blank">CVE-2026-16463</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>A maliciously crafted DXF file, when parsed through Autodesk AutoCAD, can force a Heap-Based Overflow vulnerability. A malicious actor can leverage this vulnerability to cause a crash, read sensitive data, or execute arbitrary code in the context of the current process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15228" data-description="kong kubernetes ingress controller (kic) allows a user with namespace-scoped secret creation privileges to cause a cluster-wide ingress configuration denial of service. kic collects ca-certificate secrets across all watched namespaces using a label selector alone, without ingress-class or namespace restrictions. the ca-certificate primary key is derived from a user-supplied field in the secret. duplicate ca-certificate ids cause kong gateway to reject the entire configuration document and halting all ingress changes cluster-wide.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15228" target="_blank">CVE-2026-15228</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 11:17:49 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Kong Kubernetes Ingress Controller (KIC) allows a user with namespace-scoped Secret creation privileges to cause a cluster-wide ingress configuration denial of service. KIC collects CA-certificate Secrets across all watched namespaces using a label selector alone, without ingress-class or namespace restrictions. The CA-certificate primary key is derived from a user-supplied field in the Secret. Duplicate CA-certificate IDs cause Kong Gateway to reject the entire configuration document and halting all ingress changes cluster-wide.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66724" data-description="mwdb core versions >=2.0.0 and <2.19.0 contain a missing authorization vulnerability in the deprecated config and blob upload endpoints. these endpoints accept the undocumented post method, which bypasses the capability checks applied to the documented put method. this allows any authenticated user without the adding_configs or adding_blobs capabilities to upload config and text blob objects to the system. the impact is limited to adding new config and blob objects. this issue has been fixed in version 2.19.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66724" target="_blank">CVE-2026-66724</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-07-29 10:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MWDB Core versions >=2.0.0 and <2.19.0 contain a missing authorization vulnerability in the deprecated config and blob upload endpoints. These endpoints accept the undocumented POST method, which bypasses the capability checks applied to the documented PUT method. This allows any authenticated user without the adding_configs or adding_blobs capabilities to upload config and text blob objects to the system. The impact is limited to adding new config and blob objects. This issue has been fixed in version 2.19.0</p>
                 </div>
         
             </div>
