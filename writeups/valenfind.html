@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ValenFind is a Flask-based “secure dating” web application exposed on TCP/5000. Authenticated users can load profile layout templates through an API parameter t">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Valenfind — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Valenfind — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Valenfind — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-17</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.67.137.234   <strong>Assessment Date:</strong> 2026-07-17   <strong>Classification:</strong> CONFIDENTIAL (lab / TryHackMe)</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>ValenFind is a Flask-based “secure dating” web application exposed on TCP/5000. Authenticated users can load profile layout templates through an API parameter that is joined unsafely to a filesystem path, enabling arbitrary file read on the host. Application source recovered via LFI disclosed a hardcoded admin API token used to download the SQLite user database. The database stored passwords in plaintext and embedded the engagement flag in the privileged <code>cupid</code> account’s address field. No SSH foothold was required; the room objective was fully achieved through the web attack path.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.137.234</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22/tcp (SSH), 5000/tcp (HTTP)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>ValenFind Flask app (Werkzeug 3.0.1, Python 3.12.3); OpenSSH 9.6p1</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External lab penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Ubuntu Linux (TTL 62 over THM VPN); app process ran as root</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Register/login → LFI via /api/fetch_layout?layout= → read app.py
+  → recover ADMIN_API_KEY → /api/admin/export_db → cupid.db
+  → cupid.address contains FLAG</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Path traversal / arbitrary file read (<code>/api/fetch_layout</code>)</td>
+<td>8.6</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Hardcoded admin API key → full database export</td>
+<td>9.1</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Plaintext password storage (SQLite)</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Sensitive PII + flag material stored in application DB</td>
+<td>6.5</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Application service runs as root</td>
+<td>5.5</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Path Traversal / Arbitrary File Read via Layout API</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.6)   <strong>Affected Component:</strong> <code>GET /api/fetch_layout?layout=</code></p>
+<p><strong>Description:</strong>   Profile pages load theme HTML via a client-side call to <code>/api/fetch_layout</code>. The server builds the file path with <code>os.path.join(base_dir, layout_file)</code> and opens the result without normalizing or restricting path components. Absolute paths and <code>../</code> sequences allow reading any world-readable (and, because the process runs as root, nearly any) file on the system. Weak denylists block only <code>*.db</code> / <code>cupid.db</code> and the substring <code>seeder.py</code>.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Authenticate (register + login), then:
+curl -b &#x27;session=&lt;cookie&gt;&#x27; \
+  &#x27;http://10.67.137.234:5000/api/fetch_layout?layout=/etc/passwd&#x27;
+curl -b &#x27;session=&lt;cookie&gt;&#x27; \
+  &#x27;http://10.67.137.234:5000/api/fetch_layout?layout=../../app.py&#x27;</code></pre>
+<p><strong>Impact:</strong>   Source code disclosure, configuration leakage, credential and secret recovery, and broader host file access enabling further compromise.</p>
+<p><strong>CVSS Justification:</strong>   AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N — network reachable after low-privilege registration; confidentiality high; scope changed (reads outside app boundary).</p>
+<hr>
+<h3>F-02: Hardcoded Admin Token Enables Unauthenticated Database Export</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.1)   <strong>Affected Component:</strong> <code>GET /api/admin/export_db</code> + <code>ADMIN_API_KEY</code> in <code>app.py</code></p>
+<p><strong>Description:</strong>   The application embeds <code>ADMIN_API_KEY = &quot;CUPID_MASTER_KEY_2024_XOXO&quot;</code>. Presenting this value in the <code>X-Valentine-Token</code> header returns the full SQLite database as an attachment. The endpoint does not require a user session—only knowledge of the static secret, which LFI trivially provides.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -H &#x27;X-Valentine-Token: CUPID_MASTER_KEY_2024_XOXO&#x27; \
+  http://10.67.137.234:5000/api/admin/export_db -o cupid.db
+sqlite3 cupid.db &#x27;SELECT username,password,address FROM users;&#x27;</code></pre>
+<p><strong>Impact:</strong>   Complete compromise of all user credentials and profile data, including the room flag stored in the <code>cupid</code> row.</p>
+<p><strong>CVSS Justification:</strong>   AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N — once the key is known, unauthenticated full DB download; high confidentiality and integrity risk (credential reuse / account takeover).</p>
+<hr>
+<h3>F-03: Plaintext Password Storage</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> SQLite <code>users.password</code> column; login compares cleartext.</p>
+<p><strong>Description:</strong>   Registration and seeding store passwords without hashing. Any database read (export, LFI of DB if filters fail, backups) immediately yields usable credentials for every account.</p>
+<p><strong>Impact:</strong>   Immediate account takeover for all users; high risk of password reuse against SSH or other services.</p>
+<p><strong>CVSS Justification:</strong>   AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N — requires prior access path but impact is total credential disclosure and account control.</p>
+<hr>
+<h3>F-04: Sensitive Personal Data and Flag in User Profiles</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.5)   <strong>Affected Component:</strong> Profile fields (<code>real_name</code>, <code>email</code>, <code>phone_number</code>, <code>address</code>, <code>bio</code>)</p>
+<p><strong>Description:</strong>   The app encourages collection of real name, email, phone, and home address. The privileged <code>cupid</code> account’s <code>address</code> field contained the engagement flag. Combined with F-02, all PII is bulk-exfiltrable.</p>
+<p><strong>Impact:</strong>   Privacy breach for all users; secret material stored as ordinary profile data.</p>
+<p><strong>CVSS Justification:</strong>   AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N — confidentiality of personal data without requiring multi-step privilege elevation beyond DB access.</p>
+<hr>
+<h3>F-05: Web Application Runs as Root</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.5)   <strong>Affected Component:</strong> systemd service <code>valenfind</code> / process environment</p>
+<p><strong>Description:</strong>   <code>/proc/self/environ</code> and process metadata show the Flask app executing as <code>USER=root</code>. Any future RCE or additional file-write bug would yield immediate root compromise.</p>
+<p><strong>Impact:</strong>   Elevates impact of all application bugs from app-user to full system control.</p>
+<p><strong>CVSS Justification:</strong>   AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N scored as a compounding misconfiguration; standalone local impact medium, critical when chained with RCE.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01:</strong> Resolve layout names against an allowlist of known theme files; use <code>os.path.realpath</code> and enforce a fixed base directory prefix before <code>open()</code>. Never pass raw user input into path joins.</li>
+<li><strong>F-02:</strong> Remove hardcoded secrets; load admin credentials from a secrets manager or environment variables; require strong mutual auth (mTLS or short-lived tokens) and session-bound admin roles for export endpoints.</li>
+<li><strong>F-03:</strong> Hash passwords with a modern KDF (bcrypt/argon2id); never store or compare plaintext.</li>
+<li><strong>F-04:</strong> Minimize PII collection; do not store secrets/flags as profile fields; encrypt sensitive columns at rest where required.</li>
+<li><strong>F-05:</strong> Run the app under a dedicated unprivileged service account with least privilege and a hardened systemd unit (<code>NoNewPrivileges</code>, private tmp, restricted filesystem).</li>
+<li><strong>General:</strong> Disable verbose path error messages; add authentication rate limiting; rotate all exposed credentials after this assessment.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>Flag (web / cupid.address):</strong> <code>THM{v1be_c0ding_1s_n0t_my_cup_0f_t3a}</code></li>
+</ul>
+<p>(Only flag for this room per engagement confirmation.)</p>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] No reverse shells or implants left on target</li>
+<li>[x] No files uploaded to target filesystem</li>
+<li>[x] Local temp artifacts under <code>/tmp/vf_*</code> removed</li>
+<li>[x] Journal and loot updated (<code>loot/flag.txt</code>, <code>loot/creds.txt</code>, <code>loot/app.py</code>, <code>loot/cupid.db</code>)</li>
+<li>[ ] Lab test account <code>pentester1</code> remains in application DB (no admin delete UI used)</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

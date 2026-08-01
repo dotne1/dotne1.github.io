@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target running Ubuntu 18.04.4 with a custom Go web server and OpenSSH. The assessment identified 5 security vulnera">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Wonderland — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Wonderland — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Wonderland — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">July 7, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.67.130.30   <strong>Assessment Date:</strong> July 7, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target running Ubuntu 18.04.4 with a custom Go web server and OpenSSH. The assessment identified 5 security vulnerabilities ranging from Critical to Medium severity. Initial access was gained through hidden credentials discovered in the web application, after which Python import hijacking, insecure sudo configuration, SUID binary abuse, and Linux capabilities abuse were chained to achieve full root compromise.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.67.130.30</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22 (SSH), 80 (HTTP)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>OpenSSH 7.6p1, Golang net/http server, Python 3.6.9</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Ubuntu 18.04.4 LTS (GNU/Linux 4.15.0-101 x86_64)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Hidden Credentials in Web Application Source</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Sudo Misconfiguration Allowing Privilege Escalation</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Python Import Hijacking via Sudo</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>SUID Binary with Unsafe system() Call</td>
+<td>7.0</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Linux Capability cap_setuid+ep on Executable</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: Hidden Credentials in Web Application Source</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>GET /r/a/b/b/i/t/</code></p>
+<p><strong>Description:</strong>   The web application contains a hidden HTML paragraph element (<code>&lt;p style=&quot;display:none&quot;&gt;</code>) on the path <code>/r/a/b/b/i/t/</code> that exposes valid SSH credentials (<code>alice:HowDothTheLittleCrocodileImproveHisShiningTail</code>). The path is obtained by traversing a directory-based puzzle at <code>/r/</code> that spells out "rabbit" one letter at a time.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>curl -s http://10.67.130.30/r/a/b/b/i/t/ | grep display:none</code></pre>
+<p><strong>Impact:</strong> An attacker can SSH into the target as the <code>alice</code> user, gaining initial access to the system.</p>
+<p><strong>CVSS Justification:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H — Network-based, low complexity, no privileges required, high CIA impact.</p>
+<hr>
+<h3>F-02: Sudo Misconfiguration Allowing Privilege Escalation</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Affected Component:</strong> <code>/etc/sudoers.d/alice</code></p>
+<p><strong>Description:</strong>   The user <code>alice</code> is allowed to execute <code>/usr/bin/python3.6</code> as the <code>rabbit</code> user via sudo without a password. The rule permits execution of a specific Python script, but the Python interpreter itself can be leveraged to execute arbitrary code as <code>rabbit</code> through module import hijacking.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>cat /etc/sudoers.d/alice
+# alice ALL = (rabbit) /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py</code></pre>
+<p><strong>Impact:</strong> Allows escalation from <code>alice</code> to <code>rabbit</code> user.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Local access, low complexity, requires alice access.</p>
+<hr>
+<h3>F-03: Python Import Hijacking via Sudo</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Affected Component:</strong> <code>/home/alice/walrus_and_the_carpenter.py</code></p>
+<p><strong>Description:</strong>   The Python script <code>walrus_and_the_carpenter.py</code> (owned by root) imports the <code>random</code> module without using a fully-qualified path. Python's <code>sys.path</code> starts with <code>&#x27;&#x27;</code> (current directory), so a malicious <code>random.py</code> placed in <code>/home/alice/</code> is imported before the system library. When the script is executed via <code>sudo -u rabbit</code>, the malicious code runs as <code>rabbit</code>.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code># Create /home/alice/random.py containing:
+import os
+os.system(&quot;cp /bin/bash /tmp/rshell &amp;&amp; chmod 4755 /tmp/rshell&quot;)
+
+# Then execute:
+sudo -u rabbit /usr/bin/python3.6 /home/alice/walrus_and_the_carpenter.py</code></pre>
+<p><strong>Impact:</strong> Arbitrary code execution as the <code>rabbit</code> user.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Local, low complexity, requires alice access.</p>
+<hr>
+<h3>F-04: SUID Binary with Unsafe system() Call</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.0)   <strong>Affected Component:</strong> <code>/home/rabbit/teaParty</code></p>
+<p><strong>Description:</strong>   The <code>/home/rabbit/teaParty</code> binary has the SUID bit set (owner: root) and calls <code>setuid(1003)</code> to drop privileges to the <code>hatter</code> user, then invokes <code>system(&quot;/bin/echo -n &#x27;Probably by &#x27; &amp;&amp; date --date=&#x27;next hour&#x27; -R&quot;)</code>. The <code>date</code> command is called without a full path, allowing PATH hijacking. A malicious <code>date</code> script placed in a directory earlier in <code>$PATH</code> will be executed as the <code>hatter</code> user.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>export PATH=/tmp:$PATH
+# Create /tmp/date:
+cp /bin/bash /tmp/hshell &amp;&amp; chmod 4755 /tmp/hshell
+/home/rabbit/teaParty
+# /tmp/hshell is now SUID hatter</code></pre>
+<p><strong>Impact:</strong> Privilege escalation from <code>rabbit</code> to <code>hatter</code> user.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Local, low complexity, requires rabbit access.</p>
+<hr>
+<h3>F-05: Linux Capability cap_setuid+ep on Executable</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Affected Component:</strong> <code>/usr/bin/perl</code></p>
+<p><strong>Description:</strong>   The <code>/usr/bin/perl</code> binary has the <code>cap_setuid+ep</code> capability set, which allows the program to change its UID to any value via <code>setuid()</code>. The binary is group-owned by <code>hatter</code> with group execute permission. When executed by the <code>hatter</code> user, perl can call <code>POSIX::setuid(0)</code> to become root and execute arbitrary commands.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>/usr/bin/perl -e &#x27;use POSIX; setuid(0); system(&quot;cat /home/alice/root.txt&quot;)&#x27;</code></pre>
+<p><strong>Impact:</strong> Full root compromise. Allows reading <code>/root/user.txt</code> and <code>/home/alice/root.txt</code>.</p>
+<p><strong>CVSS Justification:</strong> AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H — Local, low complexity, requires hatter access.</p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Web Application (hidden creds) → SSH alice
+  → sudo -u rabbit + Python import hijack → rabbit user
+    → teaParty SUID + PATH hijack → hatter user
+      → perl cap_setuid → root</code></pre>
+<hr>
+<h2>6. Remediation Recommendations</h2>
+<ol>
+<li><strong>F-01:</strong> Remove sensitive information from web-accessible files. Use secure storage for credentials.</li>
+<li><strong>F-02:</strong> Restrict sudo rules to only allow execution of the specific script with no ability to modify its execution environment.</li>
+<li><strong>F-03:</strong> Use absolute module imports or set <code>PYTHONPATH</code> securely. The script's directory should not be writable by lower-privilege users.</li>
+<li><strong>F-04:</strong> Use absolute paths for all commands in <code>system()</code> calls. Do not rely on PATH. Consider dropping privileges more securely.</li>
+<li><strong>F-05:</strong> Remove unnecessary capabilities from binaries. The <code>cap_setuid+ep</code> capability on <code>perl</code> is equivalent to full root access for any user who can execute it.</li>
+</ol>
+<hr>
+<h2>7. Flags Obtained</h2>
+<ul>
+<li><strong>user.txt:</strong> <code>thm{&quot;Curiouser and curiouser!&quot;}</code></li>
+<li><strong>root.txt:</strong> <code>thm{Twinkle, twinkle, little bat! How I wonder what you&#x27;re at!}</code></li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

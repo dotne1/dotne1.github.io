@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the CorpNet NOC portal at 10.66.182.237:5050. The assessment identified four security vulnerabilities that, when chaine">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">May 30–31, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Client:</strong> Silent Monitor Corp - CorpNet NOC   <strong>Assessment Date:</strong> May 30–31, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the CorpNet NOC portal at 10.66.182.237:5050. The assessment identified four security vulnerabilities that, when chained, allowed an unauthenticated attacker to achieve full remote compromise of the host. Initial access was gained via SQL injection in the login form, followed by command injection in a health-check endpoint that allowed a reverse shell. Lateral movement to the <code>sysadmin</code> account used credentials found in a configuration file on the server, and privilege escalation to <code>root</code> was achieved by cracking a KeePass credential database whose master password was found in the rockyou wordlist.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.66.182.237</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22 (SSH), 5050 (HTTP - CorpNet NOC)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>CorpNet NOC Portal (Flask/Werkzeug 2.0.2), OpenSSH 8.9p1</td>
+</tr>
+<tr>
+<td>OS</td>
+<td>Ubuntu 22.04.3 LTS (kernel 6.8.0-1017-aws)</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>SQL Injection in Login Form</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Command Injection in Health Check Endpoint</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Hardcoded Credentials in Application Config</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>KeePass Database with Weak Master Password</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: SQL Injection in Login Form</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>POST /internal</code> — Login endpoint</p>
+<p><strong>Description:</strong>   The login form accepts unsanitized <code>username</code> and <code>password</code> POST parameters and passes them directly into a SQLite query string. No parameterized queries or input sanitization is implemented. An attacker can bypass authentication entirely by injecting SQL into the <code>username</code> field.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>POST /internal HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&#x27; OR &#x27;1&#x27;=&#x27;1&#x27; --&amp;password=anything</code></pre>
+<p>The server returns a session cookie granting operator-level access:</p>
+<pre><code>Set-Cookie: session=eyJyb2xlIjoib3BlcmF0b3IiLCJ1c2VyIjoibmV0b3BzIn0.ZltV5A.7QedPUPE90SJQjBz2nLl9JgZtSs; HttpOnly; Path=/</code></pre>
+<p><strong>Impact:</strong> Unauthenticated attacker gains authenticated access to the NOC dashboard and all restricted functionality, including the vulnerable health-check feature.</p>
+<p><strong>Recommendation:</strong> Use parameterized queries (e.g., <code>cursor.execute(&quot;SELECT ... WHERE username = ?&quot;, (username,))</code>). Never concatenate user input into SQL strings.</p>
+<hr>
+<h3>F-02: Command Injection in Health Check Endpoint</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Affected Component:</strong> <code>POST /internal/health</code> — Health check endpoint</p>
+<p><strong>Description:</strong>   The health check feature accepts a <code>target</code> IP/hostname POST parameter and passes it unsanitized into a <code>subprocess.Popen(..., shell=True)</code> call executing <code>ping -c 2 -W 1 &lt;target&gt;</code>. A character filter blocks <code>;</code>, <code>|</code>, `<code> </code> `<code>, </code>$<code>, and </code>&<code>, but the newline character (</code>\n<code> / </code>%0A`) is not blocked, allowing command chaining.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>POST /internal/health HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+target=127.0.0.1%0A&lt;COMMAND&gt;</code></pre>
+<p>Arbitrary commands execute as the <code>www-data</code> user.</p>
+<p><strong>Impact:</strong> Full execution of arbitrary commands on the server as <code>www-data</code>, enabling lateral movement, data exfiltration, and backdoor installation.</p>
+<p><strong>Recommendation:</strong> Do not use <code>shell=True</code> with subprocess. Parse and validate the target input rigorously — accept only known-good IP addresses or hostnames. Use <code>subprocess.Popen([&quot;ping&quot;, &quot;-c&quot;, &quot;2&quot;, &quot;-W&quot;, &quot;1&quot;, target])</code> with a pre-validated target.</p>
+<hr>
+<h3>F-03: Hardcoded Credentials in Application Config</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>/opt/netops/secret.config</code></p>
+<p><strong>Description:</strong>   The backup-agent configuration file is stored in the application directory and is readable by the <code>www-data</code> user (the web application user). It contains SSH credentials for the <code>sysadmin</code> account in plaintext.</p>
+<p><strong>Evidence:</strong></p>
+<pre><code>[backup_agent]
+username = sysadmin
+password = S3cur3Backup$Acc3ss!</code></pre>
+<p><strong>Impact:</strong> An attacker who has achieved command execution as <code>www-data</code> can read this file and gain SSH access as <code>sysadmin</code>, a user with significantly more system privileges.</p>
+<p><strong>Recommendation:</strong> Store secrets in an encrypted vault or a dedicated secrets manager. Restrict file permissions on any configuration files that must contain credentials. Do not co-locate secrets with web application code.</p>
+<hr>
+<h3>F-04: KeePass Database with Weak Master Password</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Affected Component:</strong> <code>/home/sysadmin/backups/infrastructure.kdbx</code></p>
+<p><strong>Description:</strong>   A KeePass 4.0 credential database containing the root password is stored in the <code>sysadmin</code> home directory with a master password (<code>spring</code>) that appears in the rockyou wordlist (rank ~2301). This database is world-readable by the <code>sysadmin</code> user and contains the <code>root</code> account password.</p>
+<p><strong>Evidence (KeePass entry):</strong></p>
+<table>
+<thead><tr>
+<th>Field</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>Title</td>
+<td>Root User Password - Sensitive</td>
+</tr>
+<tr>
+<td>Username</td>
+<td>root</td>
+</tr>
+<tr>
+<td>Password</td>
+<td><code>S3cur3P4ss0nK33p4ss</code></td>
+</tr>
+</tbody></table>
+<p><strong>Impact:</strong> Any user who can read this database file and crack the password (e.g., by exfiltrating it and running it against rockyou) gains root-level access to the host.</p>
+<p><strong>Recommendation:</strong> Enforce a strong password policy for password managers (minimum 16 characters, high entropy, not present in common wordlists). Restrict file permissions on the KeePass database. Use multi-factor authentication or SSH key-based access for root.</p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Unauthenticated ─► F-01: SQLi in login ─► Authenticated (operator)
+                            │
+                            ▼
+                  F-02: Command injection in /internal/health
+                            │
+                            ▼
+                  Shell as www-data (read secret.config)
+                            │
+                            ▼
+                  F-03: SSH as sysadmin (password reuse)
+                            │
+                            ▼
+                  Exfiltrate /home/sysadmin/backups/infrastructure.kdbx
+                            │
+                            ▼
+                  F-04: Crack KeePass DB (password: &quot;spring&quot; ─ rockyou)
+                            │
+                            ▼
+                  su - root ─► /root/root.txt</code></pre>
+<hr>
+<h2>6. Remediation Priority</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-01</td>
+<td>Use parameterized queries for all database operations</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-02</td>
+<td>Remove <code>shell=True</code> and validate all user input passed to subprocess</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F-03</td>
+<td>Rotate all exposed credentials; store secrets in a vault or environment variables</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F-04</td>
+<td>Rotate root password; enforce strong master passwords for credential databases</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Appendix: Compromised Credentials</h2>
+<p>The following credentials were compromised during testing and must be rotated immediately:</p>
+<table>
+<thead><tr>
+<th>Account</th>
+<th>Type</th>
+<th>Credential</th>
+</tr></thead><tbody>
+<tr>
+<td>netops</td>
+<td>Web app</td>
+<td><code>C0rp$N3tS3cur3!</code></td>
+</tr>
+<tr>
+<td>sysadmin</td>
+<td>SSH</td>
+<td><code>S3cur3Backup$Acc3ss!</code></td>
+</tr>
+<tr>
+<td>root</td>
+<td>OS (su)</td>
+<td><code>S3cur3P4ss0nK33p4ss</code></td>
+</tr>
+<tr>
+<td>Flask secret</td>
+<td>Session signing</td>
+<td><code>7f3a91c4d2e8b056a4f7c93d2e51b9a1</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Appendix: Flags Captured</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>User (<code>/home/sysadmin/user.txt</code>)</td>
+<td><code>THM{sQli_4nd_cMd_1nj3ct10n_l3D_y0u_h3re!}</code></td>
+</tr>
+<tr>
+<td>Root (<code>/root/root.txt</code>)</td>
+<td><code>THM{KDBx_V4ul7_H4s_b33n_cr4ck3d_0peN}</code></td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

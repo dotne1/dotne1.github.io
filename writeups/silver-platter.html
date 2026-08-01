@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target environment at 10.66.135.148. The assessment identified five security vulnerabilities that, when chained, al">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">May 31, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Client:</strong> Silver Platter Corp   <strong>Assessment Date:</strong> May 31, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target environment at 10.66.135.148. The assessment identified five security vulnerabilities that, when chained, allowed an unauthenticated attacker to achieve full remote compromise of the host. Initial access was gained via an authentication bypass in the Silverpeas web application (CVE-2024-36042), followed by a broken access control vulnerability (CVE-2023-47323) that leaked SSH credentials for a low-privileged user. From there, credential reuse and excessive sudo privileges enabled lateral movement and privilege escalation to root.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.66.135.148</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22, 80, 8080</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Silverpeas 6.3.1, nginx 1.18.0, OpenSSH 8.9p1</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Silverpeas Authentication Bypass (CVE-2024-36042)</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Silverpeas Broken Access Control on Messages (CVE-2023-47323)</td>
+<td>6.5</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Database Credentials Exposed in System Logs</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Password Reuse Across Application and OS Accounts</td>
+<td>8.0</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>User tyler Granted Unrestricted sudo Access</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: Silverpeas Authentication Bypass (CVE-2024-36042)</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>/silverpeas/AuthenticationServlet</code></p>
+<p><strong>Description:</strong>   Silverpeas versions prior to 6.3.5 permit authentication bypass by omitting the <code>Password</code> POST parameter. The server treats the absence of this field as an SSO-based login, granting access as the target user.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>POST /silverpeas/AuthenticationServlet HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+Login=1&amp;DomainId=0</code></pre>
+<p><strong>Impact:</strong> Unauthenticated remote attacker gains superadmin privileges.</p>
+<p><strong>Recommendation:</strong> Upgrade to Silverpeas >= 6.3.5.</p>
+<hr>
+<h3>F-02: Broken Access Control on Messages (CVE-2023-47323)</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 6.5)   <strong>Affected Component:</strong> <code>/silverpeas/RSILVERMAIL/jsp/ReadMessage.jsp</code></p>
+<p><strong>Description:</strong>   The messaging feature does not authorize the <code>ID</code> parameter, allowing any authenticated user to enumerate all internal messages.</p>
+<p><strong>Impact:</strong> Confidential data leak. SSH credentials for user <code>tim</code> were discovered in Message #6.</p>
+<p><strong>Recommendation:</strong> Upgrade to Silverpeas >= 6.3.2.</p>
+<hr>
+<h3>F-03: Database Credentials Exposed in System Logs</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>/var/log/auth.log</code> (world-readable by <code>adm</code> group)</p>
+<p><strong>Description:</strong>   The PostgreSQL database password was passed as a command-line argument to <code>docker run</code> and recorded in plaintext in the system authentication log. Any user in the <code>adm</code> group (including low-privilege user <code>tim</code>) could retrieve it.</p>
+<p><strong>Evidence (from <code>/var/log/auth.log.2</code>):</strong></p>
+<pre><code>Dec 13 15:40:33 sudo: tyler : ... docker run ... -e POSTGRES_PASSWORD=_Zd_zx7N823/ ...</code></pre>
+<p><strong>Impact:</strong> Exposed database password enabled lateral movement via password reuse.</p>
+<p><strong>Recommendation:</strong> Never pass secrets as command-line arguments. Use Docker secrets, environment files with restricted permissions, or a secrets manager.</p>
+<hr>
+<h3>F-04: Password Reuse Across Application and OS Accounts</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.0)   <strong>Affected Accounts:</strong> tyler (OS), silverpeas (PostgreSQL)</p>
+<p><strong>Description:</strong>   The PostgreSQL database password <code>_Zd_zx7N823/</code> was identical to user <code>tyler</code>'s OS login password, enabling lateral movement from <code>tim</code> to <code>tyler</code>.</p>
+<p><strong>Impact:</strong> Full compromise of the <code>tyler</code> account, which held sudo privileges.</p>
+<p><strong>Recommendation:</strong> Enforce unique passwords across all systems and applications. Implement a password manager.</p>
+<hr>
+<h3>F-05: User tyler Granted Unrestricted sudo Access</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)   <strong>Affected Component:</strong> <code>/etc/sudoers</code> / <code>sudo</code> group membership</p>
+<p><strong>Description:</strong>   User <code>tyler</code> is a member of the <code>sudo</code> group, granting full root execution privileges with no restrictions.</p>
+<p><strong>Impact:</strong> Complete host compromise.</p>
+<p><strong>Recommendation:</strong> Apply the principle of least privilege. Restrict sudo rights to specific commands with appropriate auditing.</p>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Unauthenticated ─► CVE-2024-36042 (auth bypass) ─► Superadmin (Silverpeas)
+                           │
+                           ▼
+                 CVE-2023-47323 (IDOR on messages)
+                           │
+                           ▼
+                 SSH as tim (user flag)
+                           │
+                           ▼
+                 /var/log/auth.log (adm group)
+                           │
+                           ▼
+                 DB password = tyler&#x27;s password (reuse)
+                           │
+                           ▼
+                 su - tyler ─► sudo -i ─► root (root flag)</code></pre>
+<hr>
+<h2>6. Remediation Priority</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-01</td>
+<td>Upgrade Silverpeas to >= 6.3.5</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-02</td>
+<td>Upgrade Silverpeas to >= 6.3.2</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F-03</td>
+<td>Rotate all exposed credentials; audit log retention; stop passing secrets on CLI</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F-04</td>
+<td>Enforce unique passwords per service</td>
+</tr>
+<tr>
+<td>5</td>
+<td>F-05</td>
+<td>Audit sudo group membership and apply least privilege</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Appendix: Compromised Credentials</h2>
+<p>The following credentials were compromised during testing and must be rotated immediately:</p>
+<table>
+<thead><tr>
+<th>Account</th>
+<th>Type</th>
+<th>Credential</th>
+</tr></thead><tbody>
+<tr>
+<td>tim</td>
+<td>SSH</td>
+<td><code>cm0nt!md0ntf0rg3tth!spa$$w0rdagainlol</code></td>
+</tr>
+<tr>
+<td>tyler</td>
+<td>OS / sudo</td>
+<td><code>_Zd_zx7N823/</code></td>
+</tr>
+<tr>
+<td>silverpeas</td>
+<td>PostgreSQL</td>
+<td><code>_Zd_zx7N823/</code></td>
+</tr>
+<tr>
+<td>User ID 1</td>
+<td>Silverpeas superadmin</td>
+<td>N/A (bypass does not require password)</td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

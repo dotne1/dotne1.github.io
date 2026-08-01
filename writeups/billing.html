@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Billing host runs MagnusBilling on Apache. An unauthenticated command injection (CVE-2023-30258) in the Icepay library yielded a shell as asterisk. That acc">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Billing — Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Billing — Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Billing — Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-easy">Easy</span> <span class="dot">·</span> <span class="date">2026-07-17</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.66.143.171   <strong>Assessment Date:</strong> 2026-07-17   <strong>Classification:</strong> Lab / CTF  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>The Billing host runs MagnusBilling on Apache. An unauthenticated command injection (CVE-2023-30258) in the Icepay library yielded a shell as <code>asterisk</code>. That account could run <code>fail2ban-client</code> via passwordless sudo; abusing ban actions produced a root shell and full compromise.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.66.143.171</td>
+</tr>
+<tr>
+<td>Ports</td>
+<td>22, 80, 3306, 5038</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>MagnusBilling, Asterisk, MariaDB, Fail2Ban</td>
+</tr>
+<tr>
+<td>Out of scope</td>
+<td>Bruteforcing (per room rules)</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td>Debian Linux</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Attack Chain</h2>
+<pre><code>HTTP /mbilling (MagnusBilling)
+  → CVE-2023-30258 icepay.php command injection
+  → shell as asterisk
+  → user.txt (/home/magnus)
+  → sudo fail2ban-client NOPASSWD
+  → custom actionban (SUID bash)
+  → root.txt (/root)</code></pre>
+<hr>
+<h2>4. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F1</td>
+<td>MagnusBilling unauth RCE (CVE-2023-30258)</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F2</td>
+<td>Passwordless sudo for fail2ban-client</td>
+<td>7.8</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Findings Detail</h2>
+<h3>F1 — Unauthenticated command injection in Icepay endpoint</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Vector:</strong> AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H  </p>
+<p><code>GET /mbilling/lib/icepay/icepay.php?democ=&lt;payload&gt;</code> allows OS command injection after a semicolon. Confirmed with time-based and reverse-shell payloads.</p>
+<p><strong>Remediation:</strong> Patch MagnusBilling; remove/disable vulnerable Icepay demo path; input validation / disable dangerous PHP functions if unused.</p>
+<h3>F2 — fail2ban-client sudo without password</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.8)  </p>
+<p><code>asterisk</code> may run <code>/usr/bin/fail2ban-client</code> as root without a password. Attackers can redefine <code>actionban</code> to run arbitrary commands (e.g. SUID on <code>/bin/bash</code>) and trigger them via <code>banip</code>.</p>
+<p><strong>Remediation:</strong> Remove NOPASSWD or restrict to non-action-mutating subcommands; harden Fail2Ban configs against runtime action injection.</p>
+<hr>
+<h2>6. Flags</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>user.txt</td>
+<td><code>THM{4a6831d5f124b25eefb1e92e0f0da4ca}</code></td>
+</tr>
+<tr>
+<td>root.txt</td>
+<td><code>THM{33ad5b530e71a172648f424ec23fae60}</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Tools</h2>
+<p>nmap/rustscan, curl, bash reverse shell / RCE, fail2ban-client</p>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

