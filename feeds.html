@@ -34,6 +34,90 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-55735" data-description="improper verification of cryptographic signature in ueberauth guardian allows an unauthenticated attacker to revoke a victim's session with a forged token.
+
+guardian.revoke/3 in lib/guardian.ex decodes the supplied token with peek/1, which performs no signature verification (it only base64-decodes the jwt header and payload). the resulting unverified claims are forwarded directly to the configured token module's revoke callback and the implementation's on_revoke callback, a state-mutating sink. the sibling operations refresh/2 and exchange/4 both call decode_and_verify first, so the signature is checked before anything acts on the claims; revoke/3 is the only state-mutating path that acts on claims without verifying the signature.
+
+an attacker who knows or guesses a victim's identifying claim values (jti, sub) can forge a jwt carrying those claims, sign it with an arbitrary key, and submit it to any endpoint that funnels a caller-supplied token into guardian.revoke/3 (the standard logout / session-revocation pattern). when the token module mutates state keyed by the claims (whitelist deletion or blacklist insertion, for example a guardiandb-style store), the victim's legitimate session is evicted. this is an unauthenticated session-revocation denial of service; the attacker never needs the signing secret.
+
+this issue affects guardian: from 1.0.0 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55735" target="_blank">CVE-2026-55735</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-01 14:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Verification of Cryptographic Signature in ueberauth guardian allows an unauthenticated attacker to revoke a victim's session with a forged token.
+
+Guardian.revoke/3 in lib/guardian.ex decodes the supplied token with peek/1, which performs no signature verification (it only base64-decodes the JWT header and payload). The resulting unverified claims are forwarded directly to the configured token module's revoke callback and the implementation's on_revoke callback, a state-mutating sink. The sibling operations refresh/2 and exchange/4 both call decode_and_verify first, so the signature is checked before anything acts on the claims; revoke/3 is the only state-mutating path that acts on claims without verifying the signature.
+
+An attacker who knows or guesses a victim's identifying claim values (jti, sub) can forge a JWT carrying those claims, sign it with an arbitrary key, and submit it to any endpoint that funnels a caller-supplied token into Guardian.revoke/3 (the standard logout / session-revocation pattern). When the token module mutates state keyed by the claims (whitelist deletion or blacklist insertion, for example a GuardianDb-style store), the victim's legitimate session is evicted. This is an unauthenticated session-revocation denial of service; the attacker never needs the signing secret.
+
+This issue affects guardian: from 1.0.0 before 2.4.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-55734" data-description="allocation of resources without limits or throttling vulnerability in ueberauth guardian (guardian.permissions module) allows a denial of service via beam atom-table exhaustion.
+
+this vulnerability is associated with program file lib/guardian/permissions.ex and program routines 'elixir.guardian.permissions':encode_permissions!/1, 'elixir.guardian.permissions':encode_permissions_into_claims!/2, 'elixir.guardian.permissions':do_encode_permissions!/2.
+
+the guardian.permissions mixin installs a public encode_permissions!/1 function on every module that does use guardian.permissions. for each key of the supplied map, encode_permissions!/1 calls string.to_atom(to_string(k)) before any validation runs. the integer-value clause of do_encode_permissions!/2 then short-circuits straight to encoding without validating the key against the configured permission set, so a key with an integer value is interned as a fresh atom with no exception raised. atoms are never garbage collected and the beam atom table is a fixed-size resource (default roughly 1,048,576 entries), so each unique attacker-chosen key permanently consumes one slot. an attacker who can influence a permission map that reaches encode_permissions!/1 (for example a permissions map read from a request body and passed into token issuance via encode_permissions_into_claims!/2) can mint an unbounded number of atoms and exhaust the atom table, crashing the entire beam node and every service running on it. the sibling decode_permissions/1 is not affected because it skips keys absent from the configured permission set.
+
+this issue affects guardian: from 2.0.0 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55734" target="_blank">CVE-2026-55734</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-01 14:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling vulnerability in ueberauth guardian (Guardian.Permissions module) allows a denial of service via BEAM atom-table exhaustion.
+
+This vulnerability is associated with program file lib/guardian/permissions.ex and program routines 'Elixir.Guardian.Permissions':encode_permissions!/1, 'Elixir.Guardian.Permissions':encode_permissions_into_claims!/2, 'Elixir.Guardian.Permissions':do_encode_permissions!/2.
+
+The Guardian.Permissions mixin installs a public encode_permissions!/1 function on every module that does use Guardian.Permissions. For each key of the supplied map, encode_permissions!/1 calls String.to_atom(to_string(k)) before any validation runs. The integer-value clause of do_encode_permissions!/2 then short-circuits straight to encoding without validating the key against the configured permission set, so a key with an integer value is interned as a fresh atom with no exception raised. Atoms are never garbage collected and the BEAM atom table is a fixed-size resource (default roughly 1,048,576 entries), so each unique attacker-chosen key permanently consumes one slot. An attacker who can influence a permission map that reaches encode_permissions!/1 (for example a permissions map read from a request body and passed into token issuance via encode_permissions_into_claims!/2) can mint an unbounded number of atoms and exhaust the atom table, crashing the entire BEAM node and every service running on it. The sibling decode_permissions/1 is not affected because it skips keys absent from the configured permission set.
+
+This issue affects guardian: from 2.0.0 before 2.4.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-55733" data-description="allocation of resources without limits or throttling in ueberauth guardian allows denial of service via unbounded atom creation from attacker-controlled binary input.
+
+guardian.permissions.atomencoding encodes permission scopes by passing arbitrary binaries to string.to_atom/1. when encode/3 in lib/guardian/permissions/atom_encoding.ex is called with a list, each binary entry is handled by the encode_value/3 binary clause, which calls string.to_atom(value) with no allow-list check. the perm_set argument (the application's small, finite set of legitimate permission names) is discarded, so any external string flows straight into atom creation. this encoder is selected with use guardian.permissions, encoding: guardian.permissions.atomencoding and reached through the imported encode/3 entry point.
+
+string.to_atom/1 creates a brand-new atom for every previously unseen binary, atoms are never garbage collected, and the beam atom table is fixed at roughly 1,048,576 entries by default. an application that funnels attacker-influenced permission scopes (from a request body, a jwt claim, or other external input) into encode/3 therefore mints one permanent atom per distinct value. a modest stream of varied, unauthenticated input permanently consumes the atom table and crashes the beam node with system_limit, taking down every application running on it.
+
+the default encoder is guardian.permissions.bitwiseencoding, which is not affected.
+
+this issue affects guardian: from 2.0.0 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55733" target="_blank">CVE-2026-55733</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-01 14:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling in ueberauth guardian allows denial of service via unbounded atom creation from attacker-controlled binary input.
+
+Guardian.Permissions.AtomEncoding encodes permission scopes by passing arbitrary binaries to String.to_atom/1. When encode/3 in lib/guardian/permissions/atom_encoding.ex is called with a list, each binary entry is handled by the encode_value/3 binary clause, which calls String.to_atom(value) with no allow-list check. The perm_set argument (the application's small, finite set of legitimate permission names) is discarded, so any external string flows straight into atom creation. This encoder is selected with use Guardian.Permissions, encoding: Guardian.Permissions.AtomEncoding and reached through the imported encode/3 entry point.
+
+String.to_atom/1 creates a brand-new atom for every previously unseen binary, atoms are never garbage collected, and the BEAM atom table is fixed at roughly 1,048,576 entries by default. An application that funnels attacker-influenced permission scopes (from a request body, a JWT claim, or other external input) into encode/3 therefore mints one permanent atom per distinct value. A modest stream of varied, unauthenticated input permanently consumes the atom table and crashes the BEAM node with system_limit, taking down every application running on it.
+
+The default encoder is Guardian.Permissions.BitwiseEncoding, which is not affected.
+
+This issue affects guardian: from 2.0.0 before 2.4.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-54894" data-description="allocation of resources without limits or throttling in ueberauth guardian allows denial of service via unbounded atom creation from attacker-influenced binary input.
+
+guardian.plug.keys derives connection and session namespace keys by passing arbitrary binaries to string.to_atom/1. base_key/1 in lib/guardian/plug/keys.ex converts any binary into the atom :"guardian_<input>", and the derived helpers claims_key/1, resource_key/1, and token_key/1 create a second atom on top of that. key_from_other/1 likewise converts a regex-captured binary through string.to_atom/1. the public specs advertise string.t() as a valid argument, so passing a string is documented usage, and higher-level entry points such as guardian.plug.current_token(conn, key: key) thread the caller-supplied key straight into these functions.
+
+string.to_atom/1 creates a brand-new atom for every previously unseen binary, atoms are never garbage collected, and the beam atom table is fixed at roughly 1,048,576 entries by default. an application that routes attacker-influenced data (a tenant identifier, header, or other request input) into a guardian key therefore mints one permanent atom per distinct value. a modest stream of varied, unauthenticated input permanently consumes the atom table and crashes the beam node, taking down every application running on it.
+
+this issue affects guardian: from 0.1.0 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54894" target="_blank">CVE-2026-54894</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-01 14:16:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling in ueberauth guardian allows denial of service via unbounded atom creation from attacker-influenced binary input.
+
+Guardian.Plug.Keys derives connection and session namespace keys by passing arbitrary binaries to String.to_atom/1. base_key/1 in lib/guardian/plug/keys.ex converts any binary into the atom :"guardian_<input>", and the derived helpers claims_key/1, resource_key/1, and token_key/1 create a second atom on top of that. key_from_other/1 likewise converts a regex-captured binary through String.to_atom/1. The public specs advertise String.t() as a valid argument, so passing a string is documented usage, and higher-level entry points such as Guardian.Plug.current_token(conn, key: key) thread the caller-supplied key straight into these functions.
+
+String.to_atom/1 creates a brand-new atom for every previously unseen binary, atoms are never garbage collected, and the BEAM atom table is fixed at roughly 1,048,576 entries by default. An application that routes attacker-influenced data (a tenant identifier, header, or other request input) into a Guardian key therefore mints one permanent atom per distinct value. A modest stream of varied, unauthenticated input permanently consumes the atom table and crashes the BEAM node, taking down every application running on it.
+
+This issue affects guardian: from 0.1.0 before 2.4.1.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-67355" data-description="guzzlehttp/guzzle versions before 7.15.1 fail to preserve host-only cookie scope, storing the request host in the domain field instead of marking cookies as host-only. attackers controlling child hosts can receive host-only cookies intended only for parent hosts, potentially disclosing session identifiers and authorization tokens when the same cookie jar is reused across trust boundaries.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67355" target="_blank">CVE-2026-67355</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-01 08:17:06 CDT</p>
@@ -160,38 +244,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.2</p>
                     <p>better-auth before 1.6.13 (and pre-release builds 1.7.0-beta.0 through 1.7.0-beta.3) fail to validate the scheme of redirect_uris registered via the deprecated oidc-provider plugin and the mcp plugin (which wraps the same provider). An attacker can register an OAuth client with a javascript: redirect_uri, which the authorization server later returns unchanged in the consent response. If the deployment's consent page navigates the browser to the returned redirectURI (e.g. assigning it to window.location.href), the attacker's JavaScript executes in the authorization-server origin, exposing the victim's session and enabling account takeover.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67332" data-description="@better-auth/oauth-provider before 1.7.0-beta.4 fails to bind access-token audience to the authorization grant, allowing clients to request tokens for unrelated resources. attackers can complete an oauth flow and obtain access tokens whose audience targets resource servers the authorization never covered, bypassing intended authorization boundaries.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67332" target="_blank">CVE-2026-67332</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-01 08:17:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>@better-auth/oauth-provider before 1.7.0-beta.4 fails to bind access-token audience to the authorization grant, allowing clients to request tokens for unrelated resources. Attackers can complete an OAuth flow and obtain access tokens whose audience targets resource servers the authorization never covered, bypassing intended authorization boundaries.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67331" data-description="better-auth scim versions from 1.5.0 before 1.7.0-beta.4 fail to bind non-organization scim providers to their creator by default, allowing authenticated users to manage other users' providers. attackers can regenerate scim bearer tokens, invalidate legitimate tokens, and authenticate to scim api routes with the attacker-controlled token.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67331" target="_blank">CVE-2026-67331</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-01 08:17:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
-                    <p>better-auth SCIM versions from 1.5.0 before 1.7.0-beta.4 fail to bind non-organization SCIM providers to their creator by default, allowing authenticated users to manage other users' providers. Attackers can regenerate SCIM bearer tokens, invalidate legitimate tokens, and authenticate to SCIM API routes with the attacker-controlled token.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67330" data-description="@better-auth/scim (a better-auth plugin) versions >= 1.4.0-beta.27 through <= 1.6.21 and >= 1.7.0-beta.0 through <= 1.7.0-beta.9 contain an authorization bypass. scim token issuance did not reject provider ids already used by existing sso, saml, oidc, generic oauth, or social account providers, and the same logical provider id was used for both scim provider configuration and account ownership. an authenticated user could mint a scim token whose provider id collided with an existing provider namespace, causing scim user routes to resolve account rows the token never provisioned. this allowed listing, reading, updating (including rewriting global profile/email fields without uniqueness checks), and deleting global user accounts and sessions, resulting in account takeover and unauthorized deprovisioning. fixed in 1.6.22 and 1.7.0-beta.10 (1.7.0-rc.0).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67330" target="_blank">CVE-2026-67330</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-01 08:17:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>@better-auth/scim (a better-auth plugin) versions >= 1.4.0-beta.27 through <= 1.6.21 and >= 1.7.0-beta.0 through <= 1.7.0-beta.9 contain an authorization bypass. SCIM token issuance did not reject provider IDs already used by existing SSO, SAML, OIDC, generic OAuth, or social account providers, and the same logical provider ID was used for both SCIM provider configuration and account ownership. An authenticated user could mint a SCIM token whose provider ID collided with an existing provider namespace, causing SCIM user routes to resolve account rows the token never provisioned. This allowed listing, reading, updating (including rewriting global profile/email fields without uniqueness checks), and deleting global user accounts and sessions, resulting in account takeover and unauthorized deprovisioning. Fixed in 1.6.22 and 1.7.0-beta.10 (1.7.0-rc.0).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67329" data-description="@better-auth/stripe versions >= 1.4.11 and < 1.6.21, and >= 1.7.0-beta.0 and < 1.7.0-beta.10, contain an authorization bypass in organization subscription actions. the middleware validates the organization id taken from the request query string against the authorizereference callback, but the handler reads the organization id only from the request body and falls back to the caller's active organization from their session. when these differ, an authenticated member of multiple organizations can perform subscription actions (cancel, change plan, restore, billing portal access) against an organization they belong to but should not manage, and can access another organization's billing details including payment methods, invoices, and subscription state.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67329" target="_blank">CVE-2026-67329</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-01 08:17:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>@better-auth/stripe versions >= 1.4.11 and < 1.6.21, and >= 1.7.0-beta.0 and < 1.7.0-beta.10, contain an authorization bypass in organization subscription actions. The middleware validates the organization ID taken from the request query string against the authorizeReference callback, but the handler reads the organization ID only from the request body and falls back to the caller's active organization from their session. When these differ, an authenticated member of multiple organizations can perform subscription actions (cancel, change plan, restore, billing portal access) against an organization they belong to but should not manage, and can access another organization's billing details including payment methods, invoices, and subscription state.</p>
                 </div>
         
             </div>
