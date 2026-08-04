@@ -34,6 +34,58 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-66884" data-description="cross-site request forgery vulnerability in erlang ecosystem foundation oidcc_plug (oidcc.plug.authorizationcallback module) allows an attacker to make a victim's browser complete an authorization flow the victim never initiated.
+
+this vulnerability is associated with program file lib/oidcc/plug/authorization_callback.ex and program routine oidcc.plug.authorizationcallback.call/2.
+
+a callback request that carries no oidcc.plug.authorize session is processed with every security check disabled rather than being rejected. call/2 substitutes permissive defaults for the absent session, and each downstream check treats its value as nothing to compare and returns :ok, so the nonce, state, pkce, peer ip and user agent checks are all skipped. a separate clause of check_state/2 also accepts a state-less request when a verifier is present.
+
+an attacker obtains an authorization code for their own provider account, then induces the victim to visit the callback endpoint with that code and no state parameter. the application signs the victim in as the attacker, so the victim's subsequent actions occur in the attacker's account where the attacker can read them. applications reusing one callback for both signing in and linking a provider account are further exposed to account takeover, the attacker's account becoming linked to the victim's.
+
+the permissive fallback serves no conforming flow. third-party-initiated login reaches a relying party at a separate login initiation endpoint and causes it to send a fresh authentication request, and this library implements no such endpoint. oidcc.plug.authorize always sends a state parameter, which an authorization server must echo, so no legitimate callback lacks one.
+
+this issue affects oidcc_plug: from 0.2.0-beta.1 before 0.5.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66884" target="_blank">CVE-2026-66884</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 07:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Cross-Site Request Forgery vulnerability in Erlang Ecosystem Foundation oidcc_plug (Oidcc.Plug.AuthorizationCallback module) allows an attacker to make a victim's browser complete an authorization flow the victim never initiated.
+
+This vulnerability is associated with program file lib/oidcc/plug/authorization_callback.ex and program routine Oidcc.Plug.AuthorizationCallback.call/2.
+
+A callback request that carries no Oidcc.Plug.Authorize session is processed with every security check disabled rather than being rejected. call/2 substitutes permissive defaults for the absent session, and each downstream check treats its value as nothing to compare and returns :ok, so the nonce, state, PKCE, peer IP and user agent checks are all skipped. A separate clause of check_state/2 also accepts a state-less request when a verifier is present.
+
+An attacker obtains an authorization code for their own provider account, then induces the victim to visit the callback endpoint with that code and no state parameter. The application signs the victim in as the attacker, so the victim's subsequent actions occur in the attacker's account where the attacker can read them. Applications reusing one callback for both signing in and linking a provider account are further exposed to account takeover, the attacker's account becoming linked to the victim's.
+
+The permissive fallback serves no conforming flow. Third-party-initiated login reaches a relying party at a separate login initiation endpoint and causes it to send a fresh authentication request, and this library implements no such endpoint. Oidcc.Plug.Authorize always sends a state parameter, which an authorization server must echo, so no legitimate callback lacks one.
+
+This issue affects oidcc_plug: from 0.2.0-beta.1 before 0.5.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66883" data-description="improper handling of case sensitivity vulnerability in erlang ecosystem foundation oidcc_plug (oidcc.plug.authorize module) renders the user agent session binding inert, removing a defense in depth control against replay of a stolen session.
+
+this vulnerability is associated with program files lib/oidcc/plug/authorize.ex and lib/oidcc/plug/authorization_callback.ex, and program routines oidcc.plug.authorize.call/2 and oidcc.plug.authorizationcallback.call/2.
+
+oidcc.plug.authorize.call/2 reads the initiating client's user agent with get_req_header(conn, "user-agent"). plug lowercases incoming header names, but get_req_header/2 matches the supplied key exactly and performs no normalization of its own, so the mixed-case lookup always returns an empty list and nil is written into the session. on the callback side, oidcc.plug.authorizationcallback treats a stored nil user agent as nothing to compare and returns :ok without inspecting the request. the two behaviours combine so that the check passes unconditionally on every request, including for deployments that explicitly opted in with check_useragent: true, and an authorization callback can be completed from a different user agent than the one that initiated the flow without detection. the check fails open silently, with no error and no log entry, so a deployment cannot tell the binding is absent.
+
+the impact is limited to defense in depth. the inert check does not by itself allow an attacker to complete an authorization flow; it removes one layer that would otherwise hinder use of a stolen or leaked session, such as an exfiltrated session cookie replayed from a different client. the csrf/state, nonce, and pkce checks are unaffected and continue to function. deployments that never enabled check_useragent are not affected in practice, since they never expected the binding. the corresponding lookup in oidcc.plug.authorizationcallback correctly uses the lowercase key and is not affected.
+
+this issue affects oidcc_plug: from 0.1.0-alpha.3 before 0.5.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66883" target="_blank">CVE-2026-66883</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 07:16:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Handling of Case Sensitivity vulnerability in Erlang Ecosystem Foundation oidcc_plug (Oidcc.Plug.Authorize module) renders the user agent session binding inert, removing a defense in depth control against replay of a stolen session.
+
+This vulnerability is associated with program files lib/oidcc/plug/authorize.ex and lib/oidcc/plug/authorization_callback.ex, and program routines Oidcc.Plug.Authorize.call/2 and Oidcc.Plug.AuthorizationCallback.call/2.
+
+Oidcc.Plug.Authorize.call/2 reads the initiating client's user agent with get_req_header(conn, "User-Agent"). Plug lowercases incoming header names, but get_req_header/2 matches the supplied key exactly and performs no normalization of its own, so the mixed-case lookup always returns an empty list and nil is written into the session. On the callback side, Oidcc.Plug.AuthorizationCallback treats a stored nil user agent as nothing to compare and returns :ok without inspecting the request. The two behaviours combine so that the check passes unconditionally on every request, including for deployments that explicitly opted in with check_useragent: true, and an authorization callback can be completed from a different user agent than the one that initiated the flow without detection. The check fails open silently, with no error and no log entry, so a deployment cannot tell the binding is absent.
+
+The impact is limited to defense in depth. The inert check does not by itself allow an attacker to complete an authorization flow; it removes one layer that would otherwise hinder use of a stolen or leaked session, such as an exfiltrated session cookie replayed from a different client. The CSRF/state, nonce, and PKCE checks are unaffected and continue to function. Deployments that never enabled check_useragent are not affected in practice, since they never expected the binding. The corresponding lookup in Oidcc.Plug.AuthorizationCallback correctly uses the lowercase key and is not affected.
+
+This issue affects oidcc_plug: from 0.1.0-alpha.3 before 0.5.0.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-10050" data-description="in eclipse jetty, the digest authentication server-side component uses iso-8859-1 to encode the password as bytes.
 
 
@@ -372,98 +424,6 @@ primary_path/active_path pointing at freed memory.
 Reject a DEL-IP that targets the transport the ASCONF is being processed
 against, mirroring the existing source-address guard, so the wildcard
 branch can never reuse a freed transport.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64563" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-rhashtable: clear stale iter->p on table restart
-
-rhashtable_walk_start_check() has two restart paths when resuming a walk.
-when iter->walker.tbl is valid, it re-validates iter->p against the table
-and sets iter->p = null if the object is gone.  when iter->walker.tbl is
-null (table was freed during resize), it resets slot and skip but forgets
-to clear iter->p.
-
-rhashtable_walk_next() then dereferences the stale iter->p, reading
-freed memory.  this is a use-after-free.
-
-any caller that does multi-fragment rhashtable walks across
-walk_stop/walk_start boundaries is affected.  concrete cases include
-netlink_diag (__netlink_diag_dump in net/netlink/diag.c) and tipc
-(tipc_nl_sk_walk in net/tipc/socket.c).
-
-crash stack (netlink_diag):
-  bug: kasan: slab-use-after-free in rhashtable_walk_next+0x365/0x3c0
-  read of size 8 at addr ffff88801a9d2438 (freed kmalloc-2k, offset 1080)
-  call trace:
-   rhashtable_walk_next+0x365/0x3c0 (lib/rhashtable.c:1016)
-   __netlink_diag_dump+0x160/0x760 (net/netlink/diag.c:122)
-   netlink_diag_dump+0xc2/0x240
-   netlink_dump+0x5bc/0x1270
-   netlink_recvmsg+0x7a3/0x980
-   sock_recvmsg+0x1bc/0x200
-   __sys_recvfrom+0x1d4/0x2c0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64563" target="_blank">CVE-2026-64563</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-rhashtable: clear stale iter->p on table restart
-
-rhashtable_walk_start_check() has two restart paths when resuming a walk.
-When iter->walker.tbl is valid, it re-validates iter->p against the table
-and sets iter->p = NULL if the object is gone.  When iter->walker.tbl is
-NULL (table was freed during resize), it resets slot and skip but forgets
-to clear iter->p.
-
-rhashtable_walk_next() then dereferences the stale iter->p, reading
-freed memory.  This is a use-after-free.
-
-Any caller that does multi-fragment rhashtable walks across
-walk_stop/walk_start boundaries is affected.  Concrete cases include
-netlink_diag (__netlink_diag_dump in net/netlink/diag.c) and TIPC
-(tipc_nl_sk_walk in net/tipc/socket.c).
-
-Crash stack (netlink_diag):
-  BUG: KASAN: slab-use-after-free in rhashtable_walk_next+0x365/0x3c0
-  Read of size 8 at addr ffff88801a9d2438 (freed kmalloc-2k, offset 1080)
-  Call Trace:
-   rhashtable_walk_next+0x365/0x3c0 (lib/rhashtable.c:1016)
-   __netlink_diag_dump+0x160/0x760 (net/netlink/diag.c:122)
-   netlink_diag_dump+0xc2/0x240
-   netlink_dump+0x5bc/0x1270
-   netlink_recvmsg+0x7a3/0x980
-   sock_recvmsg+0x1bc/0x200
-   __sys_recvfrom+0x1d4/0x2c0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64562" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-kvm: nvmx: hide shadow vmcs right after vmclear
-
-free_nested() frees the shadow vmcs while vmcs01 still points to it. but
-because it is asynchronous with respect to loaded_vmcs_clear(), the vcpu
-might migrate before the pointer is cleared and __loaded_vmcs_clear()
-may then execute vmclear.
-
-the vmcs needs to stay attached until its explicit vmclear completes, but
-then it can be hidden and the page safely freed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64562" target="_blank">CVE-2026-64562</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-KVM: nVMX: Hide shadow VMCS right after VMCLEAR
-
-free_nested() frees the shadow VMCS while vmcs01 still points to it. But
-because it is asynchronous with respect to loaded_vmcs_clear(), the vCPU
-might migrate before the pointer is cleared and __loaded_vmcs_clear()
-may then execute VMCLEAR.
-
-The VMCS needs to stay attached until its explicit VMCLEAR completes, but
-then it can be hidden and the page safely freed.</p>
                 </div>
         
             </div>
