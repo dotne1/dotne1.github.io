@@ -34,232 +34,390 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-68744" data-description="a flaw was found in sssd. the sss_nss_protocol_fill_initgr() function in the nss responder pre-allocates reply space for all group entries but does not shrink the packet when groups are skipped, causing uninitialized heap bytes to be transmitted to the client. a local attacker can exploit this to disclose cached directory data and heap layout information from the sssd_nss process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68744" target="_blank">CVE-2026-68744</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-04 01:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>A flaw was found in SSSD. The sss_nss_protocol_fill_initgr() function in the NSS responder pre-allocates reply space for all group entries but does not shrink the packet when groups are skipped, causing uninitialized heap bytes to be transmitted to the client. A local attacker can exploit this to disclose cached directory data and heap layout information from the sssd_nss process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-18739" data-description="a flaw was found in popt, a command-line option parsing library. an off-by-one error in the poptstuffargs function, when repeatedly called by a host application or through deep alias nesting, can lead to corruption of internal program data. this corruption could potentially enable a local attacker to execute arbitrary code if the host application then unsafely processes the altered data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18739" target="_blank">CVE-2026-18739</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-04 01:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.5</p>
-                    <p>A flaw was found in popt, a command-line option parsing library. An off-by-one error in the poptStuffArgs function, when repeatedly called by a host application or through deep alias nesting, can lead to corruption of internal program data. This corruption could potentially enable a local attacker to execute arbitrary code if the host application then unsafely processes the altered data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-18569" data-description="a flaw was found in the backchannel logout endpoint of the keycloak-services component, which is part of the red hat build of keycloak. this component handles authentication and session management for applications. the issue occurs when an oidc identity provider is configured to skip signature validation. in this specific setup, the system incorrectly accepts logout requests that have no cryptographic signature. an attacker who knows certain technical details about a user's session can use this flaw to force that user to be logged out, potentially disrupting their work.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18569" target="_blank">CVE-2026-18569</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-04 01:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>A flaw was found in the backchannel logout endpoint of the keycloak-services component, which is part of the Red Hat Build of Keycloak. This component handles authentication and session management for applications. The issue occurs when an OIDC identity provider is configured to skip signature validation. In this specific setup, the system incorrectly accepts logout requests that have no cryptographic signature. An attacker who knows certain technical details about a user's session can use this flaw to force that user to be logged out, potentially disrupting their work.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-16881" data-description="a code injection vulnerability exists in the line android app prior to version 26.7.2. 
+                <div class="cve-entry" data-cve-id="CVE-2026-64565" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-the profile rendering component does not adequately validate or sandbox externally supplied script content embedded in profile templates. 
+input: ims-pcu - fix heap-buffer-overflow in ims_pcu_process_data()
 
-as a result, an attacker who is able to place crafted content in a profile could cause unintended code to execute with the application's privileges when a victim views that profile. 
+the `ims_pcu_process_data()` processes incoming urb data byte by byte.
+however, it fails to check if the `read_pos` index exceeds
+ims_pcu_buf_size.
 
-a server-side mitigation has been deployed that also protects existing android clients that have not been updated to version 26.7.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16881" target="_blank">CVE-2026-16881</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-04 01:16:29 CDT</p>
+if a malicious usb device sends a packet larger than ims_pcu_buf_size,
+`read_pos` will increment indefinitely. moreover, since `read_pos` is
+located immediately after `read_buf`, the attacker can overwrite
+`read_pos` itself to arbitrarily control the index.
+
+this manipulated `read_pos` is subsequently used in
+`ims_pcu_handle_response()` to copy data into `cmd_buf`, leading to a
+heap buffer overflow.
+
+specifically, an attacker can overwrite the `cmd_done.wait.head` located
+at offset 136 relative to `cmd_buf` in the `ims_pcu_handle_response()`.
+consequently, when the driver calls `complete(&pcu->cmd_done)`, it
+triggers a control flow hijack by using the manipulated pointer.
+
+fix this by adding a bounds check for `read_pos` before writing to
+`read_buf`. if the packet is too long, discard it, log a warning,
+and reset the parser state.
+
+[dtor: factor out resetting packet state, reset checksum as well]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64565" target="_blank">CVE-2026-64565</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A code injection vulnerability exists in the LINE Android app prior to version 26.7.2. 
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-The profile rendering component does not adequately validate or sandbox externally supplied script content embedded in profile templates. 
+Input: ims-pcu - fix heap-buffer-overflow in ims_pcu_process_data()
 
-As a result, an attacker who is able to place crafted content in a profile could cause unintended code to execute with the application's privileges when a victim views that profile. 
+The `ims_pcu_process_data()` processes incoming URB data byte by byte.
+However, it fails to check if the `read_pos` index exceeds
+IMS_PCU_BUF_SIZE.
 
-A server-side mitigation has been deployed that also protects existing Android clients that have not been updated to version 26.7.2.</p>
+If a malicious USB device sends a packet larger than IMS_PCU_BUF_SIZE,
+`read_pos` will increment indefinitely. Moreover, since `read_pos` is
+located immediately after `read_buf`, the attacker can overwrite
+`read_pos` itself to arbitrarily control the index.
+
+This manipulated `read_pos` is subsequently used in
+`ims_pcu_handle_response()` to copy data into `cmd_buf`, leading to a
+heap buffer overflow.
+
+Specifically, an attacker can overwrite the `cmd_done.wait.head` located
+at offset 136 relative to `cmd_buf` in the `ims_pcu_handle_response()`.
+Consequently, when the driver calls `complete(&pcu->cmd_done)`, it
+triggers a control flow hijack by using the manipulated pointer.
+
+Fix this by adding a bounds check for `read_pos` before writing to
+`read_buf`. If the packet is too long, discard it, log a warning,
+and reset the parser state.
+
+[dtor: factor out resetting packet state, reset checksum as well]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-42169" data-description="a heap-buffer-overflow vulnerability exists in the apng (animated png) file loader of gimp. this flaw occurs when the `fctl` width exceeds the `ihdr` width, leading to pixel data being written past the end of a heap allocation. additionally, a heap-based buffer overflow exists in the dds plug-in due to a bpp mismatch in the `load_layer()` function. both vulnerabilities can be triggered by opening a specially crafted image file, potentially leading to code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42169" target="_blank">CVE-2026-42169</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 23:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A heap-buffer-overflow vulnerability exists in the APNG (Animated PNG) file loader of GIMP. This flaw occurs when the `fcTL` width exceeds the `IHDR` width, leading to pixel data being written past the end of a heap allocation. Additionally, a heap-based buffer overflow exists in the DDS plug-in due to a BPP mismatch in the `load_layer()` function. Both vulnerabilities can be triggered by opening a specially crafted image file, potentially leading to code execution.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-64564" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+sctp: don't free the asconf's own transport in del-ip processing
+
+sctp_process_asconf() caches the transport the asconf chunk is processed
+against in asconf->transport (== chunk->transport, set once in sctp_rcv()).
+for an asconf located through its address parameter by
+__sctp_rcv_asconf_lookup(), that cached transport corresponds to the
+address parameter, which need not be the packet's source address.
+
+sctp_process_asconf_param() rejects a del-ip for the packet source address
+(addip d8, sctp_error_del_src_ip), but nothing protects asconf->transport.
+a single asconf can therefore carry, in order:
+
+    [address parameter l] [del-ip l] [del-ip 0.0.0.0]
+
+where l differs from the source. the del-ip for l passes the d8 check and
+calls sctp_assoc_rm_peer() on the transport that asconf->transport still
+points at, freeing it (rcu-deferred). the following wildcard del-ip then
+reuses the now-dangling asconf->transport in sctp_assoc_set_primary() and
+sctp_assoc_del_nonprimary_peers(): set_primary() dereferences the freed
+transport (->ipaddr, ->state) and plants the dangling pointer into
+asoc->peer.primary_path / active_path, and del_nonprimary_peers(), keeping
+only the pointer that is no longer on the list, removes every real
+transport, leaving the association with a transport_count of 0 and
+primary_path/active_path pointing at freed memory.
+
+reject a del-ip that targets the transport the asconf is being processed
+against, mirroring the existing source-address guard, so the wildcard
+branch can never reuse a freed transport.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64564" target="_blank">CVE-2026-64564</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+sctp: don't free the ASCONF's own transport in DEL-IP processing
+
+sctp_process_asconf() caches the transport the ASCONF chunk is processed
+against in asconf->transport (== chunk->transport, set once in sctp_rcv()).
+For an ASCONF located through its Address Parameter by
+__sctp_rcv_asconf_lookup(), that cached transport corresponds to the
+Address Parameter, which need not be the packet's source address.
+
+sctp_process_asconf_param() rejects a DEL-IP for the packet source address
+(ADDIP D8, SCTP_ERROR_DEL_SRC_IP), but nothing protects asconf->transport.
+A single ASCONF can therefore carry, in order:
+
+    [Address Parameter L] [DEL-IP L] [DEL-IP 0.0.0.0]
+
+where L differs from the source. The DEL-IP for L passes the D8 check and
+calls sctp_assoc_rm_peer() on the transport that asconf->transport still
+points at, freeing it (RCU-deferred). The following wildcard DEL-IP then
+reuses the now-dangling asconf->transport in sctp_assoc_set_primary() and
+sctp_assoc_del_nonprimary_peers(): set_primary() dereferences the freed
+transport (->ipaddr, ->state) and plants the dangling pointer into
+asoc->peer.primary_path / active_path, and del_nonprimary_peers(), keeping
+only the pointer that is no longer on the list, removes every real
+transport, leaving the association with a transport_count of 0 and
+primary_path/active_path pointing at freed memory.
+
+Reject a DEL-IP that targets the transport the ASCONF is being processed
+against, mirroring the existing source-address guard, so the wildcard
+branch can never reuse a freed transport.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-18723" data-description="a vulnerability was determined in diaowen dwsurvey up to 6.14.0. the affected element is an unknown function of the file /api/dwsurvey/app/survey/up-survey-status.do of the component survey status handler. this manipulation causes improper authorization. the attack may be initiated remotely. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18723" target="_blank">CVE-2026-18723</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 23:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was determined in diaowen DWSurvey up to 6.14.0. The affected element is an unknown function of the file /api/dwsurvey/app/survey/up-survey-status.do of the component Survey Status Handler. This manipulation causes improper authorization. The attack may be initiated remotely. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-64563" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rhashtable: clear stale iter->p on table restart
+
+rhashtable_walk_start_check() has two restart paths when resuming a walk.
+when iter->walker.tbl is valid, it re-validates iter->p against the table
+and sets iter->p = null if the object is gone.  when iter->walker.tbl is
+null (table was freed during resize), it resets slot and skip but forgets
+to clear iter->p.
+
+rhashtable_walk_next() then dereferences the stale iter->p, reading
+freed memory.  this is a use-after-free.
+
+any caller that does multi-fragment rhashtable walks across
+walk_stop/walk_start boundaries is affected.  concrete cases include
+netlink_diag (__netlink_diag_dump in net/netlink/diag.c) and tipc
+(tipc_nl_sk_walk in net/tipc/socket.c).
+
+crash stack (netlink_diag):
+  bug: kasan: slab-use-after-free in rhashtable_walk_next+0x365/0x3c0
+  read of size 8 at addr ffff88801a9d2438 (freed kmalloc-2k, offset 1080)
+  call trace:
+   rhashtable_walk_next+0x365/0x3c0 (lib/rhashtable.c:1016)
+   __netlink_diag_dump+0x160/0x760 (net/netlink/diag.c:122)
+   netlink_diag_dump+0xc2/0x240
+   netlink_dump+0x5bc/0x1270
+   netlink_recvmsg+0x7a3/0x980
+   sock_recvmsg+0x1bc/0x200
+   __sys_recvfrom+0x1d4/0x2c0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64563" target="_blank">CVE-2026-64563</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+rhashtable: clear stale iter->p on table restart
+
+rhashtable_walk_start_check() has two restart paths when resuming a walk.
+When iter->walker.tbl is valid, it re-validates iter->p against the table
+and sets iter->p = NULL if the object is gone.  When iter->walker.tbl is
+NULL (table was freed during resize), it resets slot and skip but forgets
+to clear iter->p.
+
+rhashtable_walk_next() then dereferences the stale iter->p, reading
+freed memory.  This is a use-after-free.
+
+Any caller that does multi-fragment rhashtable walks across
+walk_stop/walk_start boundaries is affected.  Concrete cases include
+netlink_diag (__netlink_diag_dump in net/netlink/diag.c) and TIPC
+(tipc_nl_sk_walk in net/tipc/socket.c).
+
+Crash stack (netlink_diag):
+  BUG: KASAN: slab-use-after-free in rhashtable_walk_next+0x365/0x3c0
+  Read of size 8 at addr ffff88801a9d2438 (freed kmalloc-2k, offset 1080)
+  Call Trace:
+   rhashtable_walk_next+0x365/0x3c0 (lib/rhashtable.c:1016)
+   __netlink_diag_dump+0x160/0x760 (net/netlink/diag.c:122)
+   netlink_diag_dump+0xc2/0x240
+   netlink_dump+0x5bc/0x1270
+   netlink_recvmsg+0x7a3/0x980
+   sock_recvmsg+0x1bc/0x200
+   __sys_recvfrom+0x1d4/0x2c0</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-18722" data-description="a vulnerability was found in diaowen dwsurvey up to 6.14.0. impacted is the function in dwdeisgnsurveycontroller.devsurvey. of the file /api/dwsurvey/app/v6/dw-design-survey/dev-survey.do of the component survey handler. the manipulation results in authorization bypass. the attack can be launched remotely. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18722" target="_blank">CVE-2026-18722</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 23:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was found in diaowen DWSurvey up to 6.14.0. Impacted is the function in DwDeisgnSurveyController.devSurvey. of the file /api/dwsurvey/app/v6/dw-design-survey/dev-survey.do of the component Survey Handler. The manipulation results in authorization bypass. The attack can be launched remotely. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-64562" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+kvm: nvmx: hide shadow vmcs right after vmclear
+
+free_nested() frees the shadow vmcs while vmcs01 still points to it. but
+because it is asynchronous with respect to loaded_vmcs_clear(), the vcpu
+might migrate before the pointer is cleared and __loaded_vmcs_clear()
+may then execute vmclear.
+
+the vmcs needs to stay attached until its explicit vmclear completes, but
+then it can be hidden and the page safely freed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64562" target="_blank">CVE-2026-64562</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+KVM: nVMX: Hide shadow VMCS right after VMCLEAR
+
+free_nested() frees the shadow VMCS while vmcs01 still points to it. But
+because it is asynchronous with respect to loaded_vmcs_clear(), the vCPU
+might migrate before the pointer is cleared and __loaded_vmcs_clear()
+may then execute VMCLEAR.
+
+The VMCS needs to stay attached until its explicit VMCLEAR completes, but
+then it can be hidden and the page safely freed.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-18721" data-description="a vulnerability has been found in kalcaddle kodbox 1.67 build 02. this issue affects some unknown processing of the file /user/sso/apilogin of the component sso api login. the manipulation of the argument callbackurl leads to open redirect. the attack can be initiated remotely. the exploit has been disclosed to the public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18721" target="_blank">CVE-2026-18721</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 23:16:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability has been found in kalcaddle kodbox 1.67 Build 02. This issue affects some unknown processing of the file /user/sso/apiLogin of the component SSO API Login. The manipulation of the argument callbackUrl leads to open redirect. The attack can be initiated remotely. The exploit has been disclosed to the public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-64561" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+kvm: x86: check for invalid/obsolete root *after* making mmu pages available
+
+check for a "stale" page fault, i.e. for an invalid and/or obsolete root,
+after making mmu pages available for the shadow mmu.  if reclaiming shadow
+pages zaps an in-use root, i.e. marks it invalid, then kvm will attempt to
+map memory into an invalid root.  on its own, populating an invalid root is
+"fine", but because child shadow pages inherit their parent's role, any
+children created during the map/fetch will be created as invalid pages,
+thus violating kvm's invariant that invalid pages are never on the list of
+active mmu pages.
+
+note, the underlying flaw has existed since kvm first started tracking
+invalid roots in 2008 (commit 2e53d63acba7, "kvm: mmu: ignore zapped root
+pagetables"), but the true badness only came along in 2020 (linux 5.9)
+with the invariant that invalid shadow pages can't be on the list of
+active pages.
+
+note #2, inheriting role.invalid when creating child shadow pages is also
+far from ideal; that flaw will be addressed separately.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64561" target="_blank">CVE-2026-64561</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+KVM: x86: Check for invalid/obsolete root *after* making MMU pages available
+
+Check for a "stale" page fault, i.e. for an invalid and/or obsolete root,
+after making MMU pages available for the shadow MMU.  If reclaiming shadow
+pages zaps an in-use root, i.e. marks it invalid, then KVM will attempt to
+map memory into an invalid root.  On its own, populating an invalid root is
+"fine", but because child shadow pages inherit their parent's role, any
+children created during the map/fetch will be created as invalid pages,
+thus violating KVM's invariant that invalid pages are never on the list of
+active MMU pages.
+
+Note, the underlying flaw has existed since KVM first started tracking
+invalid roots in 2008 (commit 2e53d63acba7, "KVM: MMU: ignore zapped root
+pagetables"), but the true badness only came along in 2020 (Linux 5.9)
+with the invariant that invalid shadow pages can't be on the list of
+active pages.
+
+Note #2, inheriting role.invalid when creating child shadow pages is also
+far from ideal; that flaw will be addressed separately.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-14818" data-description="a path traversal vulnerability in the cli command used to execute configuration files in zyxel atp series firmware versions from v4.32 through v5.42 patch 1, usg flex series firmware versions from v4.50 through v5.42 patch 1, usg flex 50(w) series firmware versions from v4.16 through v5.42 patch 1, and usg20(w)-vpn series firmware versions from v4.16 through v5.42 patch 1 could allow an authenticated attacker with administrator privileges to execute a crafted malicious configuration file on an affected device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14818" target="_blank">CVE-2026-14818</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 23:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>A path traversal vulnerability in the CLI command used to execute configuration files in Zyxel ATP series firmware versions from V4.32 through V5.42 Patch 1, USG FLEX series firmware versions from V4.50 through V5.42 Patch 1, USG FLEX 50(W) series firmware versions from V4.16 through V5.42 Patch 1, and USG20(W)-VPN series firmware versions from V4.16 through V5.42 Patch 1 could allow an authenticated attacker with administrator privileges to execute a crafted malicious configuration file on an affected device.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16623" data-description="the create block  wordpress plugin before 2.10.0 does not correctly escape user-supplied text before writing it into a generated php pattern file, allowing a multisite subsite administrator (who holds the capability gating this action but is denied the capability that normally gates php file editing) to inject and execute arbitrary php code on the server.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16623" target="_blank">CVE-2026-16623</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Create Block  WordPress plugin before 2.10.0 does not correctly escape user-supplied text before writing it into a generated PHP pattern file, allowing a multisite subsite administrator (who holds the capability gating this action but is denied the capability that normally gates PHP file editing) to inject and execute arbitrary PHP code on the server.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-8508" data-description="an improper authentication vulnerability in the "social_login.cgi" cgi program in zyxel wax650s firmware versions through 7.10(abrm.4)c0 could allow an attacker on the wlan to bypass captive portal authentication.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8508" target="_blank">CVE-2026-8508</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 22:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>An improper authentication vulnerability in the "social_login.cgi" CGI program in Zyxel WAX650S firmware versions through 7.10(ABRM.4)C0 could allow an attacker on the WLAN to bypass captive portal authentication.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16618" data-description="the improve seo wordpress plugin through 2.0.11 does not properly validate uploaded files, checking only the file content type while writing the file with the attacker-supplied extension into a publicly accessible directory, allowing unauthenticated users to upload executable php files and achieve remote code execution.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16618" target="_blank">CVE-2026-16618</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Improve SEO WordPress plugin through 2.0.11 does not properly validate uploaded files, checking only the file content type while writing the file with the attacker-supplied extension into a publicly accessible directory, allowing unauthenticated users to upload executable PHP files and achieve remote code execution.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6837" data-description="a post-authentication command injection vulnerability in the "export-cgi" cgi program in zyxel wax650s firmware versions through 7.10(abrm.4)c0 could allow an authenticated attacker with administrator privileges to execute os commands on an affected device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6837" target="_blank">CVE-2026-6837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 22:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>A post-authentication command injection vulnerability in the "export-cgi" CGI program in Zyxel WAX650S firmware versions through 7.10(ABRM.4)C0 could allow an authenticated attacker with administrator privileges to execute OS commands on an affected device.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16548" data-description="the chat widget: floating customer support button for 30+ channels, supporting sms, calls, and chat  wordpress plugin before 1.8.2 does not validate the type, extension, content, or size of files submitted to its public response endpoint and stores them under the uploads directory, so an unauthenticated user can upload arbitrary files. the original extension is discarded (files are stored under a bare uuid), so this does not yield code execution or stored xss; impact is bounded to disk consumption and content hosting. the storing path requires the channel's response storage or mail-forwarding to be configured.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16548" target="_blank">CVE-2026-16548</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Chat Widget: Floating Customer Support Button for 30+ Channels, Supporting SMS, Calls, and Chat  WordPress plugin before 1.8.2 does not validate the type, extension, content, or size of files submitted to its public response endpoint and stores them under the uploads directory, so an unauthenticated user can upload arbitrary files. The original extension is discarded (files are stored under a bare UUID), so this does not yield code execution or stored XSS; impact is bounded to disk consumption and content hosting. The storing path requires the channel's response storage or mail-forwarding to be configured.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-18720" data-description="a flaw has been found in kalcaddle kodbox 1.67 build 02. this vulnerability affects unknown code of the file /index.php?plugin/msgwarning/action of the component msgwarning plugin. executing a manipulation can lead to improper authorization. it is possible to launch the attack remotely. the exploit has been published and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18720" target="_blank">CVE-2026-18720</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 22:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A flaw has been found in kalcaddle kodbox 1.67 Build 02. This vulnerability affects unknown code of the file /index.php?plugin/msgWarning/action of the component msgWarning Plugin. Executing a manipulation can lead to improper authorization. It is possible to launch the attack remotely. The exploit has been published and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16547" data-description="the rest api log wordpress plugin before 1.7.1 does not bind the token protecting its log download feature to the log entry being requested, nor does it check the capability of the requester, allowing unauthenticated users in possession of any such token to download the logged rest api requests and responses of any entry, which may contain sensitive data such as credentials, authentication tokens or private content.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16547" target="_blank">CVE-2026-16547</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The REST API Log WordPress plugin before 1.7.1 does not bind the token protecting its log download feature to the log entry being requested, nor does it check the capability of the requester, allowing unauthenticated users in possession of any such token to download the logged REST API requests and responses of any entry, which may contain sensitive data such as credentials, authentication tokens or private content.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-17614" data-description="a path traversal flaw was found in wildfly's domain mode
-  implementation. the localfilerepository.getfile() and
-  getconfigurationfile() methods in
-  wildfly-core/deployment-repository do not validate that the
-  resolved file path remains within the configured repository or
-  configuration root directories. a remote attacker who has
-  obtained the slave host controller secret or compromised a slave
-  host controller can supply a crafted relative path containing
-  directory traversal sequences (e.g., ../../etc/passwd) via the
-  slave-dc wire protocol, causing the domain controller to resolve
-  and serve arbitrary files readable by the dc process. this leads
-  to unauthorized disclosure of sensitive information such as
-  configuration files, keystores, and system credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17614" target="_blank">CVE-2026-17614</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 22:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
-                    <p>A path traversal flaw was found in WildFly's domain mode
-  implementation. The LocalFileRepository.getFile() and
-  getConfigurationFile() methods in
-  wildfly-core/deployment-repository do not validate that the
-  resolved file path remains within the configured repository or
-  configuration root directories. A remote attacker who has
-  obtained the slave host controller secret or compromised a slave
-  host controller can supply a crafted relative path containing
-  directory traversal sequences (e.g., ../../etc/passwd) via the
-  slave-DC wire protocol, causing the Domain Controller to resolve
-  and serve arbitrary files readable by the DC process. This leads
-  to unauthorized disclosure of sensitive information such as
-  configuration files, keystores, and system credentials.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16546" data-description="the wired impact volunteer management wordpress plugin before 2.8.2 does not have authorisation checks in one of its ajax actions, and does not verify that the rsvp being removed belongs to the requesting user, allowing users with a role as low as subscriber to remove arbitrary users' rsvps from any volunteer opportunity.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16546" target="_blank">CVE-2026-16546</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Wired Impact Volunteer Management WordPress plugin before 2.8.2 does not have authorisation checks in one of its AJAX actions, and does not verify that the RSVP being removed belongs to the requesting user, allowing users with a role as low as Subscriber to remove arbitrary users' RSVPs from any volunteer opportunity.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-18719" data-description="a vulnerability was detected in cemtan sar2html 4.0.0. this affects an unknown part of the file sar2html.py of the component search. performing a manipulation of the argument search results in sql injection. it is possible to initiate the attack remotely. the exploit is now public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18719" target="_blank">CVE-2026-18719</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 21:16:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was detected in cemtan sar2html 4.0.0. This affects an unknown part of the file sar2html.py of the component Search. Performing a manipulation of the argument Search results in sql injection. It is possible to initiate the attack remotely. The exploit is now public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16536" data-description="the simple google calendar outlook events widget wordpress plugin before 3.1.0 does not validate a user-supplied url before performing a server-side request, allowing unauthenticated attackers to perform server-side request forgery attacks and, in some cases, read the response of the internal request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16536" target="_blank">CVE-2026-16536</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Simple Google Calendar Outlook Events Widget WordPress plugin before 3.1.0 does not validate a user-supplied URL before performing a server-side request, allowing unauthenticated attackers to perform Server-Side Request Forgery attacks and, in some cases, read the response of the internal request.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-58045" data-description="a flaw in node.js allows a spoofed `typedarray` `bytelength` to trigger a reachable assertion in the synchronous `node:zlib` apis, causing the entire process to crash. all 11 synchronous zlib functions are affected.
-
-repeated exploitation of this condition can result in a denial of service.
-
-this vulnerability affects node.js **22.x**, **24.x**, and **26.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58045" target="_blank">CVE-2026-58045</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 20:16:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.2</p>
-                    <p>A flaw in Node.js allows a spoofed `TypedArray` `byteLength` to trigger a reachable assertion in the synchronous `node:zlib` APIs, causing the entire process to crash. All 11 synchronous zlib functions are affected.
-
-Repeated exploitation of this condition can result in a denial of service.
-
-This vulnerability affects Node.js **22.x**, **24.x**, and **26.x**.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16296" data-description="the clearfy cache  wordpress plugin before 2.4.3 does not validate the redirect target in its cyrlitera old-url redirect handler, passing a decoded request uri to an unsafe redirect function, which allows unauthenticated attackers to redirect visitors to an arbitrary external url when a non-default option is enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16296" target="_blank">CVE-2026-16296</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Clearfy Cache  WordPress plugin before 2.4.3 does not validate the redirect target in its Cyrlitera old-URL redirect handler, passing a decoded request URI to an unsafe redirect function, which allows unauthenticated attackers to redirect visitors to an arbitrary external URL when a non-default option is enabled.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-58044" data-description="a flaw in node.js http client can cause a request desynchronization for node.js-based forwarding proxies that rebuild outbound headers from the visible `incomingmessage` headers while piping the original body to a reused backend connection.
-
-node.js can omit headers beyond `maxheaderscount` / `maxheaderpairs` from `req.headers`, `req.rawheaders`, and `req.headersdistinct`, while still using those omitted headers internally for http message framing. in particular, `content-length` can be hidden from userland while the request body is still delivered.
-
-this vulnerability affects all supported release lines: **node.js 22**, **node.js 24**, and **node.js 26**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58044" target="_blank">CVE-2026-58044</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 20:16:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>A flaw in Node.js HTTP client can cause a request desynchronization for Node.js-based forwarding proxies that rebuild outbound headers from the visible `IncomingMessage` headers while piping the original body to a reused backend connection.
-
-Node.js can omit headers beyond `maxHeadersCount` / `maxHeaderPairs` from `req.headers`, `req.rawHeaders`, and `req.headersDistinct`, while still using those omitted headers internally for HTTP message framing. In particular, `Content-Length` can be hidden from userland while the request body is still delivered.
-
-This vulnerability affects all supported release lines: **Node.js 22**, **Node.js 24**, and **Node.js 26**.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16295" data-description="the clearfy cache  wordpress plugin before 2.4.3 does not perform a capability check in one of its admin-page dispatch paths, allowing any authenticated user such as a subscriber to render admin-only settings pages and disclose their contents, including administrative nonces, while the canonical page url correctly restricts access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16295" target="_blank">CVE-2026-16295</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Clearfy Cache  WordPress plugin before 2.4.3 does not perform a capability check in one of its admin-page dispatch paths, allowing any authenticated user such as a Subscriber to render admin-only settings pages and disclose their contents, including administrative nonces, while the canonical page URL correctly restricts access.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-58042" data-description="a flaw in node.js can cause dns.resolveany() aborts the node.js process when a dns response contains more than 256 a records.
-
-repeated triggering of this condition can lead to denial of service.
-
-this vulnerability affects node.js **26.x**, **24.x**, and **22.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58042" target="_blank">CVE-2026-58042</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 20:16:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>A flaw in Node.js can cause dns.resolveAny() Aborts the Node.js Process When a DNS Response Contains More Than 256 A Records.
-
-Repeated triggering of this condition can lead to denial of service.
-
-This vulnerability affects Node.js **26.x**, **24.x**, and **22.x**.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16293" data-description="the powerpress podcasting plugin by blubrry wordpress plugin before 11.16.11 does not sanitise and escape some of its podcast episode settings, which could allow users with a role as low as contributor to perform stored cross-site scripting attacks even when the unfiltered_html capability is disallowed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16293" target="_blank">CVE-2026-16293</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The PowerPress Podcasting plugin by Blubrry WordPress plugin before 11.16.11 does not sanitise and escape some of its Podcast Episode settings, which could allow users with a role as low as Contributor to perform Stored Cross-Site Scripting attacks even when the unfiltered_html capability is disallowed.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-58041" data-description="a flaw in node.js node:sqlite allows a stale statementsynciterator created through databasesync#createtagstore() to continue executing a cached prepared statement after it has been reset and rebound with new parameters. sqltagstore resets cached statements using sqlite3_reset() directly, bypassing the iterator invalidation mechanism introduced for statementsync in recent releases
-
-this vulnerability affects node.js **22.x**, **24.x**, and **26.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58041" target="_blank">CVE-2026-58041</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 20:16:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A flaw in Node.js node:sqlite allows a stale StatementSyncIterator created through DatabaseSync#createTagStore() to continue executing a cached prepared statement after it has been reset and rebound with new parameters. SQLTagStore resets cached statements using sqlite3_reset() directly, bypassing the iterator invalidation mechanism introduced for StatementSync in recent releases
-
-This vulnerability affects Node.js **22.x**, **24.x**, and **26.x**.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16070" data-description="the brizy  wordpress plugin before 2.8.19 does not properly verify authorization on the object being modified before updating a template's type meta, validating a request parameter that is different from the one used in the write operation, allowing users with contributor-level access and above to change the template-type assignment of templates owned by other users.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16070" target="_blank">CVE-2026-16070</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Brizy  WordPress plugin before 2.8.19 does not properly verify authorization on the object being modified before updating a template's type meta, validating a request parameter that is different from the one used in the write operation, allowing users with Contributor-level access and above to change the template-type assignment of templates owned by other users.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-56846" data-description="a flaw in node.js http/2 handling can cause http/2 retained header blocks evade maxsessionmemory and enable remote memory exhaustion.
-
-this vulnerability affects node.js **24.x** and **22.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56846" target="_blank">CVE-2026-56846</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 20:16:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>A flaw in Node.js HTTP/2 handling can cause HTTP/2 retained header blocks evade maxSessionMemory and enable remote memory exhaustion.
-
-This vulnerability affects Node.js **24.x** and **22.x**.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16069" data-description="the brizy  wordpress plugin before 2.8.19 does not sanitize or escape featured-image focal-point coordinates submitted through one of its ajax actions before storing them and later echoing them into html attributes in the post editor's featured image meta box, allowing users with the contributor role or above to inject arbitrary web scripts that execute in the session of a higher-privileged user who opens the post for review.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16069" target="_blank">CVE-2026-16069</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Brizy  WordPress plugin before 2.8.19 does not sanitize or escape featured-image focal-point coordinates submitted through one of its AJAX actions before storing them and later echoing them into HTML attributes in the post editor's Featured Image meta box, allowing users with the Contributor role or above to inject arbitrary web scripts that execute in the session of a higher-privileged user who opens the post for review.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-56845" data-description="an unauthenticated path traversal (lfi) vulnerability exists under /custom-sounds/ when customsounds storage is configured to filesystem. by including ../ sequences in the request path, an attacker can read arbitrary files outside the base directory.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56845" target="_blank">CVE-2026-56845</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-03 20:16:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>An unauthenticated path traversal (LFI) vulnerability exists under /custom-sounds/ when CustomSounds storage is configured to FileSystem. By including ../ sequences in the request path, an attacker can read arbitrary files outside the base directory.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-16068" data-description="the brizy  wordpress plugin before 2.8.19 does not properly restrict who can modify its site-global design data and does not sanitise part of that data before outputting it, allowing authenticated users with author-level access and above to store arbitrary javascript that is then served unsanitised on the site's front-end pages and executes in the browser of every visitor, including administrators.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16068" target="_blank">CVE-2026-16068</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Brizy  WordPress plugin before 2.8.19 does not properly restrict who can modify its site-global design data and does not sanitise part of that data before outputting it, allowing authenticated users with Author-level access and above to store arbitrary JavaScript that is then served unsanitised on the site's front-end pages and executes in the browser of every visitor, including administrators.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16056" data-description="the contest gallery  wordpress plugin before 30.0.7 does not perform any capability or nonce check in one of its handlers, allowing any authenticated user down to subscriber to read the site's entire stored openai prompt history.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16056" target="_blank">CVE-2026-16056</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Contest Gallery  WordPress plugin before 30.0.7 does not perform any capability or nonce check in one of its handlers, allowing any authenticated user down to Subscriber to read the site's entire stored OpenAI prompt history.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16035" data-description="the miniorange 2fa  wordpress plugin before 6.2.7 does not restrict who can trigger its second-factor configuration otp send, nor bind the otp recipient to the enrolling user's own address, allowing a low-privileged user to send one-time-passcode emails to arbitrary recipients and to exhaust the site's metered otp allowance, preventing legitimate users from receiving their second-factor codes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16035" target="_blank">CVE-2026-16035</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The miniOrange 2FA  WordPress plugin before 6.2.7 does not restrict who can trigger its second-factor configuration OTP send, nor bind the OTP recipient to the enrolling user's own address, allowing a low-privileged user to send one-time-passcode emails to arbitrary recipients and to exhaust the site's metered OTP allowance, preventing legitimate users from receiving their second-factor codes.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15958" data-description="the easy integration for dropbox  wordpress plugin before 2.2.0 does not perform authorization checks on several of its file-management ajax actions that it also registers for unauthenticated users, allowing an unauthenticated attacker to list, download and upload arbitrary files across the connected dropbox account and to read the connected account and administrator email addresses.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15958" target="_blank">CVE-2026-15958</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-04 02:16:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Easy Integration for Dropbox  WordPress plugin before 2.2.0 does not perform authorization checks on several of its file-management AJAX actions that it also registers for unauthenticated users, allowing an unauthenticated attacker to list, download and upload arbitrary files across the connected Dropbox account and to read the connected account and administrator email addresses.</p>
                 </div>
         
             </div>
