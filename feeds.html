@@ -34,6 +34,248 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-71256" data-description="nanomodbus through v1.23.0 contains an out-of-bounds stack read leading to a wild-pointer write in nmbs_read_device_identification_basic() / recv_read_device_identification_res() in nanomodbus.c. a fixed 3-element stack array order[3] = {0,1,2} maps object ids to buffer indices. the server-supplied object_id field (0-255, read directly from the wire) is used without any bounds check as buf_index = order[object_id]. when a malicious modbus server sends a read device identification response with object_id >= 3, this reads an out-of-bounds/garbage byte from the stack adjacent to order[], which is then used as an index into a 3-element buffers[] array of char* pointers. the resulting wild pointer is passed to strncpy() as the destination, causing an arbitrary-address write with server-controlled data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71256" target="_blank">CVE-2026-71256</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>nanoMODBUS through v1.23.0 contains an out-of-bounds stack read leading to a wild-pointer write in nmbs_read_device_identification_basic() / recv_read_device_identification_res() in nanomodbus.c. A fixed 3-element stack array order[3] = {0,1,2} maps object IDs to buffer indices. The server-supplied object_id field (0-255, read directly from the wire) is used without any bounds check as buf_index = order[object_id]. When a malicious Modbus server sends a Read Device Identification response with object_id >= 3, this reads an out-of-bounds/garbage byte from the stack adjacent to order[], which is then used as an index into a 3-element buffers[] array of char* pointers. The resulting wild pointer is passed to strncpy() as the destination, causing an arbitrary-address write with server-controlled data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-71255" data-description="nanomodbus through v1.23.0 contains an out-of-bounds write in the modbus client-side recv_read_device_identification_res() function (fc 0x2b/mei 0x0e, read device identification) in nanomodbus.c. the server-supplied object_length field (0-246) is validated only against the remaining pdu size (res_size_left) and is never validated against the caller-supplied buffers_length parameter. after copying data with strncpy(buffers_out[buf_index], str, buffers_length), the code unconditionally writes a nul terminator at buffers_out[buf_index][object_length]. when a malicious or compromised modbus server sends a response with object_length greater than or equal to the client's buffers_length, this nul write lands past the end of the caller-provided buffer, corrupting adjacent stack or heap memory on the client.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71255" target="_blank">CVE-2026-71255</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.6</p>
+                    <p>nanoMODBUS through v1.23.0 contains an out-of-bounds write in the Modbus client-side recv_read_device_identification_res() function (FC 0x2B/MEI 0x0E, Read Device Identification) in nanomodbus.c. The server-supplied object_length field (0-246) is validated only against the remaining PDU size (res_size_left) and is never validated against the caller-supplied buffers_length parameter. After copying data with strncpy(buffers_out[buf_index], str, buffers_length), the code unconditionally writes a NUL terminator at buffers_out[buf_index][object_length]. When a malicious or compromised Modbus server sends a response with object_length greater than or equal to the client's buffers_length, this NUL write lands past the end of the caller-provided buffer, corrupting adjacent stack or heap memory on the client.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-71254" data-description="nanomodbus through v1.23.0 contains an out-of-bounds write in the modbus server-side handle_read_file_record() function (fc 0x14, read file record) in nanomodbus.c. the function validates that the total request size does not exceed 245 bytes and that each sub-request's record_length is at most 124, but it never validates the cumulative response size across all sub-requests before processing them. the accumulator response_data_size is declared as uint8_t and is incremented by 2 + record_length*2 for each of up to 35 sub-requests; with 35 sub-requests of record_length=124, the cumulative demand is 8750 bytes, which overflows the uint8_t accumulator. a subsequent loop then calls get_n(), an internal function with no bounds checking, once per sub-request to obtain a pointer into the 260-byte msg.buf receive buffer and advances the internal buf_idx by up to 248 bytes per call; swap_regs() then writes to that pointer unconditionally. a single crafted fc 0x14 request from an unauthenticated network client can cause up to ~8490 bytes to be written out of bounds past the 260-byte buffer, corrupting adjacent memory in the server process and leading to denial of service or potential remote code execution, particularly on embedded/bare-metal targets without memory protection.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71254" target="_blank">CVE-2026-71254</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>nanoMODBUS through v1.23.0 contains an out-of-bounds write in the Modbus server-side handle_read_file_record() function (FC 0x14, Read File Record) in nanomodbus.c. The function validates that the total request size does not exceed 245 bytes and that each sub-request's record_length is at most 124, but it never validates the CUMULATIVE response size across all sub-requests before processing them. The accumulator response_data_size is declared as uint8_t and is incremented by 2 + record_length*2 for each of up to 35 sub-requests; with 35 sub-requests of record_length=124, the cumulative demand is 8750 bytes, which overflows the uint8_t accumulator. A subsequent loop then calls get_n(), an internal function with no bounds checking, once per sub-request to obtain a pointer into the 260-byte msg.buf receive buffer and advances the internal buf_idx by up to 248 bytes per call; swap_regs() then writes to that pointer unconditionally. A single crafted FC 0x14 request from an unauthenticated network client can cause up to ~8490 bytes to be written out of bounds past the 260-byte buffer, corrupting adjacent memory in the server process and leading to denial of service or potential remote code execution, particularly on embedded/bare-metal targets without memory protection.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-64582" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/rxe: fix a use-after-free problem in rxe_mmap
+
+rxe_mmap() removes a rxe_mmap_info struct from the pending_mmaps list
+and releases pending_lock while the struct's kref is still at 1:
+
+   list_del_init(&ip->pending_mmaps);
+   spin_unlock_bh(&rxe->pending_lock);   /* ref == 1, no lock held */
+   ret = remap_vmalloc_range(vma, ip->obj, 0);  /* walks ptes */
+   [...]
+   rxe_vma_open(vma);                    /* kref_get, ref → 2 */
+   remap_vmalloc_range_partial() walks ptes without any lock.
+
+a concurrent destroy_cq ioctl on another cpu calls:
+
+    kref_put(&q->ip->ref, rxe_mmap_release)   /* ref 1→0 */
+    vfree(ip->obj)   /* clears vmalloc ptes mid-walk */
+    kfree(ip)        /* frees rxe_mmap_info */
+
+this yields:
+
+   1. kernel crash, vmalloc_to_page() returns null when vfree wins the
+   per-pte race -> vm_insert_page(null) → gpf in validate_page_before_insert
+
+   2. page uaf, vmalloc_to_page() reads a stale pte before vfree clears
+   it. user vma holds a pte to a free'd page which might eventually get
+   reallocated later by vmalloc which allows the attacker to get a clean
+   page-level uaf.
+
+   it is worth noting that even though a page-level uaf is possible given
+   the strong primitive, it is statistically very difficult to achieve
+   given the very short time window (after the last insert_page and before
+   the kref_get).
+
+the call trace are as below:
+
+  oops: general protection fault, probably for non-canonical address 0xdffffc0000000001: 0000 [#1] smp kasan nopti
+  kasan: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]
+  cpu: 0 uid: 1000 pid: 413 comm: poc not tainted 7.0.0-rc5-dirty #28 preempt(lazy)
+  hardware name: qemu standard pc (i440fx + piix, 1996), bios 1.15.0-1 04/01/2014
+  rip: 0010:validate_page_before_insert+0x32/0x300
+  code: e5 41 57 41 56 49 89 fe 41 55 41 54 53 48 89 f3 e8 93 b5 a3 ff 48 8d 7b 08 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 7b 02 00 00 4c 8b 63 08 31 ff 4d 89 e5 41 83 e5
+  rsp: 0018:ffff88811b15f2f0 eflags: 00000202
+  rax: dffffc0000000000 rbx: 0000000000000000 rcx: 0000000000000000
+  rdx: 0000000000000001 rsi: 0000000000000000 rdi: 0000000000000008
+  rbp: ffff88811b15f318 r08: 0000000000000000 r09: 0000000000000000
+  r10: 0000000000000000 r11: 0000000000000000 r12: ffff8881181eee00
+  r13: 0000000000000000 r14: ffff8881181eee00 r15: ffff8881181eee20
+  fs:  00007b1e000f76c0(0000) gs:ffff8884268e0000(0000) knlgs:0000000000000000
+  cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+  cr2: 00007b1e00a24ac0 cr3: 0000000116eb3000 cr4: 00000000000006f0
+  call trace:
+   <task>
+   insert_page+0x8f/0x190
+   ? __pfx_insert_page+0x10/0x10
+   ? kasan_save_alloc_info+0x38/0x60
+   vm_insert_page+0x2e7/0x400
+   remap_vmalloc_range_partial+0x212/0x3e0
+   remap_vmalloc_range+0x6e/0xb0
+   ? __kasan_check_write+0x14/0x30
+   rxe_mmap+0x2e9/0x5d0
+   ib_uverbs_mmap+0x1ad/0x2c0
+   __mmap_region+0x12c2/0x2ad0
+   ? __pfx___mmap_region+0x10/0x10
+   ? __sanitizer_cov_trace_switch+0x58/0xb0
+   ? mas_prev_slot+0x360/0x39c0
+   ? __sanitizer_cov_trace_switch+0x58/0xb0
+   ? mas_next_slot+0x1e5b/0x2f40
+   ? __sanitizer_cov_trace_cmp8+0x18/0x30
+   ? unmapped_area_topdown+0x4dd/0x610
+   ? kfree+0x1b1/0x440
+   ? free_cpumask_var+0x16/0x30
+   ? __kasan_slab_free+0x7d/0xa0
+   ? __sanitizer_cov_trace_cmp8+0x18/0x30
+   mmap_region+0x2e6/0x3c0
+   do_mmap+0xa3e/0x12a0
+   ? __pfx_do_mmap+0x10/0x10
+   ? __kasan_check_write+0x14/0x30
+   ? down_write_killable+0xba/0x160
+   ? __pfx_down_write_killable+0x10/0x10
+   ? __sanitizer_cov_trace_cmp4+0x16/0x30
+   vm_mmap_pgoff+0x2d4/0x4a0
+   ? __pfx_vm_mmap_pgoff+0x10/0x10
+   ? fget+0x1bf/0x270
+   ksys_mmap_pgoff+0x40c/0x690
+   ? __sanitizer_cov_trace_const_cmp4+0x16/0x30
+   ? __pfx_ksys_mmap_pgoff+0x10/0x10
+   ? __kasan_check_write+0x14/0x30
+   ? _raw_spin_trylock+0xbb/0x130
+   ? __pfx__raw_spin_trylock+0x10/0x10
+   __x64_sys_mmap+0x135/0x1e0
+   x64_sys_c
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64582" target="_blank">CVE-2026-64582</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/rxe: Fix a use-after-free problem in rxe_mmap
+
+rxe_mmap() removes a rxe_mmap_info struct from the pending_mmaps list
+and releases pending_lock while the struct's kref is still at 1:
+
+   list_del_init(&ip->pending_mmaps);
+   spin_unlock_bh(&rxe->pending_lock);   /* ref == 1, no lock held */
+   ret = remap_vmalloc_range(vma, ip->obj, 0);  /* walks PTEs */
+   [...]
+   rxe_vma_open(vma);                    /* kref_get, ref → 2 */
+   remap_vmalloc_range_partial() walks PTEs without any lock.
+
+A concurrent DESTROY_CQ ioctl on another CPU calls:
+
+    kref_put(&q->ip->ref, rxe_mmap_release)   /* ref 1→0 */
+    vfree(ip->obj)   /* clears vmalloc PTEs mid-walk */
+    kfree(ip)        /* frees rxe_mmap_info */
+
+This yields:
+
+   1. Kernel crash, vmalloc_to_page() returns NULL when vfree wins the
+   per-PTE race -> vm_insert_page(NULL) → GPF in validate_page_before_insert
+
+   2. Page UAF, vmalloc_to_page() reads a stale PTE before vfree clears
+   it. User VMA holds a PTE to a free'd page which might eventually get
+   reallocated later by vmalloc which allows the attacker to get a clean
+   page-level UAF.
+
+   It is worth noting that even though a page-level UAF is possible given
+   the strong primitive, it is statistically very difficult to achieve
+   given the very short time window (after the last insert_page and before
+   the kref_get).
+
+The call trace are as below:
+
+  Oops: general protection fault, probably for non-canonical address 0xdffffc0000000001: 0000 [#1] SMP KASAN NOPTI
+  KASAN: null-ptr-deref in range [0x0000000000000008-0x000000000000000f]
+  CPU: 0 UID: 1000 PID: 413 Comm: poc Not tainted 7.0.0-rc5-dirty #28 PREEMPT(lazy)
+  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+  RIP: 0010:validate_page_before_insert+0x32/0x300
+  Code: e5 41 57 41 56 49 89 fe 41 55 41 54 53 48 89 f3 e8 93 b5 a3 ff 48 8d 7b 08 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 7b 02 00 00 4c 8b 63 08 31 ff 4d 89 e5 41 83 e5
+  RSP: 0018:ffff88811b15f2f0 EFLAGS: 00000202
+  RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000000000000
+  RDX: 0000000000000001 RSI: 0000000000000000 RDI: 0000000000000008
+  RBP: ffff88811b15f318 R08: 0000000000000000 R09: 0000000000000000
+  R10: 0000000000000000 R11: 0000000000000000 R12: ffff8881181eee00
+  R13: 0000000000000000 R14: ffff8881181eee00 R15: ffff8881181eee20
+  FS:  00007b1e000f76c0(0000) GS:ffff8884268e0000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 00007b1e00a24ac0 CR3: 0000000116eb3000 CR4: 00000000000006f0
+  Call Trace:
+   <TASK>
+   insert_page+0x8f/0x190
+   ? __pfx_insert_page+0x10/0x10
+   ? kasan_save_alloc_info+0x38/0x60
+   vm_insert_page+0x2e7/0x400
+   remap_vmalloc_range_partial+0x212/0x3e0
+   remap_vmalloc_range+0x6e/0xb0
+   ? __kasan_check_write+0x14/0x30
+   rxe_mmap+0x2e9/0x5d0
+   ib_uverbs_mmap+0x1ad/0x2c0
+   __mmap_region+0x12c2/0x2ad0
+   ? __pfx___mmap_region+0x10/0x10
+   ? __sanitizer_cov_trace_switch+0x58/0xb0
+   ? mas_prev_slot+0x360/0x39c0
+   ? __sanitizer_cov_trace_switch+0x58/0xb0
+   ? mas_next_slot+0x1e5b/0x2f40
+   ? __sanitizer_cov_trace_cmp8+0x18/0x30
+   ? unmapped_area_topdown+0x4dd/0x610
+   ? kfree+0x1b1/0x440
+   ? free_cpumask_var+0x16/0x30
+   ? __kasan_slab_free+0x7d/0xa0
+   ? __sanitizer_cov_trace_cmp8+0x18/0x30
+   mmap_region+0x2e6/0x3c0
+   do_mmap+0xa3e/0x12a0
+   ? __pfx_do_mmap+0x10/0x10
+   ? __kasan_check_write+0x14/0x30
+   ? down_write_killable+0xba/0x160
+   ? __pfx_down_write_killable+0x10/0x10
+   ? __sanitizer_cov_trace_cmp4+0x16/0x30
+   vm_mmap_pgoff+0x2d4/0x4a0
+   ? __pfx_vm_mmap_pgoff+0x10/0x10
+   ? fget+0x1bf/0x270
+   ksys_mmap_pgoff+0x40c/0x690
+   ? __sanitizer_cov_trace_const_cmp4+0x16/0x30
+   ? __pfx_ksys_mmap_pgoff+0x10/0x10
+   ? __kasan_check_write+0x14/0x30
+   ? _raw_spin_trylock+0xbb/0x130
+   ? __pfx__raw_spin_trylock+0x10/0x10
+   __x64_sys_mmap+0x135/0x1e0
+   x64_sys_c
+---truncated---</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61891" data-description="in eclipse theia versions up to and including 1.73.1, the `@theia/filesystem` backend exposes http file-download endpoints (`get /file`, `get /files/`, `put /files/`) that convert a client-supplied uri directly to a filesystem path and stream the file, without confining it to the workspace or any allow-listed root. in browser (non-electron) deployments the connection token is enforced only on websocket upgrades; the http middleware in `@theia/core` re-issues the cookie and calls `next()` without rejecting tokenless http requests, so these endpoints are reachable without a valid token. as a result an unauthenticated client can read any file readable by the backend process, including files outside the opened workspace (for example `/etc/hosts`, ssh keys, or tokens). electron mode uses a separate `electronsecuritytoken` and is not affected via this path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61891" target="_blank">CVE-2026-61891</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>In Eclipse Theia versions up to and including 1.73.1, the `@theia/filesystem` backend exposes HTTP file-download endpoints (`GET /file`, `GET /files/`, `PUT /files/`) that convert a client-supplied URI directly to a filesystem path and stream the file, without confining it to the workspace or any allow-listed root. In browser (non-Electron) deployments the connection token is enforced only on WebSocket upgrades; the HTTP middleware in `@theia/core` re-issues the cookie and calls `next()` without rejecting tokenless HTTP requests, so these endpoints are reachable without a valid token. As a result an unauthenticated client can read any file readable by the backend process, including files outside the opened workspace (for example `/etc/hosts`, SSH keys, or tokens). Electron mode uses a separate `ElectronSecurityToken` and is not affected via this path.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46581" data-description="in eclipse mojarra versions 2.3 and following, url handing in `defaultfaceletfactory` does not properly sanitize and/or block remote urls, allowing an attacker to specify a url to a remote facelet which will be included and processed as part of the normal request, with the privileges of the target server. this could allow access to restricted files such as `web-inf/web.xml` or `/etc/passwd`.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46581" target="_blank">CVE-2026-46581</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In Eclipse Mojarra versions 2.3 and following, URL handing in `DefaultFaceletFactory` does not properly sanitize and/or block remote URLs, allowing an attacker to specify a URL to a remote Facelet which will be included and processed as part of the normal request, with the privileges of the target server. This could allow access to restricted files such as `WEB-INF/web.xml` or `/etc/passwd`.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18933" data-description="the wp-downloadmanager wordpress plugin, in version 1.68.11 (also affecting the 6.9.4 release line), allows an admin-privileged user (current_user_can('manage_downloads')) to upload arbitrary files via download-add.php with no extension or mime-type validation of any kind - no wp_check_filetype_and_ext(), no validate_file(), and no extension blocklist exist anywhere in the upload handler. the destination path is additionally built by concatenating the raw, unsanitized $_post['file_upload_to'] value with no traversal check (no ../ filtering, no basename()/realpath() applied). since the base download path is required to live under wp_content_dir (a web-accessible location), an uploaded php file lands in a web-servable path and can be directly executed, resulting in remote code execution. the plugin's own later changelog confirms these protections were absent in this version: v1.69 added file-type validation via wp_check_filetype_and_ext(), and v1.69.1 added directory-traversal protection - neither existed in 1.68.11.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18933" target="_blank">CVE-2026-18933</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-05 07:18:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
+                    <p>The wp-downloadmanager WordPress plugin, in version 1.68.11 (also affecting the 6.9.4 release line), allows an admin-privileged user (current_user_can('manage_downloads')) to upload arbitrary files via download-add.php with no extension or MIME-type validation of any kind - no wp_check_filetype_and_ext(), no validate_file(), and no extension blocklist exist anywhere in the upload handler. The destination path is additionally built by concatenating the raw, unsanitized $_POST['file_upload_to'] value with no traversal check (no ../ filtering, no basename()/realpath() applied). Since the base download path is required to live under WP_CONTENT_DIR (a web-accessible location), an uploaded PHP file lands in a web-servable path and can be directly executed, resulting in remote code execution. The plugin's own later changelog confirms these protections were absent in this version: v1.69 added file-type validation via wp_check_filetype_and_ext(), and v1.69.1 added directory-traversal protection - neither existed in 1.68.11.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-71252" data-description="toner-management's admin state-changing handlers (add.php, edit.php, delete.php under admin/toners, admin/toner-brands, admin/printers, and related admin subdirectories) executed insert/update/delete database operations with no authentication or authorization check, while access control was enforced only in listing views. an unauthenticated remote attacker could invoke these handlers directly to create, modify, or destroy application data. the vendor has since merged a fix requiring an authenticated admin session before any such handler proceeds.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71252" target="_blank">CVE-2026-71252</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-05 06:16:28 CDT</p>
@@ -136,62 +378,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
                     <p>DjangoCRM's toggle_default_sorting view is the only route in common/urls.py that is not wrapped in login_required or staff_member_required, and it redirects to a caller-supplied next_url GET parameter after only checking secure_url(next_url), which merely verifies the target host matches the current site's domain (blocking only cross-domain redirects) while allowing any same-site path with no authentication required to reach the view. This enables unauthenticated phishing redirects and referrer-based token leakage via redirect chains.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71239" data-description="djangocrm's massmail module renders user-controlled emlmessage fields (subject, content) through django's template() constructor with no sanitization, in at least three locations: message_previews.py builds an f-string embedding message.subject/message.content directly into a template() call; email_creators.py passes eml_message.subject directly as a template string to template(); and helpers.py contains the same f-string interpolation pattern. an authenticated user with mass-mail message edit rights can inject django template syntax ({{ }} / {% %}) that executes at render time, enabling disclosure of other users' data and password hashes via request context variables, csrf token forgery, and inclusion of arbitrary registered templates.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71239" target="_blank">CVE-2026-71239</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>DjangoCRM's massmail module renders user-controlled EmlMessage fields (subject, content) through Django's Template() constructor with no sanitization, in at least three locations: message_previews.py builds an f-string embedding message.subject/message.content directly into a Template() call; email_creators.py passes eml_message.subject directly as a template string to Template(); and helpers.py contains the same f-string interpolation pattern. An authenticated user with mass-mail message edit rights can inject Django template syntax ({{ }} / {% %}) that executes at render time, enabling disclosure of other users' data and password hashes via request context variables, CSRF token forgery, and inclusion of arbitrary registered templates.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71238" data-description="djangocrm ships with its django secret_key hardcoded directly in the committed webcrm/settings.py rather than read from an environment variable. since this key is used for session signing, csrf token generation, and password reset tokens, anyone who reads the public repository can forge valid session cookies (including for the superadmin account), forge csrf tokens, and forge password reset tokens, achieving full account takeover. the repository also ships with debug=true as the default, causing error pages to leak database credentials, email credentials, oauth data, and internal file paths.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71238" target="_blank">CVE-2026-71238</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
-                    <p>DjangoCRM ships with its Django SECRET_KEY hardcoded directly in the committed webcrm/settings.py rather than read from an environment variable. Since this key is used for session signing, CSRF token generation, and password reset tokens, anyone who reads the public repository can forge valid session cookies (including for the superadmin account), forge CSRF tokens, and forge password reset tokens, achieving full account takeover. The repository also ships with DEBUG=True as the default, causing error pages to leak database credentials, email credentials, OAuth data, and internal file paths.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71237" data-description="miantang/iot-php's index.php implements a post /userlogin route that reads the password directly from $_post['pwd'] with no sanitization and concatenates it into a raw sql string: mysql_query("select * from userlists where username='$username' and password='$password' limit 1"). the username value is passed through htmlspecialchars(), which does not encode single quotes by default and therefore does not prevent sql injection through the password field. an unauthenticated attacker can submit a payload such as pwd=' or '1'='1 to bypass authentication and, via union-based injection, extract arbitrary data from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71237" target="_blank">CVE-2026-71237</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Miantang/IoT-PHP's index.php implements a POST /userlogin route that reads the password directly from $_POST['pwd'] with no sanitization and concatenates it into a raw SQL string: mysql_query("select * from userlists where username='$username' and password='$password' limit 1"). The username value is passed through htmlspecialchars(), which does not encode single quotes by default and therefore does not prevent SQL injection through the password field. An unauthenticated attacker can submit a payload such as pwd=' OR '1'='1 to bypass authentication and, via UNION-based injection, extract arbitrary data from the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71236" data-description="grocy's api request-body parser (controllers/api/baseapicontroller.php, getparsedandfilteredrequestbody) purifies incoming field values with htmlpurifier, then manually reverses html-entity encoding of the resulting output by replacing &amp;lt;, &amp;gt;, and &amp;amp; back to <, >, and & immediately after purification. this double-decode reconstructs live html/script tags from the entity-encoded form that htmlpurifier produced to neutralize them, re-introducing stored xss across api-writable fields (products, recipes, stock, users, chores, and others) that are rendered elsewhere without re-sanitization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71236" target="_blank">CVE-2026-71236</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.7</p>
-                    <p>Grocy's API request-body parser (controllers/Api/BaseApiController.php, GetParsedAndFilteredRequestBody) purifies incoming field values with HTMLPurifier, then manually reverses HTML-entity encoding of the resulting output by replacing &amp;lt;, &amp;gt;, and &amp;amp; back to <, >, and & immediately after purification. This double-decode reconstructs live HTML/script tags from the entity-encoded form that HTMLPurifier produced to neutralize them, re-introducing stored XSS across API-writable fields (products, recipes, stock, users, chores, and others) that are rendered elsewhere without re-sanitization.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71235" data-description="magistrala's rules engine allows authenticated users to create rules with embedded go or lua scripts executed server-side when iot messages arrive. the go script engine (re/golang.go) runs scripts through the yaegi interpreter with stdlib.symbols, exposing the full go standard library (including os and net/http) with validation limited to a regex blocking goroutines and panic() calls; dangerous functions such as os.readfile, os.writefile, os.remove, and os.environ remain fully accessible. the lua script engine (re/lua.go) performs no input validation at all and preloads dangerous libraries: db (arbitrary database access), ioutil (file i/o), an http client (ssrf), and filepath (traversal). an authenticated low-privileged user can achieve arbitrary file read/write, environment variable leakage, database access, and ssrf against internal microservices.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71235" target="_blank">CVE-2026-71235</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Magistrala's Rules Engine allows authenticated users to create rules with embedded Go or Lua scripts executed server-side when IoT messages arrive. The Go script engine (re/golang.go) runs scripts through the Yaegi interpreter with stdlib.Symbols, exposing the full Go standard library (including os and net/http) with validation limited to a regex blocking goroutines and panic() calls; dangerous functions such as os.ReadFile, os.WriteFile, os.Remove, and os.Environ remain fully accessible. The Lua script engine (re/lua.go) performs no input validation at all and preloads dangerous libraries: db (arbitrary database access), ioutil (file I/O), an HTTP client (SSRF), and filepath (traversal). An authenticated low-privileged user can achieve arbitrary file read/write, environment variable leakage, database access, and SSRF against internal microservices.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71234" data-description="documize community's attachment download route (domain/attachment/endpoint.go, download function, registered via addpublic with no auth middleware) accepts a `secure` query parameter and grants access whenever the parameter is simply non-empty (len(securetoken) > 0), without comparing it to any server-stored value. any non-empty string, such as ?secure=x, bypasses authentication entirely and allows downloading any organization's attachments. sibling handlers in the same file (togglepublish, delete) correctly enforce session-based authorization, confirming this is an inconsistency rather than intended design.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71234" target="_blank">CVE-2026-71234</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Documize Community's attachment download route (domain/attachment/endpoint.go, Download function, registered via AddPublic with no auth middleware) accepts a `secure` query parameter and grants access whenever the parameter is simply non-empty (len(secureToken) > 0), without comparing it to any server-stored value. Any non-empty string, such as ?secure=x, bypasses authentication entirely and allows downloading any organization's attachments. Sibling handlers in the same file (togglePublish, delete) correctly enforce session-based authorization, confirming this is an inconsistency rather than intended design.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71233" data-description="invoiceninja v5-stable renders an invoice or quote's "terms" field in the client portal using laravel blade's raw output directive {!! $entity->terms !!} (resources/views/portal/ninja2020/invoices/includes/terms.blade.php) with no html sanitization. storeinvoicerequest.php only strips newlines from the field and does not purify html. an authenticated user with invoice creation access can set the terms field via the rest api (put /api/v1/invoices/{id}) to an html/javascript payload that executes in the client's browser when they view the invoice, enabling session cookie theft and client account takeover. this is a distinct code path from the previously published invoice line-item description field xss (ghsa-98wm-cxpw-847p / cve-2026-33628).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71233" target="_blank">CVE-2026-71233</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-05 06:16:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.7</p>
-                    <p>InvoiceNinja v5-stable renders an invoice or quote's "terms" field in the client portal using Laravel Blade's raw output directive {!! $entity->terms !!} (resources/views/portal/ninja2020/invoices/includes/terms.blade.php) with no HTML sanitization. StoreInvoiceRequest.php only strips newlines from the field and does not purify HTML. An authenticated user with invoice creation access can set the terms field via the REST API (PUT /api/v1/invoices/{id}) to an HTML/JavaScript payload that executes in the client's browser when they view the invoice, enabling session cookie theft and client account takeover. This is a distinct code path from the previously published invoice line-item description field XSS (GHSA-98wm-cxpw-847p / CVE-2026-33628).</p>
                 </div>
         
             </div>
