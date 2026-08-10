@@ -34,6 +34,232 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-8718" data-description="tls_opt_dtls_peer_connection_id_value_get() in subsys/net/lib/sockets/sockets_tls.c, which handles getsockopt(sol_tls, tls_dtls_peer_cid_value), passed the caller-supplied optval directly to mbedtls_ssl_get_peer_cid() without verifying the buffer was at least mbedtls_ssl_cid_out_len_max (default 32) bytes. mbedtls_ssl_get_peer_cid() copies the peer-negotiated dtls connection id (length 1..mbedtls_ssl_cid_out_len_max) into that buffer without a destination-size parameter, so a caller-supplied optlen smaller than the cid causes a write of up to 31 bytes past the buffer end.
+
+in config_userspace builds the getsockopt syscall verifier (z_vrfy_zsock_getsockopt) bounce-buffers the user's optval into a kernel allocation of exactly optlen bytes (k_usermode_alloc_from_copy -> z_thread_malloc), so an unprivileged user thread that passes a small optlen on a connected dtls socket with connection id enabled induces a kernel-heap buffer overflow, with the overflowing content being the remote peer's cid.
+
+the defect requires config_mbedtls_ssl_dtls_connection_id, an established dtls session with a negotiated peer cid, and (for the kernel-crossing case) config_userspace. introduced when the tls_dtls_cid option was added (v3.5.0).
+
+the fix rejects callers whose optlen is below mbedtls_ssl_cid_out_len_max with -einval.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8718" target="_blank">CVE-2026-8718</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.4</p>
+                    <p>tls_opt_dtls_peer_connection_id_value_get() in subsys/net/lib/sockets/sockets_tls.c, which handles getsockopt(SOL_TLS, TLS_DTLS_PEER_CID_VALUE), passed the caller-supplied optval directly to mbedtls_ssl_get_peer_cid() without verifying the buffer was at least MBEDTLS_SSL_CID_OUT_LEN_MAX (default 32) bytes. mbedtls_ssl_get_peer_cid() copies the peer-negotiated DTLS Connection ID (length 1..MBEDTLS_SSL_CID_OUT_LEN_MAX) into that buffer without a destination-size parameter, so a caller-supplied optlen smaller than the CID causes a write of up to 31 bytes past the buffer end.
+
+In CONFIG_USERSPACE builds the getsockopt syscall verifier (z_vrfy_zsock_getsockopt) bounce-buffers the user's optval into a kernel allocation of exactly optlen bytes (k_usermode_alloc_from_copy -> z_thread_malloc), so an unprivileged user thread that passes a small optlen on a connected DTLS socket with Connection ID enabled induces a kernel-heap buffer overflow, with the overflowing content being the remote peer's CID.
+
+The defect requires CONFIG_MBEDTLS_SSL_DTLS_CONNECTION_ID, an established DTLS session with a negotiated peer CID, and (for the kernel-crossing case) CONFIG_USERSPACE. Introduced when the TLS_DTLS_CID option was added (v3.5.0).
+
+The fix rejects callers whose optlen is below MBEDTLS_SSL_CID_OUT_LEN_MAX with -EINVAL.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48161" data-description="react18-use is a react 19 use hook shim. between 2026-05-19 01:07:01 and 2026-05-19 15:20:43, the default branch contained malicious commits 7b79148d1495a2505f9277da295a98cf176f4496 through 7b79148d1495a2505f9277da295a98cf176f4496 that executed remote attacker-controlled code on developer machines during `npm install`. the commits were removed by force-push, but local clones, forks, and direct-sha urls may still contain them, and `npm install` against an affected checkout will still execute the code today. the package was not published to npm. `src/install.js` was added and wired into the `postinstall` script. it fetched a javascript payload from an attacker-controlled https endpoint (configurable via an environment variable), disabled tls verification, and evaluated the response as code with `require` available. execution was deliberately skipped on ci and cloud/serverless environments, targeting developer workstations. the second-stage payload was attacker-hosted and cannot be reconstructed. assume full compromise of anything reachable from a node process with the user's permissions. those who ran `npm install` against an affected checkout on a developer machine on or after 2026-05-19 01:07:01 should treat the machine as compromised, rotate every credential the machine could reach, audit account activity since 2026-05-19 01:07:01, and clean local clones.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48161" target="_blank">CVE-2026-48161</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>react18-use is a React 19 use hook shim. Between 2026-05-19 01:07:01 and 2026-05-19 15:20:43, the default branch contained malicious commits 7b79148d1495a2505f9277da295a98cf176f4496 through 7b79148d1495a2505f9277da295a98cf176f4496 that executed remote attacker-controlled code on developer machines during `npm install`. The commits were removed by force-push, but local clones, forks, and direct-SHA URLs may still contain them, and `npm install` against an affected checkout will still execute the code today. The package was not published to npm. `src/install.js` was added and wired into the `postinstall` script. It fetched a JavaScript payload from an attacker-controlled HTTPS endpoint (configurable via an environment variable), disabled TLS verification, and evaluated the response as code with `require` available. Execution was deliberately skipped on CI and cloud/serverless environments, targeting developer workstations. The second-stage payload was attacker-hosted and cannot be reconstructed. Assume full compromise of anything reachable from a Node process with the user's permissions. Those who ran `npm install` against an affected checkout on a developer machine on or after 2026-05-19 01:07:01 should treat the machine as compromised, rotate every credential the machine could reach, audit account activity since 2026-05-19 01:07:01, and clean local clones.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11812" data-description="the updatehub management subsystem (subsys/mgmt/updatehub/updatehub.c) drives every update operation through a single file-scope ctx structure that holds the coap block context, payload buffer, status code, socket, and a one-element poll-fd array fds[1]. access to ctx was not serialized, and prepare_fds() wrote ctx.fds[ctx.nfds] and incremented ctx.nfds with no bounds check.
+
+two independent paths mutate ctx concurrently: the background autohandler running on the system workqueue, and user-triggered operations reached through the updatehub run shell command, direct api calls, or — since the operations are exposed as syscalls — userspace threads. when a second flow enters prepare_fds() while ctx.nfds is already 1, the write lands one element past the array; by struct layout it overlaps the adjacent ctx.sock/ctx.nfds members. more broadly, the unsynchronized sharing lets two flows interleave connection setup and teardown, double-closing a socket descriptor or scribbling the shared buffers.
+
+the result is corruption of the update subsystem's internal state and denial of service of the firmware-update path; the out-of-bounds write is contained within the ctx structure and there is no demonstrated path to memory outside it or to code execution. triggering requires a local actor able to invoke update operations (or, with config_userspace, an unprivileged userspace thread) and to win a timing race against the background handler; remote peers cannot control the race timing. the fix serializes the entry points with a mutex and adds a bounds check to prepare_fds().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11812" target="_blank">CVE-2026-11812</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 2.5</p>
+                    <p>The UpdateHub management subsystem (subsys/mgmt/updatehub/updatehub.c) drives every update operation through a single file-scope ctx structure that holds the CoAP block context, payload buffer, status code, socket, and a one-element poll-fd array fds[1]. Access to ctx was not serialized, and prepare_fds() wrote ctx.fds[ctx.nfds] and incremented ctx.nfds with no bounds check.
+
+Two independent paths mutate ctx concurrently: the background autohandler running on the system workqueue, and user-triggered operations reached through the updatehub run shell command, direct API calls, or — since the operations are exposed as syscalls — userspace threads. When a second flow enters prepare_fds() while ctx.nfds is already 1, the write lands one element past the array; by struct layout it overlaps the adjacent ctx.sock/ctx.nfds members. More broadly, the unsynchronized sharing lets two flows interleave connection setup and teardown, double-closing a socket descriptor or scribbling the shared buffers.
+
+The result is corruption of the update subsystem's internal state and denial of service of the firmware-update path; the out-of-bounds write is contained within the ctx structure and there is no demonstrated path to memory outside it or to code execution. Triggering requires a local actor able to invoke update operations (or, with CONFIG_USERSPACE, an unprivileged userspace thread) and to win a timing race against the background handler; remote peers cannot control the race timing. The fix serializes the entry points with a mutex and adds a bounds check to prepare_fds().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-11811" data-description="the updatehub over-the-air update client's start_coap_client() in subsys/mgmt/updatehub/updatehub.c leaks the coap/dtls socket descriptor on its connection-setup failure paths. the shared error: cleanup gated socket closing on a ret > 0 flag, but ret was set to -1 immediately after the socket was created, so when zsock_setsockopt() (dtls) or zsock_connect() subsequently failed the gate was false and cleanup_connection() was never called. the open descriptor in the global ctx.sock was then overwritten by the next attempt, permanently leaking it from the socket / net_context pool until reboot.
+
+the failing setup path is reached every time the ota client tries to contact the updatehub server and the connection cannot be established — driven automatically by the periodic autohandler() poll (and on demand via the updatehub_probe()/updatehub_update() api or the updatehub run shell command). the dtls handshake/connect outcome is influenceable by a network or on-path attacker who drops, resets, or otherwise disrupts traffic to the server, and also fails naturally whenever the server is unreachable.
+
+each failed attempt permanently leaks one descriptor; once the shared socket pool is exhausted, networking degrades device-wide until the device is rebooted, a denial-of-service condition. severity is low because the leak rate is bounded by the configured ota poll interval (default once per 24 hours), the effect is gradual and recovered by reboot, and only builds with the updatehub client enabled are affected. there is no memory-corruption, information-disclosure, or authentication impact.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-11811" target="_blank">CVE-2026-11811</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>The UpdateHub over-the-air update client's start_coap_client() in subsys/mgmt/updatehub/updatehub.c leaks the CoAP/DTLS socket descriptor on its connection-setup failure paths. The shared error: cleanup gated socket closing on a ret > 0 flag, but ret was set to -1 immediately after the socket was created, so when zsock_setsockopt() (DTLS) or zsock_connect() subsequently failed the gate was false and cleanup_connection() was never called. The open descriptor in the global ctx.sock was then overwritten by the next attempt, permanently leaking it from the socket / net_context pool until reboot.
+
+The failing setup path is reached every time the OTA client tries to contact the UpdateHub server and the connection cannot be established — driven automatically by the periodic autohandler() poll (and on demand via the updatehub_probe()/updatehub_update() API or the updatehub run shell command). The DTLS handshake/connect outcome is influenceable by a network or on-path attacker who drops, resets, or otherwise disrupts traffic to the server, and also fails naturally whenever the server is unreachable.
+
+Each failed attempt permanently leaks one descriptor; once the shared socket pool is exhausted, networking degrades device-wide until the device is rebooted, a denial-of-service condition. Severity is low because the leak rate is bounded by the configured OTA poll interval (default once per 24 hours), the effect is gradual and recovered by reboot, and only builds with the UpdateHub client enabled are affected. There is no memory-corruption, information-disclosure, or authentication impact.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-30241" data-description="certain web
+interface components in affected tp-link aginet devices do not validate and sanitize user-supplied input properly before
+passing it to system-level command execution functions.  an authenticated adjacent attacker may inject
+specially crafted input to execute arbitrary operation system commands with
+elevated privileges.
+
+
+
+
+
+
+
+
+
+successful
+exploitation may allow execution of arbitrary system commands, potentially
+leading to full device compromise.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-30241" target="_blank">CVE-2025-30241</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Certain web
+interface components in affected TP-Link Aginet devices do not validate and sanitize user-supplied input properly before
+passing it to system-level command execution functions.  An authenticated adjacent attacker may inject
+specially crafted input to execute arbitrary operation system commands with
+elevated privileges.
+
+
+
+
+
+
+
+
+
+Successful
+exploitation may allow execution of arbitrary system commands, potentially
+leading to full device compromise.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-30240" data-description="the affected tp-link aginet devices do not properly validate symbolic links created on external usb storage
+devices. by placing a crafted symbolic link on supported storage media, an
+attacker may cause the system to resolve the link.
+
+
+
+
+
+
+
+
+
+successful
+exploitation may allow unauthorized read access to sensitive files within the
+device filesystem.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-30240" target="_blank">CVE-2025-30240</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The affected TP-Link Aginet devices do not properly validate symbolic links created on external USB storage
+devices. By placing a crafted symbolic link on supported storage media, an
+attacker may cause the system to resolve the link.
+
+
+
+
+
+
+
+
+
+Successful
+exploitation may allow unauthorized read access to sensitive files within the
+device filesystem.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-30239" data-description="in affected tp-link aginet devices, use of
+hardcoded cryptographic keys embedded in the firmware to protect sensitive
+configuration data may allow an attacker who has access to device storage to
+recover the keys and decrypt stored data.
+
+
+
+
+
+successful
+exploitation may allow access to decrypted sensitive configuration data,
+including credentials and service-related information.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-30239" target="_blank">CVE-2025-30239</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In affected TP-Link Aginet devices, use of
+hardcoded cryptographic keys embedded in the firmware to protect sensitive
+configuration data may allow an attacker who has access to device storage to
+recover the keys and decrypt stored data.
+
+
+
+
+
+Successful
+exploitation may allow access to decrypted sensitive configuration data,
+including credentials and service-related information.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-30238" data-description="in affected tp-link aginet devices, insufficient
+authorization validation allows authenticated low-privileged users to execute higher-privileged
+operations.
+
+
+
+
+
+an attacker
+may perform administrative actions such as creating privileged accounts or
+modifying critical configuration settings.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-30238" target="_blank">CVE-2025-30238</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:49 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In affected TP-Link Aginet devices, insufficient
+authorization validation allows authenticated low-privileged users to execute higher-privileged
+operations.
+
+
+
+
+
+An attacker
+may perform administrative actions such as creating privileged accounts or
+modifying critical configuration settings.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-30237" data-description="the affected tp-link aginet devices contain a flaw in the web management interface where authentication
+checks are not consistently enforced on certain endpoints. an attacker can send
+specially crafted requests to bypass authentication and directly invoke
+privileged functionality without valid credentials. this issue arises from
+improper enforcement of access control mechanisms on sensitive operations.
+
+
+
+
+
+successful
+exploitation may allow an unauthenticated attacker to execute privileged
+operations and gain full control of the device.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-30237" target="_blank">CVE-2025-30237</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 18:16:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The affected TP-Link Aginet devices contain a flaw in the web management interface where authentication
+checks are not consistently enforced on certain endpoints. An attacker can send
+specially crafted requests to bypass authentication and directly invoke
+privileged functionality without valid credentials. This issue arises from
+improper enforcement of access control mechanisms on sensitive operations.
+
+
+
+
+
+Successful
+exploitation may allow an unauthenticated attacker to execute privileged
+operations and gain full control of the device.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-72919" data-description="rocket.chat is an open-source, secure, fully customizable communications platform. prior to 7.10.14, 8.0.8, 8.1.7, 8.2.7, 8.3.7, 8.4.5, 8.5.2, and 8.6.1, the channels.converttoteam rest endpoint allows an authenticated registered user with the create-team permission to convert an unrelated public channel by supplying channelname instead of channelid because the edit-room permission is checked only for channelid. this issue is fixed in versions 7.10.14, 8.0.8, 8.1.7, 8.2.7, 8.3.7, 8.4.5, 8.5.2, and 8.6.1.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72919" target="_blank">CVE-2026-72919</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 17:17:10 CDT</p>
@@ -124,78 +350,6 @@ This can result in a crash of the QEMU process or memory corruption. Exploitatio
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.1</p>
                     <p>unearth through 0.18.2, fixed in commit 6c78164, contains a path traversal vulnerability in the is_within_directory function that fails to normalize paths before validation, allowing ../ sequences to bypass directory containment checks. Attackers can supply malicious tar archives with symlink members or traversal sequences to write files to arbitrary filesystem locations accessible to the process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72913" data-description="kitty is a cross-platform gpu based terminal. prior to 0.48.2, the @kitty-echo and @kitty-ssh dcs handlers in kitty/window.py write unauthenticated data to the child shell's stdin, where handle_remote_echo accepts printable shell command characters and handle_remote_ssh calls get_ssh_data in kittens/ssh/utils.py, which emits a newline; chaining the handlers can execute attacker-controlled commands when a user displays untrusted terminal data. this issue is fixed in version 0.48.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72913" target="_blank">CVE-2026-72913</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Kitty is a cross-platform GPU based terminal. Prior to 0.48.2, the @kitty-echo and @kitty-ssh DCS handlers in kitty/window.py write unauthenticated data to the child shell's stdin, where handle_remote_echo accepts printable shell command characters and handle_remote_ssh calls get_ssh_data in kittens/ssh/utils.py, which emits a newline; chaining the handlers can execute attacker-controlled commands when a user displays untrusted terminal data. This issue is fixed in version 0.48.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72912" data-description="cyberchef is a web app for encryption, encoding, compression, and data analysis. prior to 11.3.0, cyberchef's pretty-recipe parser in src/core/utils.mjs can exhaust client-side cpu when a malformed #recipe= url fragment containing a large number of unmatched quote characters reaches utils.parserecipeconfig(). the function synchronously applies a complex global regular expression that may perform heavy backtracking before rejecting the input, causing the victim's browser tab to freeze during startup for seconds or longer. no code execution, data exfiltration, or privilege escalation occurs. this issue is fixed in version 11.3.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72912" target="_blank">CVE-2026-72912</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>CyberChef is a web app for encryption, encoding, compression, and data analysis. Prior to 11.3.0, CyberChef's pretty-recipe parser in src/core/Utils.mjs can exhaust client-side CPU when a malformed #recipe= URL fragment containing a large number of unmatched quote characters reaches Utils.parseRecipeConfig(). The function synchronously applies a complex global regular expression that may perform heavy backtracking before rejecting the input, causing the victim's browser tab to freeze during startup for seconds or longer. No code execution, data exfiltration, or privilege escalation occurs. This issue is fixed in version 11.3.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72911" data-description="erpnext is a free and open source enterprise resource planning tool. prior to 15.118.0 and 16.29.0, the validate_template and render_template calls in erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.py render subject, body, and pdf_name fields with unrestricted globals including frappe.utils, allowing an authenticated user with a common operational role to inject template expressions, execute arbitrary server-side code, and read data across the application. this issue is fixed in versions 15.118.0 and 16.29.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72911" target="_blank">CVE-2026-72911</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>ERPNext is a free and open source Enterprise Resource Planning tool. Prior to 15.118.0 and 16.29.0, the validate_template and render_template calls in erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.py render subject, body, and pdf_name fields with unrestricted globals including frappe.utils, allowing an authenticated user with a common operational role to inject template expressions, execute arbitrary server-side code, and read data across the application. This issue is fixed in versions 15.118.0 and 16.29.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72910" data-description="erpnext is a free and open source enterprise resource planning tool. prior to 15.112.0 and 16.22.0, the merge_account, pause_job_for_doc, trigger_job_for_doc, change_release_date, and update_cost_center functions across erpnext/accounts/doctype/account/account.py, erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py, erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py, and erpnext/accounts/utils.py omit required write permission checks, allowing authenticated limited users to modify protected data beyond their roles. this issue is fixed in versions 15.112.0 and 16.22.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72910" target="_blank">CVE-2026-72910</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>ERPNext is a free and open source Enterprise Resource Planning tool. Prior to 15.112.0 and 16.22.0, the merge_account, pause_job_for_doc, trigger_job_for_doc, change_release_date, and update_cost_center functions across erpnext/accounts/doctype/account/account.py, erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py, erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py, and erpnext/accounts/utils.py omit required write permission checks, allowing authenticated limited users to modify protected data beyond their roles. This issue is fixed in versions 15.112.0 and 16.22.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72909" data-description="erpnext is a free and open source enterprise resource planning tool. prior to 15.112.0 and 16.23.0, the receivablepayablereport prepare_conditions path in erpnext/accounts/report/accounts_receivable/accounts_receivable.py does not apply customer and supplier user permissions to the payment ledger entry dynamic-link party field, allowing any authenticated user to read unauthorized cross-company financial data in accounts receivable and accounts payable reports. this issue is fixed in versions 15.112.0 and 16.23.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72909" target="_blank">CVE-2026-72909</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>ERPNext is a free and open source Enterprise Resource Planning tool. Prior to 15.112.0 and 16.23.0, the ReceivablePayableReport prepare_conditions path in erpnext/accounts/report/accounts_receivable/accounts_receivable.py does not apply Customer and Supplier user permissions to the Payment Ledger Entry dynamic-link party field, allowing any authenticated user to read unauthorized cross-company financial data in Accounts Receivable and Accounts Payable reports. This issue is fixed in versions 15.112.0 and 16.23.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72908" data-description="erpnext is a free and open source enterprise resource planning tool. prior to 15.109.0 and 16.20.0, the get_tax_template function in erpnext/accounts/doctype/tax_rule/tax_rule.py constructs an sql where clause from request-influenced posting_date and args values, allowing an authenticated low-privilege user to inject sql and extract sensitive information. this issue is fixed in versions 15.109.0 and 16.20.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72908" target="_blank">CVE-2026-72908</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>ERPNext is a free and open source Enterprise Resource Planning tool. Prior to 15.109.0 and 16.20.0, the get_tax_template function in erpnext/accounts/doctype/tax_rule/tax_rule.py constructs an SQL WHERE clause from request-influenced posting_date and args values, allowing an authenticated low-privilege user to inject SQL and extract sensitive information. This issue is fixed in versions 15.109.0 and 16.20.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72907" data-description="erpnext is a free and open source enterprise resource planning tool. prior to 15.111.0 and 16.22.0, the add_ac function in erpnext/accounts/utils.py accepts the ignore_permissions argument without enforcing account create permission, allowing an authenticated limited user to create unauthorized accounting master records and affect financial data integrity and audit trails. this issue is fixed in versions 15.111.0 and 16.22.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72907" target="_blank">CVE-2026-72907</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>ERPNext is a free and open source Enterprise Resource Planning tool. Prior to 15.111.0 and 16.22.0, the add_ac function in erpnext/accounts/utils.py accepts the ignore_permissions argument without enforcing Account create permission, allowing an authenticated limited user to create unauthorized accounting master records and affect financial data integrity and audit trails. This issue is fixed in versions 15.111.0 and 16.22.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72906" data-description="erpnext is a free and open source enterprise resource planning tool. prior to 15.111.0 and 16.22.0, the send_auto_email function in erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.py lacks a process statement of accounts permission check, allowing an authenticated low-privilege user to trigger automated emails outside the permitted role. this issue is fixed in versions 15.111.0 and 16.22.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72906" target="_blank">CVE-2026-72906</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>ERPNext is a free and open source Enterprise Resource Planning tool. Prior to 15.111.0 and 16.22.0, the send_auto_email function in erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.py lacks a Process Statement Of Accounts permission check, allowing an authenticated low-privilege user to trigger automated emails outside the permitted role. This issue is fixed in versions 15.111.0 and 16.22.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72905" data-description="rejected reason: further research determined the issue is not a vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72905" target="_blank">CVE-2026-72905</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 16:17:25 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: Further research determined the issue is not a vulnerability.</p>
                 </div>
         
             </div>
