@@ -34,52 +34,544 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-72594" data-description="a stored cross-site scripting (xss) vulnerability in lobehub/lobe-chat through v2.2.13 allows a low-privileged authenticated user to inject arbitrary javascript into the application by uploading a crafted svg file as a user avatar. the avatar upload handler derives the stored file extension and s3 content type from the original filename rather than inspecting file content, enabling an attacker to store an svg containing a script element that executes in the browser of any user who views the attacker's profile or avatar.">
+                <div class="cve-entry" data-cve-id="CVE-2026-68092" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+time/jiffies: register jiffies clocksource before usage
+
+teddy reported that a xen hvm has a long boot delay, which was bisected to
+the recent enhancements to the negative motion detection. it turned out
+that the jiffies clocksource is used in early boot before it is registered,
+which leaves the max_delta_raw field at zero. that causes the read out to
+be clamped to the max delta of 0, which means time is not making progress.
+
+cure it by ensuring that it is initialized before its first usage in
+timekeeping_init().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68092" target="_blank">CVE-2026-68092</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+time/jiffies: Register jiffies clocksource before usage
+
+Teddy reported that a XEN HVM has a long boot delay, which was bisected to
+the recent enhancements to the negative motion detection. It turned out
+that the jiffies clocksource is used in early boot before it is registered,
+which leaves the max_delta_raw field at zero. That causes the read out to
+be clamped to the max delta of 0, which means time is not making progress.
+
+Cure it by ensuring that it is initialized before its first usage in
+timekeeping_init().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68091" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+hid: wacom: stop hardware after post-start probe failures
+
+wacom_parse_and_register() starts hid hardware before registering inputs
+and initializing pad leds/remotes. those later steps can fail, but their
+error paths currently release wacom resources without stopping the hid
+hardware.
+
+route post-hid_hw_start() failures through hid_hw_stop() before
+releasing driver resources.
+
+this issue was identified during our ongoing static-analysis research while
+reviewing kernel code.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68091" target="_blank">CVE-2026-68091</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+HID: wacom: stop hardware after post-start probe failures
+
+wacom_parse_and_register() starts HID hardware before registering inputs
+and initializing pad LEDs/remotes. Those later steps can fail, but their
+error paths currently release Wacom resources without stopping the HID
+hardware.
+
+Route post-hid_hw_start() failures through hid_hw_stop() before
+releasing driver resources.
+
+This issue was identified during our ongoing static-analysis research while
+reviewing kernel code.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68090" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+debugobjects: plug race against a concurrent oom disable
+
+syzbot reported a puzzling splat:
+
+   warning: kernel/time/hrtimer.c:443 at stub_timer+0xa/0x20
+
+stub_timer() is installed as timer callback function in
+hrtimer_fixup_assert_init(), which is invoked when
+debug_object_assert_init() can't find a shadow object. in that case debug
+objects emits a warning about it before invoking the fixup.
+
+though the provided console log lacks this warning and instead has the
+following a few seconds before the splat:
+
+     odebug: out of memory. odebug disabled
+
+so the object was looked up in debug_object_assert_init() and the lookup
+failed due a concurrent out of memory situation which disabled debug
+objects and freed the shadow objects:
+
+debug_object_assert_init()
+        if (!debug_objects_enabled)
+        	return;                         obj = alloc();
+                				if (!obj) {
+							// out of memory
+                                                	debug_objects_enabled = false;
+                                                        free_objects();
+        obj = lookup_or_alloc();
+
+        // the lookup failed because the other side
+        // removed the objects, so this returns
+        // an error code as the object in question
+        // is not statically initialized
+
+	if (!is_err_or_null(obj))
+        	return;
+        if (!obj) {
+        	debug_oom();
+                return;
+        }
+
+        print(...)
+           if (!debug_objects_enabled)
+                return;
+
+        fixup(...)
+
+the debug object splat is skipped because debug_objects_enabled is false,
+but the fixup callback is invoked unconditionally, which makes the timer
+disfunctional.
+
+this is only a problem in debug_object_assert_init() and
+debug_object_activate() as both have to handle statically initialized
+objects and therefore must handle the error pointer return case
+gracefully. all other places only handle the found/not found case and the
+null pointer return is a signal for oom. otherwise they get a valid shadow
+object.
+
+plug the hole by checking whether debug objects are still enabled before
+invoking the print and fixup function in those two places.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68090" target="_blank">CVE-2026-68090</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+debugobjects: Plug race against a concurrent OOM disable
+
+syzbot reported a puzzling splat:
+
+   WARNING: kernel/time/hrtimer.c:443 at stub_timer+0xa/0x20
+
+stub_timer() is installed as timer callback function in
+hrtimer_fixup_assert_init(), which is invoked when
+debug_object_assert_init() can't find a shadow object. In that case debug
+objects emits a warning about it before invoking the fixup.
+
+Though the provided console log lacks this warning and instead has the
+following a few seconds before the splat:
+
+     ODEBUG: Out of memory. ODEBUG disabled
+
+So the object was looked up in debug_object_assert_init() and the lookup
+failed due a concurrent out of memory situation which disabled debug
+objects and freed the shadow objects:
+
+debug_object_assert_init()
+        if (!debug_objects_enabled)
+        	return;                         obj = alloc();
+                				if (!obj) {
+							// Out of memory
+                                                	debug_objects_enabled = false;
+                                                        free_objects();
+        obj = lookup_or_alloc();
+
+        // The lookup failed because the other side
+        // removed the objects, so this returns
+        // an error code as the object in question
+        // is not statically initialized
+
+	if (!IS_ERR_OR_NULL(obj))
+        	return;
+        if (!obj) {
+        	debug_oom();
+                return;
+        }
+
+        print(...)
+           if (!debug_objects_enabled)
+                return;
+
+        fixup(...)
+
+The debug object splat is skipped because debug_objects_enabled is false,
+but the fixup callback is invoked unconditionally, which makes the timer
+disfunctional.
+
+This is only a problem in debug_object_assert_init() and
+debug_object_activate() as both have to handle statically initialized
+objects and therefore must handle the error pointer return case
+gracefully. All other places only handle the found/not found case and the
+NULL pointer return is a signal for OOM. Otherwise they get a valid shadow
+object.
+
+Plug the hole by checking whether debug objects are still enabled before
+invoking the print and fixup function in those two places.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68089" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+iio: core: fix uninitialized data in debugfs
+
+if *ppos is non-zero then simple_write_to_buffer() will not initialize
+the start of buf[].  non zero values for *ppos aren't going to work
+anyway.  test for them at the start of the function and return -einval.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68089" target="_blank">CVE-2026-68089</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+iio: core: fix uninitialized data in debugfs
+
+If *ppos is non-zero then simple_write_to_buffer() will not initialize
+the start of buf[].  Non zero values for *ppos aren't going to work
+anyway.  Test for them at the start of the function and return -EINVAL.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68088" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+usb: gadget: function: rndis: add length check to response query
+
+add variable representations for buflength and bufoffset in
+rndis_query_response(), and perform a length check on them.
+
+this is identical to how rndis_set_response() handles these parameters.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68088" target="_blank">CVE-2026-68088</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+usb: gadget: function: rndis: add length check to response query
+
+Add variable representations for BufLength and BufOffset in
+rndis_query_response(), and perform a length check on them.
+
+This is identical to how rndis_set_response() handles these parameters.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68087" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+hid: wacom: use gfp_atomic in wacom_wac_queue_flush()
+
+wacom_wac_queue_flush() is called via the .raw_event callback
+(wacom_raw_event → wacom_wac_pen_serial_enforce → wacom_wac_queue_flush).
+for usb hid devices, this callback is invoked from hid_irq_in(), which
+is a urb completion handler running in atomic context. using gfp_kernel
+in this path can sleep, leading to a "scheduling while atomic" bug.
+
+use gfp_atomic instead. the existing code already handles allocation
+failure by skipping the fifo entry and continuing.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68087" target="_blank">CVE-2026-68087</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+HID: wacom: use GFP_ATOMIC in wacom_wac_queue_flush()
+
+wacom_wac_queue_flush() is called via the .raw_event callback
+(wacom_raw_event → wacom_wac_pen_serial_enforce → wacom_wac_queue_flush).
+For USB HID devices, this callback is invoked from hid_irq_in(), which
+is a URB completion handler running in atomic context. Using GFP_KERNEL
+in this path can sleep, leading to a "scheduling while atomic" bug.
+
+Use GFP_ATOMIC instead. The existing code already handles allocation
+failure by skipping the fifo entry and continuing.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68086" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mm/khugepaged: write all dirty file folios when collapsing
+
+[there is no upstream commit, as this code was removed by upstream
+ commit 044925f9b565 ("mm: fs: remove filemap_nr_thps*() functions and their users")]
+
+as-is, khugepaged and writable-file opening exclude each other. a file
+cannot be open writeable and have thps (because the filesystem is not aware
+of them). khugepaged will never collapse file pages for files that are
+opened writeable. on an open(o_rdwr/o_wronly), the page cache for that
+particular file is dropped. this is fine because nothing could've been
+dirtied.
+
+however, there is an edge-case: collapse_file() might not be able to
+coexist with concurrent writers, but it can coexist with dirty folios
+(from previous writers). therefore, the following can happen:
+
+open(file, o_rdwr)
+write(file)
+close(file)
+madvise(file_mapping, madv_collapse, some non-dirty range)
+open(file, o_rdwr)
+ nr_thps > 0
+  truncate_inode_pages()
+    /* thps are cleared out, but so are the dirty folios */
+
+when this edge-case happens, there is data loss, as the dirty folios are
+fully discarded.
+
+fix it by fully writing back the page cache (and waiting) when collapsing
+file thps. doing so provides the guarantee that no dirty folio will be
+observed while there are active thps. to fully ensure this is safe, the
+invalidate_lock needs to be held while doing the writeout, so that
+do_dentry_open()'s page cache truncation excludes this write-and-wait.
+
+as a side effect, move the nr_thps counter bumping outside the i_pages
+lock. this is correct since the counter itself is an atomic_t and the
+producer <-> consumer correctness is provided by a full memory barrier:
+smp_mb() in collapse_file()/memory barrier implied by full ordering in
+get_write_access() -> atomic_inc_unless_negative().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68086" target="_blank">CVE-2026-68086</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mm/khugepaged: write all dirty file folios when collapsing
+
+[There is no upstream commit, as this code was removed by upstream
+ commit 044925f9b565 ("mm: fs: remove filemap_nr_thps*() functions and their users")]
+
+As-is, khugepaged and writable-file opening exclude each other. A file
+cannot be open writeable and have THPs (because the filesystem is not aware
+of them). khugepaged will never collapse file pages for files that are
+opened writeable. On an open(O_RDWR/O_WRONLY), the page cache for that
+particular file is dropped. This is fine because nothing could've been
+dirtied.
+
+However, there is an edge-case: collapse_file() might not be able to
+coexist with concurrent writers, but it can coexist with dirty folios
+(from previous writers). Therefore, the following can happen:
+
+open(file, O_RDWR)
+write(file)
+close(file)
+madvise(file_mapping, MADV_COLLAPSE, some non-dirty range)
+open(file, O_RDWR)
+ nr_thps > 0
+  truncate_inode_pages()
+    /* THPs are cleared out, but so are the dirty folios */
+
+When this edge-case happens, there is data loss, as the dirty folios are
+fully discarded.
+
+Fix it by fully writing back the page cache (and waiting) when collapsing
+file THPs. Doing so provides the guarantee that no dirty folio will be
+observed while there are active THPs. To fully ensure this is safe, the
+invalidate_lock needs to be held while doing the writeout, so that
+do_dentry_open()'s page cache truncation excludes this write-and-wait.
+
+As a side effect, move the nr_thps counter bumping outside the i_pages
+lock. This is correct since the counter itself is an atomic_t and the
+producer <-> consumer correctness is provided by a full memory barrier:
+smp_mb() in collapse_file()/memory barrier implied by full ordering in
+get_write_access() -> atomic_inc_unless_negative().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68085" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bluetooth: hci_uart: clear hci_uart_sending when write_work is canceled
+
+hci_uart_sending bit in tx_state means write_work is pending and blocks
+queueing it again.  currently this bit is not cleared when canceling the
+work in hci_uart_close(), which blocks future writes when device is
+reopened later if write_work was pending.
+
+fix by clearing hci_uart_sending when canceling the work.
+
+also make clearing of tx_skb safe by using disable_work_sync +
+enable_work instead of just cancel_work_sync.  hci_uart_flush() purges
+the proto tx queue so we can cancel the pending write_work there,
+instead of doing it just in hci_uart_close().  re-enable and possibly
+requeue the work after queue flush.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68085" target="_blank">CVE-2026-68085</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+Bluetooth: hci_uart: clear HCI_UART_SENDING when write_work is canceled
+
+HCI_UART_SENDING bit in tx_state means write_work is pending and blocks
+queueing it again.  Currently this bit is not cleared when canceling the
+work in hci_uart_close(), which blocks future writes when device is
+reopened later if write_work was pending.
+
+Fix by clearing HCI_UART_SENDING when canceling the work.
+
+Also make clearing of tx_skb safe by using disable_work_sync +
+enable_work instead of just cancel_work_sync.  hci_uart_flush() purges
+the proto tx queue so we can cancel the pending write_work there,
+instead of doing it just in hci_uart_close().  Re-enable and possibly
+requeue the work after queue flush.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68084" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+staging: vme_user: fix location monitor leak in tsi148 bridge
+
+tsi148_probe() allocates a location monitor resource and links it into
+tsi148_bridge->lm_resources. the probe error path frees this list, but
+tsi148_remove() only frees the dma, slave and master resource lists, so
+the location monitor resource is leaked on device unbind or module
+unload.
+
+free the lm_resources list in tsi148_remove() as well, before
+tsi148_bridge is freed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68084" target="_blank">CVE-2026-68084</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+staging: vme_user: fix location monitor leak in tsi148 bridge
+
+tsi148_probe() allocates a location monitor resource and links it into
+tsi148_bridge->lm_resources. The probe error path frees this list, but
+tsi148_remove() only frees the dma, slave and master resource lists, so
+the location monitor resource is leaked on device unbind or module
+unload.
+
+Free the lm_resources list in tsi148_remove() as well, before
+tsi148_bridge is freed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68083" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: fix path resolution in ksmbd_vfs_kern_path_create
+
+the smb2 open lookup is rooted at the share with lookup_beneath, but the
+create/mkdir/hardlink sink is not: ksmbd_vfs_kern_path_create() builds an
+absolute path with convert_to_unix_name() and resolves it from at_fdcwd
+via start_creating_path(), so a ".." component is walked from the real
+filesystem root and escapes the export.
+
+an authenticated client races a missing path component so the rooted open
+lookup returns -enoent (taking the create branch) while the same component
+is present (a directory) when the create walk runs; the create then
+resolves ".." out of the share.
+
+root the create walk at the share like the lookup and rename paths already
+are: resolve the parent with vfs_path_parent_lookup(..., lookup_beneath,
+&share_conf->vfs_path) and create the final component with
+start_creating_noperm(). convert_to_unix_name() then has no callers and is
+removed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68083" target="_blank">CVE-2026-68083</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: fix path resolution in ksmbd_vfs_kern_path_create
+
+The SMB2 open lookup is rooted at the share with LOOKUP_BENEATH, but the
+create/mkdir/hardlink sink is not: ksmbd_vfs_kern_path_create() builds an
+absolute path with convert_to_unix_name() and resolves it from AT_FDCWD
+via start_creating_path(), so a ".." component is walked from the real
+filesystem root and escapes the export.
+
+An authenticated client races a missing path component so the rooted open
+lookup returns -ENOENT (taking the create branch) while the same component
+is present (a directory) when the create walk runs; the create then
+resolves ".." out of the share.
+
+Root the create walk at the share like the lookup and rename paths already
+are: resolve the parent with vfs_path_parent_lookup(..., LOOKUP_BENEATH,
+&share_conf->vfs_path) and create the final component with
+start_creating_noperm(). convert_to_unix_name() then has no callers and is
+removed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-64941" data-description="url redirection to untrusted site ('open redirect') vulnerability in phoenixframework phoenix_live_view allows an attacker to send a victim's browser to an origin of the attacker's choosing via a :to value containing ascii tab, lf or cr.
+
+redirect/2 validates :to through the private validate_local_url!/2 in lib/phoenix_live_view.ex, which is intended to guarantee the target is a path within the application. it rejects a leading // and any backslash, but not ascii tab, lf or cr. browsers strip those three characters before parsing a url, so a value such as /<tab>/example.com passes validation as a path and is then resolved as the scheme-relative url //example.com. the live navigation functions share the guard but are not affected, because the client expands their target against the current origin. push_patch/2 is also affected before 0.7.0, which is when that expansion was added.
+
+this issue affects phoenix_live_view: from 0.5.0 before 1.0.19, from 1.1.0-rc.0 before 1.1.33, and from 1.2.0-rc.0 before 1.2.9.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64941" target="_blank">CVE-2026-64941</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>URL Redirection to Untrusted Site ('Open Redirect') vulnerability in phoenixframework phoenix_live_view allows an attacker to send a victim's browser to an origin of the attacker's choosing via a :to value containing ASCII tab, LF or CR.
+
+redirect/2 validates :to through the private validate_local_url!/2 in lib/phoenix_live_view.ex, which is intended to guarantee the target is a path within the application. It rejects a leading // and any backslash, but not ASCII tab, LF or CR. Browsers strip those three characters before parsing a URL, so a value such as /<TAB>/example.com passes validation as a path and is then resolved as the scheme-relative URL //example.com. The live navigation functions share the guard but are not affected, because the client expands their target against the current origin. push_patch/2 is also affected before 0.7.0, which is when that expansion was added.
+
+This issue affects phoenix_live_view: from 0.5.0 before 1.0.19, from 1.1.0-rc.0 before 1.1.33, and from 1.2.0-rc.0 before 1.2.9.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59088" data-description="a flaw was found in gimp. a signed integer overflow vulnerability exists in the `file-fli` plugin when processing fli image files. this occurs due to an incorrect calculation during memory allocation for image buffers, where the multiplication of image width and height can exceed the maximum integer value. a remote attacker could exploit this by tricking a user into opening a specially crafted fli file, leading to the application crashing and resulting in a denial of service.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59088" target="_blank">CVE-2026-59088</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>A flaw was found in GIMP. A signed integer overflow vulnerability exists in the `file-fli` plugin when processing FLI image files. This occurs due to an incorrect calculation during memory allocation for image buffers, where the multiplication of image width and height can exceed the maximum integer value. A remote attacker could exploit this by tricking a user into opening a specially crafted FLI file, leading to the application crashing and resulting in a denial of service.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-72594" data-description="a stored cross-site scripting (xss) vulnerability in lobehub/lobe-chat through v2.2.13 allows a low-privileged authenticated user to inject arbitrary javascript into the application by uploading a crafted svg file as a user avatar.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72594" target="_blank">CVE-2026-72594</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>A stored cross-site scripting (XSS) vulnerability in lobehub/lobe-chat through v2.2.13 allows a low-privileged authenticated user to inject arbitrary JavaScript into the application by uploading a crafted SVG file as a user avatar. The avatar upload handler derives the stored file extension and S3 content type from the original filename rather than inspecting file content, enabling an attacker to store an SVG containing a script element that executes in the browser of any user who views the attacker's profile or avatar.</p>
+                    <p>A stored cross-site scripting (XSS) vulnerability in lobehub/lobe-chat through v2.2.13 allows a low-privileged authenticated user to inject arbitrary JavaScript into the application by uploading a crafted SVG file as a user avatar.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72593" data-description="a missing authentication vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to access the full file manager functionality including reading, writing, deleting, and uploading files anywhere on the server filesystem. the authentication check in index.php at line 637 evaluates 'if ($auth_pass == '' || $loggedon==$auth_pass)', and since auth_pass is an empty string in the default configuration, the condition always evaluates to true and grants full access without credentials.">
+                <div class="cve-entry" data-cve-id="CVE-2026-72593" data-description="a missing authentication vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to access the full file manager functionality including reading, writing, deleting, and uploading files anywhere on the server filesystem.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72593" target="_blank">CVE-2026-72593</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>A missing authentication vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to access the full file manager functionality including reading, writing, deleting, and uploading files anywhere on the server filesystem. The authentication check in index.php at line 637 evaluates 'if ($auth_pass == '' || $loggedon==$auth_pass)', and since auth_pass is an empty string in the default configuration, the condition always evaluates to true and grants full access without credentials.</p>
+                    <p>A missing authentication vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to access the full file manager functionality including reading, writing, deleting, and uploading files anywhere on the server filesystem.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72592" data-description="an unrestricted file upload vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to execute arbitrary php code on the server. the application ships with an empty upload extension filter ($upload_ext_filter = array()) and no authentication enabled by default (auth_pass is empty string), allowing an unauthenticated attacker to upload a php webshell and execute it by browsing to the uploaded path.">
+                <div class="cve-entry" data-cve-id="CVE-2026-72592" data-description="an unrestricted file upload vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to execute arbitrary php code on the server. the application ships with an empty upload extension filter ( = array) and no authentication enabled by default (auth_pass is empty string), allowing an unauthenticated attacker to upload a php webshell and execute it by browsing to the uploaded path.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72592" target="_blank">CVE-2026-72592</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An unrestricted file upload vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to execute arbitrary PHP code on the server. The application ships with an empty upload extension filter ($upload_ext_filter = array()) and no authentication enabled by default (auth_pass is empty string), allowing an unauthenticated attacker to upload a PHP webshell and execute it by browsing to the uploaded path.</p>
+                    <p>An unrestricted file upload vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to execute arbitrary PHP code on the server. The application ships with an empty upload extension filter ( = array) and no authentication enabled by default (auth_pass is empty string), allowing an unauthenticated attacker to upload a PHP webshell and execute it by browsing to the uploaded path.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72591" data-description="a server-side request forgery (ssrf) vulnerability in gabehf/koito through v0.3.2 allows an authenticated user to make the server perform http requests to arbitrary internal or external hosts by supplying a crafted image_url value in the patch /apis/web/v1/album/{id}/image endpoint. the application fetches the supplied url server-side without validating the destination host or blocking access to private, loopback, link-local, or internal addresses.">
+                <div class="cve-entry" data-cve-id="CVE-2026-72591" data-description="a server-side request forgery (ssrf) vulnerability in gabehf/koito through v0.3.2 allows an authenticated user to make the server perform http requests to arbitrary internal or external hosts by supplying a crafted image_url value in the patch /apis/web/v1/album/{id}/image endpoint.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72591" target="_blank">CVE-2026-72591</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>A server-side request forgery (SSRF) vulnerability in gabehf/Koito through v0.3.2 allows an authenticated user to make the server perform HTTP requests to arbitrary internal or external hosts by supplying a crafted image_url value in the PATCH /apis/web/v1/album/{id}/image endpoint. The application fetches the supplied URL server-side without validating the destination host or blocking access to private, loopback, link-local, or internal addresses.</p>
+                    <p>A server-side request forgery (SSRF) vulnerability in gabehf/Koito through v0.3.2 allows an authenticated user to make the server perform HTTP requests to arbitrary internal or external hosts by supplying a crafted image_url value in the PATCH /apis/web/v1/album/{id}/image endpoint.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72590" data-description="an os command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to inject arbitrary cron job entries by sending a crafted get request to /crontab with url-encoded newlines in the env_vars parameter. the handler appends the env_vars value directly to the crontab file string as '${envvars}\n' without stripping newline characters, enabling an attacker to insert arbitrary cron expressions that execute attacker-controlled commands.">
+                <div class="cve-entry" data-cve-id="CVE-2026-72590" data-description="an os command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to inject arbitrary cron job entries by sending a crafted get request to /crontab with url-encoded newlines in the env_vars parameter.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72590" target="_blank">CVE-2026-72590</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An OS command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to inject arbitrary cron job entries by sending a crafted GET request to /crontab with URL-encoded newlines in the env_vars parameter. The handler appends the env_vars value directly to the crontab file string as '${envVars}\n' without stripping newline characters, enabling an attacker to insert arbitrary cron expressions that execute attacker-controlled commands.</p>
+                    <p>An OS command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to inject arbitrary cron job entries by sending a crafted GET request to /crontab with URL-encoded newlines in the env_vars parameter.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72589" data-description="an os command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to execute arbitrary system commands by importing a crafted crontab database file. the post /import endpoint accepts arbitrary .db files and overwrites the application database without validation. the hook field value is embedded directly into a shell command by crontab.js makecommand() without sanitization, so a malicious hook value in the imported file results in command execution on the next cron execution cycle.">
+                <div class="cve-entry" data-cve-id="CVE-2026-72589" data-description="an os command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to execute arbitrary system commands by importing a crafted crontab database file. the post /import endpoint accepts arbitrary .db files and overwrites the application database without validation.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72589" target="_blank">CVE-2026-72589</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An OS command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to execute arbitrary system commands by importing a crafted crontab database file. The POST /import endpoint accepts arbitrary .db files and overwrites the application database without validation. The hook field value is embedded directly into a shell command by crontab.js makeCommand() without sanitization, so a malicious hook value in the imported file results in command execution on the next cron execution cycle.</p>
+                    <p>An OS command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to execute arbitrary system commands by importing a crafted crontab database file. The POST /import endpoint accepts arbitrary .db files and overwrites the application database without validation.</p>
                 </div>
         
                 <div class="cve-entry" data-cve-id="CVE-2026-72588" data-description="a user enumeration vulnerability in bluewave-labs/checkmate through 2.1.0 allows an unauthenticated remote attacker to determine whether a given email address is registered. the post /api/v1/auth/recovery/request endpoint returns http 200 for registered email addresses and a different status code for unregistered ones, enabling attackers to enumerate valid user accounts.">
@@ -90,108 +582,12 @@
                     <p>A user enumeration vulnerability in bluewave-labs/Checkmate through 2.1.0 allows an unauthenticated remote attacker to determine whether a given email address is registered. The POST /api/v1/auth/recovery/request endpoint returns HTTP 200 for registered email addresses and a different status code for unregistered ones, enabling attackers to enumerate valid user accounts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72587" data-description="a cache poisoning vulnerability in corebunch/instatic through 0.0.14 allows an unauthenticated remote attacker to poison the shared process-wide render cache by manipulating the u query parameter of the get /_instatic/hole/<nodeid> server island endpoint. the originating-page url supplied in u seeds the route template frame used for rendering, and the result is stored in a shared cache keyed only on nodeid, enabling an attacker to inject a crafted route that causes all subsequent visitors to receive malformed or attacker-controlled fragment content.">
+                <div class="cve-entry" data-cve-id="CVE-2026-72587" data-description="a cache poisoning vulnerability in corebunch/instatic through 0.0.14 allows an unauthenticated remote attacker to poison the shared process-wide render cache by manipulating the u query parameter of the get /_instatic/hole/<nodeid> server island endpoint.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72587" target="_blank">CVE-2026-72587</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>A cache poisoning vulnerability in CoreBunch/Instatic through 0.0.14 allows an unauthenticated remote attacker to poison the shared process-wide render cache by manipulating the u query parameter of the GET /_instatic/hole/<nodeId> server island endpoint. The originating-page URL supplied in u seeds the route template frame used for rendering, and the result is stored in a shared cache keyed only on nodeId, enabling an attacker to inject a crafted route that causes all subsequent visitors to receive malformed or attacker-controlled fragment content.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72586" data-description="a missing authentication vulnerability in frangoteam/fuxa through 1.3.3 allows an unauthenticated remote attacker to query all historical sensor data via the daq_query socket.io event. when secureenabled=true, all other sensitive socket.io events (device_browse, host_interfaces, device_tags_request, etc.) call issocketadminauthorized() to verify the connection token, but the daq_query handler in server/runtime/index.js lacks this check entirely.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72586" target="_blank">CVE-2026-72586</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>A missing authentication vulnerability in frangoteam/FUXA through 1.3.3 allows an unauthenticated remote attacker to query all historical sensor data via the DAQ_QUERY Socket.IO event. When secureEnabled=true, all other sensitive Socket.IO events (DEVICE_BROWSE, HOST_INTERFACES, DEVICE_TAGS_REQUEST, etc.) call isSocketAdminAuthorized() to verify the connection token, but the DAQ_QUERY handler in server/runtime/index.js lacks this check entirely.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72585" data-description="an authorization bypass vulnerability in grafana through 13.2.0 allows an editor-role user to delete protected contact points (receivers) without the required alert.notifications.receivers.protected:write permission. the fix for cve-2026-21724 addressed only the update code path in both pkg/services/ngalert/provisioning/contactpoints.go and pkg/services/ngalert/notifier/receiver_svc.go, but the delete path in both receiver services was not updated with the protected-field check, leaving deletion operations unguarded.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72585" target="_blank">CVE-2026-72585</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>An authorization bypass vulnerability in Grafana through 13.2.0 allows an Editor-role user to delete protected contact points (receivers) without the required alert.notifications.receivers.protected:write permission. The fix for CVE-2026-21724 addressed only the UPDATE code path in both pkg/services/ngalert/provisioning/contactpoints.go and pkg/services/ngalert/notifier/receiver_svc.go, but the DELETE path in both receiver services was not updated with the protected-field check, leaving deletion operations unguarded.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72584" data-description="a time-of-check/time-of-use (toctou) race condition in fastschema through v0.15.1 allows an unauthenticated remote attacker to bypass the otp attempt limit on the account recovery flow, enabling brute-force attacks on 6-digit otp codes. the verifyotpsession function in pkg/auth/local.go reads and increments the attempt counter in separate non-atomic operations, allowing concurrent requests to observe the same attempt count below the threshold and proceed past the limit check before any update is committed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72584" target="_blank">CVE-2026-72584</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>A time-of-check/time-of-use (TOCTOU) race condition in fastschema through v0.15.1 allows an unauthenticated remote attacker to bypass the OTP attempt limit on the account recovery flow, enabling brute-force attacks on 6-digit OTP codes. The verifyOTPSession function in pkg/auth/local.go reads and increments the attempt counter in separate non-atomic operations, allowing concurrent requests to observe the same attempt count below the threshold and proceed past the limit check before any update is committed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72583" data-description="a stored cross-site scripting (xss) vulnerability in fastschema through v0.15.1 allows a low-privileged authenticated user to upload an svg file containing malicious javascript by bypassing the mime type allow-list check. the pkg/rclonefs/base.go putmultipart function validates the content-type header supplied by the client rather than inspecting the actual file content, enabling an attacker to rename a file to .jpg while specifying image/svg+xml to bypass the filter and store a script-bearing svg in the web root.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72583" target="_blank">CVE-2026-72583</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>A stored cross-site scripting (XSS) vulnerability in fastschema through v0.15.1 allows a low-privileged authenticated user to upload an SVG file containing malicious JavaScript by bypassing the MIME type allow-list check. The pkg/rclonefs/base.go PutMultipart function validates the Content-Type header supplied by the client rather than inspecting the actual file content, enabling an attacker to rename a file to .jpg while specifying image/svg+xml to bypass the filter and store a script-bearing SVG in the web root.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72582" data-description="a null pointer dereference vulnerability in fastschema through v0.15.1 allows an unauthenticated remote attacker to crash the server process with a single http request. the sendotpemail function in pkg/auth/local.go dereferences a pointer obtained from an unchecked error path without validating it is non-nil, causing a fatal panic that terminates the entire server when a recovery request is sent to the /api/auth/local/recover endpoint.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72582" target="_blank">CVE-2026-72582</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>A NULL pointer dereference vulnerability in fastschema through v0.15.1 allows an unauthenticated remote attacker to crash the server process with a single HTTP request. The sendOTPEmail function in pkg/auth/local.go dereferences a pointer obtained from an unchecked error path without validating it is non-nil, causing a fatal panic that terminates the entire server when a recovery request is sent to the /api/auth/local/recover endpoint.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72581" data-description="a server-side request forgery (ssrf) vulnerability in duhow/xiaoai-patch through commit fb07049 allows a remote attacker to make the xiaomi smart speaker perform http requests to arbitrary internal or external urls. the /auth endpoint in api/main.py uses the user-supplied url post parameter to redirect to a home assistant instance without validating the destination url, enabling internal network scanning and access to internal services.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72581" target="_blank">CVE-2026-72581</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.6</p>
-                    <p>A server-side request forgery (SSRF) vulnerability in duhow/xiaoai-patch through commit fb07049 allows a remote attacker to make the Xiaomi smart speaker perform HTTP requests to arbitrary internal or external URLs. The /auth endpoint in api/main.py uses the user-supplied url POST parameter to redirect to a Home Assistant instance without validating the destination URL, enabling internal network scanning and access to internal services.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72580" data-description="an os command injection vulnerability in duhow/xiaoai-patch through commit fb07049 allows a remote attacker to execute arbitrary system commands on xiaomi smart speakers running the patch. the /mute and /unmute endpoint handlers in api/main.py pass the user-supplied silent query parameter directly to os.system() without sanitization, enabling command injection via shell metacharacters.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72580" target="_blank">CVE-2026-72580</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An OS command injection vulnerability in duhow/xiaoai-patch through commit fb07049 allows a remote attacker to execute arbitrary system commands on Xiaomi smart speakers running the patch. The /mute and /unmute endpoint handlers in api/main.py pass the user-supplied silent query parameter directly to os.system() without sanitization, enabling command injection via shell metacharacters.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72579" data-description="an os command injection vulnerability in nasa hypercp (main branch) allows a network-adjacent attacker who can intercept or spoof responses from oceandata.sci.gsfc.nasa.gov to execute arbitrary system commands on the researcher's workstation. the source/obpgsession.py handler parses server response headers without sanitization and passes attacker-controlled field values to subprocess calls, enabling arbitrary command execution when a user performs a data download operation against a tampered server.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72579" target="_blank">CVE-2026-72579</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>An OS command injection vulnerability in NASA HyperCP (main branch) allows a network-adjacent attacker who can intercept or spoof responses from oceandata.sci.gsfc.nasa.gov to execute arbitrary system commands on the researcher's workstation. The Source/OBPGSession.py handler parses server response headers without sanitization and passes attacker-controlled field values to subprocess calls, enabling arbitrary command execution when a user performs a data download operation against a tampered server.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72578" data-description="a cross-site request forgery (csrf) vulnerability in freepbx framework 17.0 allows an unauthenticated remote attacker to perform administrative actions on behalf of an authenticated administrator. the /admin/ajax.php dispatcher in amp_conf/htdocs/admin/libraries/bmo/ajax.class.php does not implement csrf tokens; its only protection is a referer header check that is bypassed when the request is sent without a referer header or from a same-site context, enabling attackers to trigger admin operations by luring an administrator to a malicious page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72578" target="_blank">CVE-2026-72578</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A cross-site request forgery (CSRF) vulnerability in FreePBX Framework 17.0 allows an unauthenticated remote attacker to perform administrative actions on behalf of an authenticated administrator. The /admin/ajax.php dispatcher in amp_conf/htdocs/admin/libraries/BMO/Ajax.class.php does not implement CSRF tokens; its only protection is a Referer header check that is bypassed when the request is sent without a Referer header or from a same-site context, enabling attackers to trigger admin operations by luring an administrator to a malicious page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72577" data-description="multiple vulnerabilities in nasa fprime-gds through 3.4.3 allow an unauthenticated remote attacker to achieve arbitrary code execution on the ground station host and inject arbitrary commands to connected spacecraft. the flask application in src/fprime_gds/flask/app.py applies no authentication to any endpoint. a path traversal in src/fprime_gds/flask/updown.py allows reading and writing arbitrary files outside the upload directory. a hardcoded secret key (cwe-321) in the application enables session forgery. chained together, these vulnerabilities allow complete compromise of the ground data system and any spacecraft under its control.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72577" target="_blank">CVE-2026-72577</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Multiple vulnerabilities in NASA fprime-gds through 3.4.3 allow an unauthenticated remote attacker to achieve arbitrary code execution on the ground station host and inject arbitrary commands to connected spacecraft. The Flask application in src/fprime_gds/flask/app.py applies no authentication to any endpoint. A path traversal in src/fprime_gds/flask/updown.py allows reading and writing arbitrary files outside the upload directory. A hardcoded secret key (CWE-321) in the application enables session forgery. Chained together, these vulnerabilities allow complete compromise of the ground data system and any spacecraft under its control.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72576" data-description="a stored cross-site scripting (xss) vulnerability in bludit 4.0.0-beta allows a low-privileged authenticated user (author role) to inject arbitrary javascript by uploading a crafted svg file as the site logo. the /admin/ajax/logo-upload endpoint in bl-kernel/ajax/logo-upload.php moves the uploaded file directly to the web root via filesystem::mv() without invoking sanitizesvg() or transformimage(), while svg is present in the allowed_img_extension and allowed_img_mimetypes allow-lists. a stored script tag in the svg executes in the browser of any user who loads the logo.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72576" target="_blank">CVE-2026-72576</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>A stored cross-site scripting (XSS) vulnerability in Bludit 4.0.0-beta allows a low-privileged authenticated user (Author role) to inject arbitrary JavaScript by uploading a crafted SVG file as the site logo. The /admin/ajax/logo-upload endpoint in bl-kernel/ajax/logo-upload.php moves the uploaded file directly to the web root via Filesystem::mv() without invoking sanitizeSVG() or transformImage(), while SVG is present in the ALLOWED_IMG_EXTENSION and ALLOWED_IMG_MIMETYPES allow-lists. A stored script tag in the SVG executes in the browser of any user who loads the logo.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72575" data-description="an improper authorization vulnerability in daptin through v0.12.34 allows unauthenticated remote attackers to read, create, update, and delete usergroup records. the permission check functions (canread, canpeek, cancreate, canupdate, candelete, canrefer) in server/permission/permission.go return true whenever p.userid equals the requesting userid, but fail to reject the null/zero reference — unlike canexecute, which explicitly guards it. since usergroup table rows have no user_account_id and are loaded with a null owner, an unauthenticated guest whose session userid is null gains full crud access to all usergroup objects.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72575" target="_blank">CVE-2026-72575</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
-                    <p>An improper authorization vulnerability in daptin through v0.12.34 allows unauthenticated remote attackers to read, create, update, and delete usergroup records. The permission check functions (CanRead, CanPeek, CanCreate, CanUpdate, CanDelete, CanRefer) in server/permission/permission.go return true whenever p.UserId equals the requesting userId, but fail to reject the null/zero reference — unlike CanExecute, which explicitly guards it. Since usergroup table rows have no user_account_id and are loaded with a null owner, an unauthenticated guest whose session UserId is null gains full CRUD access to all usergroup objects.</p>
+                    <p>A cache poisoning vulnerability in CoreBunch/Instatic through 0.0.14 allows an unauthenticated remote attacker to poison the shared process-wide render cache by manipulating the u query parameter of the GET /_instatic/hole/<nodeId> server island endpoint.</p>
                 </div>
         
             </div>
