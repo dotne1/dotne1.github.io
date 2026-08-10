@@ -34,560 +34,744 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-68092" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-time/jiffies: register jiffies clocksource before usage
-
-teddy reported that a xen hvm has a long boot delay, which was bisected to
-the recent enhancements to the negative motion detection. it turned out
-that the jiffies clocksource is used in early boot before it is registered,
-which leaves the max_delta_raw field at zero. that causes the read out to
-be clamped to the max delta of 0, which means time is not making progress.
-
-cure it by ensuring that it is initialized before its first usage in
-timekeeping_init().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68092" target="_blank">CVE-2026-68092</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-time/jiffies: Register jiffies clocksource before usage
-
-Teddy reported that a XEN HVM has a long boot delay, which was bisected to
-the recent enhancements to the negative motion detection. It turned out
-that the jiffies clocksource is used in early boot before it is registered,
-which leaves the max_delta_raw field at zero. That causes the read out to
-be clamped to the max delta of 0, which means time is not making progress.
-
-Cure it by ensuring that it is initialized before its first usage in
-timekeeping_init().</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68091" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-hid: wacom: stop hardware after post-start probe failures
-
-wacom_parse_and_register() starts hid hardware before registering inputs
-and initializing pad leds/remotes. those later steps can fail, but their
-error paths currently release wacom resources without stopping the hid
-hardware.
-
-route post-hid_hw_start() failures through hid_hw_stop() before
-releasing driver resources.
-
-this issue was identified during our ongoing static-analysis research while
-reviewing kernel code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68091" target="_blank">CVE-2026-68091</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-HID: wacom: stop hardware after post-start probe failures
-
-wacom_parse_and_register() starts HID hardware before registering inputs
-and initializing pad LEDs/remotes. Those later steps can fail, but their
-error paths currently release Wacom resources without stopping the HID
-hardware.
-
-Route post-hid_hw_start() failures through hid_hw_stop() before
-releasing driver resources.
-
-This issue was identified during our ongoing static-analysis research while
-reviewing kernel code.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68090" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-debugobjects: plug race against a concurrent oom disable
-
-syzbot reported a puzzling splat:
-
-   warning: kernel/time/hrtimer.c:443 at stub_timer+0xa/0x20
-
-stub_timer() is installed as timer callback function in
-hrtimer_fixup_assert_init(), which is invoked when
-debug_object_assert_init() can't find a shadow object. in that case debug
-objects emits a warning about it before invoking the fixup.
-
-though the provided console log lacks this warning and instead has the
-following a few seconds before the splat:
-
-     odebug: out of memory. odebug disabled
-
-so the object was looked up in debug_object_assert_init() and the lookup
-failed due a concurrent out of memory situation which disabled debug
-objects and freed the shadow objects:
-
-debug_object_assert_init()
-        if (!debug_objects_enabled)
-        	return;                         obj = alloc();
-                				if (!obj) {
-							// out of memory
-                                                	debug_objects_enabled = false;
-                                                        free_objects();
-        obj = lookup_or_alloc();
-
-        // the lookup failed because the other side
-        // removed the objects, so this returns
-        // an error code as the object in question
-        // is not statically initialized
-
-	if (!is_err_or_null(obj))
-        	return;
-        if (!obj) {
-        	debug_oom();
-                return;
-        }
-
-        print(...)
-           if (!debug_objects_enabled)
-                return;
-
-        fixup(...)
-
-the debug object splat is skipped because debug_objects_enabled is false,
-but the fixup callback is invoked unconditionally, which makes the timer
-disfunctional.
-
-this is only a problem in debug_object_assert_init() and
-debug_object_activate() as both have to handle statically initialized
-objects and therefore must handle the error pointer return case
-gracefully. all other places only handle the found/not found case and the
-null pointer return is a signal for oom. otherwise they get a valid shadow
-object.
-
-plug the hole by checking whether debug objects are still enabled before
-invoking the print and fixup function in those two places.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68090" target="_blank">CVE-2026-68090</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-debugobjects: Plug race against a concurrent OOM disable
-
-syzbot reported a puzzling splat:
-
-   WARNING: kernel/time/hrtimer.c:443 at stub_timer+0xa/0x20
-
-stub_timer() is installed as timer callback function in
-hrtimer_fixup_assert_init(), which is invoked when
-debug_object_assert_init() can't find a shadow object. In that case debug
-objects emits a warning about it before invoking the fixup.
-
-Though the provided console log lacks this warning and instead has the
-following a few seconds before the splat:
-
-     ODEBUG: Out of memory. ODEBUG disabled
-
-So the object was looked up in debug_object_assert_init() and the lookup
-failed due a concurrent out of memory situation which disabled debug
-objects and freed the shadow objects:
-
-debug_object_assert_init()
-        if (!debug_objects_enabled)
-        	return;                         obj = alloc();
-                				if (!obj) {
-							// Out of memory
-                                                	debug_objects_enabled = false;
-                                                        free_objects();
-        obj = lookup_or_alloc();
-
-        // The lookup failed because the other side
-        // removed the objects, so this returns
-        // an error code as the object in question
-        // is not statically initialized
-
-	if (!IS_ERR_OR_NULL(obj))
-        	return;
-        if (!obj) {
-        	debug_oom();
-                return;
-        }
-
-        print(...)
-           if (!debug_objects_enabled)
-                return;
-
-        fixup(...)
-
-The debug object splat is skipped because debug_objects_enabled is false,
-but the fixup callback is invoked unconditionally, which makes the timer
-disfunctional.
-
-This is only a problem in debug_object_assert_init() and
-debug_object_activate() as both have to handle statically initialized
-objects and therefore must handle the error pointer return case
-gracefully. All other places only handle the found/not found case and the
-NULL pointer return is a signal for OOM. Otherwise they get a valid shadow
-object.
-
-Plug the hole by checking whether debug objects are still enabled before
-invoking the print and fixup function in those two places.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68089" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-iio: core: fix uninitialized data in debugfs
-
-if *ppos is non-zero then simple_write_to_buffer() will not initialize
-the start of buf[].  non zero values for *ppos aren't going to work
-anyway.  test for them at the start of the function and return -einval.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68089" target="_blank">CVE-2026-68089</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-iio: core: fix uninitialized data in debugfs
-
-If *ppos is non-zero then simple_write_to_buffer() will not initialize
-the start of buf[].  Non zero values for *ppos aren't going to work
-anyway.  Test for them at the start of the function and return -EINVAL.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68088" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-usb: gadget: function: rndis: add length check to response query
-
-add variable representations for buflength and bufoffset in
-rndis_query_response(), and perform a length check on them.
-
-this is identical to how rndis_set_response() handles these parameters.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68088" target="_blank">CVE-2026-68088</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-usb: gadget: function: rndis: add length check to response query
-
-Add variable representations for BufLength and BufOffset in
-rndis_query_response(), and perform a length check on them.
-
-This is identical to how rndis_set_response() handles these parameters.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68087" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-hid: wacom: use gfp_atomic in wacom_wac_queue_flush()
-
-wacom_wac_queue_flush() is called via the .raw_event callback
-(wacom_raw_event → wacom_wac_pen_serial_enforce → wacom_wac_queue_flush).
-for usb hid devices, this callback is invoked from hid_irq_in(), which
-is a urb completion handler running in atomic context. using gfp_kernel
-in this path can sleep, leading to a "scheduling while atomic" bug.
-
-use gfp_atomic instead. the existing code already handles allocation
-failure by skipping the fifo entry and continuing.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68087" target="_blank">CVE-2026-68087</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-HID: wacom: use GFP_ATOMIC in wacom_wac_queue_flush()
-
-wacom_wac_queue_flush() is called via the .raw_event callback
-(wacom_raw_event → wacom_wac_pen_serial_enforce → wacom_wac_queue_flush).
-For USB HID devices, this callback is invoked from hid_irq_in(), which
-is a URB completion handler running in atomic context. Using GFP_KERNEL
-in this path can sleep, leading to a "scheduling while atomic" bug.
-
-Use GFP_ATOMIC instead. The existing code already handles allocation
-failure by skipping the fifo entry and continuing.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68086" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-mm/khugepaged: write all dirty file folios when collapsing
-
-[there is no upstream commit, as this code was removed by upstream
- commit 044925f9b565 ("mm: fs: remove filemap_nr_thps*() functions and their users")]
-
-as-is, khugepaged and writable-file opening exclude each other. a file
-cannot be open writeable and have thps (because the filesystem is not aware
-of them). khugepaged will never collapse file pages for files that are
-opened writeable. on an open(o_rdwr/o_wronly), the page cache for that
-particular file is dropped. this is fine because nothing could've been
-dirtied.
-
-however, there is an edge-case: collapse_file() might not be able to
-coexist with concurrent writers, but it can coexist with dirty folios
-(from previous writers). therefore, the following can happen:
-
-open(file, o_rdwr)
-write(file)
-close(file)
-madvise(file_mapping, madv_collapse, some non-dirty range)
-open(file, o_rdwr)
- nr_thps > 0
-  truncate_inode_pages()
-    /* thps are cleared out, but so are the dirty folios */
-
-when this edge-case happens, there is data loss, as the dirty folios are
-fully discarded.
-
-fix it by fully writing back the page cache (and waiting) when collapsing
-file thps. doing so provides the guarantee that no dirty folio will be
-observed while there are active thps. to fully ensure this is safe, the
-invalidate_lock needs to be held while doing the writeout, so that
-do_dentry_open()'s page cache truncation excludes this write-and-wait.
-
-as a side effect, move the nr_thps counter bumping outside the i_pages
-lock. this is correct since the counter itself is an atomic_t and the
-producer <-> consumer correctness is provided by a full memory barrier:
-smp_mb() in collapse_file()/memory barrier implied by full ordering in
-get_write_access() -> atomic_inc_unless_negative().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68086" target="_blank">CVE-2026-68086</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-mm/khugepaged: write all dirty file folios when collapsing
-
-[There is no upstream commit, as this code was removed by upstream
- commit 044925f9b565 ("mm: fs: remove filemap_nr_thps*() functions and their users")]
-
-As-is, khugepaged and writable-file opening exclude each other. A file
-cannot be open writeable and have THPs (because the filesystem is not aware
-of them). khugepaged will never collapse file pages for files that are
-opened writeable. On an open(O_RDWR/O_WRONLY), the page cache for that
-particular file is dropped. This is fine because nothing could've been
-dirtied.
-
-However, there is an edge-case: collapse_file() might not be able to
-coexist with concurrent writers, but it can coexist with dirty folios
-(from previous writers). Therefore, the following can happen:
-
-open(file, O_RDWR)
-write(file)
-close(file)
-madvise(file_mapping, MADV_COLLAPSE, some non-dirty range)
-open(file, O_RDWR)
- nr_thps > 0
-  truncate_inode_pages()
-    /* THPs are cleared out, but so are the dirty folios */
-
-When this edge-case happens, there is data loss, as the dirty folios are
-fully discarded.
-
-Fix it by fully writing back the page cache (and waiting) when collapsing
-file THPs. Doing so provides the guarantee that no dirty folio will be
-observed while there are active THPs. To fully ensure this is safe, the
-invalidate_lock needs to be held while doing the writeout, so that
-do_dentry_open()'s page cache truncation excludes this write-and-wait.
-
-As a side effect, move the nr_thps counter bumping outside the i_pages
-lock. This is correct since the counter itself is an atomic_t and the
-producer <-> consumer correctness is provided by a full memory barrier:
-smp_mb() in collapse_file()/memory barrier implied by full ordering in
-get_write_access() -> atomic_inc_unless_negative().</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68085" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-bluetooth: hci_uart: clear hci_uart_sending when write_work is canceled
-
-hci_uart_sending bit in tx_state means write_work is pending and blocks
-queueing it again.  currently this bit is not cleared when canceling the
-work in hci_uart_close(), which blocks future writes when device is
-reopened later if write_work was pending.
-
-fix by clearing hci_uart_sending when canceling the work.
-
-also make clearing of tx_skb safe by using disable_work_sync +
-enable_work instead of just cancel_work_sync.  hci_uart_flush() purges
-the proto tx queue so we can cancel the pending write_work there,
-instead of doing it just in hci_uart_close().  re-enable and possibly
-requeue the work after queue flush.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68085" target="_blank">CVE-2026-68085</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-Bluetooth: hci_uart: clear HCI_UART_SENDING when write_work is canceled
-
-HCI_UART_SENDING bit in tx_state means write_work is pending and blocks
-queueing it again.  Currently this bit is not cleared when canceling the
-work in hci_uart_close(), which blocks future writes when device is
-reopened later if write_work was pending.
-
-Fix by clearing HCI_UART_SENDING when canceling the work.
-
-Also make clearing of tx_skb safe by using disable_work_sync +
-enable_work instead of just cancel_work_sync.  hci_uart_flush() purges
-the proto tx queue so we can cancel the pending write_work there,
-instead of doing it just in hci_uart_close().  Re-enable and possibly
-requeue the work after queue flush.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68084" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-staging: vme_user: fix location monitor leak in tsi148 bridge
-
-tsi148_probe() allocates a location monitor resource and links it into
-tsi148_bridge->lm_resources. the probe error path frees this list, but
-tsi148_remove() only frees the dma, slave and master resource lists, so
-the location monitor resource is leaked on device unbind or module
-unload.
-
-free the lm_resources list in tsi148_remove() as well, before
-tsi148_bridge is freed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68084" target="_blank">CVE-2026-68084</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-staging: vme_user: fix location monitor leak in tsi148 bridge
-
-tsi148_probe() allocates a location monitor resource and links it into
-tsi148_bridge->lm_resources. The probe error path frees this list, but
-tsi148_remove() only frees the dma, slave and master resource lists, so
-the location monitor resource is leaked on device unbind or module
-unload.
-
-Free the lm_resources list in tsi148_remove() as well, before
-tsi148_bridge is freed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68083" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ksmbd: fix path resolution in ksmbd_vfs_kern_path_create
-
-the smb2 open lookup is rooted at the share with lookup_beneath, but the
-create/mkdir/hardlink sink is not: ksmbd_vfs_kern_path_create() builds an
-absolute path with convert_to_unix_name() and resolves it from at_fdcwd
-via start_creating_path(), so a ".." component is walked from the real
-filesystem root and escapes the export.
-
-an authenticated client races a missing path component so the rooted open
-lookup returns -enoent (taking the create branch) while the same component
-is present (a directory) when the create walk runs; the create then
-resolves ".." out of the share.
-
-root the create walk at the share like the lookup and rename paths already
-are: resolve the parent with vfs_path_parent_lookup(..., lookup_beneath,
-&share_conf->vfs_path) and create the final component with
-start_creating_noperm(). convert_to_unix_name() then has no callers and is
-removed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68083" target="_blank">CVE-2026-68083</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ksmbd: fix path resolution in ksmbd_vfs_kern_path_create
-
-The SMB2 open lookup is rooted at the share with LOOKUP_BENEATH, but the
-create/mkdir/hardlink sink is not: ksmbd_vfs_kern_path_create() builds an
-absolute path with convert_to_unix_name() and resolves it from AT_FDCWD
-via start_creating_path(), so a ".." component is walked from the real
-filesystem root and escapes the export.
-
-An authenticated client races a missing path component so the rooted open
-lookup returns -ENOENT (taking the create branch) while the same component
-is present (a directory) when the create walk runs; the create then
-resolves ".." out of the share.
-
-Root the create walk at the share like the lookup and rename paths already
-are: resolve the parent with vfs_path_parent_lookup(..., LOOKUP_BENEATH,
-&share_conf->vfs_path) and create the final component with
-start_creating_noperm(). convert_to_unix_name() then has no callers and is
-removed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64941" data-description="url redirection to untrusted site ('open redirect') vulnerability in phoenixframework phoenix_live_view allows an attacker to send a victim's browser to an origin of the attacker's choosing via a :to value containing ascii tab, lf or cr.
-
-redirect/2 validates :to through the private validate_local_url!/2 in lib/phoenix_live_view.ex, which is intended to guarantee the target is a path within the application. it rejects a leading // and any backslash, but not ascii tab, lf or cr. browsers strip those three characters before parsing a url, so a value such as /<tab>/example.com passes validation as a path and is then resolved as the scheme-relative url //example.com. the live navigation functions share the guard but are not affected, because the client expands their target against the current origin. push_patch/2 is also affected before 0.7.0, which is when that expansion was added.
-
-this issue affects phoenix_live_view: from 0.5.0 before 1.0.19, from 1.1.0-rc.0 before 1.1.33, and from 1.2.0-rc.0 before 1.2.9.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64941" target="_blank">CVE-2026-64941</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>URL Redirection to Untrusted Site ('Open Redirect') vulnerability in phoenixframework phoenix_live_view allows an attacker to send a victim's browser to an origin of the attacker's choosing via a :to value containing ASCII tab, LF or CR.
-
-redirect/2 validates :to through the private validate_local_url!/2 in lib/phoenix_live_view.ex, which is intended to guarantee the target is a path within the application. It rejects a leading // and any backslash, but not ASCII tab, LF or CR. Browsers strip those three characters before parsing a URL, so a value such as /<TAB>/example.com passes validation as a path and is then resolved as the scheme-relative URL //example.com. The live navigation functions share the guard but are not affected, because the client expands their target against the current origin. push_patch/2 is also affected before 0.7.0, which is when that expansion was added.
-
-This issue affects phoenix_live_view: from 0.5.0 before 1.0.19, from 1.1.0-rc.0 before 1.1.33, and from 1.2.0-rc.0 before 1.2.9.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59088" data-description="a flaw was found in gimp. a signed integer overflow vulnerability exists in the `file-fli` plugin when processing fli image files. this occurs due to an incorrect calculation during memory allocation for image buffers, where the multiplication of image width and height can exceed the maximum integer value. a remote attacker could exploit this by tricking a user into opening a specially crafted fli file, leading to the application crashing and resulting in a denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59088" target="_blank">CVE-2026-59088</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 07:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A flaw was found in GIMP. A signed integer overflow vulnerability exists in the `file-fli` plugin when processing FLI image files. This occurs due to an incorrect calculation during memory allocation for image buffers, where the multiplication of image width and height can exceed the maximum integer value. A remote attacker could exploit this by tricking a user into opening a specially crafted FLI file, leading to the application crashing and resulting in a denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72594" data-description="a stored cross-site scripting (xss) vulnerability in lobehub/lobe-chat through v2.2.13 allows a low-privileged authenticated user to inject arbitrary javascript into the application by uploading a crafted svg file as a user avatar.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72594" target="_blank">CVE-2026-72594</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-72692" data-description="a missing authorization vulnerability in opensignlabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to irreversibly decline any in-flight document and forge the decline attribution to an arbitrary user via the declinedoc parse cloud function. the function writes isdeclined, declinereason, and a caller-supplied declineby pointer without verifying the caller's identity, enabling workflow termination and evidentiary record falsification against any accessible document.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72692" target="_blank">CVE-2026-72692</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:39 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>A stored cross-site scripting (XSS) vulnerability in lobehub/lobe-chat through v2.2.13 allows a low-privileged authenticated user to inject arbitrary JavaScript into the application by uploading a crafted SVG file as a user avatar.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A missing authorization vulnerability in OpenSignLabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to irreversibly decline any in-flight document and forge the decline attribution to an arbitrary user via the declinedoc Parse cloud function. The function writes IsDeclined, DeclineReason, and a caller-supplied DeclineBy pointer without verifying the caller's identity, enabling workflow termination and evidentiary record falsification against any accessible document.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72593" data-description="a missing authentication vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to access the full file manager functionality including reading, writing, deleting, and uploading files anywhere on the server filesystem.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72593" target="_blank">CVE-2026-72593</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>A missing authentication vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to access the full file manager functionality including reading, writing, deleting, and uploading files anywhere on the server filesystem.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72592" data-description="an unrestricted file upload vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to execute arbitrary php code on the server. the application ships with an empty upload extension filter ( = array) and no authentication enabled by default (auth_pass is empty string), allowing an unauthenticated attacker to upload a php webshell and execute it by browsing to the uploaded path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72592" target="_blank">CVE-2026-72592</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An unrestricted file upload vulnerability in dulldusk/phpfm through 1.8.0 allows an unauthenticated remote attacker to execute arbitrary PHP code on the server. The application ships with an empty upload extension filter ( = array) and no authentication enabled by default (auth_pass is empty string), allowing an unauthenticated attacker to upload a PHP webshell and execute it by browsing to the uploaded path.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72591" data-description="a server-side request forgery (ssrf) vulnerability in gabehf/koito through v0.3.2 allows an authenticated user to make the server perform http requests to arbitrary internal or external hosts by supplying a crafted image_url value in the patch /apis/web/v1/album/{id}/image endpoint.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72591" target="_blank">CVE-2026-72591</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-72691" data-description="an authentication bypass vulnerability in opensignlabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to mint master_key-signed file access tokens for arbitrary stored files via the getsignedurl parse cloud function. the function skips its isauthenticated check whenever any docid parameter is supplied, even one corresponding to no real document, allowing the authentication gate to be bypassed by supplying an arbitrary string as docid.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72691" target="_blank">CVE-2026-72691</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:39 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>A server-side request forgery (SSRF) vulnerability in gabehf/Koito through v0.3.2 allows an authenticated user to make the server perform HTTP requests to arbitrary internal or external hosts by supplying a crafted image_url value in the PATCH /apis/web/v1/album/{id}/image endpoint.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>An authentication bypass vulnerability in OpenSignLabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to mint MASTER_KEY-signed file access tokens for arbitrary stored files via the getsignedurl Parse cloud function. The function skips its isAuthenticated check whenever any docId parameter is supplied, even one corresponding to no real document, allowing the authentication gate to be bypassed by supplying an arbitrary string as docId.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72590" data-description="an os command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to inject arbitrary cron job entries by sending a crafted get request to /crontab with url-encoded newlines in the env_vars parameter.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72590" target="_blank">CVE-2026-72590</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An OS command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to inject arbitrary cron job entries by sending a crafted GET request to /crontab with URL-encoded newlines in the env_vars parameter.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-72690" data-description="an improper authorization vulnerability in attendize through commit 9289acb allows an authenticated remote attacker to inject persistent mandatory survey questions into another organizer's events via the post /event/{event_id}/question/create endpoint. the postcreateeventquestion method loads the target event without the tenant-isolation scope, enabling cross-tenant writes; the injected question cannot be removed by the victim because the victim's account-scoped delete path cannot resolve a question owned by another tenant.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72690" target="_blank">CVE-2026-72690</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>An improper authorization vulnerability in Attendize through commit 9289acb allows an authenticated remote attacker to inject persistent mandatory survey questions into another organizer's events via the POST /event/{event_id}/question/create endpoint. The postCreateEventQuestion method loads the target event without the tenant-isolation scope, enabling cross-tenant writes; the injected question cannot be removed by the victim because the victim's account-scoped delete path cannot resolve a question owned by another tenant.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72589" data-description="an os command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to execute arbitrary system commands by importing a crafted crontab database file. the post /import endpoint accepts arbitrary .db files and overwrites the application database without validation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72589" target="_blank">CVE-2026-72589</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An OS command injection vulnerability in alseambusher/crontab-ui through 0.4.2 allows an unauthenticated remote attacker to execute arbitrary system commands by importing a crafted crontab database file. The POST /import endpoint accepts arbitrary .db files and overwrites the application database without validation.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-72689" data-description="a broken object-level authorization vulnerability in opensignlabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to read complete contract records via the getdocument parse cloud function. the function fetches documents using usemasterkey, bypassing the object acl, and returns full records including sender and signer pii and a pre-signed document download url whenever the document's isenableotp flag is unset, which is the default configuration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72689" target="_blank">CVE-2026-72689</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A broken object-level authorization vulnerability in OpenSignLabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to read complete contract records via the getDocument Parse cloud function. The function fetches documents using useMasterKey, bypassing the object ACL, and returns full records including sender and signer PII and a pre-signed document download URL whenever the document's IsEnableOTP flag is unset, which is the default configuration.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72588" data-description="a user enumeration vulnerability in bluewave-labs/checkmate through 2.1.0 allows an unauthenticated remote attacker to determine whether a given email address is registered. the post /api/v1/auth/recovery/request endpoint returns http 200 for registered email addresses and a different status code for unregistered ones, enabling attackers to enumerate valid user accounts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72588" target="_blank">CVE-2026-72588</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-72688" data-description="a missing authentication vulnerability in opensignlabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to read arbitrary stored documents via the fileupload parse cloud function. the function mints master_key-signed file access tokens for any caller-supplied url without performing any session check, defeating the only access control protecting stored contract files.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72688" target="_blank">CVE-2026-72688</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A missing authentication vulnerability in OpenSignLabs opensignserver through 2.37.0 allows an unauthenticated remote attacker to read arbitrary stored documents via the fileupload Parse cloud function. The function mints MASTER_KEY-signed file access tokens for any caller-supplied URL without performing any session check, defeating the only access control protecting stored contract files.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-6374" data-description="use of hard-coded credentials vulnerability in zyxel networks wah7601 allows read sensitive constants within an executable.
+
+this issue affects wah7601: through 20.07.2026.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6374" target="_blank">CVE-2026-6374</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>Use of Hard-coded Credentials vulnerability in Zyxel Networks WAH7601 allows Read Sensitive Constants Within an Executable.
+
+This issue affects WAH7601: through 20.07.2026.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-6373" data-description="exposure of sensitive system information to an unauthorized control sphere vulnerability in zyxel networks wah7601 allows web application fingerprinting.
+
+this issue affects wah7601: through 20072026.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6373" target="_blank">CVE-2026-6373</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:38 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A user enumeration vulnerability in bluewave-labs/Checkmate through 2.1.0 allows an unauthenticated remote attacker to determine whether a given email address is registered. The POST /api/v1/auth/recovery/request endpoint returns HTTP 200 for registered email addresses and a different status code for unregistered ones, enabling attackers to enumerate valid user accounts.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Exposure of sensitive system information to an unauthorized control sphere vulnerability in Zyxel Networks WAH7601 allows Web Application Fingerprinting.
+
+This issue affects WAH7601: through 20072026.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-72587" data-description="a cache poisoning vulnerability in corebunch/instatic through 0.0.14 allows an unauthenticated remote attacker to poison the shared process-wide render cache by manipulating the u query parameter of the get /_instatic/hole/<nodeid> server island endpoint.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72587" target="_blank">CVE-2026-72587</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-10 06:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>A cache poisoning vulnerability in CoreBunch/Instatic through 0.0.14 allows an unauthenticated remote attacker to poison the shared process-wide render cache by manipulating the u query parameter of the GET /_instatic/hole/<nodeId> server island endpoint.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-68428" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+kvm: x86/mmu: fix use-after-free on vendor module reload
+
+mmu_destroy_caches() destroys pte_list_desc_cache and
+mmu_page_header_cache, but leaves both pointers unchanged.  the pointers
+live in kvm.ko, and therefore survive when a vendor module is unloaded
+while kvm.ko remains loaded.
+
+if creation of pte_list_desc_cache fails during a subsequent vendor
+module load, its assignment sets pte_list_desc_cache to null and the
+error path calls mmu_destroy_caches().  mmu_page_header_cache still
+points to the cache destroyed during the preceding vendor module
+unload.  passing that stale pointer to kmem_cache_destroy() causes a
+slab use-after-free.
+
+reproduce the issue on a v7.1.3 kernel with config_kasan=y,
+config_kasan_generic=y, config_kvm=m, and config_kvm_intel=m.  a
+one-shot test hook forces pte_list_desc_cache to null on the second
+invocation of kvm_mmu_vendor_module_init():
+
+  1. load kvm.ko and kvm-intel.ko, creating both caches.
+  2. unload only kvm_intel, leaving kvm.ko loaded.
+  3. reload kvm_intel and force initialization through the -enomem path.
+
+kasan reports:
+
+  bug: kasan: slab-use-after-free in
+  kvm_mmu_vendor_module_init+0x5b/0x170 [kvm]
+  ...
+  kmem_cache_destroy+0x21/0x1d0
+  kvm_mmu_vendor_module_init+0x5b/0x170 [kvm]
+  ...
+  allocated by task 16817:
+  __kmem_cache_create_args+0x12c/0x3b0
+  __kmem_cache_create.constprop.0+0xb6/0xf0 [kvm]
+  kvm_mmu_vendor_module_init+0x13b/0x170 [kvm]
+  ...
+  freed by task 16820:
+  kmem_cache_destroy+0x117/0x1d0
+  kvm_mmu_vendor_module_exit+0x21/0x30 [kvm]
+
+clear both pointers immediately after destroying their caches so that
+the stored state reflects the caches' lifetime and repeated cleanup is
+safe.
+
+with the fix applied, the same injected vendor module reload fails with
+-enomem as expected and produces no kasan report.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68428" target="_blank">CVE-2026-68428</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+KVM: x86/mmu: Fix use-after-free on vendor module reload
+
+mmu_destroy_caches() destroys pte_list_desc_cache and
+mmu_page_header_cache, but leaves both pointers unchanged.  The pointers
+live in kvm.ko, and therefore survive when a vendor module is unloaded
+while kvm.ko remains loaded.
+
+If creation of pte_list_desc_cache fails during a subsequent vendor
+module load, its assignment sets pte_list_desc_cache to NULL and the
+error path calls mmu_destroy_caches().  mmu_page_header_cache still
+points to the cache destroyed during the preceding vendor module
+unload.  Passing that stale pointer to kmem_cache_destroy() causes a
+slab use-after-free.
+
+Reproduce the issue on a v7.1.3 kernel with CONFIG_KASAN=y,
+CONFIG_KASAN_GENERIC=y, CONFIG_KVM=m, and CONFIG_KVM_INTEL=m.  A
+one-shot test hook forces pte_list_desc_cache to NULL on the second
+invocation of kvm_mmu_vendor_module_init():
+
+  1. Load kvm.ko and kvm-intel.ko, creating both caches.
+  2. Unload only kvm_intel, leaving kvm.ko loaded.
+  3. Reload kvm_intel and force initialization through the -ENOMEM path.
+
+KASAN reports:
+
+  BUG: KASAN: slab-use-after-free in
+  kvm_mmu_vendor_module_init+0x5b/0x170 [kvm]
+  ...
+  kmem_cache_destroy+0x21/0x1d0
+  kvm_mmu_vendor_module_init+0x5b/0x170 [kvm]
+  ...
+  Allocated by task 16817:
+  __kmem_cache_create_args+0x12c/0x3b0
+  __kmem_cache_create.constprop.0+0xb6/0xf0 [kvm]
+  kvm_mmu_vendor_module_init+0x13b/0x170 [kvm]
+  ...
+  Freed by task 16820:
+  kmem_cache_destroy+0x117/0x1d0
+  kvm_mmu_vendor_module_exit+0x21/0x30 [kvm]
+
+Clear both pointers immediately after destroying their caches so that
+the stored state reflects the caches' lifetime and repeated cleanup is
+safe.
+
+With the fix applied, the same injected vendor module reload fails with
+-ENOMEM as expected and produces no KASAN report.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68427" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+gpu: host1x: fix use-after-free in host1x_bo_clear_cached_mappings
+
+__host1x_bo_unpin() drops the last reference to the mapping and frees
+it, so we can't dereference mapping afterwards. the cache itself
+outlives the mapping, so use the cache local variable instead.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68427" target="_blank">CVE-2026-68427</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+gpu: host1x: Fix use-after-free in host1x_bo_clear_cached_mappings
+
+__host1x_bo_unpin() drops the last reference to the mapping and frees
+it, so we can't dereference mapping afterwards. The cache itself
+outlives the mapping, so use the cache local variable instead.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68426" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: fix stale skb->prev after async crypto steals a gso segment
+
+skb_gso_segment() leaves the segment list head with ->prev pointing at
+the last segment, an invariant validate_xmit_skb_list() relies on when
+it sets its tail pointer (tail = skb->prev).
+
+when validate_xmit_xfrm() walks a gso list and some segments are stolen
+by async crypto (->xmit() returns -einprogress), those segments are
+unlinked from the list but the head ->prev is never updated.  if the
+last segment is the one stolen, the returned head still has ->prev
+pointing at it, even though it is now owned by the crypto engine and may
+be freed.  validate_xmit_skb_list() later does tail->next = skb, writing
+through that stale pointer -- a use-after-free.
+
+repoint skb->prev at the last retained segment before returning.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68426" target="_blank">CVE-2026-68426</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: fix stale skb->prev after async crypto steals a GSO segment
+
+skb_gso_segment() leaves the segment list head with ->prev pointing at
+the last segment, an invariant validate_xmit_skb_list() relies on when
+it sets its tail pointer (tail = skb->prev).
+
+When validate_xmit_xfrm() walks a GSO list and some segments are stolen
+by async crypto (->xmit() returns -EINPROGRESS), those segments are
+unlinked from the list but the head ->prev is never updated.  If the
+last segment is the one stolen, the returned head still has ->prev
+pointing at it, even though it is now owned by the crypto engine and may
+be freed.  validate_xmit_skb_list() later does tail->next = skb, writing
+through that stale pointer -- a use-after-free.
+
+Repoint skb->prev at the last retained segment before returning.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68425" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ib/mad: drop unmatched rmpp responses before reassembly
+
+kernel-handled rmpp receive processing starts reassembly for active
+data responses before the response is matched to an outstanding send.
+the normal match happens later, after ib_process_rmpp_recv_wc() has
+either assembled a complete message or consumed the segment.
+
+that ordering lets an unsolicited response that routes to a kernel
+rmpp agent by the high tid bits allocate or extend rmpp receive state
+before the full tid and source address are checked against a real
+request. a reordered burst can therefore reach the receive-side
+insertion path even though the response would not match any send.
+
+for kernel-handled rmpp data responses, require the existing
+ib_find_send_mad() match before entering rmpp reassembly. the matcher
+already checks the full tid, management class and source address/gid
+against the agent wait, backlog and in-flight send lists. if there is
+no match, drop the response without creating rmpp state.
+
+this leaves the rmpp window behavior unchanged and only rejects
+responses that have no corresponding request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68425" target="_blank">CVE-2026-68425</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+IB/mad: Drop unmatched RMPP responses before reassembly
+
+Kernel-handled RMPP receive processing starts reassembly for active
+DATA responses before the response is matched to an outstanding send.
+The normal match happens later, after ib_process_rmpp_recv_wc() has
+either assembled a complete message or consumed the segment.
+
+That ordering lets an unsolicited response that routes to a kernel
+RMPP agent by the high TID bits allocate or extend RMPP receive state
+before the full TID and source address are checked against a real
+request. A reordered burst can therefore reach the receive-side
+insertion path even though the response would not match any send.
+
+For kernel-handled RMPP DATA responses, require the existing
+ib_find_send_mad() match before entering RMPP reassembly. The matcher
+already checks the full TID, management class and source address/GID
+against the agent wait, backlog and in-flight send lists. If there is
+no match, drop the response without creating RMPP state.
+
+This leaves the RMPP window behavior unchanged and only rejects
+responses that have no corresponding request.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68424" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mtd: virt_concat: fix use-after-free in mtd_virt_concat_destroy_joins()
+
+mtd_concat_destroy() frees item->concat so calling
+mtd_virt_concat_put_mtd_devices(item->concat) leads to a use after free.
+
+fix this by moving mtd_virt_concat_put_mtd_devices() before
+mtd_concat_destroy()">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68424" target="_blank">CVE-2026-68424</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mtd: virt_concat: fix use-after-free in mtd_virt_concat_destroy_joins()
+
+mtd_concat_destroy() frees item->concat so calling
+mtd_virt_concat_put_mtd_devices(item->concat) leads to a use after free.
+
+Fix this by moving mtd_virt_concat_put_mtd_devices() before
+mtd_concat_destroy()</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68423" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mtd: virt_concat: fix use-after-free in mtd_virt_concat_destroy()
+
+mtd_concat_destroy() frees item->concat so calling
+mtd_virt_concat_put_mtd_devices(item->concat) after that leads to a
+use-after-free.
+
+fix it by moving mtd_virt_concat_put_mtd_devices() before
+mtd_concat_destroy().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68423" target="_blank">CVE-2026-68423</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mtd: virt_concat: fix use-after-free in mtd_virt_concat_destroy()
+
+mtd_concat_destroy() frees item->concat so calling
+mtd_virt_concat_put_mtd_devices(item->concat) after that leads to a
+use-after-free.
+
+Fix it by moving mtd_virt_concat_put_mtd_devices() before
+mtd_concat_destroy().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68422" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+btrfs: fix root leak if its reloc root is unexpected in merge_reloc_roots()
+
+if we have an unexpected reloc_root for our root, we jump to the out label
+but never drop the reference we obtained for root, resulting in a leak.
+add a missing btrfs_put_root() call.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68422" target="_blank">CVE-2026-68422</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+btrfs: fix root leak if its reloc root is unexpected in merge_reloc_roots()
+
+If we have an unexpected reloc_root for our root, we jump to the out label
+but never drop the reference we obtained for root, resulting in a leak.
+Add a missing btrfs_put_root() call.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68421" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+sched_ext: don't warn on core-sched forced idle in put_prev_task_scx()
+
+put_prev_task_scx() warns when a runnable task drops to a lower sched_class
+without scx_ops_enq_last, on the assumption that balance_one() would have
+kept it running. core scheduling breaks that: a forced-idle smt sibling
+reschedules through the core_pick fast path in pick_next_task(), which skips
+pick_task_scx() and thus balance_one(), so a runnable task can drop to idle
+with enq_last unset.
+
+gate the warning on sched_cpu_cookie_match(): a cookie mismatch means core
+scheduling forced the idle, while a match (or core scheduling off) still
+catches a genuine missing-enq_last drop.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68421" target="_blank">CVE-2026-68421</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+sched_ext: Don't warn on core-sched forced idle in put_prev_task_scx()
+
+put_prev_task_scx() warns when a runnable task drops to a lower sched_class
+without SCX_OPS_ENQ_LAST, on the assumption that balance_one() would have
+kept it running. Core scheduling breaks that: a forced-idle SMT sibling
+reschedules through the core_pick fast path in pick_next_task(), which skips
+pick_task_scx() and thus balance_one(), so a runnable task can drop to idle
+with ENQ_LAST unset.
+
+Gate the warning on sched_cpu_cookie_match(): a cookie mismatch means core
+scheduling forced the idle, while a match (or core scheduling off) still
+catches a genuine missing-ENQ_LAST drop.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68420" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: reject optional iptfs templates in outbound policies
+
+syzbot reported a stack-out-of-bounds read in xfrm_state_find()
+which flows from xfrm_tmpl_resolve_one().
+
+commit 3d776e31c841 ("xfrm: reject optional tunnel/beet mode
+templates in outbound policies") disallowed optional tunnel and
+beet in outbound policies to prevent this. later when iptfs
+added, it was not covered by that fix and can still trigger
+the out-of-bounds read;
+
+extend the check to disallow optional iptfs in outbound policies
+as well. iptfs should be identical to tunnel mode.
+in and fwd policies are not affected: xfrm_tmpl_resolve_one()
+is only reachable via the outbound path.
+
+reproducer, before:
+
+ip link add dummy0 type dummy
+ip link set dummy0 up
+ip addr add 10.1.1.1/24 dev dummy0
+ip xfrm policy add src 10.1.1.1/32 dst 10.1.1.2/32 dir out tmpl
+  src fc00::dead:1 dst fc00::dead:2 proto esp reqid 1 mode iptfs
+  level use tmpl src fc00::dead:1 dst fc00::dead:2 proto esp reqid
+  2 mode transport
+ping -w 1 -c 1 10.1.1.2
+ping 10.1.1.2 (10.1.1.2) 56(84) bytes of data.
+
+[   64.168420] ==================================================================
+[   64.169977] bug: kasan: stack-out-of-bounds in __xfrm6_addr_hash+0x11e/0x170
+[   64.169977] read of size 4 at addr ffff88800e1ffd20 by task ping/2844
+
+[   64.169977] cpu: 2 uid: 0 pid: 2844 comm: ping not tainted 7.1.0-rc7-00180-geb23b588430a #98 preempt(full)
+[   64.169977] hardware name: qemu standard pc (i440fx + piix, 1996), bios 1.16.3-debian-1.16.3-2 04/01/2014
+[   64.169977] call trace:
+[   64.169977]  <task>
+[   64.169977]  dump_stack_lvl+0x47/0x70
+[   64.169977]  ? __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  print_report+0x152/0x4b0
+[   64.169977]  ? ksys_mmap_pgoff+0x6d/0xa0
+[   64.169977]  ? entry_syscall_64_after_hwframe+0x76/0x7e
+[   64.169977]  ? rcu_read_unlock_sched+0xa/0x20
+[   64.169977]  ? __virt_addr_valid+0x21b/0x230
+[   64.169977]  ? __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  kasan_report+0xa8/0xd0
+[   64.169977]  ? __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  __xfrm_dst_hash+0x24/0xc0
+[   64.169977]  xfrm_state_find+0xa2d/0x2f90
+[   64.169977]  ? __pfx_xfrm_state_find+0x10/0x10
+[   64.169977]  ? __pfx_ftrace_graph_ret_addr+0x10/0x10
+[   64.169977]  ? __pfx_ftrace_graph_ret_addr+0x10/0x10
+[   64.169977]  xfrm_tmpl_resolve_one+0x210/0x570
+[   64.169977]  ? __pfx_xfrm_tmpl_resolve_one+0x10/0x10
+[   64.169977]  ? __pfx_stack_trace_consume_entry+0x10/0x10
+[   64.169977]  ? kernel_text_address+0x5b/0x80
+[   64.169977]  ? __kernel_text_address+0xe/0x30
+[   64.169977]  ? unwind_get_return_address+0x5e/0x90
+[   64.169977]  ? arch_stack_walk+0x8c/0xe0
+[   64.169977]  xfrm_tmpl_resolve+0x130/0x200
+[   64.169977]  ? __pfx_xfrm_tmpl_resolve+0x10/0x10
+[   64.169977]  ? __pfx_xfrm_policy_inexact_lookup_rcu+0x10/0x10
+[   64.169977]  ? __refcount_add_not_zero.constprop.0+0xb2/0x110
+[   64.169977]  ? __pfx___refcount_add_not_zero.constprop.0+0x10/0x10
+[   64.169977]  xfrm_resolve_and_create_bundle+0xd5/0x310
+[   64.169977]  ? __pfx_xfrm_resolve_and_create_bundle+0x10/0x10
+[   64.169977]  ? __pfx_xfrm_policy_lookup_bytype+0x10/0x10
+[   64.169977]  ? __pfx_xfrm_policy_lookup_bytype+0x10/0x10
+[   64.169977]  xfrm_lookup_with_ifid+0x3d8/0xb80
+[   64.169977]  ? __pfx_xfrm_lookup_with_ifid+0x10/0x10
+[   64.169977]  ? ip_route_output_key_hash+0xc6/0x110
+[   64.169977]  ? kasan_save_track+0x10/0x30
+[   64.169977]  xfrm_lookup_route+0x18/0xe0
+[   64.169977]  ip4_datagram_release_cb+0x4c9/0x530
+[   64.169977]  ? __pfx_ip4_datagram_release_cb+0x10/0x10
+[   64.169977]  ? do_raw_spin_lock+0x71/0xc0
+[   64.169977]  ? __pfx_do_raw_spin_lock+0x10/0x10
+[   64.169977]  release_sock+0xb0/0x170
+[   64.169977]  udp_connect+0x43/0x50
+[   64.169977]  __sys_connect+0xa6/0x100
+[   64.169977]  ? alloc_fd+0x2e9/0x300
+[   64.169977]  ? __pfx___sys_connect+0x10/0x10
+[   64.169977]  ? preempt_latency
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68420" target="_blank">CVE-2026-68420</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: reject optional IPTFS templates in outbound policies
+
+syzbot reported a stack-out-of-bounds read in xfrm_state_find()
+which flows from xfrm_tmpl_resolve_one().
+
+Commit 3d776e31c841 ("xfrm: Reject optional tunnel/BEET mode
+templates in outbound policies") disallowed optional tunnel and
+BEET in outbound policies to prevent this. Later when IPTFS
+added, it was not covered by that fix and can still trigger
+the out-of-bounds read;
+
+Extend the check to disallow optional IPTFS in outbound policies
+as well. IPTFS should be identical to tunnel mode.
+IN and FWD policies are not affected: xfrm_tmpl_resolve_one()
+is only reachable via the outbound path.
+
+Reproducer, before:
+
+ip link add dummy0 type dummy
+ip link set dummy0 up
+ip addr add 10.1.1.1/24 dev dummy0
+ip xfrm policy add src 10.1.1.1/32 dst 10.1.1.2/32 dir out tmpl
+  src fc00::dead:1 dst fc00::dead:2 proto esp reqid 1 mode iptfs
+  level use tmpl src fc00::dead:1 dst fc00::dead:2 proto esp reqid
+  2 mode transport
+ping -W 1 -c 1 10.1.1.2
+PING 10.1.1.2 (10.1.1.2) 56(84) bytes of data.
+
+[   64.168420] ==================================================================
+[   64.169977] BUG: KASAN: stack-out-of-bounds in __xfrm6_addr_hash+0x11e/0x170
+[   64.169977] Read of size 4 at addr ffff88800e1ffd20 by task ping/2844
+
+[   64.169977] CPU: 2 UID: 0 PID: 2844 Comm: ping Not tainted 7.1.0-rc7-00180-geb23b588430a #98 PREEMPT(full)
+[   64.169977] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+[   64.169977] Call Trace:
+[   64.169977]  <TASK>
+[   64.169977]  dump_stack_lvl+0x47/0x70
+[   64.169977]  ? __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  print_report+0x152/0x4b0
+[   64.169977]  ? ksys_mmap_pgoff+0x6d/0xa0
+[   64.169977]  ? entry_SYSCALL_64_after_hwframe+0x76/0x7e
+[   64.169977]  ? rcu_read_unlock_sched+0xa/0x20
+[   64.169977]  ? __virt_addr_valid+0x21b/0x230
+[   64.169977]  ? __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  kasan_report+0xa8/0xd0
+[   64.169977]  ? __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  __xfrm6_addr_hash+0x11e/0x170
+[   64.169977]  __xfrm_dst_hash+0x24/0xc0
+[   64.169977]  xfrm_state_find+0xa2d/0x2f90
+[   64.169977]  ? __pfx_xfrm_state_find+0x10/0x10
+[   64.169977]  ? __pfx_ftrace_graph_ret_addr+0x10/0x10
+[   64.169977]  ? __pfx_ftrace_graph_ret_addr+0x10/0x10
+[   64.169977]  xfrm_tmpl_resolve_one+0x210/0x570
+[   64.169977]  ? __pfx_xfrm_tmpl_resolve_one+0x10/0x10
+[   64.169977]  ? __pfx_stack_trace_consume_entry+0x10/0x10
+[   64.169977]  ? kernel_text_address+0x5b/0x80
+[   64.169977]  ? __kernel_text_address+0xe/0x30
+[   64.169977]  ? unwind_get_return_address+0x5e/0x90
+[   64.169977]  ? arch_stack_walk+0x8c/0xe0
+[   64.169977]  xfrm_tmpl_resolve+0x130/0x200
+[   64.169977]  ? __pfx_xfrm_tmpl_resolve+0x10/0x10
+[   64.169977]  ? __pfx_xfrm_policy_inexact_lookup_rcu+0x10/0x10
+[   64.169977]  ? __refcount_add_not_zero.constprop.0+0xb2/0x110
+[   64.169977]  ? __pfx___refcount_add_not_zero.constprop.0+0x10/0x10
+[   64.169977]  xfrm_resolve_and_create_bundle+0xd5/0x310
+[   64.169977]  ? __pfx_xfrm_resolve_and_create_bundle+0x10/0x10
+[   64.169977]  ? __pfx_xfrm_policy_lookup_bytype+0x10/0x10
+[   64.169977]  ? __pfx_xfrm_policy_lookup_bytype+0x10/0x10
+[   64.169977]  xfrm_lookup_with_ifid+0x3d8/0xb80
+[   64.169977]  ? __pfx_xfrm_lookup_with_ifid+0x10/0x10
+[   64.169977]  ? ip_route_output_key_hash+0xc6/0x110
+[   64.169977]  ? kasan_save_track+0x10/0x30
+[   64.169977]  xfrm_lookup_route+0x18/0xe0
+[   64.169977]  ip4_datagram_release_cb+0x4c9/0x530
+[   64.169977]  ? __pfx_ip4_datagram_release_cb+0x10/0x10
+[   64.169977]  ? do_raw_spin_lock+0x71/0xc0
+[   64.169977]  ? __pfx_do_raw_spin_lock+0x10/0x10
+[   64.169977]  release_sock+0xb0/0x170
+[   64.169977]  udp_connect+0x43/0x50
+[   64.169977]  __sys_connect+0xa6/0x100
+[   64.169977]  ? alloc_fd+0x2e9/0x300
+[   64.169977]  ? __pfx___sys_connect+0x10/0x10
+[   64.169977]  ? preempt_latency
+---truncated---</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68419" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/irdma: prevent rereg_mr for non-mem regions
+
+when a qp/cq/srq is created, a two step process is used
+where the buffer is allocated in userspace and explicitly
+registered with the normal reg_mr mechanism prior to creating
+the actual qp/cq/srq object.
+
+these special registrations are indicated via an abi field
+so the driver knows that they do not have a valid mkey and
+to skip the actual cqp command submission.
+
+since these are real mr objects from the core's perspective,
+it is possible for a user application to invoke rereg_mr on them
+and cause a real cqp op to be emitted with the zero-initialized
+mkey value of 0.
+
+fix this by preventing rereg_mr on these special regions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68419" target="_blank">CVE-2026-68419</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/irdma: Prevent rereg_mr for non-mem regions
+
+When a QP/CQ/SRQ is created, a two step process is used
+where the buffer is allocated in userspace and explicitly
+registered with the normal reg_mr mechanism prior to creating
+the actual QP/CQ/SRQ object.
+
+These special registrations are indicated via an ABI field
+so the driver knows that they do not have a valid mkey and
+to skip the actual CQP command submission.
+
+Since these are real MR objects from the core's perspective,
+it is possible for a user application to invoke rereg_mr on them
+and cause a real CQP op to be emitted with the zero-initialized
+mkey value of 0.
+
+Fix this by preventing rereg_mr on these special regions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68418" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/irdma: prevent user-triggered null deref on qp create
+
+previously, the user qp creation path would only attempt to
+populate iwqp->iwpbl if the user-provided req.user_wqe_bufs
+field was non-zero. the problem is that iwqp->iwpbl is
+unconditionally dereferenced later on in irdma_setup_virt_qp.
+
+while there was a check for iwqp->iwpbl != null, this check
+would only occur if req.user_wqe_bufs was non-zero. the end
+result is that a user could send a zero user_wqe_bufs value
+and trigger a null ptr deref.
+
+fix this by unconditionally calling irdma_get_pbl and bailing
+if it fails, similar to the cq and srq paths.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68418" target="_blank">CVE-2026-68418</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/irdma: Prevent user-triggered null deref on QP create
+
+Previously, the user QP creation path would only attempt to
+populate iwqp->iwpbl if the user-provided req.user_wqe_bufs
+field was non-zero. The problem is that iwqp->iwpbl is
+unconditionally dereferenced later on in irdma_setup_virt_qp.
+
+While there was a check for iwqp->iwpbl != NULL, this check
+would only occur if req.user_wqe_bufs was non-zero. The end
+result is that a user could send a zero user_wqe_bufs value
+and trigger a null ptr deref.
+
+Fix this by unconditionally calling irdma_get_pbl and bailing
+if it fails, similar to the CQ and SRQ paths.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68417" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/siw: publish qp after initialization
+
+siw_create_qp() currently calls siw_qp_add() before the queues, cq
+pointers, state, completion, and device list entry are ready. a qpn
+lookup can therefore reach a qp that is still being constructed.
+
+move siw_qp_add() to the end of siw_create_qp(), after qp
+initialization and before adding the qp to the siw device list.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68417" target="_blank">CVE-2026-68417</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/siw: publish QP after initialization
+
+siw_create_qp() currently calls siw_qp_add() before the queues, CQ
+pointers, state, completion, and device list entry are ready. A QPN
+lookup can therefore reach a QP that is still being constructed.
+
+Move siw_qp_add() to the end of siw_create_qp(), after QP
+initialization and before adding the QP to the siw device list.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68416" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+mtd: fix double free and warn_on in add_mtd_device() error paths
+
+when device_register() or mtd_nvmem_add() fails inside
+add_mtd_device() for a partition, the error handling triggers
+mtd_release() via put_device() or device_unregister(). mtd_release()
+calls release_mtd_partition() which frees the mtd_info structure.
+however, callers such as mtd_add_partition() and add_mtd_partitions()
+also call free_partition() in their error paths, resulting in a double
+free.
+
+additionally, release_mtd_partition() hits warn_on(!list_empty(
+&mtd->part.node)) because the partition node is still linked in the
+parent's partitions list when the release callback fires from the
+add_mtd_device() error path.
+
+fix this by overriding dev->type and dev->release before put_device()
+in the error paths, so that device_release() invokes a no-op function
+instead of mtd_release(). for the mtd_nvmem_add() failure case,
+device_unregister() is replaced with device_del() to separate the
+device removal from the final kobject reference drop, allowing the
+override to take effect before put_device() is called.
+
+the callers' error paths (list_del + free_partition) remain the sole
+owners of mtd_info lifetime on add_mtd_device() failure, which is the
+expected contract.
+
+the normal partition teardown path is not affected: del_mtd_device()
+goes through kref_put() -> mtd_device_release() -> device_unregister()
+with dev->type still set to &mtd_devtype, so mtd_release() ->
+release_mtd_partition() continues to work correctly for the regular
+removal case.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68416" target="_blank">CVE-2026-68416</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-10 08:20:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+mtd: fix double free and WARN_ON in add_mtd_device() error paths
+
+When device_register() or mtd_nvmem_add() fails inside
+add_mtd_device() for a partition, the error handling triggers
+mtd_release() via put_device() or device_unregister(). mtd_release()
+calls release_mtd_partition() which frees the mtd_info structure.
+However, callers such as mtd_add_partition() and add_mtd_partitions()
+also call free_partition() in their error paths, resulting in a double
+free.
+
+Additionally, release_mtd_partition() hits WARN_ON(!list_empty(
+&mtd->part.node)) because the partition node is still linked in the
+parent's partitions list when the release callback fires from the
+add_mtd_device() error path.
+
+Fix this by overriding dev->type and dev->release before put_device()
+in the error paths, so that device_release() invokes a no-op function
+instead of mtd_release(). For the mtd_nvmem_add() failure case,
+device_unregister() is replaced with device_del() to separate the
+device removal from the final kobject reference drop, allowing the
+override to take effect before put_device() is called.
+
+The callers' error paths (list_del + free_partition) remain the sole
+owners of mtd_info lifetime on add_mtd_device() failure, which is the
+expected contract.
+
+The normal partition teardown path is not affected: del_mtd_device()
+goes through kref_put() -> mtd_device_release() -> device_unregister()
+with dev->type still set to &mtd_devtype, so mtd_release() ->
+release_mtd_partition() continues to work correctly for the regular
+removal case.</p>
                 </div>
         
             </div>
