@@ -34,6 +34,90 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-64954" data-description="velociraptor allows scheduling new collections via vql queries in notebooks. for a user to schedule a new collection, they require the collect_client permission. however, this is not enforced when the user can run a vql query which resets the authorization provider.
+
+this allows a user who can run arbitrary vql (usually with the "analyst" role) to launch new collections (usually requires the "investigator" role). this vulnerability is an escalation from an analyst to investigator role.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64954" target="_blank">CVE-2026-64954</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 00:19:17 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>Velociraptor allows scheduling new collections via VQL queries in notebooks. For a user to schedule a new collection, they require the COLLECT_CLIENT permission. However, this is not enforced when the user can run a VQL query which resets the authorization provider.
+
+This allows a user who can run arbitrary VQL (usually with the "analyst" role) to launch new collections (usually requires the "investigator" role). This vulnerability is an escalation from an analyst to investigator role.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12235" data-description="the linkable loadable extensions (llext) subsystem mis-handles plt/rela relocation entries when linking a relocatable (partially-linked) elf extension. in llext_link_plt() (subsys/llext/llext_link.c), the relocatable branch (tgt != null, the path used for xtensa relocatable objects) computed the patch address as ext->mem[llext_mem_text] - text.sh_offset + rela.r_offset + tgt->sh_offset and then performed the relocation write there without validating rela.r_offset. its sibling shared/dynamic branch already rejected out-of-range offsets via llext_file_offset().
+
+rela.r_offset is read directly from the elf's rela table, so a crafted entry with an offset larger than the target section makes the write land arbitrarily far outside the extension's text buffer. the result is an attacker-influenced out-of-bounds write (the location via r_offset, the written value being the resolved symbol address) performed in supervisor context at link time, before any extension code runs.
+
+the path is reached from llext_load() whenever an application loads an attacker-influenced elf extension on xtensa with writable storage; llext is documented to accept extensions of untrusted origin. impact is supervisor-context memory corruption (integrity and availability loss, and a sandbox-boundary escape for user-mode extensions). exploitation is gated by the xtensa relocatable plt path and writable storage, and turning the out-of-range write into a useful primitive is non-trivial.
+
+the fix adds a bound check rejecting any rela entry whose r_offset >= tgt->sh_size, mirroring the existing validation in the shared branch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12235" target="_blank">CVE-2026-12235</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>The Linkable Loadable Extensions (llext) subsystem mis-handles PLT/RELA relocation entries when linking a relocatable (partially-linked) ELF extension. In llext_link_plt() (subsys/llext/llext_link.c), the relocatable branch (tgt != NULL, the path used for Xtensa relocatable objects) computed the patch address as ext->mem[LLEXT_MEM_TEXT] - text.sh_offset + rela.r_offset + tgt->sh_offset and then performed the relocation write there without validating rela.r_offset. Its sibling shared/dynamic branch already rejected out-of-range offsets via llext_file_offset().
+
+rela.r_offset is read directly from the ELF's RELA table, so a crafted entry with an offset larger than the target section makes the write land arbitrarily far outside the extension's text buffer. The result is an attacker-influenced out-of-bounds write (the location via r_offset, the written value being the resolved symbol address) performed in supervisor context at link time, before any extension code runs.
+
+The path is reached from llext_load() whenever an application loads an attacker-influenced ELF extension on Xtensa with writable storage; llext is documented to accept extensions of untrusted origin. Impact is supervisor-context memory corruption (integrity and availability loss, and a sandbox-boundary escape for user-mode extensions). Exploitation is gated by the Xtensa relocatable PLT path and writable storage, and turning the out-of-range write into a useful primitive is non-trivial.
+
+The fix adds a bound check rejecting any RELA entry whose r_offset >= tgt->sh_size, mirroring the existing validation in the shared branch.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12234" data-description="the userspace syscall verifiers z_vrfy_zsock_sendmsg() and z_vrfy_zsock_recvmsg() in subsys/net/lib/sockets/sockets.c snapshot the caller-supplied struct net_msghdr into a kernel-side copy with k_usermode_from_copy(), but then re-read the still-live user struct for subsequent decisions. the kernel iovec shadow buffer is sized from one read of msg->msg_iovlen, while the population loop is bounded by a second, live read of the same field.
+
+because msg points into ordinary user memory, a cooperating second thread in the same memory domain can inflate msg->msg_iovlen in the window between the sizing read and the loop test (a classic double-fetch / toctou). the population loop then iterates past the number of net_iovec slots actually allocated, writing attacker-influenced iov_base/iov_len values beyond the end of the kernel-heap shadow buffer. the recvmsg verifier has the same defect on both its inbound and result write-back loops.
+
+the code is reachable from an unprivileged user thread whenever config_userspace is enabled and the zsock_sendmsg/zsock_recvmsg syscalls are available. a successful race corrupts kernel-managed heap memory across the user-to-kernel privilege boundary, yielding a local privilege-escalation primitive or, at minimum, a kernel-fault denial of service. the fix copies the header once and derives every size, bound, and gate from the snapshot, copying each iovec entry atomically so its base and length can no longer be raced apart.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12234" target="_blank">CVE-2026-12234</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>The userspace syscall verifiers z_vrfy_zsock_sendmsg() and z_vrfy_zsock_recvmsg() in subsys/net/lib/sockets/sockets.c snapshot the caller-supplied struct net_msghdr into a kernel-side copy with k_usermode_from_copy(), but then re-read the still-live user struct for subsequent decisions. The kernel iovec shadow buffer is sized from one read of msg->msg_iovlen, while the population loop is bounded by a second, live read of the same field.
+
+Because msg points into ordinary user memory, a cooperating second thread in the same memory domain can inflate msg->msg_iovlen in the window between the sizing read and the loop test (a classic double-fetch / TOCTOU). The population loop then iterates past the number of net_iovec slots actually allocated, writing attacker-influenced iov_base/iov_len values beyond the end of the kernel-heap shadow buffer. The recvmsg verifier has the same defect on both its inbound and result write-back loops.
+
+The code is reachable from an unprivileged user thread whenever CONFIG_USERSPACE is enabled and the zsock_sendmsg/zsock_recvmsg syscalls are available. A successful race corrupts kernel-managed heap memory across the user-to-kernel privilege boundary, yielding a local privilege-escalation primitive or, at minimum, a kernel-fault denial of service. The fix copies the header once and derives every size, bound, and gate from the snapshot, copying each iovec entry atomically so its base and length can no longer be raced apart.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12233" data-description="the psa protected storage credential backend (subsys/net/lib/tls_credentials/tls_credentials_trusted.c) declared its credential-store mutex as a plain zero-filled static struct k_mutex credential_lock; and never called k_mutex_init() on it. a statically zero-filled k_mutex has an uninitialized wait queue (its dlist head/tail are null instead of the self-referential sentinels that k_mutex_init/k_mutex_define install). the uncontended lock path does not touch the wait queue, so the defect is latent and serialized use behaves correctly.
+
+when two execution contexts contend on the lock, k_mutex_lock() pends the blocking thread on the wait queue via z_pend_curr(), which calls sys_dlist_append() on the zeroed list and dereferences a null tail pointer (tail->next = node), faulting the kernel. the lock is held during tls handshake credential loading and by all credential add/get/delete operations, so a deployment performing concurrent tls handshakes (for example a server handling multiple simultaneous connections from a remote peer) or a credential-management operation concurrent with a handshake can trigger the dereference.
+
+the impact is a denial of service: a deterministic kernel panic / device reset on the first contention. there is no memory corruption beyond the null dereference and no confidentiality or integrity impact; mutual exclusion on the fast path remains correct. exposure is limited to builds with config_tls_credentials_backend_protected_storage enabled (psa protected storage / tf-m platforms); the default volatile ram backend initializes its lock correctly and is unaffected.
+
+the fix initializes the mutex statically with k_mutex_define(credential_lock), providing a valid wait queue so the contended path no longer touches a null list.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12233" target="_blank">CVE-2026-12233</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>The PSA Protected Storage credential backend (subsys/net/lib/tls_credentials/tls_credentials_trusted.c) declared its credential-store mutex as a plain zero-filled static struct k_mutex credential_lock; and never called k_mutex_init() on it. A statically zero-filled k_mutex has an uninitialized wait queue (its dlist head/tail are NULL instead of the self-referential sentinels that k_mutex_init/K_MUTEX_DEFINE install). The uncontended lock path does not touch the wait queue, so the defect is latent and serialized use behaves correctly.
+
+When two execution contexts contend on the lock, k_mutex_lock() pends the blocking thread on the wait queue via z_pend_curr(), which calls sys_dlist_append() on the zeroed list and dereferences a NULL tail pointer (tail->next = node), faulting the kernel. The lock is held during TLS handshake credential loading and by all credential add/get/delete operations, so a deployment performing concurrent TLS handshakes (for example a server handling multiple simultaneous connections from a remote peer) or a credential-management operation concurrent with a handshake can trigger the dereference.
+
+The impact is a denial of service: a deterministic kernel panic / device reset on the first contention. There is no memory corruption beyond the NULL dereference and no confidentiality or integrity impact; mutual exclusion on the fast path remains correct. Exposure is limited to builds with CONFIG_TLS_CREDENTIALS_BACKEND_PROTECTED_STORAGE enabled (PSA Protected Storage / TF-M platforms); the default volatile RAM backend initializes its lock correctly and is unaffected.
+
+The fix initializes the mutex statically with K_MUTEX_DEFINE(credential_lock), providing a valid wait queue so the contended path no longer touches a NULL list.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12232" data-description="the intel alh digital-audio-interface driver function dai_alh_get_properties() in drivers/dai/intel/alh/alh.c used a caller-supplied int stream_id with no range validation. the value indexes the fixed-size static const uint8_t alh_handshake_map[64] array and scales a fifo register address, so an out-of-range stream_id produces an out-of-bounds read of one byte at an attacker-chosen signed offset from the array. that byte is written into prop->dma_hs_id and the resulting struct dai_properties is copied back to the caller, leaking it.
+
+dai_get_properties_copy() is a zephyr __syscall, and its verifier z_vrfy_dai_get_properties_copy() (drivers/dai/dai_handlers.c) validates only the device-object permission and the destination buffer, not stream_id. a user-mode thread that has been granted access to the alh dai device object can therefore call the syscall with an arbitrary stream_id, crossing the userspace/kernel sandbox boundary.
+
+the impact is a one-byte-per-call arbitrary-offset kernel information disclosure (and leakage of a computed kernel address via fifo_address); a stream_id that resolves to an unmapped page faults in kernel context, giving a local denial of service. exploitation requires config_userspace and device access, making this a local, moderate-severity issue. the fix rejects negative and too-large stream_id values up front and returns null, which the copy wrapper maps to -enoent.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12232" target="_blank">CVE-2026-12232</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>The Intel ALH digital-audio-interface driver function dai_alh_get_properties() in drivers/dai/intel/alh/alh.c used a caller-supplied int stream_id with no range validation. The value indexes the fixed-size static const uint8_t alh_handshake_map[64] array and scales a FIFO register address, so an out-of-range stream_id produces an out-of-bounds read of one byte at an attacker-chosen signed offset from the array. That byte is written into prop->dma_hs_id and the resulting struct dai_properties is copied back to the caller, leaking it.
+
+dai_get_properties_copy() is a Zephyr __syscall, and its verifier z_vrfy_dai_get_properties_copy() (drivers/dai/dai_handlers.c) validates only the device-object permission and the destination buffer, not stream_id. A user-mode thread that has been granted access to the ALH DAI device object can therefore call the syscall with an arbitrary stream_id, crossing the userspace/kernel sandbox boundary.
+
+The impact is a one-byte-per-call arbitrary-offset kernel information disclosure (and leakage of a computed kernel address via fifo_address); a stream_id that resolves to an unmapped page faults in kernel context, giving a local denial of service. Exploitation requires CONFIG_USERSPACE and device access, making this a local, moderate-severity issue. The fix rejects negative and too-large stream_id values up front and returns NULL, which the copy wrapper maps to -ENOENT.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2025-15687" data-description="a security flaw has been discovered in open5gs up to 2.7.6. impacted is the function smf_gx_cca_cb of the component smf diameter gx credit-control-answer handler. the manipulation results in denial of service. the attack can be launched remotely. the exploit has been released to the public and may be used for attacks. upgrading to version 2.7.7 is recommended to address this issue. the patch is identified as f23d7a5e959acd8f37b925dc29b85f26b7d391cb. upgrading the affected component is advised.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15687" target="_blank">CVE-2025-15687</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-11 23:17:38 CDT</p>
@@ -184,168 +268,6 @@ Free the newly allocated node before returning -EEXIST.
 The callers currently assert that -EEXIST should not happen, so this is a
 defensive cleanup for an unexpected duplicate insert path.  If the path is
 ever reached, the local allocation should still be released.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68449" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ata: sata_dwc_460ex: fix infinite loop in ncq tag completion bit-scanning
-
-the hand-rolled bit-scanning loop in the ncq completion path has an
-infinite loop bug.  when tag_mask has only high bits set (e.g.
-0x80000000), the inner while loop left-shifts tag_mask until it
-overflows to 0.  at that point !(0 & 1) is always true and 0 <<= 1
-stays 0, causing an infinite loop in hardirq context with a spinlock
-held.
-
-replace the open-coded bit-scanning with __ffs() which correctly
-finds the least significant set bit and is bounded by the width of
-the argument.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68449" target="_blank">CVE-2026-68449</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 20:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ata: sata_dwc_460ex: fix infinite loop in NCQ tag completion bit-scanning
-
-The hand-rolled bit-scanning loop in the NCQ completion path has an
-infinite loop bug.  When tag_mask has only high bits set (e.g.
-0x80000000), the inner while loop left-shifts tag_mask until it
-overflows to 0.  At that point !(0 & 1) is always true and 0 <<= 1
-stays 0, causing an infinite loop in hardirq context with a spinlock
-held.
-
-Replace the open-coded bit-scanning with __ffs() which correctly
-finds the least significant set bit and is bounded by the width of
-the argument.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68448" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ovl: check access to copy_file_range source with src mounter creds
-
-commit 5dae222a5ff0c ("vfs: allow copy_file_range to copy across devices")
-allowed filesystems that implement the copy_file_range() f_op to decide
-if they want to access cross-sb copy from/to the same fs type.
-
-the same commit added checks to verify same sb copy for filesystems that
-implement ->copy_file_range() and do not support cross-sb copy at the
-time, namely, to ceph, fuse and nfs.
-
-the two remaining fs which implement ->copy_file_range(), cifs and
-overlayfs started to support cross-sb copy from this time.
-
-while overlayfs does support cross-sb copy when the two underlying files
-are on the same base fs, the copy operation on the two real files from
-two different overalyfs filesystems is performed with the mounter
-creds of the destination overlayfs and the read permission access hook
-for the source file was called with the wrong creds.
-
-this could cause either deny of access to copy which would otherwise be
-allowed (e.g. with splice) or allow read access to file which would
-otherwise be denied.
-
-fix the latter case by explicitly verifying read access to source file
-with the source overlayfs mounter creds.
-
-the former case remains a quirk of cross-sb overlayfs copy, but
-userspace could fall back to regular copy so no harm done.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68448" target="_blank">CVE-2026-68448</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 20:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ovl: check access to copy_file_range source with src mounter creds
-
-Commit 5dae222a5ff0c ("vfs: allow copy_file_range to copy across devices")
-allowed filesystems that implement the copy_file_range() f_op to decide
-if they want to access cross-sb copy from/to the same fs type.
-
-The same commit added checks to verify same sb copy for filesystems that
-implement ->copy_file_range() and do not support cross-sb copy at the
-time, namely, to ceph, fuse and nfs.
-
-The two remaining fs which implement ->copy_file_range(), cifs and
-overlayfs started to support cross-sb copy from this time.
-
-While overlayfs does support cross-sb copy when the two underlying files
-are on the same base fs, the copy operation on the two real files from
-two different overalyfs filesystems is performed with the mounter
-creds of the destination overlayfs and the read permission access hook
-for the source file was called with the wrong creds.
-
-This could cause either deny of access to copy which would otherwise be
-allowed (e.g. with splice) or allow read access to file which would
-otherwise be denied.
-
-Fix the latter case by explicitly verifying read access to source file
-with the source overlayfs mounter creds.
-
-The former case remains a quirk of cross-sb overlayfs copy, but
-userspace could fall back to regular copy so no harm done.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68447" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-drm/amdkfd: clamp v9 criu control stack checkpoint copy to bo size
-
-criu checkpoint copies the mqd control stack using cp_hqd_cntl_stack_size
-from hardware without bounding it to the allocated bo region. if the hw
-field is larger than the queue's control stack allocation, memcpy reads
-past the bo into adjacent gtt memory and can leak kernel data to userspace.
-
-store the page-aligned control stack bo size in mqd_manager and clamp
-checkpoint copies and reported checkpoint sizes to
-min(cp_hqd_cntl_stack_size, mm->ctl_stack_size). apply the same bound
-for multi-xcc v9.4.3 checkpoint layout.
-
-(cherry picked from commit 6c2abd0ec09e86c6323010673766f76050e28aa3)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68447" target="_blank">CVE-2026-68447</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 20:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-drm/amdkfd: clamp v9 CRIU control stack checkpoint copy to BO size
-
-CRIU checkpoint copies the MQD control stack using cp_hqd_cntl_stack_size
-from hardware without bounding it to the allocated BO region. If the HW
-field is larger than the queue's control stack allocation, memcpy reads
-past the BO into adjacent GTT memory and can leak kernel data to userspace.
-
-Store the page-aligned control stack BO size in mqd_manager and clamp
-checkpoint copies and reported checkpoint sizes to
-min(cp_hqd_cntl_stack_size, mm->ctl_stack_size). Apply the same bound
-for multi-XCC v9.4.3 checkpoint layout.
-
-(cherry picked from commit 6c2abd0ec09e86c6323010673766f76050e28aa3)</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2024-14044" data-description="a vulnerability was identified in open5gs up to 2.7.1. this issue affects the function pcrf_rx_aar_cb of the file src/pcrf/pcrf-rx-path.c of the component diameter rx handler. the manipulation of the argument num_of_media_component/num_of_sub leads to buffer overflow. the attack can be initiated remotely. the exploit is publicly available and might be used. upgrading to version 2.7.2 is capable of addressing this issue. the identifier of the patch is 87b4e4535c77ded627cdb6f4e4e2e3ea761f40b7. it is recommended to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-14044" target="_blank">CVE-2024-14044</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 20:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was identified in Open5GS up to 2.7.1. This issue affects the function pcrf_rx_aar_cb of the file src/pcrf/pcrf-rx-path.c of the component Diameter Rx Handler. The manipulation of the argument num_of_media_component/num_of_sub leads to buffer overflow. The attack can be initiated remotely. The exploit is publicly available and might be used. Upgrading to version 2.7.2 is capable of addressing this issue. The identifier of the patch is 87b4e4535c77ded627cdb6f4e4e2e3ea761f40b7. It is recommended to upgrade the affected component.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68446" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-drm/vmwgfx: validate vmw_surface_metadata::array_size
-
-this field comes from userspace and should be validated against specific
-limits depending on which shader model (sm) is available.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68446" target="_blank">CVE-2026-68446</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 19:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-drm/vmwgfx: Validate vmw_surface_metadata::array_size
-
-This field comes from userspace and should be validated against specific
-limits depending on which Shader Model (SM) is available.</p>
                 </div>
         
             </div>
