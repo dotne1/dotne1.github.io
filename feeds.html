@@ -34,240 +34,168 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-64954" data-description="velociraptor allows scheduling new collections via vql queries in notebooks. for a user to schedule a new collection, they require the collect_client permission. however, this is not enforced when the user can run a vql query which resets the authorization provider.
+                <div class="cve-entry" data-cve-id="CVE-2026-66659" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in essekia tablesome table allows blind sql injection.
 
-this allows a user who can run arbitrary vql (usually with the "analyst" role) to launch new collections (usually requires the "investigator" role). this vulnerability is an escalation from an analyst to investigator role.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64954" target="_blank">CVE-2026-64954</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 00:19:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>Velociraptor allows scheduling new collections via VQL queries in notebooks. For a user to schedule a new collection, they require the COLLECT_CLIENT permission. However, this is not enforced when the user can run a VQL query which resets the authorization provider.
+this issue affects tablesome table: from n/a through 1.2.9.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66659" target="_blank">CVE-2026-66659</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:22:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
+                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in Essekia Tablesome Table allows Blind SQL Injection.
 
-This allows a user who can run arbitrary VQL (usually with the "analyst" role) to launch new collections (usually requires the "investigator" role). This vulnerability is an escalation from an analyst to investigator role.</p>
+This issue affects Tablesome Table: from n/a through 1.2.9.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-12235" data-description="the linkable loadable extensions (llext) subsystem mis-handles plt/rela relocation entries when linking a relocatable (partially-linked) elf extension. in llext_link_plt() (subsys/llext/llext_link.c), the relocatable branch (tgt != null, the path used for xtensa relocatable objects) computed the patch address as ext->mem[llext_mem_text] - text.sh_offset + rela.r_offset + tgt->sh_offset and then performed the relocation write there without validating rela.r_offset. its sibling shared/dynamic branch already rejected out-of-range offsets via llext_file_offset().
-
-rela.r_offset is read directly from the elf's rela table, so a crafted entry with an offset larger than the target section makes the write land arbitrarily far outside the extension's text buffer. the result is an attacker-influenced out-of-bounds write (the location via r_offset, the written value being the resolved symbol address) performed in supervisor context at link time, before any extension code runs.
-
-the path is reached from llext_load() whenever an application loads an attacker-influenced elf extension on xtensa with writable storage; llext is documented to accept extensions of untrusted origin. impact is supervisor-context memory corruption (integrity and availability loss, and a sandbox-boundary escape for user-mode extensions). exploitation is gated by the xtensa relocatable plt path and writable storage, and turning the out-of-range write into a useful primitive is non-trivial.
-
-the fix adds a bound check rejecting any rela entry whose r_offset >= tgt->sh_size, mirroring the existing validation in the shared branch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12235" target="_blank">CVE-2026-12235</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>The Linkable Loadable Extensions (llext) subsystem mis-handles PLT/RELA relocation entries when linking a relocatable (partially-linked) ELF extension. In llext_link_plt() (subsys/llext/llext_link.c), the relocatable branch (tgt != NULL, the path used for Xtensa relocatable objects) computed the patch address as ext->mem[LLEXT_MEM_TEXT] - text.sh_offset + rela.r_offset + tgt->sh_offset and then performed the relocation write there without validating rela.r_offset. Its sibling shared/dynamic branch already rejected out-of-range offsets via llext_file_offset().
-
-rela.r_offset is read directly from the ELF's RELA table, so a crafted entry with an offset larger than the target section makes the write land arbitrarily far outside the extension's text buffer. The result is an attacker-influenced out-of-bounds write (the location via r_offset, the written value being the resolved symbol address) performed in supervisor context at link time, before any extension code runs.
-
-The path is reached from llext_load() whenever an application loads an attacker-influenced ELF extension on Xtensa with writable storage; llext is documented to accept extensions of untrusted origin. Impact is supervisor-context memory corruption (integrity and availability loss, and a sandbox-boundary escape for user-mode extensions). Exploitation is gated by the Xtensa relocatable PLT path and writable storage, and turning the out-of-range write into a useful primitive is non-trivial.
-
-The fix adds a bound check rejecting any RELA entry whose r_offset >= tgt->sh_size, mirroring the existing validation in the shared branch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12234" data-description="the userspace syscall verifiers z_vrfy_zsock_sendmsg() and z_vrfy_zsock_recvmsg() in subsys/net/lib/sockets/sockets.c snapshot the caller-supplied struct net_msghdr into a kernel-side copy with k_usermode_from_copy(), but then re-read the still-live user struct for subsequent decisions. the kernel iovec shadow buffer is sized from one read of msg->msg_iovlen, while the population loop is bounded by a second, live read of the same field.
-
-because msg points into ordinary user memory, a cooperating second thread in the same memory domain can inflate msg->msg_iovlen in the window between the sizing read and the loop test (a classic double-fetch / toctou). the population loop then iterates past the number of net_iovec slots actually allocated, writing attacker-influenced iov_base/iov_len values beyond the end of the kernel-heap shadow buffer. the recvmsg verifier has the same defect on both its inbound and result write-back loops.
-
-the code is reachable from an unprivileged user thread whenever config_userspace is enabled and the zsock_sendmsg/zsock_recvmsg syscalls are available. a successful race corrupts kernel-managed heap memory across the user-to-kernel privilege boundary, yielding a local privilege-escalation primitive or, at minimum, a kernel-fault denial of service. the fix copies the header once and derives every size, bound, and gate from the snapshot, copying each iovec entry atomically so its base and length can no longer be raced apart.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12234" target="_blank">CVE-2026-12234</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>The userspace syscall verifiers z_vrfy_zsock_sendmsg() and z_vrfy_zsock_recvmsg() in subsys/net/lib/sockets/sockets.c snapshot the caller-supplied struct net_msghdr into a kernel-side copy with k_usermode_from_copy(), but then re-read the still-live user struct for subsequent decisions. The kernel iovec shadow buffer is sized from one read of msg->msg_iovlen, while the population loop is bounded by a second, live read of the same field.
-
-Because msg points into ordinary user memory, a cooperating second thread in the same memory domain can inflate msg->msg_iovlen in the window between the sizing read and the loop test (a classic double-fetch / TOCTOU). The population loop then iterates past the number of net_iovec slots actually allocated, writing attacker-influenced iov_base/iov_len values beyond the end of the kernel-heap shadow buffer. The recvmsg verifier has the same defect on both its inbound and result write-back loops.
-
-The code is reachable from an unprivileged user thread whenever CONFIG_USERSPACE is enabled and the zsock_sendmsg/zsock_recvmsg syscalls are available. A successful race corrupts kernel-managed heap memory across the user-to-kernel privilege boundary, yielding a local privilege-escalation primitive or, at minimum, a kernel-fault denial of service. The fix copies the header once and derives every size, bound, and gate from the snapshot, copying each iovec entry atomically so its base and length can no longer be raced apart.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12233" data-description="the psa protected storage credential backend (subsys/net/lib/tls_credentials/tls_credentials_trusted.c) declared its credential-store mutex as a plain zero-filled static struct k_mutex credential_lock; and never called k_mutex_init() on it. a statically zero-filled k_mutex has an uninitialized wait queue (its dlist head/tail are null instead of the self-referential sentinels that k_mutex_init/k_mutex_define install). the uncontended lock path does not touch the wait queue, so the defect is latent and serialized use behaves correctly.
-
-when two execution contexts contend on the lock, k_mutex_lock() pends the blocking thread on the wait queue via z_pend_curr(), which calls sys_dlist_append() on the zeroed list and dereferences a null tail pointer (tail->next = node), faulting the kernel. the lock is held during tls handshake credential loading and by all credential add/get/delete operations, so a deployment performing concurrent tls handshakes (for example a server handling multiple simultaneous connections from a remote peer) or a credential-management operation concurrent with a handshake can trigger the dereference.
-
-the impact is a denial of service: a deterministic kernel panic / device reset on the first contention. there is no memory corruption beyond the null dereference and no confidentiality or integrity impact; mutual exclusion on the fast path remains correct. exposure is limited to builds with config_tls_credentials_backend_protected_storage enabled (psa protected storage / tf-m platforms); the default volatile ram backend initializes its lock correctly and is unaffected.
-
-the fix initializes the mutex statically with k_mutex_define(credential_lock), providing a valid wait queue so the contended path no longer touches a null list.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12233" target="_blank">CVE-2026-12233</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>The PSA Protected Storage credential backend (subsys/net/lib/tls_credentials/tls_credentials_trusted.c) declared its credential-store mutex as a plain zero-filled static struct k_mutex credential_lock; and never called k_mutex_init() on it. A statically zero-filled k_mutex has an uninitialized wait queue (its dlist head/tail are NULL instead of the self-referential sentinels that k_mutex_init/K_MUTEX_DEFINE install). The uncontended lock path does not touch the wait queue, so the defect is latent and serialized use behaves correctly.
-
-When two execution contexts contend on the lock, k_mutex_lock() pends the blocking thread on the wait queue via z_pend_curr(), which calls sys_dlist_append() on the zeroed list and dereferences a NULL tail pointer (tail->next = node), faulting the kernel. The lock is held during TLS handshake credential loading and by all credential add/get/delete operations, so a deployment performing concurrent TLS handshakes (for example a server handling multiple simultaneous connections from a remote peer) or a credential-management operation concurrent with a handshake can trigger the dereference.
-
-The impact is a denial of service: a deterministic kernel panic / device reset on the first contention. There is no memory corruption beyond the NULL dereference and no confidentiality or integrity impact; mutual exclusion on the fast path remains correct. Exposure is limited to builds with CONFIG_TLS_CREDENTIALS_BACKEND_PROTECTED_STORAGE enabled (PSA Protected Storage / TF-M platforms); the default volatile RAM backend initializes its lock correctly and is unaffected.
-
-The fix initializes the mutex statically with K_MUTEX_DEFINE(credential_lock), providing a valid wait queue so the contended path no longer touches a NULL list.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12232" data-description="the intel alh digital-audio-interface driver function dai_alh_get_properties() in drivers/dai/intel/alh/alh.c used a caller-supplied int stream_id with no range validation. the value indexes the fixed-size static const uint8_t alh_handshake_map[64] array and scales a fifo register address, so an out-of-range stream_id produces an out-of-bounds read of one byte at an attacker-chosen signed offset from the array. that byte is written into prop->dma_hs_id and the resulting struct dai_properties is copied back to the caller, leaking it.
-
-dai_get_properties_copy() is a zephyr __syscall, and its verifier z_vrfy_dai_get_properties_copy() (drivers/dai/dai_handlers.c) validates only the device-object permission and the destination buffer, not stream_id. a user-mode thread that has been granted access to the alh dai device object can therefore call the syscall with an arbitrary stream_id, crossing the userspace/kernel sandbox boundary.
-
-the impact is a one-byte-per-call arbitrary-offset kernel information disclosure (and leakage of a computed kernel address via fifo_address); a stream_id that resolves to an unmapped page faults in kernel context, giving a local denial of service. exploitation requires config_userspace and device access, making this a local, moderate-severity issue. the fix rejects negative and too-large stream_id values up front and returns null, which the copy wrapper maps to -enoent.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12232" target="_blank">CVE-2026-12232</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 00:17:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>The Intel ALH digital-audio-interface driver function dai_alh_get_properties() in drivers/dai/intel/alh/alh.c used a caller-supplied int stream_id with no range validation. The value indexes the fixed-size static const uint8_t alh_handshake_map[64] array and scales a FIFO register address, so an out-of-range stream_id produces an out-of-bounds read of one byte at an attacker-chosen signed offset from the array. That byte is written into prop->dma_hs_id and the resulting struct dai_properties is copied back to the caller, leaking it.
-
-dai_get_properties_copy() is a Zephyr __syscall, and its verifier z_vrfy_dai_get_properties_copy() (drivers/dai/dai_handlers.c) validates only the device-object permission and the destination buffer, not stream_id. A user-mode thread that has been granted access to the ALH DAI device object can therefore call the syscall with an arbitrary stream_id, crossing the userspace/kernel sandbox boundary.
-
-The impact is a one-byte-per-call arbitrary-offset kernel information disclosure (and leakage of a computed kernel address via fifo_address); a stream_id that resolves to an unmapped page faults in kernel context, giving a local denial of service. Exploitation requires CONFIG_USERSPACE and device access, making this a local, moderate-severity issue. The fix rejects negative and too-large stream_id values up front and returns NULL, which the copy wrapper maps to -ENOENT.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-15687" data-description="a security flaw has been discovered in open5gs up to 2.7.6. impacted is the function smf_gx_cca_cb of the component smf diameter gx credit-control-answer handler. the manipulation results in denial of service. the attack can be launched remotely. the exploit has been released to the public and may be used for attacks. upgrading to version 2.7.7 is recommended to address this issue. the patch is identified as f23d7a5e959acd8f37b925dc29b85f26b7d391cb. upgrading the affected component is advised.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15687" target="_blank">CVE-2025-15687</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 23:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A security flaw has been discovered in Open5GS up to 2.7.6. Impacted is the function smf_gx_cca_cb of the component SMF Diameter Gx Credit-Control-Answer Handler. The manipulation results in denial of service. The attack can be launched remotely. The exploit has been released to the public and may be used for attacks. Upgrading to version 2.7.7 is recommended to address this issue. The patch is identified as f23d7a5e959acd8f37b925dc29b85f26b7d391cb. Upgrading the affected component is advised.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-9318" data-description="tablib prior to 3.10.0 contains a stored cross-site scripting vulnerability in the html export functionality that allows attackers to execute arbitrary javascript by embedding malicious payloads in dataset titles, which are interpolated unsanitized into html output via the export_book method in the _html.py format handler. attackers can rename worksheet sheets in imported files such as xlsx, ods, xls, or yaml with script payloads that are assigned to the dataset title attribute and rendered unescaped inside an html h3 tag, leading to session hijacking, unauthorized administrative actions, and sensitive data exposure when the output is rendered in a browser.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9318" target="_blank">CVE-2026-9318</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>tablib prior to 3.10.0 contains a stored cross-site scripting vulnerability in the HTML export functionality that allows attackers to execute arbitrary JavaScript by embedding malicious payloads in dataset titles, which are interpolated unsanitized into HTML output via the export_book method in the _html.py format handler. Attackers can rename worksheet sheets in imported files such as XLSX, ODS, XLS, or YAML with script payloads that are assigned to the Dataset title attribute and rendered unescaped inside an HTML h3 tag, leading to session hijacking, unauthorized administrative actions, and sensitive data exposure when the output is rendered in a browser.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19588" data-description="integer overflow to buffer overflow vulnerability in samsung open source rlottie allows overflow buffers.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19588" target="_blank">CVE-2026-19588</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Integer Overflow to Buffer Overflow vulnerability in Samsung Open Source rlottie allows Overflow Buffers.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19587" data-description="uncontrolled resource consumption vulnerability in samsung open source rlottie allows excessive allocation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19587" target="_blank">CVE-2026-19587</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Uncontrolled Resource Consumption vulnerability in Samsung Open Source rlottie allows Excessive Allocation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-18961" data-description="the social login, passkeys, magic link & email otp – passwordless login by ventraconnect plugin for wordpress is vulnerable to authentication bypass via unverified provider email in all versions up to, and including, 1.4.3. this is due to the plugin trusting the unverified email field returned by spotify's /v1/me endpoint as proof of mailbox ownership — generic::normalize_common() copies this value into the normalized profile without requiring an email_verified assertion, and user_links::link_or_login_user() subsequently passes it directly to get_user_by('email', $email) and issues a persistent authentication cookie via wp_set_auth_cookie() without a provider-specific verified-email gate, a local mailbox challenge, or a logged-in approval step. this makes it possible for unauthenticated attackers to log in as any existing wordpress user, including administrators, by supplying a known target email address through a controlled spotify oauth flow, gaining full administrative access to the site.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18961" target="_blank">CVE-2026-18961</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:42 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-19594" data-description="insufficient input sanitization in snowflake python api (`snowflake.core`) versions prior to 1.13.0 allowed confused-deputy privilege escalation through two related weaknesses: path traversal (cwe-22) via unencoded `..` identifier path segments, and http parameter pollution (cwe-141) via unencoded `&`/`#`/`=` characters in query string values. an attacker with access to a downstream application built on snowflake.core could exploit the path traversal by supplying `..` as an object name, causing `snowflake.core` to issue rest requests against a parent resource or exploit the parameter pollution by injecting `&`/`#`/`=` into a free-form name field to override constraints on swap, clone, or rename operations — all executed under the application's privileged session. successful exploitation requires the attacker to control an identifier or object-name string in an application built on snowflake.core that passes it to `snowflake.core` under a higher-privileged snowflake session (e.g., an execute as owner stored procedure, streamlit app, or native app). the fix is available in snowflake python api version 1.13.0, which also addresses several additional security findings. users must manually upgrade.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19594" target="_blank">CVE-2026-19594</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:21:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>The Social Login, Passkeys, Magic Link & Email OTP – Passwordless Login by VentraConnect plugin for WordPress is vulnerable to Authentication Bypass via Unverified Provider Email in all versions up to, and including, 1.4.3. This is due to the plugin trusting the unverified email field returned by Spotify's /v1/me endpoint as proof of mailbox ownership — Generic::normalize_common() copies this value into the normalized profile without requiring an email_verified assertion, and User_Links::link_or_login_user() subsequently passes it directly to get_user_by('email', $email) and issues a persistent authentication cookie via wp_set_auth_cookie() without a provider-specific verified-email gate, a local mailbox challenge, or a logged-in approval step. This makes it possible for unauthenticated attackers to log in as any existing WordPress user, including Administrators, by supplying a known target email address through a controlled Spotify OAuth flow, gaining full administrative access to the site.</p>
+                    <p>Insufficient input sanitization in Snowflake Python API (`snowflake.core`) versions prior to 1.13.0 allowed confused-deputy privilege escalation through two related weaknesses: path traversal (CWE-22) via unencoded `..` identifier path segments, and HTTP parameter pollution (CWE-141) via unencoded `&`/`#`/`=` characters in query string values. An attacker with access to a downstream application built on snowflake.core could exploit the path traversal by supplying `..` as an object name, causing `snowflake.core` to issue REST requests against a parent resource or exploit the parameter pollution by injecting `&`/`#`/`=` into a free-form name field to override constraints on swap, clone, or rename operations — all executed under the application's privileged session. Successful exploitation requires the attacker to control an identifier or object-name string in an application built on snowflake.core that passes it to `snowflake.core` under a higher-privileged Snowflake session (e.g., an EXECUTE AS OWNER stored procedure, Streamlit app, or Native App). The fix is available in Snowflake Python API version 1.13.0, which also addresses several additional security findings. Users must manually upgrade.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-15686" data-description="a vulnerability has been found in open5gs up to 2.7.6. affected by this issue is the function fd_msg_sess_get of the component hss service. such manipulation of the argument session-id leads to denial of service. the attack may be performed from remote. the exploit has been disclosed to the public and may be used. the project locked and limited conversation to collaborators.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15686" target="_blank">CVE-2025-15686</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability has been found in Open5GS up to 2.7.6. Affected by this issue is the function fd_msg_sess_get of the component HSS Service. Such manipulation of the argument Session-Id leads to denial of service. The attack may be performed from remote. The exploit has been disclosed to the public and may be used. The project locked and limited conversation to collaborators.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-15685" data-description="a flaw has been found in open5gs up to 2.7.1. affected by this vulnerability is an unknown functionality of the component freediameter. this manipulation causes memory corruption. the attack is possible to be carried out remotely.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15685" target="_blank">CVE-2025-15685</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A flaw has been found in Open5GS up to 2.7.1. Affected by this vulnerability is an unknown functionality of the component freeDiameter. This manipulation causes memory corruption. The attack is possible to be carried out remotely.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-15684" data-description="a vulnerability was detected in open5gs up to 2.7.6. affected is the function diam_log_func of the file lib/diameter/common/init.c of the component cer handler. the manipulation results in reachable assertion. the attack can be executed remotely. the exploit is now public and may be used. upgrading to version 2.7.7 is able to address this issue. the patch is identified as c1a803516a3c0485696cb9bcca7a80ad857c7383. it is advisable to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15684" target="_blank">CVE-2025-15684</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 22:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability was detected in Open5GS up to 2.7.6. Affected is the function diam_log_func of the file lib/diameter/common/init.c of the component CER Handler. The manipulation results in reachable assertion. The attack can be executed remotely. The exploit is now public and may be used. Upgrading to version 2.7.7 is able to address this issue. The patch is identified as c1a803516a3c0485696cb9bcca7a80ad857c7383. It is advisable to upgrade the affected component.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73122" data-description="a flaw was found in the multicloud-operators-channel component of red hat advanced cluster management (rhacm). this vulnerability allows a compromised agent from a managed cluster to gain unauthorized access to sensitive information. specifically, the agent can read all secrets and configmaps within any channel namespace on the hub, potentially exposing credentials for other tenants' git and helm repositories. this could lead to significant information disclosure.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73122" target="_blank">CVE-2026-73122</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 21:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>A flaw was found in the multicloud-operators-channel component of Red Hat Advanced Cluster Management (RHACM). This vulnerability allows a compromised agent from a managed cluster to gain unauthorized access to sensitive information. Specifically, the agent can read all Secrets and ConfigMaps within any Channel namespace on the hub, potentially exposing credentials for other tenants' Git and Helm repositories. This could lead to significant information disclosure.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-72526" data-description="a flaw was found in the multicloud-integrations component. the application propagation controller processes the `ocm-managed-cluster` annotation from an application custom resource (cr) without proper validation. a tenant with permissions to create applications on the hub cluster can exploit this to target arbitrary managed clusters. this can force argocd on the spoke clusters to synchronize attacker-controlled manifests, leading to arbitrary code execution or privilege escalation on those clusters.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-72526" target="_blank">CVE-2026-72526</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 21:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>A flaw was found in the multicloud-integrations component. The Application propagation controller processes the `ocm-managed-cluster` annotation from an Application Custom Resource (CR) without proper validation. A tenant with permissions to create Applications on the hub cluster can exploit this to target arbitrary managed clusters. This can force ArgoCD on the spoke clusters to synchronize attacker-controlled manifests, leading to arbitrary code execution or privilege escalation on those clusters.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-70398" data-description="a flaw was found in multicloud-integrations, a component of red hat advanced cluster management (rhacm). this vulnerability allows an authenticated user, referred to as a tenant, to manipulate the gitopscluster controller. by exploiting this, a tenant can redirect sensitive spoke cluster bearer tokens from secure locations to a namespace they control. this unauthorized access to tokens can lead to the disclosure of critical information and bypass security policies within argocd appprojects.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-70398" target="_blank">CVE-2026-70398</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 21:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.6</p>
-                    <p>A flaw was found in multicloud-integrations, a component of Red Hat Advanced Cluster Management (RHACM). This vulnerability allows an authenticated user, referred to as a tenant, to manipulate the GitOpsCluster controller. By exploiting this, a tenant can redirect sensitive spoke cluster bearer tokens from secure locations to a namespace they control. This unauthorized access to tokens can lead to the disclosure of critical information and bypass security policies within ArgoCD AppProjects.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66878" data-description="a flaw was found in multicloud-operators-subscription. a privileged user, specifically a namespace administrator capable of creating channel and subscription resources, can exploit this vulnerability. by manipulating the channel.spec.secretref.namespace field, the user can cause the system to copy sensitive secret contents from other namespaces into their own, leading to information disclosure.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66878" target="_blank">CVE-2026-66878</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 21:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>A flaw was found in multicloud-operators-subscription. A privileged user, specifically a namespace administrator capable of creating Channel and Subscription resources, can exploit this vulnerability. By manipulating the Channel.Spec.SecretRef.Namespace field, the user can cause the system to copy sensitive Secret contents from other namespaces into their own, leading to information disclosure.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64927" data-description="a flaw was found in the multicloud-operators-channel component. this vulnerability allows a user with specific permissions to manipulate how the system handles sensitive information, known as secrets, across different parts of the system (namespaces). by exploiting this, an attacker can modify these secrets in unauthorized areas. this could lead to unauthorized access to information or elevated privileges within the system.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64927" target="_blank">CVE-2026-64927</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 21:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>A flaw was found in the multicloud-operators-channel component. This vulnerability allows a user with specific permissions to manipulate how the system handles sensitive information, known as Secrets, across different parts of the system (namespaces). By exploiting this, an attacker can modify these Secrets in unauthorized areas. This could lead to unauthorized access to information or elevated privileges within the system.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-6484" data-description="in an uefi, lack of verified boot to certain fv may cause arbitrary code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6484" target="_blank">CVE-2026-6484</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 20:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>In an UEFI, Lack of verified boot to certain FV may cause arbitrary code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68450" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-btrfs: free mapping node on duplicate reloc root insert
-
-__add_reloc_root() allocates a mapping_node before inserting it into
-rc->reloc_root_tree.  if rb_simple_insert() finds an existing entry, it
-returns the existing rb_node and leaves the newly allocated node unlinked.
-
-the error path then returns -eexist without freeing the new node.  since
-the node was never inserted into reloc_root_tree, the later cleanup in
-put_reloc_control() cannot find it either.
-
-free the newly allocated node before returning -eexist.
-
-the callers currently assert that -eexist should not happen, so this is a
-defensive cleanup for an unexpected duplicate insert path.  if the path is
-ever reached, the local allocation should still be released.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68450" target="_blank">CVE-2026-68450</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-11 20:17:07 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-19217" data-description="the royal addons for elementor  wordpress plugin before 1.7.1065 does not validate a widget setting used to build an html tag before outputting it, which could allow users with the contributor role and above to perform stored cross-site scripting attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19217" target="_blank">CVE-2026-19217</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:21:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-btrfs: free mapping node on duplicate reloc root insert
-
-__add_reloc_root() allocates a mapping_node before inserting it into
-rc->reloc_root_tree.  If rb_simple_insert() finds an existing entry, it
-returns the existing rb_node and leaves the newly allocated node unlinked.
-
-The error path then returns -EEXIST without freeing the new node.  Since
-the node was never inserted into reloc_root_tree, the later cleanup in
-put_reloc_control() cannot find it either.
-
-Free the newly allocated node before returning -EEXIST.
-
-The callers currently assert that -EEXIST should not happen, so this is a
-defensive cleanup for an unexpected duplicate insert path.  If the path is
-ever reached, the local allocation should still be released.</p>
+                    <p>The Royal Addons for Elementor  WordPress plugin before 1.7.1065 does not validate a widget setting used to build an HTML tag before outputting it, which could allow users with the Contributor role and above to perform Stored Cross-Site Scripting attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19073" data-description="the order sync with zendesk for woocommerce wordpress plugin before 2.2.3 does not perform any capability check on one of its rest api endpoints, and does not verify that the requester owns the account being queried, allowing unauthenticated attackers to retrieve the order history and purchase totals of any customer whose email address they know or can enumerate.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19073" target="_blank">CVE-2026-19073</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:21:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Order Sync with Zendesk for WooCommerce WordPress plugin before 2.2.3 does not perform any capability check on one of its REST API endpoints, and does not verify that the requester owns the account being queried, allowing unauthenticated attackers to retrieve the order history and purchase totals of any customer whose email address they know or can enumerate.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19052" data-description="the prosolution wp client wordpress plugin before 2.0.9 does not perform capability checks on two administrative ajax actions, and the nonce they rely on is published on its public frontend, allowing any authenticated user, such as a subscriber, to trigger an administrative data synchronisation and to clear the prosolution wp client wordpress plugin before 2.0.9's activity records.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19052" target="_blank">CVE-2026-19052</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:21:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The ProSolution WP Client WordPress plugin before 2.0.9 does not perform capability checks on two administrative AJAX actions, and the nonce they rely on is published on its public frontend, allowing any authenticated user, such as a subscriber, to trigger an administrative data synchronisation and to clear the ProSolution WP Client WordPress plugin before 2.0.9's activity records.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19050" data-description="the prosolution wp client wordpress plugin before 2.0.9 does not validate a user-supplied url, and does not check the capability or nonce of the requester, before performing a server-side http request with it, allowing any authenticated user, such as a subscriber, to make the site issue arbitrary requests to internal hosts and services, including requests with an attacker-chosen method, headers and body.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19050" target="_blank">CVE-2026-19050</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The ProSolution WP Client WordPress plugin before 2.0.9 does not validate a user-supplied URL, and does not check the capability or nonce of the requester, before performing a server-side HTTP request with it, allowing any authenticated user, such as a subscriber, to make the site issue arbitrary requests to internal hosts and services, including requests with an attacker-chosen method, headers and body.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18962" data-description="the wp photo album plus wordpress plugin before 9.2.09.002 does not check that the current user is allowed to upload into the album they target when it processes a front-end upload, allowing any authenticated user, such as a subscriber, to upload files into albums owned by other users or by the administrator. exploitation requires the wp photo album plus wordpress plugin before 9.2.09.002's front-end user upload feature to be enabled, which is not the default.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18962" target="_blank">CVE-2026-18962</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Photo Album Plus WordPress plugin before 9.2.09.002 does not check that the current user is allowed to upload into the album they target when it processes a front-end upload, allowing any authenticated user, such as a Subscriber, to upload files into albums owned by other users or by the administrator. Exploitation requires the WP Photo Album Plus WordPress plugin before 9.2.09.002's front-end user upload feature to be enabled, which is not the default.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18943" data-description="the wpc admin columns wordpress plugin before 2.3.4 does not have authorisation checks in one of its ajax actions, allowing users with a role as low as subscriber to read arbitrary user, post and term metadata, including data belonging to administrators.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18943" target="_blank">CVE-2026-18943</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WPC Admin Columns WordPress plugin before 2.3.4 does not have authorisation checks in one of its AJAX actions, allowing users with a role as low as subscriber to read arbitrary user, post and term metadata, including data belonging to administrators.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18789" data-description="the ezoic wordpress plugin before 2.23.1 does not properly restrict access to some of its content export functionality, allowing unauthenticated attackers to trigger a server-side export of the site's database, including user password hashes and password reset tokens, as well as to persistently change some of its settings.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18789" target="_blank">CVE-2026-18789</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Ezoic WordPress plugin before 2.23.1 does not properly restrict access to some of its content export functionality, allowing unauthenticated attackers to trigger a server-side export of the site's database, including user password hashes and password reset tokens, as well as to persistently change some of its settings.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18474" data-description="the wp directory kit wordpress plugin before 1.5.6 does not sanitise and escape a parameter before using it in a sql statement, leading to a sql injection exploitable by unauthenticated users when a non-default search field type is configured.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18474" target="_blank">CVE-2026-18474</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Directory Kit WordPress plugin before 1.5.6 does not sanitise and escape a parameter before using it in a SQL statement, leading to a SQL injection exploitable by unauthenticated users when a non-default search field type is configured.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18391" data-description="the woocommerce subscriptions wordpress plugin before 9.1.0 does not validate user input before unserializing it on stores with high-performance order storage enabled, leading to a php object injection issue which unauthenticated users can escalate to remote code execution via a gadget chain present in the bundled dependencies.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18391" target="_blank">CVE-2026-18391</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WooCommerce Subscriptions WordPress plugin before 9.1.0 does not validate user input before unserializing it on stores with High-Performance Order Storage enabled, leading to a PHP Object Injection issue which unauthenticated users can escalate to Remote Code Execution via a gadget chain present in the bundled dependencies.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18366" data-description="the events manager  wordpress plugin before 7.4.1 does not properly scope its capability mapping, discarding the access control decisions wordpress already made for unrelated privileged actions, which allows unauthenticated users to change the password of, escalate to administrator, or delete any account whose user id happens to match the id of one of the events manager  wordpress plugin before 7.4.1's own posts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18366" target="_blank">CVE-2026-18366</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Events Manager  WordPress plugin before 7.4.1 does not properly scope its capability mapping, discarding the access control decisions WordPress already made for unrelated privileged actions, which allows unauthenticated users to change the password of, escalate to Administrator, or delete any account whose user ID happens to match the ID of one of the Events Manager  WordPress plugin before 7.4.1's own posts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18230" data-description="the wp directory kit wordpress plugin before 1.5.6 does not sanitise and escape a parameter before using it in a sql statement through one of its authenticated ajax actions, which lacks an authorization check, allowing any authenticated user such as a subscriber to perform sql injection attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18230" target="_blank">CVE-2026-18230</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Directory Kit WordPress plugin before 1.5.6 does not sanitise and escape a parameter before using it in a SQL statement through one of its authenticated AJAX actions, which lacks an authorization check, allowing any authenticated user such as a Subscriber to perform SQL injection attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18057" data-description="the events manager  wordpress plugin before 7.4.1 does not sanitise and escape a user-controlled value before using it in a sql statement, allowing users with a subscriber account and above to perform sql injection attacks and tamper with booking consent records belonging to other people.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18057" target="_blank">CVE-2026-18057</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Events Manager  WordPress plugin before 7.4.1 does not sanitise and escape a user-controlled value before using it in a SQL statement, allowing users with a subscriber account and above to perform SQL injection attacks and tamper with booking consent records belonging to other people.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18049" data-description="the wp photo album plus wordpress plugin before 9.2.07.002 does not perform any capability or nonce check on one of its public endpoint actions and builds an option name from a client-supplied value without restricting it to its own options, allowing unauthenticated users to read the value of other autoloaded options whose names end in a matching suffix.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18049" target="_blank">CVE-2026-18049</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Photo Album Plus WordPress plugin before 9.2.07.002 does not perform any capability or nonce check on one of its public endpoint actions and builds an option name from a client-supplied value without restricting it to its own options, allowing unauthenticated users to read the value of other autoloaded options whose names end in a matching suffix.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18048" data-description="the wp photo album plus wordpress plugin before 9.2.07.002 does not validate a client-controlled value used to build a file path in one of its public endpoint actions, and performs no authorisation check on it, allowing unauthenticated attackers to delete arbitrary zip archives on the server, including ones stored outside the web root.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18048" target="_blank">CVE-2026-18048</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Photo Album Plus WordPress plugin before 9.2.07.002 does not validate a client-controlled value used to build a file path in one of its public endpoint actions, and performs no authorisation check on it, allowing unauthenticated attackers to delete arbitrary ZIP archives on the server, including ones stored outside the web root.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18046" data-description="the cookie consent  wordpress plugin before 0.0.10 does not correctly enforce its intended administrator-only capability check on the rest route that stores its geolocation service license key, so the route falls back to an authentication-only gate, allowing any authenticated user such as a subscriber to overwrite the stored key and disrupt the cookie consent  wordpress plugin before 0.0.10's geolocation-based consent banner targeting.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18046" target="_blank">CVE-2026-18046</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Cookie Consent  WordPress plugin before 0.0.10 does not correctly enforce its intended administrator-only capability check on the REST route that stores its geolocation service license key, so the route falls back to an authentication-only gate, allowing any authenticated user such as a subscriber to overwrite the stored key and disrupt the Cookie Consent  WordPress plugin before 0.0.10's geolocation-based consent banner targeting.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18035" data-description="the user access manager wordpress plugin before 2.3.15 does not apply its access restrictions to rest api requests, allowing unauthenticated attackers to read the content of posts, pages and custom post types that have been restricted to specific user groups.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18035" target="_blank">CVE-2026-18035</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The User Access Manager WordPress plugin before 2.3.15 does not apply its access restrictions to REST API requests, allowing unauthenticated attackers to read the content of posts, pages and custom post types that have been restricted to specific user groups.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-17013" data-description="the wp photo album plus wordpress plugin before 9.2.07.002 does not sanitise and escape a parameter before reflecting it into an inline script block, which could allow unauthenticated attackers to perform reflected cross-site scripting attacks against anyone who is tricked into opening a crafted link to a page displaying one of its galleries.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17013" target="_blank">CVE-2026-17013</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Photo Album Plus WordPress plugin before 9.2.07.002 does not sanitise and escape a parameter before reflecting it into an inline script block, which could allow unauthenticated attackers to perform Reflected Cross-Site Scripting attacks against anyone who is tricked into opening a crafted link to a page displaying one of its galleries.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16977" data-description="the form maker by 10web  wordpress plugin before 1.15.45 does not properly parameterize a user-controlled value that is substituted into a dynamic sql query built for a database-backed choice field, allowing subscriber-level users to perform second-order sql injection.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16977" target="_blank">CVE-2026-16977</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 01:19:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Form Maker by 10Web  WordPress plugin before 1.15.45 does not properly parameterize a user-controlled value that is substituted into a dynamic SQL query built for a database-backed choice field, allowing subscriber-level users to perform second-order SQL injection.</p>
                 </div>
         
             </div>
