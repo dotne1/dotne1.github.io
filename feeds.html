@@ -34,276 +34,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-73432" data-description="vulnerability-lookup contains a server-side request forgery (ssrf) vulnerability in the remote-instance synchronization functionality. remote instance addresses were validated only for basic url syntax before being stored, while the synchronization worker later dereferenced these addresses using requests.get() with automatic redirect handling and without enforcing network-boundary restrictions. 
-
-
-an authenticated administrator with the admin:access permission could configure a remote instance whose address points to an internal, loopback, link-local, or cloud metadata http(s) service. when synchronization is performed, the vulnerability-lookup server would issue the request from its own network context. an attacker could also use a publicly accessible url that redirects to an internal destination, because redirects were previously followed without revalidating the destination.
-
-
-successful exploitation could allow a privileged attacker to probe or interact with services that are accessible from the vulnerability-lookup server but not directly reachable by the attacker, including private network services or cloud instance metadata endpoints. the exact confidentiality, integrity, or availability impact depends on the services reachable from the application server.
-
-
-the patch introduces a shared outbound url policy that restricts remote instances to http(s), rejects non-public ip addresses, resolves hostnames at request time, and manually validates each redirect destination before following it.  the implementation explicitly blocks private, loopback, link-local, multicast, reserved, and unspecified addresses.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73432" target="_blank">CVE-2026-73432</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Vulnerability-Lookup contains a server-side request forgery (SSRF) vulnerability in the remote-instance synchronization functionality. Remote instance addresses were validated only for basic URL syntax before being stored, while the synchronization worker later dereferenced these addresses using requests.get() with automatic redirect handling and without enforcing network-boundary restrictions. 
-
-
-An authenticated administrator with the admin:access permission could configure a remote instance whose address points to an internal, loopback, link-local, or cloud metadata HTTP(S) service. When synchronization is performed, the Vulnerability-Lookup server would issue the request from its own network context. An attacker could also use a publicly accessible URL that redirects to an internal destination, because redirects were previously followed without revalidating the destination.
-
-
-Successful exploitation could allow a privileged attacker to probe or interact with services that are accessible from the Vulnerability-Lookup server but not directly reachable by the attacker, including private network services or cloud instance metadata endpoints. The exact confidentiality, integrity, or availability impact depends on the services reachable from the application server.
-
-
-The patch introduces a shared outbound URL policy that restricts remote instances to HTTP(S), rejects non-public IP addresses, resolves hostnames at request time, and manually validates each redirect destination before following it.  The implementation explicitly blocks private, loopback, link-local, multicast, reserved, and unspecified addresses.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73431" data-description="vulnerability-lookup contains an 
-authentication weakness in its account activation and password-recovery 
-mechanism. activation and recovery links were generated using stateless 
-signed tokens containing only the user's login. although the token 
-signature and age were validated, the application did not track whether a
- token had already been successfully used. as a result, a captured 
-activation or password-recovery link remained valid for the entire 
-configured token_validity_period, even after the associated password had been changed. 
-
-
-an attacker who obtains a valid 
-activation or recovery token could therefore replay it multiple times 
-during its validity period to set a new password and repeatedly take 
-control of the affected account. in addition, tokens were not bound to a
- specific purpose, allowing the same token mechanism to be used across 
-activation and recovery workflows. the patch introduces purpose-bound 
-tokens and a random nonce whose sha-256 digest is stored with the user 
-account. the nonce is invalidated after a successful password change, 
-making tokens single-use, while issuing a new token invalidates any 
-previously issued token.  the password-setting operation now explicitly consumes the token before committing the account change. 
-
-
-successful exploitation requires 
-the attacker to obtain a currently valid activation or recovery link, 
-but does not require knowledge of the victim's existing password or an 
-authenticated session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73431" target="_blank">CVE-2026-73431</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Vulnerability-Lookup contains an 
-authentication weakness in its account activation and password-recovery 
-mechanism. Activation and recovery links were generated using stateless 
-signed tokens containing only the user's login. Although the token 
-signature and age were validated, the application did not track whether a
- token had already been successfully used. As a result, a captured 
-activation or password-recovery link remained valid for the entire 
-configured TOKEN_VALIDITY_PERIOD, even after the associated password had been changed. 
-
-
-An attacker who obtains a valid 
-activation or recovery token could therefore replay it multiple times 
-during its validity period to set a new password and repeatedly take 
-control of the affected account. In addition, tokens were not bound to a
- specific purpose, allowing the same token mechanism to be used across 
-activation and recovery workflows. The patch introduces purpose-bound 
-tokens and a random nonce whose SHA-256 digest is stored with the user 
-account. The nonce is invalidated after a successful password change, 
-making tokens single-use, while issuing a new token invalidates any 
-previously issued token.  The password-setting operation now explicitly consumes the token before committing the account change. 
-
-
-Successful exploitation requires 
-the attacker to obtain a currently valid activation or recovery link, 
-but does not require knowledge of the victim's existing password or an 
-authenticated session.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73405" data-description="an authorization bypass vulnerability in vulnerability-lookup allowed inactive or unconfirmed accounts to subscribe to server-sent events (sse) streams through the /pubsub/subscribe/<topic> endpoint.
-
-
-the token_required decorator used by the pub/sub interface authenticated requests solely by matching the x-api-key header against an existing user api key. unlike the rest api authentication mechanism, it did not verify the account's is_active and is_confirmed state.
-
-
-because the self-registration process issues an api key before account confirmation is completed, an attacker could create an account and immediately use the resulting api key to access pub/sub topics that should only be available to active, confirmed users. this could expose stream events that would otherwise be inaccessible through the rest api, including newly submitted or not-yet-moderated data such as comments.
-
-
-the vulnerability results from inconsistent authorization enforcement between the rest api and the sse streaming interface.
-
-
-the patch corrects the issue by requiring accounts to be both active and confirmed before permitting access to pub/sub streams, bringing the sse authorization boundary in line with the rest api.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73405" target="_blank">CVE-2026-73405</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authorization bypass vulnerability in Vulnerability-Lookup allowed inactive or unconfirmed accounts to subscribe to Server-Sent Events (SSE) streams through the /pubsub/subscribe/<topic> endpoint.
-
-
-The token_required decorator used by the Pub/Sub interface authenticated requests solely by matching the X-API-KEY header against an existing user API key. Unlike the REST API authentication mechanism, it did not verify the account's is_active and is_confirmed state.
-
-
-Because the self-registration process issues an API key before account confirmation is completed, an attacker could create an account and immediately use the resulting API key to access Pub/Sub topics that should only be available to active, confirmed users. This could expose stream events that would otherwise be inaccessible through the REST API, including newly submitted or not-yet-moderated data such as comments.
-
-
-The vulnerability results from inconsistent authorization enforcement between the REST API and the SSE streaming interface.
-
-
-The patch corrects the issue by requiring accounts to be both active and confirmed before permitting access to Pub/Sub streams, bringing the SSE authorization boundary in line with the REST API.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73374" data-description="a stored cross-site scripting (xss) vulnerability existed in vulnerability-lookup in the render_tag_badges jinja filter used to display reference tags associated with vulnerability records.
-
-values from containers.cna.references[].tags[] were directly interpolated into html badge elements and the resulting string was wrapped in markupsafe.markup. because markup marks the generated content as safe, jinja's automatic html escaping was bypassed.
-
-an authenticated user with permissions to create or modify vulnerability records, such as a user holding the vulnerability:create or vulnerability:modify permission, could submit a crafted reference tag through the cna api containing arbitrary html or javascript-capable markup.
-
-the malicious value would subsequently be stored as part of the vulnerability record. when another user visited the corresponding public /cve/<id> or /vuln/<id> page, the crafted tag would be rendered as html in the viewer's browser. this could result in javascript execution in the security context of the vulnerability-lookup application.
-
-successful exploitation could allow an attacker to perform actions in the context of a victim, access information available to the victim's browser session, or modify page content. as the affected vulnerability pages can be accessed publicly, exploitation may affect users who are not authenticated.
-
-the issue was corrected by applying markupsafe.escape() to each reference tag before inserting it into the html badge markup, while retaining markup only for the static html scaffolding.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73374" target="_blank">CVE-2026-73374</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored cross-site scripting (XSS) vulnerability existed in Vulnerability-Lookup in the render_tag_badges Jinja filter used to display reference tags associated with vulnerability records.
-
-Values from containers.cna.references[].tags[] were directly interpolated into HTML badge elements and the resulting string was wrapped in markupsafe.Markup. Because Markup marks the generated content as safe, Jinja's automatic HTML escaping was bypassed.
-
-An authenticated user with permissions to create or modify vulnerability records, such as a user holding the vulnerability:create or vulnerability:modify permission, could submit a crafted reference tag through the CNA API containing arbitrary HTML or JavaScript-capable markup.
-
-The malicious value would subsequently be stored as part of the vulnerability record. When another user visited the corresponding public /cve/<id> or /vuln/<id> page, the crafted tag would be rendered as HTML in the viewer's browser. This could result in JavaScript execution in the security context of the Vulnerability-Lookup application.
-
-Successful exploitation could allow an attacker to perform actions in the context of a victim, access information available to the victim's browser session, or modify page content. As the affected vulnerability pages can be accessed publicly, exploitation may affect users who are not authenticated.
-
-The issue was corrected by applying markupsafe.escape() to each reference tag before inserting it into the HTML badge markup, while retaining Markup only for the static HTML scaffolding.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73291" data-description="seerr is an open-source media request and discovery manager for jellyfin, plex, and emby. prior to version 3.4.0, seerr's imageproxy in server/lib/imageproxy.ts uses the upstream etag and content-type response headers to build a cache filename for the unauthenticated get /avatarproxy/:jellyfinuserid route, allowing a malicious or compromised jellyfin or emby server, or a man-in-the-middle attacker on a plaintext media-server connection, to supply traversal sequences that path.join and fs.writefile normalize outside the cache directory, overwrite /app/dist/index.js or other files, and execute code as the node user after a container restart. this issue is fixed in version 3.4.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73291" target="_blank">CVE-2026-73291</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:33 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73325" data-description="fujitsu research's onecompression library 1.2.0 contains an unsafe deserialization vulnerability that allows attackers to execute arbitrary code by supplying a crafted model.pt checkpoint file, as quantizedmodelloader.load_quantized_model_pt() unconditionally calls torch.load with weights_only=false, invoking python's pickle machinery during deserialization. attackers can embed malicious __reduce__ methods in a crafted model checkpoint to execute arbitrary python code, including system commands, when the library loads the file from a caller-selected model directory.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73325" target="_blank">CVE-2026-73325</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Seerr is an open-source media request and discovery manager for Jellyfin, Plex, and Emby. Prior to version 3.4.0, Seerr's ImageProxy in server/lib/imageproxy.ts uses the upstream ETag and Content-Type response headers to build a cache filename for the unauthenticated GET /avatarproxy/:jellyfinUserId route, allowing a malicious or compromised Jellyfin or Emby server, or a man-in-the-middle attacker on a plaintext media-server connection, to supply traversal sequences that path.join and fs.writeFile normalize outside the cache directory, overwrite /app/dist/index.js or other files, and execute code as the node user after a container restart. This issue is fixed in version 3.4.0.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>Fujitsu Research's OneCompression library 1.2.0 contains an unsafe deserialization vulnerability that allows attackers to execute arbitrary code by supplying a crafted model.pt checkpoint file, as QuantizedModelLoader.load_quantized_model_pt() unconditionally calls torch.load with weights_only=False, invoking Python's pickle machinery during deserialization. Attackers can embed malicious __reduce__ methods in a crafted model checkpoint to execute arbitrary Python code, including system commands, when the library loads the file from a caller-selected model directory.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73290" data-description="rustfs is a distributed object storage system built in rust. prior to 1.0.0-beta.12, an anonymous listobjectversions request in rustfs/src/storage/access.rs that lacks a direct bucket-policy grant falls back to an s3:listbucket check and returns before the policy_allowed path applies deny_anonymous_table_data_plane_if_needed and restrictpublicbuckets, so a bucket that permits anonymous listing can continue exposing version listings after an operator enables the public-access control. the bypass affects get /<bucket>?versions= and can disclose object version metadata even though equivalent getobject requests are denied. this issue is fixed in version 1.0.0-beta.12.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73290" target="_blank">CVE-2026-73290</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>RustFS is a distributed object storage system built in Rust. Prior to 1.0.0-beta.12, an anonymous ListObjectVersions request in rustfs/src/storage/access.rs that lacks a direct bucket-policy grant falls back to an s3:ListBucket check and returns before the policy_allowed path applies deny_anonymous_table_data_plane_if_needed and RestrictPublicBuckets, so a bucket that permits anonymous listing can continue exposing version listings after an operator enables the public-access control. The bypass affects GET /<bucket>?versions= and can disclose object version metadata even though equivalent GetObject requests are denied. This issue is fixed in version 1.0.0-beta.12.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73289" data-description="rustfs is a distributed object storage system built in rust. prior to 1.0.0-beta.12, rustfs evaluates the forallvalues: and foranyvalue: set qualifiers with the negated string operators stringnotequals, stringnotequalsignorecase, stringnotlike, arnnotequals, and arnnotlike using each other's semantics because crates/policy/src/policy/function/string.rs negates the aggregate result after eval or eval_like instead of negating each request-value predicate before quantification. partially overlapping policy and request value sets can therefore make an allow condition grant access to an excluded principal or make a deny guardrail fail, including policies based on jwt:groups and jwt:roles; absent keys also receive the opposite forallvalues: and foranyvalue: behavior. this issue is fixed in version 1.0.0-beta.12.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73289" target="_blank">CVE-2026-73289</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>RustFS is a distributed object storage system built in Rust. Prior to 1.0.0-beta.12, RustFS evaluates the ForAllValues: and ForAnyValue: set qualifiers with the negated string operators StringNotEquals, StringNotEqualsIgnoreCase, StringNotLike, ArnNotEquals, and ArnNotLike using each other's semantics because crates/policy/src/policy/function/string.rs negates the aggregate result after eval or eval_like instead of negating each request-value predicate before quantification. Partially overlapping policy and request value sets can therefore make an Allow condition grant access to an excluded principal or make a Deny guardrail fail, including policies based on jwt:groups and jwt:roles; absent keys also receive the opposite ForAllValues: and ForAnyValue: behavior. This issue is fixed in version 1.0.0-beta.12.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73288" data-description="rustfs is a distributed object storage system built in rust. prior to 1.0.0-rc.1, rustfs object lock enforcement in crates/ecstore/src/bucket/object_lock/objectlock_sys.rs lets check_object_lock_for_deletion, delete_prefix, and lifecycle and scanner sweeps treat confignotfound, unreadable .metadata.bin data, or unparseable metadata as no lock configuration, allowing objects under compliance retention to be deleted or expired. this issue is fixed in version 1.0.0-rc.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73288" target="_blank">CVE-2026-73288</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>RustFS is a distributed object storage system built in Rust. Prior to 1.0.0-rc.1, RustFS Object Lock enforcement in crates/ecstore/src/bucket/object_lock/objectlock_sys.rs lets check_object_lock_for_deletion, delete_prefix, and lifecycle and scanner sweeps treat ConfigNotFound, unreadable .metadata.bin data, or unparseable metadata as no lock configuration, allowing objects under COMPLIANCE retention to be deleted or expired. This issue is fixed in version 1.0.0-rc.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73287" data-description="rustfs is a distributed object storage system built in rust. prior to 1.0.0-beta.12, rustfs handles ftps mkd in ftpsdriver::mkd in crates/protocols/src/ftps/driver.rs by calling storage.create_bucket without authorize_operation for s3action::createbucket, allowing authenticated ftps users denied s3:createbucket to create buckets. this issue is fixed in version 1.0.0-beta.12.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73287" target="_blank">CVE-2026-73287</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>RustFS is a distributed object storage system built in Rust. Prior to 1.0.0-beta.12, RustFS handles FTPS MKD in FtpsDriver::mkd in crates/protocols/src/ftps/driver.rs by calling storage.create_bucket without authorize_operation for S3Action::CreateBucket, allowing authenticated FTPS users denied s3:CreateBucket to create buckets. This issue is fixed in version 1.0.0-beta.12.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73286" data-description="rustfs is a distributed object storage system built in rust. prior to 1.0.0-beta.12, rustfs get_condition_values folds attacker-controlled request headers from headermap into server-derived userid, username, principaltype, groups, versionid, signatureversion, jwt:, and ldap: condition keys, allowing authenticated callers to satisfy identity-based policy conditions. this issue is fixed in version 1.0.0-beta.12.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73286" target="_blank">CVE-2026-73286</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>RustFS is a distributed object storage system built in Rust. Prior to 1.0.0-beta.12, RustFS get_condition_values folds attacker-controlled request headers from HeaderMap into server-derived userid, username, principaltype, groups, versionid, signatureversion, jwt:, and ldap: condition keys, allowing authenticated callers to satisfy identity-based policy conditions. This issue is fixed in version 1.0.0-beta.12.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73285" data-description="rustfs is a distributed object storage system built in rust. from 1.0.0-alpha.64 until 1.0.0-rc.1, rustfs external opa authorization enabled by rustfs_policy_plugin_url in crates/iam/src/sys.rs sets preparediamauth.needs_existing_object_tag incorrectly for preparediammode::opa, causing maybe_merge_object_tag_conditions to omit s3:existingobjecttag/* values and allowing authenticated users to bypass tag-based policy restrictions. this issue is fixed in version 1.0.0-rc.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73285" target="_blank">CVE-2026-73285</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>RustFS is a distributed object storage system built in Rust. From 1.0.0-alpha.64 until 1.0.0-rc.1, RustFS external OPA authorization enabled by RUSTFS_POLICY_PLUGIN_URL in crates/iam/src/sys.rs sets PreparedIamAuth.needs_existing_object_tag incorrectly for PreparedIamMode::Opa, causing maybe_merge_object_tag_conditions to omit s3:ExistingObjectTag/* values and allowing authenticated users to bypass tag-based policy restrictions. This issue is fixed in version 1.0.0-rc.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73284" data-description="rustfs is a distributed object storage system built in rust. rustfs addserviceaccount in rustfs/src/admin/handlers/service_account.rs accepts an attacker-controlled target_user after only checking createserviceaccountadminaction, passes it to new_service_account, and prepare_service_account_auth sets is_owner for the resulting root-parent service account. this issue is fixed in version 1.0.0-beta.11.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73284" target="_blank">CVE-2026-73284</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>RustFS is a distributed object storage system built in Rust. RustFS AddServiceAccount in rustfs/src/admin/handlers/service_account.rs accepts an attacker-controlled target_user after only checking CreateServiceAccountAdminAction, passes it to new_service_account, and prepare_service_account_auth sets is_owner for the resulting root-parent service account. This issue is fixed in version 1.0.0-beta.11.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73265" data-description="rustfs is a distributed object storage system built in rust. rustfs authorizes explicit versionid reads in getobject, copyobject sources, and uploadpartcopy sources with s3:getobject instead of s3:getobjectversion, allowing principals without historical-version permission to disclose known historical object content. this issue is fixed in version 1.0.0-beta.11.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73265" target="_blank">CVE-2026-73265</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>RustFS is a distributed object storage system built in Rust. RustFS authorizes explicit versionId reads in GetObject, CopyObject sources, and UploadPartCopy sources with s3:GetObject instead of s3:GetObjectVersion, allowing principals without historical-version permission to disclose known historical object content. This issue is fixed in version 1.0.0-beta.11.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73264" data-description="prowler is a cloud security platform. prior to 5.33.1, an authenticated user with lighthouse provider configuration access could supply an unvalidated base_url for the openai_compatible provider through post /api/v1/lighthouse/providers and post /api/v1/lighthouse/providers/{id}/connection, causing api/src/backend/tasks/jobs/lighthouse_providers.py to send outbound requests, including the api key in the authorization header, to attacker-controlled or internal endpoints when client.models.list was called. this issue is fixed in version 5.33.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73264" target="_blank">CVE-2026-73264</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>Prowler is a cloud security platform. Prior to 5.33.1, an authenticated user with Lighthouse provider configuration access could supply an unvalidated base_url for the openai_compatible provider through POST /api/v1/lighthouse/providers and POST /api/v1/lighthouse/providers/{id}/connection, causing api/src/backend/tasks/jobs/lighthouse_providers.py to send outbound requests, including the API key in the Authorization header, to attacker-controlled or internal endpoints when client.models.list was called. This issue is fixed in version 5.33.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73263" data-description="prowler is a cloud security platform. prior to 5.36.0, the kubernetes provider connection test accepted kubeconfig_content containing a legacy gcp auth-provider with config.cmd-path and config.cmd-args because kubeconfig_contains_exec_auth in api/src/backend/api/v1/serializers.py checked only exec blocks, and post /api/v1/providers/{id}/connection loaded it through config.load_kube_config_from_dict in prowler/providers/kubernetes/kubernetes_provider.py, causing kubernetes-python commandtokensource.token to run the attacker-supplied command through subprocess.popen on the shared worker. this issue is fixed in version 5.36.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73263" target="_blank">CVE-2026-73263</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73294" data-description="semaphore ui is a web interface for managing devops tools. prior to 2.18.17 and 2.19.5-beta2, repository git_url handling passes an attacker-controlled --upload-pack option to cmdgitclient.getlastremotecommithash through post /api/project/{id}/repositories and scheduled commit-hash polling, allowing a project manager or owner to execute arbitrary os commands in the semaphore server process. this issue is fixed in versions 2.18.17 and 2.19.5-beta2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73294" target="_blank">CVE-2026-73294</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>Prowler is a cloud security platform. Prior to 5.36.0, the Kubernetes provider connection test accepted kubeconfig_content containing a legacy gcp auth-provider with config.cmd-path and config.cmd-args because kubeconfig_contains_exec_auth in api/src/backend/api/v1/serializers.py checked only exec blocks, and POST /api/v1/providers/{id}/connection loaded it through config.load_kube_config_from_dict in prowler/providers/kubernetes/kubernetes_provider.py, causing kubernetes-python CommandTokenSource.token to run the attacker-supplied command through subprocess.Popen on the shared worker. This issue is fixed in version 5.36.0.</p>
+                    <p>Semaphore UI is a web interface for managing DevOps tools. Prior to 2.18.17 and 2.19.5-beta2, repository git_url handling passes an attacker-controlled --upload-pack option to CmdGitClient.GetLastRemoteCommitHash through POST /api/project/{id}/repositories and scheduled commit-hash polling, allowing a project Manager or Owner to execute arbitrary OS commands in the Semaphore server process. This issue is fixed in versions 2.18.17 and 2.19.5-beta2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73262" data-description="prowler is a cloud security platform. prior to 5.37.0, prowler's html output formatter in prowler/lib/outputs/html/html.py inserted finding.resource_tags, assembled by unroll_dict and parse_html_string, into generated reports without html escaping, allowing a cloud principal who can modify a scanned resource tag to store html or javascript that executes when another user opens the report. this issue is fixed in version 5.37.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73262" target="_blank">CVE-2026-73262</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Prowler is a cloud security platform. Prior to 5.37.0, Prowler's HTML output formatter in prowler/lib/outputs/html/html.py inserted finding.resource_tags, assembled by unroll_dict and parse_html_string, into generated reports without HTML escaping, allowing a cloud principal who can modify a scanned resource tag to store HTML or JavaScript that executes when another user opens the report. This issue is fixed in version 5.37.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68760" data-description="an unauthenticated user may bypass authentication under specific cache conditions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68760" target="_blank">CVE-2026-68760</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>An unauthenticated user may bypass authentication under specific cache conditions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68757" data-description="a user with access to a valid saml response may impersonate another user under specific conditions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68757" target="_blank">CVE-2026-68757</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:22 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73293" data-description="semaphore ui is a web interface for managing devops tools.  prior to 2.18.19 and from 2.19.0-alpha3 until 2.19.5-beta5, projectmiddleware and getprojectorglobalrolebyslug allow a project manager to use post /api/project/{id}/roles to create a custom manager role with permission bitmask 15, overriding the built-in manager permissions and granting canupdateproject and canmanageprojectusers owner capabilities. this issue is fixed in versions 2.18.19 and 2.19.5-beta5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73293" target="_blank">CVE-2026-73293</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>A user with access to a valid SAML response may impersonate another user under specific conditions.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Semaphore UI is a web interface for managing DevOps tools.  Prior to 2.18.19 and from 2.19.0-alpha3 until 2.19.5-beta5, ProjectMiddleware and GetProjectOrGlobalRoleBySlug allow a project manager to use POST /api/project/{id}/roles to create a custom manager role with permission bitmask 15, overriding the built-in manager permissions and granting CanUpdateProject and CanManageProjectUsers owner capabilities. This issue is fixed in versions 2.18.19 and 2.19.5-beta5.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-68756" data-description="a party with write access to stored session data may affect jfrog artifactory under specific conditions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68756" target="_blank">CVE-2026-68756</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.6</p>
-                    <p>A party with write access to stored session data may affect JFrog Artifactory under specific conditions.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73292" data-description="semaphore ui is a web interface for managing devops tools. prior to 2.18.21, the /api/users/{id}/password endpoint accepts a cross-site request using the authenticated user's semaphore session cookie without csrf protection or current-password confirmation, allowing an unauthenticated attacker to change an administrator's or another user's password after user interaction. this issue is fixed in version 2.18.21.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73292" target="_blank">CVE-2026-73292</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
+                    <p>Semaphore UI is a web interface for managing DevOps tools. Prior to 2.18.21, the /api/users/{id}/password endpoint accepts a cross-site request using the authenticated user's semaphore session cookie without CSRF protection or current-password confirmation, allowing an unauthenticated attacker to change an administrator's or another user's password after user interaction. This issue is fixed in version 2.18.21.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-68755" data-description="a bundle writer may create misleading release promotion information under specific conditions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68755" target="_blank">CVE-2026-68755</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-12 10:18:22 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-70547" data-description="an authenticated user without repository read permission may access package metadata under specific conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-70547" target="_blank">CVE-2026-70547</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A bundle writer may create misleading release promotion information under specific conditions.</p>
+                    <p>An authenticated user without repository read permission may access package metadata under specific conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-69107" data-description="an unauthenticated user may access restricted artifacts in jfrog artifactory under specific conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-69107" target="_blank">CVE-2026-69107</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>An unauthenticated user may access restricted artifacts in JFrog Artifactory under specific conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-69105" data-description="an unauthenticated attacker may cause untrusted package content to be cached under specific conditions, potentially affecting artifact integrity and availability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-69105" target="_blank">CVE-2026-69105</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>An unauthenticated attacker may cause untrusted package content to be cached under specific conditions, potentially affecting artifact integrity and availability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68971" data-description="apache airflow's asset materialization endpoint (`post /api/v2/assets/{asset_id}/materialize`) and the xcom result check on `wait_dag_run_until_finished` authorized the target dag without its team, unlike every other authorization site. a team-aware auth manager distinguishes a team-scoped dag from a global one by that field -- the keycloak auth manager, for example, checks the `dag` resource instead of `dag:<team>` -- so the team-scoped permission that should gate the request was never consulted. in a deployment running multi-team mode with a team-aware auth manager, an authenticated user in one team could trigger dag runs belonging to another team, supplying their own `dag_run_id` and `conf`, and could read another team's xcom values. deployments using the fab auth manager are unaffected, as it has no multi-team support. users are advised to upgrade to apache-airflow 3.3.1 or later, which resolves the dag's team at both sites.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68971" target="_blank">CVE-2026-68971</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow's asset materialization endpoint (`POST /api/v2/assets/{asset_id}/materialize`) and the XCom result check on `wait_dag_run_until_finished` authorized the target Dag without its team, unlike every other authorization site. A team-aware auth manager distinguishes a team-scoped Dag from a global one by that field -- the Keycloak auth manager, for example, checks the `DAG` resource instead of `DAG:<team>` -- so the team-scoped permission that should gate the request was never consulted. In a deployment running multi-team mode with a team-aware auth manager, an authenticated user in one team could trigger Dag runs belonging to another team, supplying their own `dag_run_id` and `conf`, and could read another team's XCom values. Deployments using the FAB auth manager are unaffected, as it has no multi-team support. Users are advised to upgrade to apache-airflow 3.3.1 or later, which resolves the Dag's team at both sites.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68970" data-description="apache airflow's task sdk did not mask the contents of a variable whose json value is a list, so secrets stored in that shape appeared in cleartext in task logs and in the rendered templates ui. masking was applied only when the deserialized value was a string or a dict; a list at the top level matched neither and was returned unmasked. any authenticated user able to read the logs or rendered templates of a task that references such a variable could recover the values, with no special configuration required. this is the list-shaped counterpart of cve-2026-59244, whose fix covered the dict case only, so deployments that upgraded in response to that advisory remain affected and must upgrade again. users are advised to upgrade to apache-airflow 3.3.1 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68970" target="_blank">CVE-2026-68970</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow's Task SDK did not mask the contents of a Variable whose JSON value is a list, so secrets stored in that shape appeared in cleartext in task logs and in the Rendered Templates UI. Masking was applied only when the deserialized value was a string or a dict; a list at the top level matched neither and was returned unmasked. Any authenticated user able to read the logs or rendered templates of a task that references such a Variable could recover the values, with no special configuration required. This is the list-shaped counterpart of CVE-2026-59244, whose fix covered the dict case only, so deployments that upgraded in response to that advisory remain affected and must upgrade again. Users are advised to upgrade to apache-airflow 3.3.1 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68969" data-description="apache airflow wrote variable values and connection `extra` contents to the audit log in cleartext when they were submitted through the bulk endpoints (`patch /api/v2/variables` and `patch /api/v2/connections`). the audit-log masking recognised only top-level request fields, and a bulk request nests its entities two levels below, so no masking was applied to them. any authenticated user with audit-log read access -- who need not hold variables or connections read at all -- could recover those secrets verbatim, and the connection `extra` copy is stored unencrypted in the log while the connection table encrypts it. the airflow ui's *import variables* action posts to this endpoint, so an ordinary operator import wrote every secret in the file to the log. this is a different code path from cve-2026-50204: that fix shipped in 3.3.0 and covers the single-entity endpoints only, so deployments that upgraded in response to that advisory remain affected and must upgrade again. users are advised to upgrade to apache-airflow 3.3.1 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68969" target="_blank">CVE-2026-68969</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow wrote Variable values and Connection `extra` contents to the audit log in cleartext when they were submitted through the bulk endpoints (`PATCH /api/v2/variables` and `PATCH /api/v2/connections`). The audit-log masking recognised only top-level request fields, and a bulk request nests its entities two levels below, so no masking was applied to them. Any authenticated user with audit-log read access -- who need not hold Variables or Connections read at all -- could recover those secrets verbatim, and the Connection `extra` copy is stored unencrypted in the log while the connection table encrypts it. The Airflow UI's *Import Variables* action posts to this endpoint, so an ordinary operator import wrote every secret in the file to the log. This is a different code path from CVE-2026-50204: that fix shipped in 3.3.0 and covers the single-entity endpoints only, so deployments that upgraded in response to that advisory remain affected and must upgrade again. Users are advised to upgrade to apache-airflow 3.3.1 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68968" data-description="apache airflow's backfill api authorized a request against a dag id supplied by the caller whenever the `backfill_id` path segment failed to parse. the authorization dependency parsed it with `int()` while the route handler parsed it as pydantic's `nonnegativeint`, which accepts values `int()` rejects (`1.0` coerces to `1`); fastapi resolves dependencies before endpoint validation, so the two acted on different dags. an authenticated user holding edit permission on any single dag could therefore read, pause and cancel backfills belonging to any other dag, including moving another dag's queued runs to `failed`. no non-default configuration is required and backfill ids are sequential, so finding a target is trivial. users are advised to upgrade to apache-airflow 3.3.1 or later, which parses the backfill id with the same type the routes declare.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68968" target="_blank">CVE-2026-68968</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow's Backfill API authorized a request against a Dag id supplied by the caller whenever the `backfill_id` path segment failed to parse. The authorization dependency parsed it with `int()` while the route handler parsed it as pydantic's `NonNegativeInt`, which accepts values `int()` rejects (`1.0` coerces to `1`); FastAPI resolves dependencies before endpoint validation, so the two acted on different Dags. An authenticated user holding edit permission on any single Dag could therefore read, pause and cancel backfills belonging to any other Dag, including moving another Dag's queued runs to `failed`. No non-default configuration is required and backfill ids are sequential, so finding a target is trivial. Users are advised to upgrade to apache-airflow 3.3.1 or later, which parses the backfill id with the same type the routes declare.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68759" data-description="a holder of a valid integration credential may impersonate other users under specific conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68759" target="_blank">CVE-2026-68759</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
+                    <p>A holder of a valid integration credential may impersonate other users under specific conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68758" data-description="a low-privileged authenticated user may access restricted support information under specific conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68758" target="_blank">CVE-2026-68758</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>A low-privileged authenticated user may access restricted support information under specific conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-68076" data-description="apache airflow's environment-variable secrets backend resolved a team-scoped connection or variable from the wrong team's scope. the guard meant to prevent this only ran when no team scope was supplied, and its pattern could not match a team name containing an underscore, which team names are allowed to contain. when the guard did not apply, the lookup fell through to an unconditional global read that resolved the stored `airflow_conn__<team>___<id>` variable regardless of which team asked. in multi-team mode an authenticated user of one team could therefore have `post /api/v2/connections/test` resolve another team's connection and authenticate outward with that team's credentials; the endpoint uses the credentials rather than returning them. exploitation requires `[core] multi_team` enabled, `[core] test_connection` set to `enabled` (it ships `disabled`), team-scoped secrets provisioned as environment variables in the api-server process, and knowledge of the encoded identifier. redirecting the test at an attacker-controlled host is separately blocked. users are advised to upgrade to apache-airflow 3.3.1 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68076" target="_blank">CVE-2026-68076</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow's environment-variable secrets backend resolved a team-scoped Connection or Variable from the wrong team's scope. The guard meant to prevent this only ran when no team scope was supplied, and its pattern could not match a team name containing an underscore, which team names are allowed to contain. When the guard did not apply, the lookup fell through to an unconditional global read that resolved the stored `AIRFLOW_CONN__<TEAM>___<ID>` variable regardless of which team asked. In multi-team mode an authenticated user of one team could therefore have `POST /api/v2/connections/test` resolve another team's Connection and authenticate outward with that team's credentials; the endpoint uses the credentials rather than returning them. Exploitation requires `[core] multi_team` enabled, `[core] test_connection` set to `Enabled` (it ships `Disabled`), team-scoped secrets provisioned as environment variables in the API-server process, and knowledge of the encoded identifier. Redirecting the test at an attacker-controlled host is separately blocked. Users are advised to upgrade to apache-airflow 3.3.1 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-67587" data-description="apache airflow's task sdk rebuilt a `callback` object from serialized data by re-running its constructor, which imports the module named by the stored callback path. because `synccallback` is itself an airflow class it passes the default `allowed_deserialization_classes` allow-list, so tightening that setting does not help. a dag author — who controls a task instance's `next_kwargs` through the task execution api — can therefore cause an arbitrary module to be imported inside the scheduler process, when the scheduler's `awaiting_input` timeout sweep deserializes that value. no non-default configuration is required; the sweep runs unconditionally. versions before 3.3.0 are not affected: the class existed, but the scheduler sweep that reaches it did not. this is a separate code path from cve-2026-58076 and cve-2026-67260, which cover different gadgets reaching deserialization — applying either of those fixes does not address this one. users are advised to upgrade to apache-airflow 3.3.1 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67587" target="_blank">CVE-2026-67587</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow's Task SDK rebuilt a `Callback` object from serialized data by re-running its constructor, which imports the module named by the stored callback path. Because `SyncCallback` is itself an Airflow class it passes the default `allowed_deserialization_classes` allow-list, so tightening that setting does not help. A Dag author — who controls a task instance's `next_kwargs` through the task execution API — can therefore cause an arbitrary module to be imported inside the scheduler process, when the scheduler's `awaiting_input` timeout sweep deserializes that value. No non-default configuration is required; the sweep runs unconditionally. Versions before 3.3.0 are not affected: the class existed, but the scheduler sweep that reaches it did not. This is a separate code path from CVE-2026-58076 and CVE-2026-67260, which cover different gadgets reaching deserialization — applying either of those fixes does not address this one. Users are advised to upgrade to apache-airflow 3.3.1 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-67260" data-description="apache airflow 3.3.0 moved human-in-the-loop tasks from the triggerer to a new `awaiting_input` task state swept by the scheduler. that sweep deserializes the task instance's `next_kwargs` without an allow-list, so a dag author — who controls that value through the task execution api — can cause an arbitrary module import and object instantiation inside the scheduler process, or terminate the scheduler job. no non-default configuration is required: the sweep runs unconditionally every 15 seconds, and the default `allowed_deserialization_classes` setting does not cover this code path. versions before 3.3.0 are not affected, because human-in-the-loop tasks deferred onto the triggerer instead. this is a different code path from cve-2026-58076, which covers the same unguarded exception-node deserialization reached elsewhere — deployments that applied that fix must upgrade for this issue as well. users are advised to upgrade to apache-airflow 3.3.1 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67260" target="_blank">CVE-2026-67260</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache Airflow 3.3.0 moved human-in-the-loop tasks from the triggerer to a new `awaiting_input` task state swept by the scheduler. That sweep deserializes the task instance's `next_kwargs` without an allow-list, so a Dag author — who controls that value through the task execution API — can cause an arbitrary module import and object instantiation inside the scheduler process, or terminate the scheduler job. No non-default configuration is required: the sweep runs unconditionally every 15 seconds, and the default `allowed_deserialization_classes` setting does not cover this code path. Versions before 3.3.0 are not affected, because human-in-the-loop tasks deferred onto the triggerer instead. This is a different code path from CVE-2026-58076, which covers the same unguarded exception-node deserialization reached elsewhere — deployments that applied that fix must upgrade for this issue as well. Users are advised to upgrade to apache-airflow 3.3.1 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66384" data-description="an authenticated user may write data outside the intended docker cache path under specific remote-repository conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66384" target="_blank">CVE-2026-66384</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>An authenticated user may write data outside the intended Docker cache path under specific remote-repository conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66016" data-description="under specific self-hosted helm configurations, generated tls private keys may be retained in rendered manifests accessible to highly privileged local users.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66016" target="_blank">CVE-2026-66016</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
+                    <p>Under specific self-hosted Helm configurations, generated TLS private keys may be retained in rendered manifests accessible to highly privileged local users.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-65941" data-description="in whatsup gold versions released before 2026.0.2, an unauthenticated remote attacker with network access to the affected service can execute arbitrary code in the context of the iis application service account.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65941" target="_blank">CVE-2026-65941</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>In WhatsUp Gold versions released before 2026.0.2, an unauthenticated remote attacker with network access to the affected service can execute arbitrary code in the context of the IIS application service account.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-65940" data-description="in whatsup gold versions released before 2026.0.2, a privileged attacker can write arbitrary files to a web-accessible location on the host server.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65940" target="_blank">CVE-2026-65940</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-12 11:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
+                    <p>In WhatsUp Gold versions released before 2026.0.2, a privileged attacker can write arbitrary files to a web-accessible location on the host server.</p>
                 </div>
         
             </div>
