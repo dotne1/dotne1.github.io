@@ -34,6 +34,22 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-19893" data-description="a vulnerability was identified in d-link dir-842 2.01.b04. this impacts an unknown function of the file /etc/vsftpd.conf of the component vsftpd. such manipulation leads to incorrect default permissions. it is possible to launch the attack remotely. a high complexity level is associated with this attack. the exploitability is said to be difficult.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19893" target="_blank">CVE-2026-19893</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-15 07:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
+                    <p>A vulnerability was identified in D-Link DIR-842 2.01.B04. This impacts an unknown function of the file /etc/vsftpd.conf of the component vsftpd. Such manipulation leads to incorrect default permissions. It is possible to launch the attack remotely. A high complexity level is associated with this attack. The exploitability is said to be difficult.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12248" data-description="the wpml multilingual cms plugin for wordpress is vulnerable to sql injection via the 'sorting' parameter in all versions up to, and including, 4.9.5 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for authenticated attackers, with translator-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12248" target="_blank">CVE-2026-12248</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-15 07:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The WPML Multilingual CMS plugin for WordPress is vulnerable to SQL Injection via the 'sorting' parameter in all versions up to, and including, 4.9.5 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with translator-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-73635" data-description="allocation of resources without limits or throttling vulnerability in apache struts. when no fixed locale is configured, the locale used for localized-text lookups is taken from the incoming request, allowing an unauthenticated remote client to cause the framework's internal localized-text caches to grow without bound and exhaust the java heap, denying service to other users. applications that configure a fixed locale are not affected.
 
 this issue affects apache struts: from 2.0.0 through 2.3.37, from 2.5.0 through 2.5.33, from 6.0.0 through 6.10.0, from 7.0.0 through 7.2.1.
@@ -482,118 +498,6 @@ rxrpc: Fix leak of released call in recvmsg(MSG_PEEK)
 Fix rxrpc_recvmsg() to also drop the ref it holds on an already-released
 call if MSG_PEEK is in force (the function holds a ref on the call
 irrespective of whether MSG_PEEK is specified or not).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74431" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-rxrpc: fix potential infinite loop in rxrpc_recvmsg()
-
-fix the wait in rxrpc_recvmsg() also take check the oob queue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74431" target="_blank">CVE-2026-74431</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-15 01:22:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-rxrpc: Fix potential infinite loop in rxrpc_recvmsg()
-
-Fix the wait in rxrpc_recvmsg() also take check the oob queue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74430" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-rxrpc: fix ackall packet handling
-
-rxrpc_input_ackall() accepts ackall packets without checking whether the
-call is in a state that can legitimately have outstanding transmit buffers.
-a forged ackall can therefore reach a new service call in
-rxrpc_call_server_recv_request before any reply packets have been queued.
-
-in that state call->tx_top is zero and call->tx_queue is null, so
-rxrpc_rotate_tx_window() dereferences a null txqueue and triggers a
-null-pointer dereference.
-
-fix the handling of ackall packets by the following means:
-
- (1) add two new call states: rxrpc_call_client_pre_send which indicates
-     that the client call is connected, but nothing has been transmitted as
-     yet; and rxrpc_call_client_await_ack, which indicates that everything
-     has been transmitted at least once, but we're now waiting for the
-     stuff remaining in the tx buffer to be ack'd (retransmissions may
-     still happen).
-
-     the rxrpc_call_client_pre_send state is set when the call is assigned
-     a channel and transitions to rxrpc_call_client_send_request when the
-     first packet is transmitted.
-
-     rxrpc_call_client_await_reply is then narrowed in scope to indicate
-     that all tx packets have been ack'd and we're now waiting for the
-     reply to be received.
-
- (2) as per wyatt feng's original patch[1], the ackall handler then checks
-     that the call state is one in which there might be stuff in the tx
-     buffer to ack, but now this includes await_ack rather than
-     await_reply.  ackall packets are ignored if received in the wrong
-     state.
-
-     note that unlike wyatt feng's patch, it's no longer necessary to check
-     to see if the tx buffer exists as this the state set now covers this.
-
- (3) make the ackall handler use call->tx_transmitted rather than
-     call->tx_top as the former is explicitly the highest packet seq number
-     transmitted, whereas the latter has a looser definition.
-
-thanks to jeffrey altman for a description of the history of the ackall
-packet[1].">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74430" target="_blank">CVE-2026-74430</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-15 01:22:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-rxrpc: Fix ACKALL packet handling
-
-rxrpc_input_ackall() accepts ACKALL packets without checking whether the
-call is in a state that can legitimately have outstanding transmit buffers.
-A forged ACKALL can therefore reach a new service call in
-RXRPC_CALL_SERVER_RECV_REQUEST before any reply packets have been queued.
-
-In that state call->tx_top is zero and call->tx_queue is NULL, so
-rxrpc_rotate_tx_window() dereferences a NULL txqueue and triggers a
-null-pointer dereference.
-
-Fix the handling of ACKALL packets by the following means:
-
- (1) Add two new call states: RXRPC_CALL_CLIENT_PRE_SEND which indicates
-     that the client call is connected, but nothing has been transmitted as
-     yet; and RXRPC_CALL_CLIENT_AWAIT_ACK, which indicates that everything
-     has been transmitted at least once, but we're now waiting for the
-     stuff remaining in the Tx buffer to be ACK'd (retransmissions may
-     still happen).
-
-     The RXRPC_CALL_CLIENT_PRE_SEND state is set when the call is assigned
-     a channel and transitions to RXRPC_CALL_CLIENT_SEND_REQUEST when the
-     first packet is transmitted.
-
-     RXRPC_CALL_CLIENT_AWAIT_REPLY is then narrowed in scope to indicate
-     that all Tx packets have been ACK'd and we're now waiting for the
-     reply to be received.
-
- (2) As per Wyatt Feng's original patch[1], the ACKALL handler then checks
-     that the call state is one in which there might be stuff in the Tx
-     buffer to ACK, but now this includes AWAIT_ACK rather than
-     AWAIT_REPLY.  ACKALL packets are ignored if received in the wrong
-     state.
-
-     Note that unlike Wyatt Feng's patch, it's no longer necessary to check
-     to see if the Tx buffer exists as this the state set now covers this.
-
- (3) Make the ACKALL handler use call->tx_transmitted rather than
-     call->tx_top as the former is explicitly the highest packet seq number
-     transmitted, whereas the latter has a looser definition.
-
-Thanks to Jeffrey Altman for a description of the history of the ACKALL
-packet[1].</p>
                 </div>
         
             </div>
