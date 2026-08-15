@@ -34,6 +34,22 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-19900" data-description="a vulnerability was identified in lb-link x-pro 1.0.22-20231206. the impacted element is an unknown function of the file /etc/shadow. the manipulation leads to hard-coded credentials. it is possible to initiate the attack remotely. a high degree of complexity is needed for the attack. the exploitability is regarded as difficult. the exploit is publicly available and might be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19900" target="_blank">CVE-2026-19900</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-15 12:16:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>A vulnerability was identified in LB-LINK X-PRO 1.0.22-20231206. The impacted element is an unknown function of the file /etc/shadow. The manipulation leads to hard-coded credentials. It is possible to initiate the attack remotely. A high degree of complexity is needed for the attack. The exploitability is regarded as difficult. The exploit is publicly available and might be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19899" data-description="a vulnerability was determined in sourcecodester class and exam timetabling system 1.0. the affected element is an unknown function of the file /edit_teacher.php. executing a manipulation of the argument id can lead to sql injection. the attack may be performed from remote. the exploit has been publicly disclosed and may be utilized.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19899" target="_blank">CVE-2026-19899</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-15 12:16:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability was determined in SourceCodester Class and Exam Timetabling System 1.0. The affected element is an unknown function of the file /edit_teacher.php. Executing a manipulation of the argument ID can lead to sql injection. The attack may be performed from remote. The exploit has been publicly disclosed and may be utilized.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-19898" data-description="a vulnerability was found in victoriametrics up to 1.146.0. impacted is the function requesthandler of the file app/vmauth/main.go of the component vmauth authentication endpoint. performing a manipulation results in improper restriction of excessive authentication attempts. the attack is possible to be carried out remotely. the complexity of an attack is rather high. the exploitability is considered difficult. the exploit has been made public and could be used. upgrading to version 1.147.0 is recommended to address this issue. the patch is named 119ba0fb5be8024d50c5ba946599b2e69e8803ea. upgrading the affected component is recommended.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19898" target="_blank">CVE-2026-19898</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-15 11:16:39 CDT</p>
@@ -782,192 +798,6 @@ rejected.
    handle_softirqs (kernel/softirq.c:622)
    run_ksoftirqd (kernel/softirq.c:1076)
    ...</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74568" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-kvm: arm64: vgic: fix race between lpi release and re-registration
-
-fix a potential race between decrementing an lpi's reference count and
-evicting that structure from the lpi xarray.
-
-lpi structures are maintained in the vgic lpi xarray (dist->lpi_xa).
-when the reference count of an lpi structure drops to zero,
-vgic_release_lpi_locked() removes the structure from the xarray and
-frees it under the xarray lock.
-
-however, the release of an lpi can race with a concurrent lpi
-re-registration with the same intid via vgic_add_lpi() on another cpu,
-since the reference count drop and the xarray eviction are not performed
-in a single atomic step. this can happen e.g. if the guest issues a
-discard while the lpi is still referenced from a vcpu's active-pending
-list (ap_list), and the same intid is re-mapped via mapti.
-
-particularly, vgic_release_lpi_locked() is called from two distinct
-paths: direct release via vgic_put_irq(), and deferred release via
-vgic_release_deleted_lpis(). during direct release, the issue can result
-in deleting a newly registered lpi from the xarray:
-
-  cpu0 (releasing lpi)                    cpu1 (adding new lpi)
-  ====================                    =====================
-  vgic_put_irq()
-      __vgic_put_irq()
-          refcount_dec_and_test()
-                                          vgic_add_lpi()
-                                              xa_lock_irqsave()
-                                              old_irq = xa_load(.., intid)
-                                              vgic_try_get_irq_ref(old_irq) == false
-                        new irq inserted -->  __xa_store(.., intid, ..)
-                                              xa_unlock_irqrestore()
-  xa_lock_irqsave();
-  vgic_release_lpi_locked()
-      __xa_erase(.., irq->intid)   <-- bug: new irq is erased
-      kfree_rcu(old_irq)
-
-during the deferred release path, the old irq can be leaked:
-
-  cpu0 (releasing lpi)                    cpu1 (adding new lpi)
-  ====================                    =====================
-  vgic_put_irq_norelease()
-      __vgic_put_irq()
-          refcount_dec_and_test()
-      irq->pending_release = true
-                                          vgic_add_lpi()
-                                              xa_lock_irqsave()
-                                              old_irq = xa_load(.., intid)
-                                              vgic_try_get_irq_ref(oldirq) == false
-                 bug: old irq overwritten --> __xa_store(.., intid, ..)
-                                              xa_unlock_irqrestore()
-
-  vgic_release_deleted_lpis()
-      xa_lock_irqsave()
-      xa_for_each() { .. } <-- old irq with pending_release = true
-                               is gone, so it cannot be released
-
-to fix the direct release path, move the reference count drop inside
-the xarray lock, making sure that vgic_add_lpi() never encounters the
-to-be-released lpi.
-
-in the deferred release path, the refcount drop must happen under a raw
-spinlock, so the xarray lock cannot be grabbed, and the same solution
-does not work. instead, update vgic_add_lpi(), so that if it evicts
-an lpi from the xarray, it takes on the responsibility of freeing it.
-consequently, an lpi may now be freed concurrently after a deferred
-release drops the refcount, so accessing the pending_release field is no
-longer safe from use-after-free. delete all uses of the flag, and update
-vgic_release_deleted_lpis() to identify orphaned lpis purely based on
-their refcount.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74568" target="_blank">CVE-2026-74568</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-15 08:18:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-KVM: arm64: vgic: Fix race between LPI release and re-registration
-
-Fix a potential race between decrementing an LPI's reference count and
-evicting that structure from the LPI xarray.
-
-LPI structures are maintained in the VGIC LPI xarray (dist->lpi_xa).
-When the reference count of an LPI structure drops to zero,
-vgic_release_lpi_locked() removes the structure from the xarray and
-frees it under the xarray lock.
-
-However, the release of an LPI can race with a concurrent LPI
-re-registration with the same INTID via vgic_add_lpi() on another CPU,
-since the reference count drop and the xarray eviction are not performed
-in a single atomic step. This can happen e.g. if the guest issues a
-DISCARD while the LPI is still referenced from a vCPU's active-pending
-list (ap_list), and the same INTID is re-mapped via MAPTI.
-
-Particularly, vgic_release_lpi_locked() is called from two distinct
-paths: direct release via vgic_put_irq(), and deferred release via
-vgic_release_deleted_lpis(). During direct release, the issue can result
-in deleting a newly registered LPI from the xarray:
-
-  CPU0 (Releasing LPI)                    CPU1 (Adding new LPI)
-  ====================                    =====================
-  vgic_put_irq()
-      __vgic_put_irq()
-          refcount_dec_and_test()
-                                          vgic_add_lpi()
-                                              xa_lock_irqsave()
-                                              old_irq = xa_load(.., intid)
-                                              vgic_try_get_irq_ref(old_irq) == false
-                        new IRQ inserted -->  __xa_store(.., intid, ..)
-                                              xa_unlock_irqrestore()
-  xa_lock_irqsave();
-  vgic_release_lpi_locked()
-      __xa_erase(.., irq->intid)   <-- BUG: new IRQ is erased
-      kfree_rcu(old_irq)
-
-During the deferred release path, the old IRQ can be leaked:
-
-  CPU0 (Releasing LPI)                    CPU1 (Adding new LPI)
-  ====================                    =====================
-  vgic_put_irq_norelease()
-      __vgic_put_irq()
-          refcount_dec_and_test()
-      irq->pending_release = true
-                                          vgic_add_lpi()
-                                              xa_lock_irqsave()
-                                              old_irq = xa_load(.., intid)
-                                              vgic_try_get_irq_ref(oldirq) == false
-                 BUG: old IRQ overwritten --> __xa_store(.., intid, ..)
-                                              xa_unlock_irqrestore()
-
-  vgic_release_deleted_lpis()
-      xa_lock_irqsave()
-      xa_for_each() { .. } <-- old IRQ with pending_release = true
-                               is gone, so it cannot be released
-
-To fix the direct release path, move the reference count drop inside
-the xarray lock, making sure that vgic_add_lpi() never encounters the
-to-be-released LPI.
-
-In the deferred release path, the refcount drop must happen under a raw
-spinlock, so the xarray lock cannot be grabbed, and the same solution
-does not work. Instead, update vgic_add_lpi(), so that if it evicts
-an LPI from the xarray, it takes on the responsibility of freeing it.
-Consequently, an LPI may now be freed concurrently after a deferred
-release drops the refcount, so accessing the pending_release field is no
-longer safe from use-after-free. Delete all uses of the flag, and update
-vgic_release_deleted_lpis() to identify orphaned LPIs purely based on
-their refcount.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74567" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-keys: fix out-of-bounds read in keyring_get_key_chunk()
-
-for description-level chunks keyring_get_key_chunk() advances the read
-pointer by level * sizeof(long) past the inline prefix but only
-bounds-checks the prefix, so a long enough key description is read past
-its kmemdup(desc, desc_len + 1) allocation.  compute the full byte
-offset and bounds-check the description against it before reading.
-
-the walk only reaches a description-level chunk when two keys collide
-through the hash, x, type and domain_tag chunks, so this is reached from
-an unprivileged add_key(2) with a crafted pair of same-type keys whose
-index hashes collide; kasan reports a slab-out-of-bounds read.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74567" target="_blank">CVE-2026-74567</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-15 08:18:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-keys: fix out-of-bounds read in keyring_get_key_chunk()
-
-For description-level chunks keyring_get_key_chunk() advances the read
-pointer by level * sizeof(long) past the inline prefix but only
-bounds-checks the prefix, so a long enough key description is read past
-its kmemdup(desc, desc_len + 1) allocation.  Compute the full byte
-offset and bounds-check the description against it before reading.
-
-The walk only reaches a description-level chunk when two keys collide
-through the hash, x, type and domain_tag chunks, so this is reached from
-an unprivileged add_key(2) with a crafted pair of same-type keys whose
-index hashes collide; KASAN reports a slab-out-of-bounds read.</p>
                 </div>
         
             </div>
