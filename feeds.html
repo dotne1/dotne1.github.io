@@ -34,6 +34,92 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-74578" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+crypto: algif_skcipher - force synchronous processing on trees without ctx->state
+
+the aio/async path in skcipher_recvmsg() passes the socket-wide ctx->iv
+directly into the skcipher request. after io_submit() the socket lock is
+dropped and the request is processed asynchronously, so a concurrent
+sendmsg(alg_set_iv) can overwrite ctx->iv and make the in-flight request
+run under an attacker-controlled iv. for ctr/stream modes this is
+iv/keystream reuse and lets an unprivileged user recover the plaintext of
+a concurrent operation.
+
+snapshotting ctx->iv into per-request storage for the async path is not
+sufficient. for ciphers with statesize == 0 - which includes cbc and ctr -
+the msg_more inter-chunk iv chaining is carried solely by the in-place
+req->iv writeback, which a snapshot redirects into per-request memory that
+af_alg_free_resources() releases on completion, silently producing wrong
+output. writing the iv back from the completion callback instead is not
+possible either: that would require lock_sock() there, but the callback can
+run in softirq/atomic context, so it must not sleep.
+
+make the operation synchronous instead, which removes both the iv race and
+any writeback race. this is equivalent to the upstream resolution, commit
+fcc77d33a34c ("net: remove support for aio on sockets"), which removed the
+aio socket path across net/ entirely and so produces the same end state for
+this file. this patch deviates from that commit deliberately: rather than
+removing aio socket support tree-wide, which would be far too invasive for
+stable, it removes only the aio branch in crypto/algif_skcipher.c.
+io_submit() now completes synchronously; af_alg async is rarely used in
+practice.
+
+the -eiocbqueued check in skcipher_recvmsg() is now dead but harmless,
+and is left alone to keep the fix minimal.
+
+tested on 6.6.y: attacker iv injection dropped from 2296/200000 to 0/200000
+after the change; msg_more chunked ctr output bit-identical to single-shot.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74578" target="_blank">CVE-2026-74578</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 04:16:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+crypto: algif_skcipher - force synchronous processing on trees without ctx->state
+
+The AIO/async path in skcipher_recvmsg() passes the socket-wide ctx->iv
+directly into the skcipher request. After io_submit() the socket lock is
+dropped and the request is processed asynchronously, so a concurrent
+sendmsg(ALG_SET_IV) can overwrite ctx->iv and make the in-flight request
+run under an attacker-controlled IV. For CTR/stream modes this is
+IV/keystream reuse and lets an unprivileged user recover the plaintext of
+a concurrent operation.
+
+Snapshotting ctx->iv into per-request storage for the async path is not
+sufficient. For ciphers with statesize == 0 - which includes cbc and ctr -
+the MSG_MORE inter-chunk IV chaining is carried solely by the in-place
+req->iv writeback, which a snapshot redirects into per-request memory that
+af_alg_free_resources() releases on completion, silently producing wrong
+output. Writing the IV back from the completion callback instead is not
+possible either: that would require lock_sock() there, but the callback can
+run in softirq/atomic context, so it must not sleep.
+
+Make the operation synchronous instead, which removes both the IV race and
+any writeback race. This is equivalent to the upstream resolution, commit
+fcc77d33a34c ("net: Remove support for AIO on sockets"), which removed the
+AIO socket path across net/ entirely and so produces the same end state for
+this file. This patch deviates from that commit deliberately: rather than
+removing AIO socket support tree-wide, which would be far too invasive for
+stable, it removes only the AIO branch in crypto/algif_skcipher.c.
+io_submit() now completes synchronously; AF_ALG async is rarely used in
+practice.
+
+The -EIOCBQUEUED check in skcipher_recvmsg() is now dead but harmless,
+and is left alone to keep the fix minimal.
+
+Tested on 6.6.y: attacker IV injection dropped from 2296/200000 to 0/200000
+after the change; MSG_MORE chunked CTR output bit-identical to single-shot.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2024-13784" data-description="the contact form, survey, quiz & popup form builder – arforms plugin for wordpress is vulnerable to php object injection in all versions up to, and including, 1.8.5 via deserialization of untrusted input from form submissions. this makes it possible for unauthenticated attackers to inject a php object. no known pop chain is present in the vulnerable software, which means this vulnerability has no impact unless another plugin or theme containing a pop chain is installed on the site. if a pop chain is present via an additional plugin or theme installed on the target system, it may allow the attacker to perform actions like delete arbitrary files, retrieve sensitive data, or execute code depending on the pop chain present.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-13784" target="_blank">CVE-2024-13784</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 04:16:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>The Contact Form, Survey, Quiz & Popup Form Builder – ARForms plugin for WordPress is vulnerable to PHP Object Injection in all versions up to, and including, 1.8.5 via deserialization of untrusted input from form submissions. This makes it possible for unauthenticated attackers to inject a PHP Object. No known POP chain is present in the vulnerable software, which means this vulnerability has no impact unless another plugin or theme containing a POP chain is installed on the site. If a POP chain is present via an additional plugin or theme installed on the target system, it may allow the attacker to perform actions like delete arbitrary files, retrieve sensitive data, or execute code depending on the POP chain present.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-2497" data-description="the gallery by bestwebsoft plugin for wordpress is vulnerable to sql injection via the '_gallery_order_{post_id}' parameter array keys in all versions up to, and including, 4.7.9. this is due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. the `gllr_save_postdata()` function stores unsanitized array keys from `$_post` directly into post meta, which are later used in sql queries without prepared statements. this makes it possible for authenticated attackers, with editor-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2497" target="_blank">CVE-2026-2497</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-16 02:16:31 CDT</p>
@@ -186,22 +272,6 @@ this affects default single-site installations. sites running multisite, or defi
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>The Masteriyo LMS  WordPress plugin before 2.3.3 does not sanitise and escape a quiz field before outputting it back in a page, and grants its instructor role the ability to store unfiltered HTML, allowing such users to perform Stored Cross-Site Scripting attacks against any visitor of the affected page, including administrators.
 This affects default single-site installations. Sites running multisite, or defining DISALLOW_UNFILTERED_HTML, are not affected as the capability is not granted there.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19711" data-description="the premium packages  wordpress plugin before 7.0.7 does not validate a withdrawal request against the requesting user's actual earned balance, allowing any authenticated user, including a subscriber with no sales at all, to submit a payout request for an arbitrary amount, which an administrator may then approve and pay out.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19711" target="_blank">CVE-2026-19711</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Premium Packages  WordPress plugin before 7.0.7 does not validate a withdrawal request against the requesting user's actual earned balance, allowing any authenticated user, including a subscriber with no sales at all, to submit a payout request for an arbitrary amount, which an administrator may then approve and pay out.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19613" data-description="the ecs  wordpress plugin before 4.3.10 does not perform ownership or post-status checks when one of its dynamic repeater data sources reads custom field values from a user-supplied post identifier, allowing users with a contributor-level account or above to read custom field values and post metadata from posts they do not own, including private and draft ones.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19613" target="_blank">CVE-2026-19613</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The ECS  WordPress plugin before 4.3.10 does not perform ownership or post-status checks when one of its dynamic repeater data sources reads custom field values from a user-supplied post identifier, allowing users with a contributor-level account or above to read custom field values and post metadata from posts they do not own, including private and draft ones.</p>
                 </div>
         
             </div>
