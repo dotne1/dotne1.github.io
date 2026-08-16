@@ -34,242 +34,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-74251" data-description="joomla extension - phoca.cz -  unauthenticated sql injection via attribute filter in phoca cart 5.0.0-6.1.16 - the a[] (attribute) and s[] (specification) get array parameters on phoca cart's public shop items page are concatenated raw into sql where clauses without parameterization or escaping. an unauthenticated attacker can inject arbitrary sql through these parameters, enabling full database extraction via time-based blind techniques.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74251" target="_blank">CVE-2026-74251</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 08:16:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Joomla Extension - phoca.cz -  Unauthenticated SQL injection via attribute filter in Phoca Cart 5.0.0-6.1.16 - The a[] (attribute) and s[] (specification) GET array parameters on Phoca Cart's public shop items page are concatenated raw into SQL WHERE clauses without parameterization or escaping. An unauthenticated attacker can inject arbitrary SQL through these parameters, enabling full database extraction via time-based blind techniques.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74797" data-description="opentofu versions before 1.11.4 contain a denial of service vulnerability in the tofu init command when processing maliciously-crafted .zip archives for provider or module packages. attackers can cause excessive cpu usage by controlling .zip archive content served during dependency installation, degrading system performance and preventing timely completion of the init process.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74797" target="_blank">CVE-2026-74797</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
+                    <p>OpenTofu versions before 1.11.4 contain a denial of service vulnerability in the tofu init command when processing maliciously-crafted .zip archives for provider or module packages. Attackers can cause excessive CPU usage by controlling .zip archive content served during dependency installation, degrading system performance and preventing timely completion of the init process.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-74578" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-crypto: algif_skcipher - force synchronous processing on trees without ctx->state
-
-the aio/async path in skcipher_recvmsg() passes the socket-wide ctx->iv
-directly into the skcipher request. after io_submit() the socket lock is
-dropped and the request is processed asynchronously, so a concurrent
-sendmsg(alg_set_iv) can overwrite ctx->iv and make the in-flight request
-run under an attacker-controlled iv. for ctr/stream modes this is
-iv/keystream reuse and lets an unprivileged user recover the plaintext of
-a concurrent operation.
-
-snapshotting ctx->iv into per-request storage for the async path is not
-sufficient. for ciphers with statesize == 0 - which includes cbc and ctr -
-the msg_more inter-chunk iv chaining is carried solely by the in-place
-req->iv writeback, which a snapshot redirects into per-request memory that
-af_alg_free_resources() releases on completion, silently producing wrong
-output. writing the iv back from the completion callback instead is not
-possible either: that would require lock_sock() there, but the callback can
-run in softirq/atomic context, so it must not sleep.
-
-make the operation synchronous instead, which removes both the iv race and
-any writeback race. this is equivalent to the upstream resolution, commit
-fcc77d33a34c ("net: remove support for aio on sockets"), which removed the
-aio socket path across net/ entirely and so produces the same end state for
-this file. this patch deviates from that commit deliberately: rather than
-removing aio socket support tree-wide, which would be far too invasive for
-stable, it removes only the aio branch in crypto/algif_skcipher.c.
-io_submit() now completes synchronously; af_alg async is rarely used in
-practice.
-
-the -eiocbqueued check in skcipher_recvmsg() is now dead but harmless,
-and is left alone to keep the fix minimal.
-
-tested on 6.6.y: attacker iv injection dropped from 2296/200000 to 0/200000
-after the change; msg_more chunked ctr output bit-identical to single-shot.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74578" target="_blank">CVE-2026-74578</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 04:16:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-crypto: algif_skcipher - force synchronous processing on trees without ctx->state
-
-The AIO/async path in skcipher_recvmsg() passes the socket-wide ctx->iv
-directly into the skcipher request. After io_submit() the socket lock is
-dropped and the request is processed asynchronously, so a concurrent
-sendmsg(ALG_SET_IV) can overwrite ctx->iv and make the in-flight request
-run under an attacker-controlled IV. For CTR/stream modes this is
-IV/keystream reuse and lets an unprivileged user recover the plaintext of
-a concurrent operation.
-
-Snapshotting ctx->iv into per-request storage for the async path is not
-sufficient. For ciphers with statesize == 0 - which includes cbc and ctr -
-the MSG_MORE inter-chunk IV chaining is carried solely by the in-place
-req->iv writeback, which a snapshot redirects into per-request memory that
-af_alg_free_resources() releases on completion, silently producing wrong
-output. Writing the IV back from the completion callback instead is not
-possible either: that would require lock_sock() there, but the callback can
-run in softirq/atomic context, so it must not sleep.
-
-Make the operation synchronous instead, which removes both the IV race and
-any writeback race. This is equivalent to the upstream resolution, commit
-fcc77d33a34c ("net: Remove support for AIO on sockets"), which removed the
-AIO socket path across net/ entirely and so produces the same end state for
-this file. This patch deviates from that commit deliberately: rather than
-removing AIO socket support tree-wide, which would be far too invasive for
-stable, it removes only the AIO branch in crypto/algif_skcipher.c.
-io_submit() now completes synchronously; AF_ALG async is rarely used in
-practice.
-
-The -EIOCBQUEUED check in skcipher_recvmsg() is now dead but harmless,
-and is left alone to keep the fix minimal.
-
-Tested on 6.6.y: attacker IV injection dropped from 2296/200000 to 0/200000
-after the change; MSG_MORE chunked CTR output bit-identical to single-shot.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2024-13784" data-description="the contact form, survey, quiz & popup form builder – arforms plugin for wordpress is vulnerable to php object injection in all versions up to, and including, 1.8.5 via deserialization of untrusted input from form submissions. this makes it possible for unauthenticated attackers to inject a php object. no known pop chain is present in the vulnerable software, which means this vulnerability has no impact unless another plugin or theme containing a pop chain is installed on the site. if a pop chain is present via an additional plugin or theme installed on the target system, it may allow the attacker to perform actions like delete arbitrary files, retrieve sensitive data, or execute code depending on the pop chain present.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-13784" target="_blank">CVE-2024-13784</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 04:16:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>The Contact Form, Survey, Quiz & Popup Form Builder – ARForms plugin for WordPress is vulnerable to PHP Object Injection in all versions up to, and including, 1.8.5 via deserialization of untrusted input from form submissions. This makes it possible for unauthenticated attackers to inject a PHP Object. No known POP chain is present in the vulnerable software, which means this vulnerability has no impact unless another plugin or theme containing a POP chain is installed on the site. If a POP chain is present via an additional plugin or theme installed on the target system, it may allow the attacker to perform actions like delete arbitrary files, retrieve sensitive data, or execute code depending on the POP chain present.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-2497" data-description="the gallery by bestwebsoft plugin for wordpress is vulnerable to sql injection via the '_gallery_order_{post_id}' parameter array keys in all versions up to, and including, 4.7.9. this is due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. the `gllr_save_postdata()` function stores unsanitized array keys from `$_post` directly into post meta, which are later used in sql queries without prepared statements. this makes it possible for authenticated attackers, with editor-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2497" target="_blank">CVE-2026-2497</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Gallery by BestWebSoft plugin for WordPress is vulnerable to SQL Injection via the '_gallery_order_{post_id}' parameter array keys in all versions up to, and including, 4.7.9. This is due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. The `gllr_save_postdata()` function stores unsanitized array keys from `$_POST` directly into post meta, which are later used in SQL queries without prepared statements. This makes it possible for authenticated attackers, with Editor-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-2357" data-description="the bold page builder plugin for wordpress is vulnerable to stored cross-site scripting via the plugin's 'bt_bb_shortcode' shortcode in all versions up to, and including, 5.6.8 due to insufficient input sanitization and output escaping on user supplied attributes. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2357" target="_blank">CVE-2026-2357</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74796" data-description="opentofu before 1.11.7 fails to validate existing symlinks in the provider cache directory during initialization. attackers can place a malicious symlink in a trusted working directory to cause tofu init to write provider package contents to arbitrary filesystem locations outside the working tree.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74796" target="_blank">CVE-2026-74796</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The Bold Page Builder plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the plugin's 'bt_bb_shortcode' shortcode in all versions up to, and including, 5.6.8 due to insufficient input sanitization and output escaping on user supplied attributes. This makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>OpenTofu before 1.11.7 fails to validate existing symlinks in the provider cache directory during initialization. Attackers can place a malicious symlink in a trusted working directory to cause tofu init to write provider package contents to arbitrary filesystem locations outside the working tree.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-18347" data-description="the kirki – freeform page builder, website builder & customizer plugin for wordpress is vulnerable to authorization bypass in all versions up to, and including, 6.1.1. this is due to the plugin not properly verifying that a user is authorized to perform an action. this makes it possible for authenticated attackers, with custom-level access and above, to read arbitrary user metadata and sensitive user record fields — including email address, assigned roles, registration date, and any user_meta values — belonging to any wordpress user including administrators, by supplying a target user id with a user-type context to the frontend collection endpoint.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18347" target="_blank">CVE-2026-18347</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>The Kirki – Freeform Page Builder, Website Builder & Customizer plugin for WordPress is vulnerable to authorization bypass in all versions up to, and including, 6.1.1. This is due to the plugin not properly verifying that a user is authorized to perform an action. This makes it possible for authenticated attackers, with custom-level access and above, to read arbitrary user metadata and sensitive user record fields — including email address, assigned roles, registration date, and any user_meta values — belonging to any WordPress user including administrators, by supplying a target user ID with a user-type context to the frontend collection endpoint.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-17608" data-description="the wp compress – instant performance & speed optimization plugin for wordpress is vulnerable to cross-site request forgery in all versions up to, and including, 7.10.09. this is due to missing or incorrect nonce validation on the (top-level template code) function. this makes it possible for unauthenticated attackers to delete arbitrary wordpress options, including critical ones such as siteurl, home, active_plugins, template, and stylesheet, causing site outage or a full plugin and theme reset via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17608" target="_blank">CVE-2026-17608</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>The WP Compress – Instant Performance & Speed Optimization plugin for WordPress is vulnerable to Cross-Site Request Forgery in all versions up to, and including, 7.10.09. This is due to missing or incorrect nonce validation on the (top-level template code) function. This makes it possible for unauthenticated attackers to delete arbitrary WordPress options, including critical ones such as siteurl, home, active_plugins, template, and stylesheet, causing site outage or a full plugin and theme reset via a forged request granted they can trick a site administrator into performing an action such as clicking on a link.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-17604" data-description="the kirki – freeform page builder, website builder & customizer plugin for wordpress is vulnerable to directory traversal in all versions up to, and including, 6.1.1 via the 'data' parameter parameter. this makes it possible for authenticated attackers, with editor-level access and above, to read the contents of arbitrary files on the server, which can contain sensitive information. the intended strpos()-based guard against leaving the uploads directory is bypassed by crafting a url that includes the uploads base path as a substring while embedding directory traversal sequences, such as /wp-content/uploads/../../wp-config.php.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17604" target="_blank">CVE-2026-17604</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>The Kirki – Freeform Page Builder, Website Builder & Customizer plugin for WordPress is vulnerable to Directory Traversal in all versions up to, and including, 6.1.1 via the 'data' parameter parameter. This makes it possible for authenticated attackers, with editor-level access and above, to read the contents of arbitrary files on the server, which can contain sensitive information. The intended strpos()-based guard against leaving the uploads directory is bypassed by crafting a URL that includes the uploads base path as a substring while embedding directory traversal sequences, such as /wp-content/uploads/../../wp-config.php.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-17087" data-description="the wp travel engine – tour booking plugin – tour operator software plugin for wordpress is vulnerable to authorization bypass in all versions up to, and including, 6.8.4. this is due to the plugin not properly verifying that a user is authorized to perform an action. this makes it possible for unauthenticated attackers to view private booking billing details — including the victim customer's first name, last name, email address, street address, city, and phone number — rendered as default values in checkout form fields by binding an arbitrary booking id to the attacker's session. the only access control on the endpoint is a frontend nonce that is publicly emitted to all visitors via the wtel10n global on trip pages, meaning it provides csrf protection only and does not restrict unauthenticated access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17087" target="_blank">CVE-2026-17087</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74795" data-description="scriban before 6.6.0 contains an uncontrolled recursion vulnerability in its recursive-descent parser. the parser does not enforce a default expression depth limit (the expressiondepthlimit property in parseroptions defaults to null/disabled), so an attacker who controls template input can supply a deeply nested template (e.g., thousands of nested parentheses or blocks) that exhausts thread stack space and raises a stackoverflowexception. because a stackoverflowexception cannot be caught in .net, this causes immediate, unrecoverable termination of the hosting process, resulting in a denial of service. applications that process untrusted or user-supplied templates can be exploited remotely without authentication.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74795" target="_blank">CVE-2026-74795</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The WP Travel Engine – Tour Booking Plugin – Tour Operator Software plugin for WordPress is vulnerable to authorization bypass in all versions up to, and including, 6.8.4. This is due to the plugin not properly verifying that a user is authorized to perform an action. This makes it possible for unauthenticated attackers to view private booking billing details — including the victim customer's first name, last name, email address, street address, city, and phone number — rendered as default values in checkout form fields by binding an arbitrary booking ID to the attacker's session. The only access control on the endpoint is a frontend nonce that is publicly emitted to all visitors via the wteL10n global on trip pages, meaning it provides CSRF protection only and does not restrict unauthenticated access.</p>
+                    <p>Scriban before 6.6.0 contains an uncontrolled recursion vulnerability in its recursive-descent parser. The parser does not enforce a default expression depth limit (the ExpressionDepthLimit property in ParserOptions defaults to null/disabled), so an attacker who controls template input can supply a deeply nested template (e.g., thousands of nested parentheses or blocks) that exhausts thread stack space and raises a StackOverflowException. Because a StackOverflowException cannot be caught in .NET, this causes immediate, unrecoverable termination of the hosting process, resulting in a denial of service. Applications that process untrusted or user-supplied templates can be exploited remotely without authentication.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-13424" data-description="the online scheduling and appointment booking system – bookly plugin for wordpress is vulnerable to stored cross-site scripting via bookly_speed_up_update_addons ajax action in all versions up to, and including, 27.7 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. the injection point is the bookly_speed_up_update_addons ajax action, which is registered as wp_ajax_nopriv_* and therefore reachable without authentication; the payload is stored verbatim in the bookly_log.details column when a request is submitted without a valid signature, and executes when an administrator later views the diagnostics → logs page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13424" target="_blank">CVE-2026-13424</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74794" data-description="scriban before 6.6.0 contains an infinite recursion vulnerability in object rendering when the objectrecursionlimit property defaults to unlimited. attackers can supply circular reference objects to the template context, exhausting stack space and triggering an uncatchable stackoverflowexception that terminates the hosting process.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74794" target="_blank">CVE-2026-74794</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Online Scheduling and Appointment Booking System – Bookly plugin for WordPress is vulnerable to Stored Cross-Site Scripting via bookly_speed_up_update_addons AJAX action in all versions up to, and including, 27.7 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. The injection point is the bookly_speed_up_update_addons AJAX action, which is registered as wp_ajax_nopriv_* and therefore reachable without authentication; the payload is stored verbatim in the bookly_log.details column when a request is submitted without a valid signature, and executes when an administrator later views the Diagnostics → Logs page.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban before 6.6.0 contains an infinite recursion vulnerability in object rendering when the ObjectRecursionLimit property defaults to unlimited. Attackers can supply circular reference objects to the template context, exhausting stack space and triggering an uncatchable StackOverflowException that terminates the hosting process.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-12998" data-description="the forminator forms – contact form, payment form & custom form builder plugin for wordpress is vulnerable to insecure direct object reference in all versions up to, and including, 1.55.0.2 via the 'draft' parameter due to missing validation on a user controlled key. this makes it possible for unauthenticated attackers to enumerate sequential integer entry ids via the 'draft' parameter and read other users' saved draft form data, including names, email addresses, phone numbers, addresses, and free-form message content. this is only exploitable on forms that have the 'save and continue' feature enabled.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12998" target="_blank">CVE-2026-12998</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Forminator Forms – Contact Form, Payment Form & Custom Form Builder plugin for WordPress is vulnerable to Insecure Direct Object Reference in all versions up to, and including, 1.55.0.2 via the 'draft' parameter due to missing validation on a user controlled key. This makes it possible for unauthenticated attackers to enumerate sequential integer entry IDs via the 'draft' parameter and read other users' saved draft form data, including names, email addresses, phone numbers, addresses, and free-form message content. This is only exploitable on forms that have the 'Save and Continue' feature enabled.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-10734" data-description="the infility global plugin for wordpress is vulnerable to stored cross-site scripting via /cf7_record log endpoint in all versions up to, and including, 2.15.21 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. the /cf7_records viewer is accessible to any authenticated user including those with subscriber-level access, meaning the injected payload executes for any logged-in user who visits the records page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-10734" target="_blank">CVE-2026-10734</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 02:16:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74792" data-description="scriban before 7.0.0 (affected versions <= 6.6.0) contains a stack overflow vulnerability in nested array initializer parsing. deeply nested array initializers recurse through a path (parsearrayinitializer → parseexpression → parsearrayinitializer) that is not covered by the expressiondepthlimit counter added in the fix for ghsa-wgh7-7m3c-fx25. an attacker who can supply untrusted input to template.parse can trigger an uncatchable stackoverflowexception that immediately terminates the process, even with the default expressiondepthlimit enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74792" target="_blank">CVE-2026-74792</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Infility Global plugin for WordPress is vulnerable to Stored Cross-Site Scripting via /cf7_record Log Endpoint in all versions up to, and including, 2.15.21 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. The /cf7_records viewer is accessible to any authenticated user including those with Subscriber-level access, meaning the injected payload executes for any logged-in user who visits the records page.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban before 7.0.0 (affected versions <= 6.6.0) contains a stack overflow vulnerability in nested array initializer parsing. Deeply nested array initializers recurse through a path (ParseArrayInitializer → ParseExpression → ParseArrayInitializer) that is not covered by the ExpressionDepthLimit counter added in the fix for GHSA-wgh7-7m3c-fx25. An attacker who can supply untrusted input to Template.Parse can trigger an uncatchable StackOverflowException that immediately terminates the process, even with the default ExpressionDepthLimit enabled.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-9767" data-description="the the school management – education & learning erp plugin for wordpress is vulnerable to generic sql injection via 'order[0][dir]' parameter in all versions up to, and including, 5.4 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for authenticated attackers, with custom-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database. this vulnerability is replicated across seven or more ajax handlers including wlsm-fetch-staff-classes, wlsm-fetch-notices, wlsm-fetch-subjects, wlsm-fetch-inquiries, wlsm-fetch-staff-employee, and wlsm-fetch-payments, and the missing nonce verification on several of these handlers also enables csrf-chained exploitation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-9767" target="_blank">CVE-2026-9767</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:55 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74791" data-description="scriban before 7.0.0 fails to clear the cachedtemplates dictionary when templatecontext.reset() is called, allowing cached templates to persist across reused contexts. attackers can exploit request-dependent itemplateloader implementations to access previously authorized template content from earlier renders without triggering templateloader.load() again.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74791" target="_blank">CVE-2026-74791</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.6</p>
+                    <p>Scriban before 7.0.0 fails to clear the CachedTemplates dictionary when TemplateContext.Reset() is called, allowing cached templates to persist across reused contexts. Attackers can exploit request-dependent ITemplateLoader implementations to access previously authorized template content from earlier renders without triggering TemplateLoader.Load() again.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74790" data-description="scriban before 7.0.0 caches typedobjectaccessor by type only without considering memberfilter changes, allowing reused templatecontext instances to expose members that should be hidden. attackers can access filtered properties and fields by reusing a templatecontext after tightening its memberfilter, bypassing sandbox policies across requests or tenants.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74790" target="_blank">CVE-2026-74790</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>Scriban before 7.0.0 caches TypedObjectAccessor by Type only without considering MemberFilter changes, allowing reused TemplateContext instances to expose members that should be hidden. Attackers can access filtered properties and fields by reusing a TemplateContext after tightening its MemberFilter, bypassing sandbox policies across requests or tenants.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74789" data-description="scriban before 7.0.0 (affected <= 6.6.0) applies its looplimit constraint only to script loop statements and not to expensive iteration performed inside built-in operators and functions. as a result, a single expression such as {{ 1..1000000 | array.size }} — or a memory-amplification expression such as {{ 'a' * 200000000 }} — can force large cpu or memory consumption even when looplimit is configured to a very small value, resulting in denial of service. applications that render attacker-controlled templates and rely on looplimit for safe execution are affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74789" target="_blank">CVE-2026-74789</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban before 7.0.0 (affected <= 6.6.0) applies its LoopLimit constraint only to script loop statements and not to expensive iteration performed inside built-in operators and functions. As a result, a single expression such as {{ 1..1000000 | array.size }} — or a memory-amplification expression such as {{ 'A' * 200000000 }} — can force large CPU or memory consumption even when LoopLimit is configured to a very small value, resulting in denial of service. Applications that render attacker-controlled templates and rely on LoopLimit for safe execution are affected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74788" data-description="scriban before 7.0.0 (affected versions <= 6.6.0) contains an uncontrolled memory allocation vulnerability in the string.pad_left and string.pad_right template functions, which perform no validation on the width parameter before delegating to .net's string.padleft/padright. when an application exposes scriban to untrusted template input, an attacker can supply an arbitrarily large width value (e.g., 500,000,000) to trigger ~1gb memory allocations in a single call, resulting in outofmemoryexception and denial of service. the templatecontext.limittostring limit does not prevent this because it is only enforced after the string has been fully allocated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74788" target="_blank">CVE-2026-74788</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban before 7.0.0 (affected versions <= 6.6.0) contains an uncontrolled memory allocation vulnerability in the string.pad_left and string.pad_right template functions, which perform no validation on the width parameter before delegating to .NET's String.PadLeft/PadRight. When an application exposes Scriban to untrusted template input, an attacker can supply an arbitrarily large width value (e.g., 500,000,000) to trigger ~1GB memory allocations in a single call, resulting in OutOfMemoryException and denial of service. The TemplateContext.LimitToString limit does not prevent this because it is only enforced after the string has been fully allocated.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74787" data-description="scriban before 7.0.0 contains an uncontrolled recursion vulnerability in the object.to_json builtin function that lacks depth limits and circular reference detection. attackers can craft templates with self-referencing objects to trigger unbounded recursion, causing a stackoverflowexception that fatally terminates the hosting .net process.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74787" target="_blank">CVE-2026-74787</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban before 7.0.0 contains an uncontrolled recursion vulnerability in the object.to_json builtin function that lacks depth limits and circular reference detection. Attackers can craft templates with self-referencing objects to trigger unbounded recursion, causing a StackOverflowException that fatally terminates the hosting .NET process.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74786" data-description="scriban before 7.0.0 (affected versions <= 6.6.0) contains a denial-of-service vulnerability in which the limittostring safety limit (default 1mb) can be bypassed because objecttostring resets the per-call length counter (_currenttostringlength) on every top-level call and stringbuilderoutput enforces no cumulative output-size limit. an attacker who can supply a template can render a near-limit string repeatedly in a loop, allocating approximately 1gb of memory and causing an out-of-memory condition that crashes the host application.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74786" target="_blank">CVE-2026-74786</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>The The School Management – Education & Learning ERP plugin for WordPress is vulnerable to generic SQL Injection via 'order[0][dir]' Parameter in all versions up to, and including, 5.4 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with custom-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. This vulnerability is replicated across seven or more AJAX handlers including wlsm-fetch-staff-classes, wlsm-fetch-notices, wlsm-fetch-subjects, wlsm-fetch-inquiries, wlsm-fetch-staff-employee, and wlsm-fetch-payments, and the missing nonce verification on several of these handlers also enables CSRF-chained exploitation.</p>
+                    <p>Scriban before 7.0.0 (affected versions <= 6.6.0) contains a denial-of-service vulnerability in which the LimitToString safety limit (default 1MB) can be bypassed because ObjectToString resets the per-call length counter (_currentToStringLength) on every top-level call and StringBuilderOutput enforces no cumulative output-size limit. An attacker who can supply a template can render a near-limit string repeatedly in a loop, allocating approximately 1GB of memory and causing an out-of-memory condition that crashes the host application.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-2283" data-description="the user login history plugin for wordpress is vulnerable to sql injection via the 'blog_id' parameter in all versions up to, and including, 2.1.7. this is due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for authenticated attackers, with administrator-level access and above, to append additional sql queries into already existing queries that can be used to extract sensitive information from the database. this is only exploitable on multisite installations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-2283" target="_blank">CVE-2026-2283</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74785" data-description="scriban before 7.0.0 contains three distinct denial-of-service vulnerabilities in expression evaluation that bypass existing safety controls through unbounded string multiplication, uncontrolled biginteger shift operations, and looplimit bypass via range enumeration in builtin functions. attackers who can supply templates can cause out-of-memory exceptions or cpu exhaustion, typically terminating the entire host process.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74785" target="_blank">CVE-2026-74785</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>The User Login History plugin for WordPress is vulnerable to SQL Injection via the 'blog_id' parameter in all versions up to, and including, 2.1.7. This is due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for authenticated attackers, with Administrator-level access and above, to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. This is only exploitable on multisite installations.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Scriban before 7.0.0 contains three distinct denial-of-service vulnerabilities in expression evaluation that bypass existing safety controls through unbounded string multiplication, uncontrolled BigInteger shift operations, and LoopLimit bypass via range enumeration in builtin functions. Attackers who can supply templates can cause out-of-memory exceptions or CPU exhaustion, typically terminating the entire host process.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-19934" data-description="a vulnerability has been found in itsourcecode hospital management system 1.0. this impacts an unknown function of the file /vieworder.php. the manipulation of the argument delid leads to sql injection. the attack is possible to be carried out remotely. the exploit has been disclosed to the public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19934" target="_blank">CVE-2026-19934</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-74784" data-description="scriban before 7.2.0 contains a denial of service vulnerability in the array.insert_at function that allocates unbounded null entries without respecting looplimit or limittostring constraints. attackers can supply a large index parameter to trigger outofmemoryexception and crash the host process in under a second.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74784" target="_blank">CVE-2026-74784</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Scriban before 7.2.0 contains a denial of service vulnerability in the array.insert_at function that allocates unbounded null entries without respecting LoopLimit or LimitToString constraints. Attackers can supply a large index parameter to trigger OutOfMemoryException and crash the host process in under a second.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74783" data-description="scriban versions 6.6.0 through 7.2.0 contain a non-enforcing expressiondepthlimit guard that fails to stop recursive descent parsing of deeply nested expressions. attackers can supply templates with deeply nested parentheses, array initializers, object initializers, or unary operators to trigger an uncatchable stackoverflowexception that immediately terminates the host process.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74783" target="_blank">CVE-2026-74783</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban versions 6.6.0 through 7.2.0 contain a non-enforcing ExpressionDepthLimit guard that fails to stop recursive descent parsing of deeply nested expressions. Attackers can supply templates with deeply nested parentheses, array initializers, object initializers, or unary operators to trigger an uncatchable StackOverflowException that immediately terminates the host process.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-73062" data-description="scriban versions 3.0.0 through 7.2.0 contain a denial of service vulnerability in the array multiplication operator that allocates memory without enforcing looplimit or overflow-safe arithmetic checks. attackers can supply a large integer multiplier in a template to force multi-gigabyte memory allocations, causing resource exhaustion and availability degradation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73062" target="_blank">CVE-2026-73062</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban versions 3.0.0 through 7.2.0 contain a denial of service vulnerability in the array multiplication operator that allocates memory without enforcing LoopLimit or overflow-safe arithmetic checks. Attackers can supply a large integer multiplier in a template to force multi-gigabyte memory allocations, causing resource exhaustion and availability degradation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-73061" data-description="scriban before 7.2.2 contains an access-modifier bypass vulnerability in typedobjectaccessor that allows template code to write clr object properties without setter-visibility checks. attackers can modify properties with private, internal, or init-only setters, and perform mass assignment on public-setter properties, permanently altering live host objects after template rendering.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73061" target="_blank">CVE-2026-73061</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>Scriban before 7.2.2 contains an access-modifier bypass vulnerability in TypedObjectAccessor that allows template code to write CLR object properties without setter-visibility checks. Attackers can modify properties with private, internal, or init-only setters, and perform mass assignment on public-setter properties, permanently altering live host objects after template rendering.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-73060" data-description="scriban versions from 3.0.0 through 7.2.5 contain a denial of service vulnerability in the scriptrange.multiply operator that bypasses looplimit when the left operand is a lazy sequence. attackers can supply templates with array multiplication on lazy sequences to execute billions of uncharged iterations, pinning cpu cores and exhausting garbage collection resources even when looplimit is set to 1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73060" target="_blank">CVE-2026-73060</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Scriban versions from 3.0.0 through 7.2.5 contain a denial of service vulnerability in the ScriptRange.Multiply operator that bypasses LoopLimit when the left operand is a lazy sequence. Attackers can supply templates with array multiplication on lazy sequences to execute billions of uncharged iterations, pinning CPU cores and exhausting garbage collection resources even when LoopLimit is set to 1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-73059" data-description="stoatchat before 0.15.0 contains a permission bypass vulnerability in the message_fetch route that checks only viewchannel permission instead of requiring readmessagehistory. attackers with viewchannel access but readmessagehistory denied can retrieve individual message content by id, bypassing the intended history restriction enforced by bulk read routes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73059" target="_blank">CVE-2026-73059</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:55 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability has been found in itsourcecode Hospital Management System 1.0. This impacts an unknown function of the file /vieworder.php. The manipulation of the argument delid leads to sql injection. The attack is possible to be carried out remotely. The exploit has been disclosed to the public and may be used.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>stoatchat before 0.15.0 contains a permission bypass vulnerability in the message_fetch route that checks only ViewChannel permission instead of requiring ReadMessageHistory. Attackers with ViewChannel access but ReadMessageHistory denied can retrieve individual message content by ID, bypassing the intended history restriction enforced by bulk read routes.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-19728" data-description="the extra product options builder for woocommerce wordpress plugin before 1.2.176 does not verify that the requester is entitled to a customer-uploaded file before serving it, allowing unauthenticated users who obtain a file's stored name to retrieve it.
-
-the extra product options builder for woocommerce wordpress plugin before 1.2.176 writes a deny-all rule into its upload directories, so the disclosure only crosses a boundary on web servers that honour it, such as apache. where it is ignored, as on a default nginx setup, the same files are already served at their direct url and the endpoint exposes nothing further.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19728" target="_blank">CVE-2026-19728</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Extra Product Options Builder for WooCommerce WordPress plugin before 1.2.176 does not verify that the requester is entitled to a customer-uploaded file before serving it, allowing unauthenticated users who obtain a file's stored name to retrieve it.
-
-The Extra Product Options Builder for WooCommerce WordPress plugin before 1.2.176 writes a deny-all rule into its upload directories, so the disclosure only crosses a boundary on web servers that honour it, such as Apache. Where it is ignored, as on a default nginx setup, the same files are already served at their direct URL and the endpoint exposes nothing further.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73058" data-description="stoatchat versions before 0.15.0 fail to block the ipv6 unspecified address (::) in the ssrf blocklist, allowing unauthenticated attackers to bypass protections via the /proxy and /embed endpoints. attackers can craft requests using ipv6 literal syntax to access services on the loopback interface and retrieve sensitive internal content.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73058" target="_blank">CVE-2026-73058</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.8</p>
+                    <p>stoatchat versions before 0.15.0 fail to block the IPv6 unspecified address (::) in the SSRF blocklist, allowing unauthenticated attackers to bypass protections via the /proxy and /embed endpoints. Attackers can craft requests using IPv6 literal syntax to access services on the loopback interface and retrieve sensitive internal content.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-19726" data-description="the visualizer  wordpress plugin before 4.0.7 does not properly authorise access to the configuration of its charts, allowing users with the contributor role and above to read the full configuration of any chart on the site, including charts the visualizer  wordpress plugin before 4.0.7's own interface denies them, and to retrieve every chart's configuration in a single request. the disclosed configuration can include the credentials of a remote data source a chart reads from.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19726" target="_blank">CVE-2026-19726</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Visualizer  WordPress plugin before 4.0.7 does not properly authorise access to the configuration of its charts, allowing users with the Contributor role and above to read the full configuration of any chart on the site, including charts the Visualizer  WordPress plugin before 4.0.7's own interface denies them, and to retrieve every chart's configuration in a single request. The disclosed configuration can include the credentials of a remote data source a chart reads from.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19725" data-description="the wpvivid — backup, migration & staging wordpress plugin before 0.9.131 does not sanitise a value taken from an unauthenticated request before using it to build a log file path, allowing an attacker holding a site to site transfer key to create a log file in any existing writable directory of the site, including the web root.
-
-the file name always carries a fixed suffix and the contents are always the wpvivid — backup, migration & staging wordpress plugin before 0.9.131's own log header, so only the location of the file is attacker controlled.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19725" target="_blank">CVE-2026-19725</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The WPvivid — Backup, Migration & Staging WordPress plugin before 0.9.131 does not sanitise a value taken from an unauthenticated request before using it to build a log file path, allowing an attacker holding a site to site transfer key to create a log file in any existing writable directory of the site, including the web root.
-
-The file name always carries a fixed suffix and the contents are always the WPvivid — Backup, Migration & Staging WordPress plugin before 0.9.131's own log header, so only the location of the file is attacker controlled.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19717" data-description="the catfolders document gallery & pdf library wordpress plugin before 2.0.7 does not have authorisation checks in some of its rest api endpoints, allowing unauthenticated users to retrieve the title, type, size and url of the media attachments assigned to any of its folders, including folders which are not published in any gallery on the site.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19717" target="_blank">CVE-2026-19717</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The CatFolders Document Gallery & PDF Library WordPress plugin before 2.0.7 does not have authorisation checks in some of its REST API endpoints, allowing unauthenticated users to retrieve the title, type, size and URL of the media attachments assigned to any of its folders, including folders which are not published in any gallery on the site.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19714" data-description="the simple jwt login  wordpress plugin before 3.6.8 does not validate the audience of the google identity tokens it accepts, allowing unauthenticated users to authenticate as any user whose email address such a token carries, up to and including an administrator. every site with the simple jwt login  wordpress plugin before 3.6.8's google sign-in enabled is affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19714" target="_blank">CVE-2026-19714</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-16 01:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Simple JWT Login  WordPress plugin before 3.6.8 does not validate the audience of the Google identity tokens it accepts, allowing unauthenticated users to authenticate as any user whose email address such a token carries, up to and including an administrator. Every site with the Simple JWT Login  WordPress plugin before 3.6.8's Google sign-in enabled is affected.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73057" data-description="stoatchat before 0.15.0 fails to validate svg viewbox dimensions in the proxy endpoint, allowing attackers to cause denial of service by memory exhaustion. attackers can host malicious svgs with extremely large width and height values and trigger concurrent requests to exhaust available memory across proxy replicas.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73057" target="_blank">CVE-2026-73057</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-16 09:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>stoatchat before 0.15.0 fails to validate SVG viewBox dimensions in the proxy endpoint, allowing attackers to cause denial of service by memory exhaustion. Attackers can host malicious SVGs with extremely large width and height values and trigger concurrent requests to exhaust available memory across proxy replicas.</p>
                 </div>
         
             </div>
