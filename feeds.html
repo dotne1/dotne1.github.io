@@ -34,6 +34,148 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-77769" data-description="the report.list procedure in packages/trpc/src/routers/report.ts accepted a projectid and a dashboardid and returned getreportsbydashboardid(dashboardid). the enforceaccess middleware in packages/trpc/src/trpc.ts verified membership for the supplied projectid, but nothing verified that the supplied dashboardid belonged to that project, and getreportsbydashboardid in packages/db/src/services/reports.service.ts selects reports by dashboardid alone with no project scoping. an authenticated user could therefore pair a projectid from their own organization, which satisfies the middleware, with a dashboardid belonging to another organization and receive every report in that dashboard. a correctly scoped helper, listreportscore, already existed in the same service file and resolves the dashboard through getdashboardbyid(dashboardid, projectid) before returning reports, but the router did not use it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77769" target="_blank">CVE-2026-77769</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The report.list procedure in packages/trpc/src/routers/report.ts accepted a projectId and a dashboardId and returned getReportsByDashboardId(dashboardId). The enforceAccess middleware in packages/trpc/src/trpc.ts verified membership for the supplied projectId, but nothing verified that the supplied dashboardId belonged to that project, and getReportsByDashboardId in packages/db/src/services/reports.service.ts selects reports by dashboardId alone with no project scoping. An authenticated user could therefore pair a projectId from their own organization, which satisfies the middleware, with a dashboardId belonging to another organization and receive every report in that dashboard. A correctly scoped helper, listReportsCore, already existed in the same service file and resolves the dashboard through getDashboardById(dashboardId, projectId) before returning reports, but the router did not use it.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77768" data-description="the report.get procedure in packages/trpc/src/routers/report.ts accepted only a reportid and returned getreportbyid(reportid) directly. the enforceaccess middleware in packages/trpc/src/trpc.ts evaluates membership only when the input carries a projectid or organizationid key, so an input consisting of a reportid alone passed through unchecked, and getreportbyid in packages/db/src/services/reports.service.ts performs a findunique on the report id with no project scoping. any authenticated user could therefore read the full configuration of any saved report on the instance, including the owning projectid, event series, filters, breakdowns and formulas, by supplying its identifier. the adjacent update, delete and duplicate procedures resolve the report first and check getprojectaccess against the report's own projectid, so the omission was specific to this procedure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77768" target="_blank">CVE-2026-77768</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The report.get procedure in packages/trpc/src/routers/report.ts accepted only a reportId and returned getReportById(reportId) directly. The enforceAccess middleware in packages/trpc/src/trpc.ts evaluates membership only when the input carries a projectId or organizationId key, so an input consisting of a reportId alone passed through unchecked, and getReportById in packages/db/src/services/reports.service.ts performs a findUnique on the report id with no project scoping. Any authenticated user could therefore read the full configuration of any saved report on the instance, including the owning projectId, event series, filters, breakdowns and formulas, by supplying its identifier. The adjacent update, delete and duplicate procedures resolve the report first and check getProjectAccess against the report's own projectId, so the omission was specific to this procedure.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77767" data-description="reconmap's api applies a fallback authorization policy in apps/api/app/program.cs that requires an authenticated user holding the administrator role, so controllers without their own attribute reject anonymous callers. the report preview action in apps/api/app/controllers/reportscontroller.cs carries [allowanonymous] and therefore opts out of that policy. previewreport loads the project row named by the id path segment, loads the linked organisation through the project's clientid, and renders both into default-report-template.html, which prints the project name and description together with the client organisation's name, address and url. no authentication, project membership or role check is performed. because the id is the auto-increment primary key of the project table, an unauthenticated remote caller can walk sequential ids to retrieve the engagement details and client organisation of every project on the instance, and the 404 returned for a missing id reveals which project ids exist. reconmap stores penetration-testing engagements, so the disclosed descriptions and client records are sensitive by nature.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77767" target="_blank">CVE-2026-77767</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Reconmap's API applies a fallback authorization policy in apps/api/app/Program.cs that requires an authenticated user holding the administrator role, so controllers without their own attribute reject anonymous callers. The report preview action in apps/api/app/Controllers/ReportsController.cs carries [AllowAnonymous] and therefore opts out of that policy. PreviewReport loads the Project row named by the id path segment, loads the linked Organisation through the project's ClientId, and renders both into default-report-template.html, which prints the project name and description together with the client organisation's name, address and URL. No authentication, project membership or role check is performed. Because the id is the auto-increment primary key of the project table, an unauthenticated remote caller can walk sequential ids to retrieve the engagement details and client organisation of every project on the instance, and the 404 returned for a missing id reveals which project ids exist. Reconmap stores penetration-testing engagements, so the disclosed descriptions and client records are sensitive by nature.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77763" data-description="the filestore backend in pkg/object/file.go, used for file:// stores and as a common juicefs sync destination, derived every operation's target from path(key), which returned either filepath.join(d.root, key) or filepath.clean(d.root + key) with no check that the result stayed beneath the root. put, get, head, delete, chmod, chown, symlink and readlink all consumed that value directly. object keys enumerated from a source object store during a sync are not constrained the way local filesystem names are, so a key containing traversal segments causes juicefs to write attacker-supplied content to a path outside the intended local destination, and no error is returned. an operator syncing from a bucket whose contents they do not fully control, such as a shared or public bucket or one an attacker can write to, is therefore exposed to a file write at an attacker-influenced location. the fix changes path() to return an error and rejects any key whose resolved path escapes the root.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77763" target="_blank">CVE-2026-77763</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The filestore backend in pkg/object/file.go, used for file:// stores and as a common juicefs sync destination, derived every operation's target from path(key), which returned either filepath.Join(d.root, key) or filepath.Clean(d.root + key) with no check that the result stayed beneath the root. Put, Get, Head, Delete, Chmod, Chown, Symlink and Readlink all consumed that value directly. Object keys enumerated from a source object store during a sync are not constrained the way local filesystem names are, so a key containing traversal segments causes juicefs to write attacker-supplied content to a path outside the intended local destination, and no error is returned. An operator syncing from a bucket whose contents they do not fully control, such as a shared or public bucket or one an attacker can write to, is therefore exposed to a file write at an attacker-influenced location. The fix changes path() to return an error and rejects any key whose resolved path escapes the root.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77761" data-description="a parser state isolation vulnerability in misp-stix could cause data from a previously processed stix document to be retained and incorporated into the misp event generated from a subsequent document when the same parser instance is reused.
+
+several stix 1 and stix 2 parser components maintained per-document state that was not completely cleared between conversions. in the stix 2 parser, galaxy and galaxy-cluster information, including custom galaxy clusters, could survive a parser reset and subsequently be associated with objects from another bundle.
+
+the stix 1 parsers were affected by the same underlying state-management issue. depending on the parser type, retained information could include galaxies, references, passive dns bookkeeping, package titles, dates, and timestamps. as a result, parsing a second stix package with an already-used parser could produce a misp event containing information that was present only in the previously processed package. for example, a generated event could inherit passive dns records from an earlier document, reference unrelated galaxy information, combine titles from different packages, or use timestamps originating from another conversion.
+
+the issue primarily affects applications using the misp-stix api directly and reusing parser instances across independent stix documents. normal conversion entry points that instantiate a new parser for each file are not affected by this particular reuse scenario.
+
+an attacker able to influence documents processed by such a long-lived parser could potentially cause information from one conversion to contaminate a subsequent misp event. this can affect the integrity of generated threat intelligence, resulting in incorrect associations, misleading contextual information, or unrelated indicators being attributed to an event. in environments where consecutive documents have different access controls or distribution scopes, the retained state could additionally result in limited disclosure of information from a previously processed document.
+
+successful exploitation depends on the consuming application reusing the same parser instance and on the ordering of processed documents, which increases attack complexity. no direct availability impact or code execution is involved.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77761" target="_blank">CVE-2026-77761</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A parser state isolation vulnerability in misp-stix could cause data from a previously processed STIX document to be retained and incorporated into the MISP event generated from a subsequent document when the same parser instance is reused.
+
+Several STIX 1 and STIX 2 parser components maintained per-document state that was not completely cleared between conversions. In the STIX 2 parser, galaxy and galaxy-cluster information, including custom galaxy clusters, could survive a parser reset and subsequently be associated with objects from another bundle.
+
+The STIX 1 parsers were affected by the same underlying state-management issue. Depending on the parser type, retained information could include galaxies, references, passive DNS bookkeeping, package titles, dates, and timestamps. As a result, parsing a second STIX package with an already-used parser could produce a MISP event containing information that was present only in the previously processed package. For example, a generated event could inherit passive DNS records from an earlier document, reference unrelated galaxy information, combine titles from different packages, or use timestamps originating from another conversion.
+
+The issue primarily affects applications using the misp-stix API directly and reusing parser instances across independent STIX documents. Normal conversion entry points that instantiate a new parser for each file are not affected by this particular reuse scenario.
+
+An attacker able to influence documents processed by such a long-lived parser could potentially cause information from one conversion to contaminate a subsequent MISP event. This can affect the integrity of generated threat intelligence, resulting in incorrect associations, misleading contextual information, or unrelated indicators being attributed to an event. In environments where consecutive documents have different access controls or distribution scopes, the retained state could additionally result in limited disclosure of information from a previously processed document.
+
+Successful exploitation depends on the consuming application reusing the same parser instance and on the ordering of processed documents, which increases attack complexity. No direct availability impact or code execution is involved.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77686" data-description="a weakness has been identified in dolibarr up to 23.0.4. this affects an unknown part of the file htdocs/user/card.php of the component account handler. this manipulation of the argument id causes improper authorization. the attack may be initiated remotely. the exploit has been made available to the public and could be used for attacks. upgrading to version 24.0.0 is able to mitigate this issue. patch name: b2a2c995537cb6282383b5e903cb5ffa29b823e6. the affected component should be upgraded.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77686" target="_blank">CVE-2026-77686</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>A weakness has been identified in Dolibarr up to 23.0.4. This affects an unknown part of the file htdocs/user/card.php of the component Account Handler. This manipulation of the argument ID causes improper authorization. The attack may be initiated remotely. The exploit has been made available to the public and could be used for attacks. Upgrading to version 24.0.0 is able to mitigate this issue. Patch name: b2a2c995537cb6282383b5e903cb5ffa29b823e6. The affected component should be upgraded.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77683" data-description="a security flaw has been discovered in comfast cf-n1-s 2.6.0.1. affected by this issue is the function system of the file /cgi-bin/mbox-config?method=set&section=ntp_timezone. the manipulation of the argument timestr results in command injection. the attack can be launched remotely. the exploit has been released to the public and may be used for attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77683" target="_blank">CVE-2026-77683</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
+                    <p>A security flaw has been discovered in Comfast CF-N1-S 2.6.0.1. Affected by this issue is the function system of the file /cgi-bin/mbox-config?method=SET&section=ntp_timezone. The manipulation of the argument timestr results in command injection. The attack can be launched remotely. The exploit has been released to the public and may be used for attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77086" data-description="siyuan before v3.7.4 fails to validate the packagename parameter in bazaar install and uninstall endpoints, allowing authenticated administrators to perform path traversal via directory traversal sequences. attackers with admin access can write arbitrary files to any location via install operations or recursively delete directories via uninstall operations by supplying crafted packagename values.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77086" target="_blank">CVE-2026-77086</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>SiYuan before v3.7.4 fails to validate the packageName parameter in Bazaar install and uninstall endpoints, allowing authenticated administrators to perform path traversal via directory traversal sequences. Attackers with admin access can write arbitrary files to any location via install operations or recursively delete directories via uninstall operations by supplying crafted packageName values.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59296" data-description="using untrusted, non-normalized input as-is for metrics data (such as metric names, tag keys, or tag values) is a dangerous antipattern that general-purpose instrumentation should never perform. when such unsafe instrumentation is used, the application becomes vulnerable to injection and spoofing attacks because micrometer-registry-statsd and micrometer-core do not sanitize newline characters (\n, \r) by default prior to this fix.
+
+  *  for the statsd registry in micrometer-registry-statsd (when using the datadog or etsy flavor), because the statsd protocol is newline-delimited, this allows for line-protocol injection (cross-metric spoofing).
+  *  for loggingmeterregistry in micrometer-core, because metric output is printed line-by-line to log files, this allows for both metric spoofing (if downstream log-metrics scrapers or parsers ingest the log lines as separate metrics) and general log spoofing.
+
+
+
+
+specifically, an application is vulnerable when all the following are true:
+
+  *  the application uses a vulnerable version of io.micrometer:micrometer-registry-statsd or io.micrometer:micrometer-core.
+  *  the application uses the datadog or etsy flavor of the statsd registry, or uses loggingmeterregistry.
+  *  the application instruments meters using user-controlled, unvalidated input for metric names, tag keys, or tag values.
+
+
+
+
+when vulnerable, an attacker can break out of the current metric or log line by injecting line terminators. this allows them to spoof arbitrary metrics (e.g., system load, standard jvm metrics, or other business metrics) across the metrics registry namespace (either directly via statsd protocol or via downstream log-metric scrapers/parsers), as well as inject arbitrary log entries to spoof general log records.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59296" target="_blank">CVE-2026-59296</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Using untrusted, non-normalized input as-is for metrics data (such as metric names, tag keys, or tag values) is a dangerous antipattern that general-purpose instrumentation should never perform. When such unsafe instrumentation is used, the application becomes vulnerable to injection and spoofing attacks because micrometer-registry-statsd and micrometer-core do not sanitize newline characters (\n, \r) by default prior to this fix.
+
+  *  For the StatsD registry in micrometer-registry-statsd (when using the Datadog or Etsy flavor), because the StatsD protocol is newline-delimited, this allows for line-protocol injection (cross-metric spoofing).
+  *  For LoggingMeterRegistry in micrometer-core, because metric output is printed line-by-line to log files, this allows for both metric spoofing (if downstream log-metrics scrapers or parsers ingest the log lines as separate metrics) and general log spoofing.
+
+
+
+
+Specifically, an application is vulnerable when all the following are true:
+
+  *  The application uses a vulnerable version of io.micrometer:micrometer-registry-statsd or io.micrometer:micrometer-core.
+  *  The application uses the Datadog or Etsy flavor of the StatsD registry, or uses LoggingMeterRegistry.
+  *  The application instruments meters using user-controlled, unvalidated input for metric names, tag keys, or tag values.
+
+
+
+
+When vulnerable, an attacker can break out of the current metric or log line by injecting line terminators. This allows them to spoof arbitrary metrics (e.g., system load, standard JVM metrics, or other business metrics) across the metrics registry namespace (either directly via StatsD protocol or via downstream log-metric scrapers/parsers), as well as inject arbitrary log entries to spoof general log records.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-15576" data-description="improper authentication in the agent receiver of checkmk <2.5.0p10 allows an unauthenticated remote attacker to bypass mutual tls client certificate verification of relay endpoints by supplying a fixed placeholder identity in the request url, resulting in limited impact on integrity and availability. only the cloud, ultimate and ultimate mt editions are affected, as other editions do not expose relay endpoints.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15576" target="_blank">CVE-2026-15576</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper authentication in the agent receiver of Checkmk <2.5.0p10 allows an unauthenticated remote attacker to bypass mutual TLS client certificate verification of relay endpoints by supplying a fixed placeholder identity in the request URL, resulting in limited impact on integrity and availability. Only the Cloud, Ultimate and Ultimate MT editions are affected, as other editions do not expose relay endpoints.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-14208" data-description="remote utilities host <=7.7.3.0 sets insecure acls on all dll files in the installation directory (c:\program files (x86)\remote utilities - host\), granting full control (f) to the built-in everyone group (builtin\everyone, s-1-1-0). a windows service running as nt authority\system loads dlls from this directory. the dlls are file-locked at runtime, but a race window exists when the service is stopped (e.g. during a software update or following a crash), during which a local unprivileged attacker can replace a dll with a malicious payload. upon service restart, the payload executes as nt authority\system. the dll confirmed as actively loaded during testing is libasset32.dll. additional dlls in the same directory (eventmsg.dll, libcodec32.dll, vp8encoder.dll, vp8decoder.dll, webmvorbisdecoder.dll, webmvorbisencoder.dll, webmmux.dll) share identical insecure permissions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14208" target="_blank">CVE-2026-14208</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 06:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Remote Utilities Host <=7.7.3.0 sets insecure ACLs on all DLL files in the installation directory (C:\Program Files (x86)\Remote Utilities - Host\), granting FULL CONTROL (F) to the built-in Everyone group (BUILTIN\Everyone, S-1-1-0). A Windows service running as NT AUTHORITY\SYSTEM loads DLLs from this directory. The DLLs are file-locked at runtime, but a race window exists when the service is stopped (e.g. during a software update or following a crash), during which a local unprivileged attacker can replace a DLL with a malicious payload. Upon service restart, the payload executes as NT AUTHORITY\SYSTEM. The DLL confirmed as actively loaded during testing is libasset32.dll. Additional DLLs in the same directory (eventmsg.dll, libcodec32.dll, vp8encoder.dll, vp8decoder.dll, webmvorbisdecoder.dll, webmvorbisencoder.dll, webmmux.dll) share identical insecure permissions.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-77755" data-description="a denial-of-service vulnerability was identified in misp-stix when processing attacker-controlled stix 1 or stix 2 documents.
 
 the stix import code used sys.exit() to handle several parsing and loading failures. because systemexit inherits from baseexception rather than exception, these failures bypassed the exception handlers used by callers of the library. as a result, a malformed stix document could terminate a long-running importer process instead of returning a recoverable parsing error.
@@ -260,270 +402,6 @@ An attacker able to provide a STIX document for import could therefore spoof the
 The vulnerability results from dynamically assigning externally supplied object properties without restricting them to an expected set of attributes, matching CWE-915. MITRE specifically describes this weakness as accepting externally influenced fields without controlling which object attributes may be modified and recommends an allow-list, which is the approach implemented by the patch. The parser-selection issue additionally corresponds to CWE-807, because an untrusted value was used to make a security-relevant trust/classification decision.
 
 The attack is also consistent with CAPEC-153 (Input Data Manipulation), in which an attacker controls the structure or flags of supplied data so that the target selects a different processing path or interprets the content differently than intended.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74866" data-description="@fastify/busboy is a multipart form-data parser for node.js. its multipart part-header parser splits header lines only on the two-byte carriage-return line-feed sequence, so a lone carriage return or line feed embedded in a part header is not treated as a line break and is carried verbatim into the parsed content-disposition filename and field name handed to the application. an attacker who uploads a file whose filename or field name contains a bare carriage return or line feed can inject control characters into consumers that trust the parser to return clean values, enabling filesystem filename pollution, log forging, or header injection when the value is forwarded to a carriage-return-sensitive sink. all versions of @fastify/busboy up to and including 3.2.1 are affected. the issue is fixed in version 3.2.2, which rejects any header line that still contains a bare carriage return or line feed. users should upgrade to 3.2.2, and consumers such as @fastify/multipart should bump their @fastify/busboy dependency to pull in the fix.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74866" target="_blank">CVE-2026-74866</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.8</p>
-                    <p>@fastify/busboy is a multipart form-data parser for Node.js. Its multipart part-header parser splits header lines only on the two-byte carriage-return line-feed sequence, so a lone carriage return or line feed embedded in a part header is not treated as a line break and is carried verbatim into the parsed Content-Disposition filename and field name handed to the application. An attacker who uploads a file whose filename or field name contains a bare carriage return or line feed can inject control characters into consumers that trust the parser to return clean values, enabling filesystem filename pollution, log forging, or header injection when the value is forwarded to a carriage-return-sensitive sink. All versions of @fastify/busboy up to and including 3.2.1 are affected. The issue is fixed in version 3.2.2, which rejects any header line that still contains a bare carriage return or line feed. Users should upgrade to 3.2.2, and consumers such as @fastify/multipart should bump their @fastify/busboy dependency to pull in the fix.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-68745" data-description="certificate validation failures in saml authentication in apache cloudstack 4.20.3.0 and 4.22.1.0 on all platforms allow a malicious agent to forge a saml response to the management server. the agent will have to spoof the ip address of the idp or get an url of its own choosing registered in the management server, after which it can allow logging on with forged signatures.
-
-users are recommended to upgrade to versions 4.20.3.1 or 4.22.1.1 and above, which fix this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-68745" target="_blank">CVE-2026-68745</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Certificate validation failures in SAML authentication in Apache CloudStack 4.20.3.0 and 4.22.1.0 on all platforms allow a malicious agent to forge a SAML response to the management server. The agent will have to spoof the ip address of the IdP or get an url of its own choosing registered in the management server, after which it can allow logging on with forged signatures.
-
-Users are recommended to upgrade to versions 4.20.3.1 or 4.22.1.1 and above, which fix this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66797" data-description="improper access control in cloudstack's annotation functionality allows unauthorized comment creation and disclosure.
-
-
-
-
-the addannotation and listannotation apis perform an ownership check when an entity's uuid is specified, but fail to honor its result correctly. this lets any authenticated user write annotations to, and disclose existing annotations/comments on, an entity they don't own by simply supplying its uuid.
-
-
-
-
-this issue affects apache cloudstack: from 4.15.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-
-
-
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66797" target="_blank">CVE-2026-66797</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper access control in CloudStack's annotation functionality allows unauthorized comment creation and disclosure.
-
-
-
-
-The addAnnotation and listAnnotation APIs perform an ownership check when an entity's UUID is specified, but fail to honor its result correctly. This lets any authenticated user write annotations to, and disclose existing annotations/comments on, an entity they don't own by simply supplying its UUID.
-
-
-
-
-This issue affects Apache CloudStack: from 4.15.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-
-
-
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66722" data-description="improper authorization for crud operations on project roles and project role permissions for domain admins in cloudstack.
-
-
-
-
-a domain admin can create, update, delete, and list project roles and project role permissions for projects in any domain, not just their own. the check only confirms the caller is a domain admin, without verifying whether the target project belongs to their domain or subdomain. this allows a malicious domain admin to tamper with project roles and permissions across unrelated domains.
-
-
-
-
-this issue affects apache cloudstack: from 4.15.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-
-
-
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66722" target="_blank">CVE-2026-66722</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper authorization for CRUD operations on Project Roles and Project Role permissions for domain admins in CloudStack.
-
-
-
-
-A Domain Admin can create, update, delete, and list project roles and project role permissions for projects in any domain, not just their own. The check only confirms the caller is a Domain Admin, without verifying whether the target project belongs to their domain or subdomain. This allows a malicious Domain Admin to tamper with project roles and permissions across unrelated domains.
-
-
-
-
-This issue affects Apache CloudStack: from 4.15.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-
-
-
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66721" data-description="missing authorization issue for domain admins in cloudstack's host tags listing functionality.
-
-
-
-
-domain admins, by default, have permission to call the listhosttags api, but the api returns host tags for every host in the environment without domain scoping. it should instead be restricted to only the hosts dedicated to that admin's domain.
-
-
-
-
-this issue affects apache cloudstack: from 4.12.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-
-
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66721" target="_blank">CVE-2026-66721</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Missing authorization issue for domain admins in CloudStack's host tags listing functionality.
-
-
-
-
-Domain Admins, by default, have permission to call the listHostTags API, but the API returns host tags for every host in the environment without domain scoping. It should instead be restricted to only the hosts dedicated to that admin's domain.
-
-
-
-
-This issue affects Apache CloudStack: from 4.12.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-
-
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-65613" data-description="exposure of sensitive information to an unauthorized actor vulnerability in apache cloudstack's webhook module while listing and deleting deliveries.
-
-this issue affects apache cloudstack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65613" target="_blank">CVE-2026-65613</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposure of Sensitive Information to an Unauthorized Actor vulnerability in Apache CloudStack's Webhook module while listing and deleting deliveries.
-
-This issue affects Apache CloudStack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-63046" data-description="improper neutralization of argument delimiters in a command ('argument injection') vulnerability in apache inlong. agent installer's modulemanager executes arbitrary shell
-commands via excutelinux.execmd() with no filtering or whitelist
-validation. 
-
-this issue affects apache inlong: from 2.0.0 before 2.4.0.
-
-
-
-users are advised to upgrade to apache inlong's  2.4.0 or cherry-pick [1]/[2] to solve it.
-
-[1]  https://github.com/apache/inlong/pull/12151 .
-
-[2]  https://github.com/apache/inlong/pull/12155 .">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63046" target="_blank">CVE-2026-63046</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Argument Delimiters in a Command ('Argument Injection') vulnerability in Apache InLong. Agent Installer's ModuleManager executes arbitrary shell
-commands via ExcuteLinux.exeCmd() with no filtering or whitelist
-validation. 
-
-This issue affects Apache InLong: from 2.0.0 before 2.4.0.
-
-
-
-Users are advised to upgrade to Apache InLong's  2.4.0 or cherry-pick [1]/[2] to solve it.
-
-[1]  https://github.com/apache/inlong/pull/12151 .
-
-[2]  https://github.com/apache/inlong/pull/12155 .</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-62440" data-description="improper access control vulnerability in apache cloudstack's kubernetes service (cks) plugin, allowing cross-tenant manipulation of the kubernetes cluster while adding and removing nodes.
-
-this issue affects apache cloudstack: from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62440" target="_blank">CVE-2026-62440</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Access Control vulnerability in Apache CloudStack's Kubernetes Service (CKS) plugin, allowing cross-tenant manipulation of the Kubernetes cluster while adding and removing nodes.
-
-This issue affects Apache CloudStack: from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-61422" data-description="authenticated pre-validation ssrf vulnerability in apache cloudstack's template and iso registration functionality.
-
-when registering a template or iso, cloudstack makes a live http head/get call to determine file size for secondary storage usage-limit checks, and this happens before url validation is performed. however, this does not pose a malicious template or iso registration risk, as url validation still occurs prior to the actual download by the secondary storage vm.this issue affects apache cloudstack: in 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61422" target="_blank">CVE-2026-61422</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Authenticated pre-validation SSRF vulnerability in Apache CloudStack's template and ISO registration functionality.
-
-When registering a template or ISO, CloudStack makes a live HTTP HEAD/GET call to determine file size for secondary storage usage-limit checks, and this happens before URL validation is performed. However, this does not pose a malicious template or ISO registration risk, as URL validation still occurs prior to the actual download by the Secondary Storage VM.This issue affects Apache CloudStack: in 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-61400" data-description="improper neutralization of special elements used in a command ('command injection') vulnerability in apache cloudstack's run and get diagnostics functionality for the system vms and virtual routers.
-
-an authenticated user holding the permissions required to invoke either `getdiagnosticsdata` or `rundiagnostics` can achieve arbitrary command execution on the system vm and/or virtual router instances, with commands running as root (or as the diagnostics-process user, at minimum). this represents a full compromise of the affected instance and, depending on network segmentation, may provide a foothold for lateral movement within the cloudstack-managed infrastructure, including access to guest network traffic handled by the compromised virtual router.
-
-
-
-the getdiagnosticsdata and rundiagnostics apis are restricted to only admin role accounts by default.
-
-
-this issue affects apache cloudstack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61400" target="_blank">CVE-2026-61400</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Special Elements used in a Command ('Command Injection') vulnerability in Apache CloudStack's run and get diagnostics functionality for the system VMs and virtual routers.
-
-An authenticated user holding the permissions required to invoke either `getDiagnosticsData` or `runDiagnostics` can achieve arbitrary command execution on the system VM and/or Virtual Router instances, with commands running as root (or as the diagnostics-process user, at minimum). This represents a full compromise of the affected instance and, depending on network segmentation, may provide a foothold for lateral movement within the CloudStack-managed infrastructure, including access to guest network traffic handled by the compromised Virtual Router.
-
-
-
-The getDiagnosticsData and runDiagnostics APIs are restricted to only Admin role accounts by default.
-
-
-This issue affects Apache CloudStack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-61399" data-description="improper encoding or escaping of output vulnerability in apache cloudstack's ui while using lock user functionality.
-
-this issue affects apache cloudstack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61399" target="_blank">CVE-2026-61399</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Encoding or Escaping of Output vulnerability in Apache CloudStack's UI while using Lock User Functionality.
-
-This issue affects Apache CloudStack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
                 </div>
         
             </div>
