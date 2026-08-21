@@ -34,6 +34,206 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-77755" data-description="a denial-of-service vulnerability was identified in misp-stix when processing attacker-controlled stix 1 or stix 2 documents.
+
+the stix import code used sys.exit() to handle several parsing and loading failures. because systemexit inherits from baseexception rather than exception, these failures bypassed the exception handlers used by callers of the library. as a result, a malformed stix document could terminate a long-running importer process instead of returning a recoverable parsing error.
+
+additionally, no limit was imposed on the size of stix documents before parsing. a submitted document was therefore read and materialised in memory before its validity or type was evaluated. depending on the document and parsing path, processing could consume approximately two to seven times the input size in memory, allowing a sufficiently large stix document to cause excessive memory and cpu consumption and potentially terminate or severely degrade the importing service.
+
+an attacker able to provide stix content to a misp-stix import workflow could exploit either condition to affect availability. a malformed document could cause abnormal process termination through an uncaught systemexit, while a large document could exhaust resources during deserialisation and conversion.
+
+the fixes replace process-terminating sys.exit() calls with catchable exceptions such as stixloadingerror and missingstixcontenterror, and extend exception handling around the complete stix detection and conversion process. the importer also now enforces an input-size limit before parsing. the default maximum is 100 mb, can be adjusted by callers, and can explicitly be disabled when required. stix 1 inputs are additionally checked for the expected root element before the complete xml tree is constructed.
+
+impactsuccessful exploitation can cause:
+
+  *  termination of a long-running misp-stix importer;
+  *  excessive memory allocation;
+  *  excessive cpu consumption;
+  *  degradation or temporary unavailability of services relying on the converter;
+  *  interruption of batch or automated stix ingestion workflows.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77755" target="_blank">CVE-2026-77755</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A denial-of-service vulnerability was identified in misp-stix when processing attacker-controlled STIX 1 or STIX 2 documents.
+
+The STIX import code used sys.exit() to handle several parsing and loading failures. Because SystemExit inherits from BaseException rather than Exception, these failures bypassed the exception handlers used by callers of the library. As a result, a malformed STIX document could terminate a long-running importer process instead of returning a recoverable parsing error.
+
+Additionally, no limit was imposed on the size of STIX documents before parsing. A submitted document was therefore read and materialised in memory before its validity or type was evaluated. Depending on the document and parsing path, processing could consume approximately two to seven times the input size in memory, allowing a sufficiently large STIX document to cause excessive memory and CPU consumption and potentially terminate or severely degrade the importing service.
+
+An attacker able to provide STIX content to a MISP-STIX import workflow could exploit either condition to affect availability. A malformed document could cause abnormal process termination through an uncaught SystemExit, while a large document could exhaust resources during deserialisation and conversion.
+
+The fixes replace process-terminating sys.exit() calls with catchable exceptions such as STIXLoadingError and MissingSTIXContentError, and extend exception handling around the complete STIX detection and conversion process. The importer also now enforces an input-size limit before parsing. The default maximum is 100 MB, can be adjusted by callers, and can explicitly be disabled when required. STIX 1 inputs are additionally checked for the expected root element before the complete XML tree is constructed.
+
+ImpactSuccessful exploitation can cause:
+
+  *  termination of a long-running MISP-STIX importer;
+  *  excessive memory allocation;
+  *  excessive CPU consumption;
+  *  degradation or temporary unavailability of services relying on the converter;
+  *  interruption of batch or automated STIX ingestion workflows.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77751" data-description="a path traversal vulnerability existed in the handling of misp object template names during stix 2 import and misp-to-stix 2 export.
+
+misp object names are passed to pymisp's object-template resolution mechanism, which constructs a filesystem path by joining the configured misp object-template directory, the object name, and definition.json. an object name originating from untrusted stix or misp content was not sufficiently restricted before being used in this filesystem path.
+
+an attacker able to supply a crafted object name containing path separators or traversal sequences such as ../ could therefore cause template resolution to escape the expected template directory and attempt to load a definition.json file from another location accessible to the process.
+
+during stix 2 import, an attacker-controlled x_misp_name from a custom stix object could directly reach this template-resolution mechanism.
+
+the issue could also become persistent. a malicious object name stored in a misp event could later be processed again during stix 2 export. consequently, content originally introduced in one security context could trigger filesystem access later when the event is exported by a process operating with different or greater privileges.
+
+if a suitable definition.json file exists outside the intended template directory, its contents may be interpreted as a misp object template and fields from that file copied into the converted object. this can result in unintended disclosure of locally accessible data represented by the template file and modification of the resulting object's metadata or semantics.
+
+the patches introduce strict validation of object-template names. valid names are restricted to a single path component containing letters, digits, hyphens, or underscores. names that do not meet these requirements are replaced with the generic unknown-template name before reaching pymisp template resolution. the original rejected name is preserved in the object's comment and a warning is generated, preventing traversal while retaining the source information.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77751" target="_blank">CVE-2026-77751</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A path traversal vulnerability existed in the handling of MISP object template names during STIX 2 import and MISP-to-STIX 2 export.
+
+MISP object names are passed to PyMISP's object-template resolution mechanism, which constructs a filesystem path by joining the configured MISP object-template directory, the object name, and definition.json. An object name originating from untrusted STIX or MISP content was not sufficiently restricted before being used in this filesystem path.
+
+An attacker able to supply a crafted object name containing path separators or traversal sequences such as ../ could therefore cause template resolution to escape the expected template directory and attempt to load a definition.json file from another location accessible to the process.
+
+During STIX 2 import, an attacker-controlled x_misp_name from a custom STIX object could directly reach this template-resolution mechanism.
+
+The issue could also become persistent. A malicious object name stored in a MISP event could later be processed again during STIX 2 export. Consequently, content originally introduced in one security context could trigger filesystem access later when the event is exported by a process operating with different or greater privileges.
+
+If a suitable definition.json file exists outside the intended template directory, its contents may be interpreted as a MISP object template and fields from that file copied into the converted object. This can result in unintended disclosure of locally accessible data represented by the template file and modification of the resulting object's metadata or semantics.
+
+The patches introduce strict validation of object-template names. Valid names are restricted to a single path component containing letters, digits, hyphens, or underscores. Names that do not meet these requirements are replaced with the generic unknown-template name before reaching PyMISP template resolution. The original rejected name is preserved in the object's comment and a warning is generated, preventing traversal while retaining the source information.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77681" data-description="a vulnerability was identified in codeastro online job portal 1.0. affected by this vulnerability is an unknown functionality of the file /users/update-profile.php. the manipulation of the argument name leads to unrestricted upload. the attack can be initiated remotely. the exploit is publicly available and might be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77681" target="_blank">CVE-2026-77681</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A vulnerability was identified in CodeAstro Online Job Portal 1.0. Affected by this vulnerability is an unknown functionality of the file /users/update-profile.php. The manipulation of the argument Name leads to unrestricted upload. The attack can be initiated remotely. The exploit is publicly available and might be used.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59323" data-description="an application using micrometer tracing with w3c baggage propagation in the brave bridge is vulnerable to denial of service (dos) due to unbounded object allocation when extracting incoming baggage headers.
+
+
+
+specifically, an application is vulnerable when all the following are true:
+
+  *  the application uses a vulnerable version of io.micrometer:micrometer-tracing-bridge-brave.
+  *  w3c propagation is active (either configured manually or active by default, such as in spring boot 3.x+).
+  *  baggage propagation is enabled (which is the default in spring boot 3.x+) and a baggage manager (such as bravebaggagemanager) is configured to handle baggage fields.
+  *  the application processes requests or messages from untrusted sources with baggage headers which it normally should not, see:  https://www.w3.org/tr/trace-context/#security-considerations .
+  *  network components including the (http) server that receives the request do not limit the header size or the limit is high enough to cause issues.
+
+
+
+
+the last two points are very important: normally this should not affect applications because they should not receive untrusted and unlimited input for baggage.
+
+  *  the application processes requests or messages from untrusted sources with baggage headers.
+
+
+
+
+when extracting baggage from the w3c baggage header, incoming entries are parsed without enforcing limits on the number of entries or header size as mandated by the w3c baggage specification. an attacker can send requests or messages with artificially inflated baggage headers containing many key-value pairs, causing unconditional baggagefield allocations per entry. this leads to garbage collection pressure, high cpu usage, and potential application crash via outofmemoryerror.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59323" target="_blank">CVE-2026-59323</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>An application using Micrometer Tracing with W3C baggage propagation in the Brave bridge is vulnerable to denial of service (DoS) due to unbounded object allocation when extracting incoming baggage headers.
+
+
+
+Specifically, an application is vulnerable when all the following are true:
+
+  *  The application uses a vulnerable version of io.micrometer:micrometer-tracing-bridge-brave.
+  *  W3C propagation is active (either configured manually or active by default, such as in Spring Boot 3.x+).
+  *  Baggage propagation is enabled (which is the default in Spring Boot 3.x+) and a baggage manager (such as BraveBaggageManager) is configured to handle baggage fields.
+  *  The application processes requests or messages from untrusted sources with baggage headers which it normally should not, see:  https://www.w3.org/TR/trace-context/#security-considerations .
+  *  Network components including the (HTTP) server that receives the request do not limit the header size or the limit is high enough to cause issues.
+
+
+
+
+The last two points are very important: normally this should not affect applications because they should not receive untrusted and unlimited input for baggage.
+
+  *  The application processes requests or messages from untrusted sources with baggage headers.
+
+
+
+
+When extracting baggage from the W3C baggage header, incoming entries are parsed without enforcing limits on the number of entries or header size as mandated by the W3C Baggage specification. An attacker can send requests or messages with artificially inflated baggage headers containing many key-value pairs, causing unconditional BaggageField allocations per entry. This leads to garbage collection pressure, high CPU usage, and potential application crash via OutOfMemoryError.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-48590" data-description="xml injection vulnerability in joshnuss xml_builder (xmlbuilder module) allows content spoofing, xml injection.
+
+this vulnerability is associated with program files lib/xml_builder.ex and program routines xmlbuilder.generate/1, xmlbuilder.generate/2, xmlbuilder.element/1, xmlbuilder.element/2, xmlbuilder.element/3.
+
+element names, attribute names, and doctype identifiers are interpolated verbatim into the serialized xml output without validation or escaping of structural characters (<, >, ", ', &). an attacker who can influence a name argument (for example, an element name derived from a json object key or an http form field name) can inject arbitrary xml markup including extra elements, comments, and event-handler attributes into the output document.
+
+this issue affects xml_builder: from 0.0.1 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48590" target="_blank">CVE-2026-48590</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>XML Injection vulnerability in joshnuss xml_builder (XmlBuilder module) allows Content Spoofing, XML Injection.
+
+This vulnerability is associated with program files lib/xml_builder.ex and program routines XmlBuilder.generate/1, XmlBuilder.generate/2, XmlBuilder.element/1, XmlBuilder.element/2, XmlBuilder.element/3.
+
+Element names, attribute names, and doctype identifiers are interpolated verbatim into the serialized XML output without validation or escaping of structural characters (<, >, ", ', &). An attacker who can influence a name argument (for example, an element name derived from a JSON object key or an HTTP form field name) can inject arbitrary XML markup including extra elements, comments, and event-handler attributes into the output document.
+
+This issue affects xml_builder: from 0.0.1 before 2.4.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-47827" data-description="command injection in bosh cli tool on windows in cloud foundry allows a remote attacker to execute arbitrary shell commands via command injection vulnerabilities">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-47827" target="_blank">CVE-2026-47827</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Command Injection in BOSH CLI tool on windows in Cloud Foundry allows a remote attacker to execute arbitrary shell commands via command injection vulnerabilities</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-47080" data-description="xml injection vulnerability in joshnuss xml_builder (xmlbuilder module) allows content spoofing, xml injection.
+
+this vulnerability is associated with program files lib/xml_builder.ex and program routines xmlbuilder.generate/1, xmlbuilder.generate/2, xmlbuilder.escape/1.
+
+the escape/1 clause for {:cdata, data} in lib/xml_builder.ex concatenates data verbatim between the cdata opener <![cdata[ and closer ]]> without rewriting or splitting on the embedded ]]> sequence. because cdata sections have no internal escape mechanism, the only safe way to embed arbitrary bytes is to split on ]]> and emit adjacent cdata sections. an attacker who can supply input containing ]]> closes the cdata section early; any bytes that follow are parsed as ordinary xml markup by downstream consumers, allowing injection of arbitrary elements, text, or entity references into the output document.
+
+this issue affects xml_builder: from 0.0.7 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-47080" target="_blank">CVE-2026-47080</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>XML Injection vulnerability in joshnuss xml_builder (XmlBuilder module) allows Content Spoofing, XML Injection.
+
+This vulnerability is associated with program files lib/xml_builder.ex and program routines XmlBuilder.generate/1, XmlBuilder.generate/2, XmlBuilder.escape/1.
+
+The escape/1 clause for {:cdata, data} in lib/xml_builder.ex concatenates data verbatim between the CDATA opener <![CDATA[ and closer ]]> without rewriting or splitting on the embedded ]]> sequence. Because CDATA sections have no internal escape mechanism, the only safe way to embed arbitrary bytes is to split on ]]> and emit adjacent CDATA sections. An attacker who can supply input containing ]]> closes the CDATA section early; any bytes that follow are parsed as ordinary XML markup by downstream consumers, allowing injection of arbitrary elements, text, or entity references into the output document.
+
+This issue affects xml_builder: from 0.0.7 before 2.4.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-47079" data-description="inappropriate encoding for output context vulnerability in joshnuss xml_builder (xmlbuilder module) allows content spoofing, cross-site scripting.
+
+this vulnerability is associated with program files lib/xml_builder.ex and program routines xmlbuilder.generate/1, xmlbuilder.generate/2, xmlbuilder.escape_string/1, xmlbuilder.escape_entity/1.
+
+xmlbuilder.generate/1 does not escape literal & characters in text or attribute values when they are followed by an entity-like token (lt;, gt;, amp;, quot;, apos;). as a result, attacker-supplied input such as &lt;script&gt; is emitted verbatim into the serialized xml rather than being escaped to &amp;lt;script&amp;gt;. when a downstream xml parser later reads the document, it decodes the entity sequences into the literal characters <script>, promoting inert-looking text into real markup. this allows an attacker to bypass upstream filters that block raw < and > characters, injecting markup into any downstream consumer that parses the produced xml and renders the text content in a markup-sensitive context (html, svg, rss/atom feeds). both element text and attribute values are affected.
+
+this issue affects xml_builder: from 0.0.6 before 2.4.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-47079" target="_blank">CVE-2026-47079</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-21 05:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Inappropriate Encoding for Output Context vulnerability in joshnuss xml_builder (XmlBuilder module) allows Content Spoofing, Cross-site Scripting.
+
+This vulnerability is associated with program files lib/xml_builder.ex and program routines XmlBuilder.generate/1, XmlBuilder.generate/2, XmlBuilder.escape_string/1, XmlBuilder.escape_entity/1.
+
+XmlBuilder.generate/1 does not escape literal & characters in text or attribute values when they are followed by an entity-like token (lt;, gt;, amp;, quot;, apos;). As a result, attacker-supplied input such as &lt;script&gt; is emitted verbatim into the serialized XML rather than being escaped to &amp;lt;script&amp;gt;. When a downstream XML parser later reads the document, it decodes the entity sequences into the literal characters <script>, promoting inert-looking text into real markup. This allows an attacker to bypass upstream filters that block raw < and > characters, injecting markup into any downstream consumer that parses the produced XML and renders the text content in a markup-sensitive context (HTML, SVG, RSS/Atom feeds). Both element text and attribute values are affected.
+
+This issue affects xml_builder: from 0.0.6 before 2.4.1.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-77710" data-description="a vulnerability in misp-stix could allow a crafted stix document to influence security-sensitive misp attribute metadata during import.
 
 the stix import logic automatically selected between the internal misp parser and the external stix parser based on metadata contained in the stix document itself. for stix2, the presence of misp-specific tool labels could cause a document to be classified as originating from misp; similarly, stix1 relied on the document title. these classification indicators are fully controlled by the stix producer and therefore cannot constitute a trusted indication of the document's origin. the accompanying fix explicitly notes that the parser choice was previously based solely on labels or header titles that any producer could write, and introduces an explicit classification parameter allowing callers to override this detection.
@@ -322,198 +522,6 @@ users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which
                     <p>Improper Encoding or Escaping of Output vulnerability in Apache CloudStack's UI while using Lock User Functionality.
 
 This issue affects Apache CloudStack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-61398" data-description="improper encoding or escaping of output vulnerability in apache cloudstack's ui while using instance reset password functionality.
-
-this issue affects apache cloudstack: from 4.15.1.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61398" target="_blank">CVE-2026-61398</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Encoding or Escaping of Output vulnerability in Apache CloudStack's UI while using Instance Reset Password functionality.
-
-This issue affects Apache CloudStack: from 4.15.1.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-61397" data-description="exposure of sensitive information to an unauthorized actor vulnerability in apache cloudstack's oauth2 authentication plugin and google oauth integration.
-
-this issue affects apache cloudstack: from 4.19.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61397" target="_blank">CVE-2026-61397</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposure of Sensitive Information to an Unauthorized Actor vulnerability in Apache CloudStack's OAuth2 authentication plugin and Google OAuth integration.
-
-This issue affects Apache CloudStack: from 4.19.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59799" data-description="improper privilege management vulnerability in apache cloudstack's two-factor authentication plugin allowing bypass of the two-factor authentication disable flow.
-
-this issue affects apache cloudstack: from 4.18.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59799" target="_blank">CVE-2026-59799</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Privilege Management vulnerability in Apache CloudStack's Two-factor authentication plugin allowing bypass of the two-factor authentication disable flow.
-
-This issue affects Apache CloudStack: from 4.18.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59780" data-description="exposure of sensitive information to an unauthorized actor vulnerability in apache cloudstack's ldap authentication plugin while listing ldap providers.
-
-
-
-
-
-
-
-
-
-
-
-ldap configurations can be listed by any authenticated user with access to the listldapconfigurations api. by default, this api is available to all default roles.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-this issue affects apache cloudstack: from 4.2.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59780" target="_blank">CVE-2026-59780</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposure of Sensitive Information to an Unauthorized Actor vulnerability in Apache CloudStack's LDAP authentication plugin while listing LDAP providers.
-
-
-
-
-
-
-
-
-
-
-
-LDAP configurations can be listed by any authenticated user with access to the listLdapConfigurations API. By default, this API is available to all default roles.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-This issue affects Apache CloudStack: from 4.2.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59657" data-description="cleartext storage of sensitive information vulnerability in apache cloudstack with asyncjob storage in the database.
-
-this issue affects apache cloudstack: from 4.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59657" target="_blank">CVE-2026-59657</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Cleartext Storage of Sensitive Information vulnerability in Apache CloudStack with AsyncJob storage in the database.
-
-This issue affects Apache CloudStack: from 4.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59655" data-description="exposure of sensitive information to an unauthorized actor vulnerability in apache cloudstack's oauth authentication plugin while listing oauth providers.
-
-this issue affects apache cloudstack: from 4.19.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59655" target="_blank">CVE-2026-59655</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposure of Sensitive Information to an Unauthorized Actor vulnerability in Apache CloudStack's OAuth authentication plugin while listing OAuth providers.
-
-This issue affects Apache CloudStack: from 4.19.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59085" data-description="server-side request forgery (ssrf) vulnerability in apache cloudstack's webhook module, exploitable via webhook delivery requests.
-
-this issue affects apache cloudstack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59085" target="_blank">CVE-2026-59085</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Server-Side Request Forgery (SSRF) vulnerability in Apache CloudStack's webhook module, exploitable via webhook delivery requests.
-
-This issue affects Apache CloudStack: from 4.20.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-50222" data-description="missing authorization, exposure of sensitive information to an unauthorized actor vulnerability in apache cloudstack's userdata reference apis.
-
-several userdata-related apis in apache cloudstack, including deleteuserdata, linkuserdatatotemplate, resetuserdataforvirtualmachine, deployvirtualmachine, and updatevirtualmachine, exhibit missing or insufficient access control validation, potentially allowing cross-tenant/cross-account access to userdata resources that belong to other tenants.
-
-this issue affects apache cloudstack: from 4.18.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-the deletecniconfiguration api, introduced in 4.21.0.0, also exhibits similar behaviour and lacks access validation.
-
-users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50222" target="_blank">CVE-2026-50222</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-21 04:16:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Missing Authorization, Exposure of Sensitive Information to an Unauthorized Actor vulnerability in Apache CloudStack's Userdata reference APIs.
-
-Several userdata-related APIs in Apache CloudStack, including deleteUserData, linkUserDataToTemplate, resetUserDataForVirtualMachine, deployVirtualMachine, and updateVirtualMachine, exhibit missing or insufficient access control validation, potentially allowing cross-tenant/cross-account access to userdata resources that belong to other tenants.
-
-This issue affects Apache CloudStack: from 4.18.0.0 through 4.20.3.0 and from 4.21.0.0 through 4.22.1.0.
-
-The deleteCniConfiguration API, introduced in 4.21.0.0, also exhibits similar behaviour and lacks access validation.
 
 Users are recommended to upgrade to version 4.20.3.1 or 4.22.1.1 or later, which fixes the issue.</p>
                 </div>
