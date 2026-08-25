@@ -34,6 +34,58 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-78637" data-description="a vulnerability was detected in fdawgs node-poppler up to 9.1.2/10.0.1. the impacted element is the function pdfinfo/pdftotext/pdftocairo/pdftoppm/pdfimages/pdftohtml/pdftops/pdffonts/pdfdetach/pdfattach/pdfseparate/pdfunite of the file src/index.js of the component argument injection handler. performing a manipulation of the argument file_path results in argument injection. the attack may be initiated remotely. the patch is named db6e3f79d3beb20601be7e59669c39811ae3c330. it is recommended to apply a patch to fix this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78637" target="_blank">CVE-2026-78637</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-25 00:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability was detected in Fdawgs node-poppler up to 9.1.2/10.0.1. The impacted element is the function pdfInfo/pdfToText/pdfToCairo/pdfToPpm/pdfImages/pdfToHtml/pdfToPs/pdfFonts/pdfDetach/pdfAttach/pdfSeparate/pdfUnite of the file src/index.js of the component Argument Injection Handler. Performing a manipulation of the argument file_path results in argument injection. The attack may be initiated remotely. The patch is named db6e3f79d3beb20601be7e59669c39811ae3c330. It is recommended to apply a patch to fix this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-13215" data-description="the zephyr ext2 filesystem driver fails to validate the s_log_block_size field of the on-disk superblock when mounting a filesystem. ext2_verify_disk_superblock() in subsys/fs/ext2/ext2_impl.c checks the magic number, revision, inode size and group counts, but never bounds s_log_block_size. on a successful verify, subsys/fs/ext2/ext2_ops.c computes fs->block_size = 1024 << superblock.s_log_block_size from this attacker-controlled uint32_t, so a crafted value either overflows the shift (undefined behaviour) or yields a block size far larger than config_ext2_max_block_size.
+
+that block size is then passed to k_mem_slab_init() by ext2_init_blocks_slab() to carve config_ext2_max_block_count blocks out of the fixed static buffer __ext2_block_memory_buffer, whose size is config_ext2_max_block_count * config_ext2_max_block_size. k_mem_slab_init() does not verify that the requested blocks fit the buffer, and the ext2 wrapper discards its return value, so the slab is laid out past the end of the static buffer. the mount immediately reads block-group, bitmap and inode blocks of fs->block_size bytes each into these slab blocks, producing an out-of-bounds write into adjacent static memory on the first block read.
+
+the entire path is gated only by data read from the mounted image, making this reachable by any attacker who can present a crafted ext2 image to a device that mounts it (for example a removable sd card or storage medium). because the ext2 driver runs in kernel mode, supplying image bytes yields a supervisor-mode memory-corruption primitive, with impact ranging from denial of service to potential code execution.
+
+the fix rejects s_log_block_size values that overflow the shift (greater than 11) or that produce a block size exceeding config_ext2_max_block_size, so the block slab can no longer be initialized larger than its backing buffer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13215" target="_blank">CVE-2026-13215</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-25 00:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
+                    <p>The Zephyr ext2 filesystem driver fails to validate the s_log_block_size field of the on-disk superblock when mounting a filesystem. ext2_verify_disk_superblock() in subsys/fs/ext2/ext2_impl.c checks the magic number, revision, inode size and group counts, but never bounds s_log_block_size. On a successful verify, subsys/fs/ext2/ext2_ops.c computes fs->block_size = 1024 << superblock.s_log_block_size from this attacker-controlled uint32_t, so a crafted value either overflows the shift (undefined behaviour) or yields a block size far larger than CONFIG_EXT2_MAX_BLOCK_SIZE.
+
+That block size is then passed to k_mem_slab_init() by ext2_init_blocks_slab() to carve CONFIG_EXT2_MAX_BLOCK_COUNT blocks out of the fixed static buffer __ext2_block_memory_buffer, whose size is CONFIG_EXT2_MAX_BLOCK_COUNT * CONFIG_EXT2_MAX_BLOCK_SIZE. k_mem_slab_init() does not verify that the requested blocks fit the buffer, and the ext2 wrapper discards its return value, so the slab is laid out past the end of the static buffer. The mount immediately reads block-group, bitmap and inode blocks of fs->block_size bytes each into these slab blocks, producing an out-of-bounds write into adjacent static memory on the first block read.
+
+The entire path is gated only by data read from the mounted image, making this reachable by any attacker who can present a crafted ext2 image to a device that mounts it (for example a removable SD card or storage medium). Because the ext2 driver runs in kernel mode, supplying image bytes yields a supervisor-mode memory-corruption primitive, with impact ranging from denial of service to potential code execution.
+
+The fix rejects s_log_block_size values that overflow the shift (greater than 11) or that produce a block size exceeding CONFIG_EXT2_MAX_BLOCK_SIZE, so the block slab can no longer be initialized larger than its backing buffer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-13214" data-description="the ocpp 1.6 client in subsys/net/lib/ocpp/ocpp_j.c contains a stack buffer overflow in parse_getconfig_msg(). when handling a getconfiguration request from the central system, the handler copied the attacker-controlled json "key" string into the caller's fixed 50-byte stack buffer (skey[cistr50], declared in subsys/net/lib/ocpp/ocpp.c) using an unbounded strcpy(). the parsed key value points directly into the receive buffer, so its length is bounded only by the message size (config_ocpp_recv_buffer_size, default 2048).
+
+the getconfiguration message is delivered over the websocket connection that the charge point opens to its configured central system. the reader thread ocpp_wsreader() reads the message into ui->recv_buf and dispatches it to parse_getconfig_msg() via the pdu function table. an attacker who controls the central system endpoint, or a man-in-the-middle on an unencrypted connection, can send a getconfiguration request whose "key" field exceeds 50 bytes and overflow the reader thread's stack with attacker-chosen bytes.
+
+the consequence is a remotely triggerable stack smash on the ocpp reader thread: at minimum a denial of service, and plausibly remote code execution depending on build-time hardening such as stack canaries and mpu configuration. the fix replaces the strcpy() with a bounded strncpy(key, payload.key[0], cistr50 - 1) followed by explicit nul termination, matching the bounded copies already used by the sibling handlers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-13214" target="_blank">CVE-2026-13214</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-25 00:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>The OCPP 1.6 client in subsys/net/lib/ocpp/ocpp_j.c contains a stack buffer overflow in parse_getconfig_msg(). When handling a GetConfiguration request from the central system, the handler copied the attacker-controlled JSON "key" string into the caller's fixed 50-byte stack buffer (skey[CISTR50], declared in subsys/net/lib/ocpp/ocpp.c) using an unbounded strcpy(). The parsed key value points directly into the receive buffer, so its length is bounded only by the message size (CONFIG_OCPP_RECV_BUFFER_SIZE, default 2048).
+
+The GetConfiguration message is delivered over the WebSocket connection that the charge point opens to its configured central system. The reader thread ocpp_wsreader() reads the message into ui->recv_buf and dispatches it to parse_getconfig_msg() via the PDU function table. An attacker who controls the central system endpoint, or a man-in-the-middle on an unencrypted connection, can send a GetConfiguration request whose "key" field exceeds 50 bytes and overflow the reader thread's stack with attacker-chosen bytes.
+
+The consequence is a remotely triggerable stack smash on the OCPP reader thread: at minimum a denial of service, and plausibly remote code execution depending on build-time hardening such as stack canaries and MPU configuration. The fix replaces the strcpy() with a bounded strncpy(key, payload.key[0], CISTR50 - 1) followed by explicit NUL termination, matching the bounded copies already used by the sibling handlers.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12561" data-description="the tagdiv composer plugin for wordpress is vulnerable to stored cross-site scripting via the vc_raw_html shortcode in all versions up to and including 5.4.5. this is due to insufficient input sanitization and output escaping in the vc_raw_html::render() method, which base64-decodes shortcode content (after a strip_tags() that is bypassed because the encoded payload contains no tags on save) and concatenates the result directly into the page html. because wordpress's save-time wp_kses_post() filter only sees the inert base64 text inside a normal shortcode bracket and does not decode it, the dangerous tags survive into post_content and are emitted unescaped at render time. this makes it possible for authenticated attackers, with contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page (for example, when an editor or administrator previews the pending post).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12561" target="_blank">CVE-2026-12561</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-25 00:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>The tagDiv Composer plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the vc_raw_html shortcode in all versions up to and including 5.4.5. This is due to insufficient input sanitization and output escaping in the vc_raw_html::render() method, which base64-decodes shortcode content (after a strip_tags() that is bypassed because the encoded payload contains no tags on save) and concatenates the result directly into the page HTML. Because WordPress's save-time wp_kses_post() filter only sees the inert base64 text inside a normal shortcode bracket and does not decode it, the dangerous tags survive into post_content and are emitted unescaped at render time. This makes it possible for authenticated attackers, with Contributor-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page (for example, when an Editor or Administrator previews the pending post).</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-76063" data-description="the fundengine – donation and crowdfunding platform plugin for wordpress is vulnerable to stored cross-site scripting via the 'wfp_featured_video_url' parameter in all versions up to, and including, 1.8.1 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with subscriber-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. the rest endpoint used to submit the video url has its permission_callback set to __return_true, meaning any authenticated user — including those with subscriber-level access — can reach the vulnerable code path.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76063" target="_blank">CVE-2026-76063</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-24 23:18:20 CDT</p>
@@ -160,38 +212,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
                     <p>GitPython before 3.1.59 contains an arbitrary file read vulnerability in TagReference.create() where a positional reference parameter bypasses the unsafe option guard. Attackers can supply a reference value like --file=<path> to read arbitrary files, with contents returned in the annotated tag message.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-78678" data-description="gitpython versions before 3.1.59 contain an incomplete denylist in the unsafe_git_revision_options guard that omits --contents and -s options, allowing attackers to read arbitrary files by passing these options to repo.blame(). attackers can supply revision values like --contents=/etc/passwd to leak file contents through the blame result returned to the caller.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78678" target="_blank">CVE-2026-78678</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-24 21:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>GitPython versions before 3.1.59 contain an incomplete denylist in the unsafe_git_revision_options guard that omits --contents and -S options, allowing attackers to read arbitrary files by passing these options to Repo.blame(). Attackers can supply revision values like --contents=/etc/passwd to leak file contents through the blame result returned to the caller.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-78677" data-description="gitpython before 3.1.59 omits --separate-git-dir from unsafe_git_clone_options, allowing attackers to create arbitrary git directories outside the intended clone destination. attackers can pass a separate_git_dir parameter to repo.clone_from() or repo.clone() to redirect repository metadata to an attacker-controlled filesystem path, enabling arbitrary directory creation and potential hook execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78677" target="_blank">CVE-2026-78677</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-24 21:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>GitPython before 3.1.59 omits --separate-git-dir from unsafe_git_clone_options, allowing attackers to create arbitrary git directories outside the intended clone destination. Attackers can pass a separate_git_dir parameter to Repo.clone_from() or Repo.clone() to redirect repository metadata to an attacker-controlled filesystem path, enabling arbitrary directory creation and potential hook execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-78676" data-description="gitpython before 3.1.59 fails to safely re-serialize multi-line git-config values during write operations, corrupting dormant quoted values into injected directives like core.hookspath. attackers can craft config files with embedded newlines that become live git directives after any unrelated gitpython config write, enabling arbitrary code execution via hook invocation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78676" target="_blank">CVE-2026-78676</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-24 21:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>GitPython before 3.1.59 fails to safely re-serialize multi-line git-config values during write operations, corrupting dormant quoted values into injected directives like core.hooksPath. Attackers can craft config files with embedded newlines that become live git directives after any unrelated GitPython config write, enabling arbitrary code execution via hook invocation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-78675" data-description="gitpython before 3.1.59 fails to disable merge_includes when parsing .gitmodules, allowing attackers to disclose local file content by including arbitrary file paths via [include] directives. attackers can craft a malicious .gitmodules file with include directives pointing to sensitive files; when repo.submodules is accessed, gitconfigparser raises missingsectionheadererror embedding the target file's first line verbatim in the exception message.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78675" target="_blank">CVE-2026-78675</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-24 21:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.4</p>
-                    <p>GitPython before 3.1.59 fails to disable merge_includes when parsing .gitmodules, allowing attackers to disclose local file content by including arbitrary file paths via [include] directives. Attackers can craft a malicious .gitmodules file with include directives pointing to sensitive files; when repo.submodules is accessed, GitConfigParser raises MissingSectionHeaderError embedding the target file's first line verbatim in the exception message.</p>
                 </div>
         
             </div>
