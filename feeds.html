@@ -34,248 +34,366 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-81814" data-description="affected versions of flowintel render calendar event titles using innerhtml. because those titles are derived from case titles, a user able to create or modify a case title could store html or script-capable content that is later interpreted by the browser when another user views the calendar.
+                <div class="cve-entry" data-cve-id="CVE-2026-81827" data-description="affected versions of flowintel incorrectly attempted to validate login email addresses by calling email(email). that does not perform wtforms field validation; it merely constructs a validator object.
+
+
+consequently, malformed attacker-controlled email input could continue through the login process and be written to security-relevant logs. the vulnerable code inserted the supplied email into both a warning log and the custom audit logger. since cr/lf characters were not escaped, an unauthenticated attacker could potentially inject additional physical log lines or forge misleading log entries.
+
+the patch corrects the validation call to email()(form, form.email), changes the standard logging call to parameterized logging, and introduces _sanitize_log_fragment() so carriage returns and line feeds are encoded instead of creating new records.
+
+version impacted >=3.3.0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81827" target="_blank">CVE-2026-81827</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Affected versions of Flowintel incorrectly attempted to validate login email addresses by calling Email(email). That does not perform WTForms field validation; it merely constructs a validator object.
+
+
+Consequently, malformed attacker-controlled email input could continue through the login process and be written to security-relevant logs. The vulnerable code inserted the supplied email into both a warning log and the custom audit logger. Since CR/LF characters were not escaped, an unauthenticated attacker could potentially inject additional physical log lines or forge misleading log entries.
+
+The patch corrects the validation call to Email()(form, form.email), changes the standard logging call to parameterized logging, and introduces _sanitize_log_fragment() so carriage returns and line feeds are encoded instead of creating new records.
+
+Version impacted >=3.3.0</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81826" data-description="affected versions of flowintel do not revoke existing authenticated sessions when a user’s password is changed.
+
+
+this means that if an attacker already possesses a valid session—for example, from prior access or a stolen session token—the victim changing their password does not terminate that attacker’s access. the session remains usable until it expires naturally. the upstream commit describes this directly as:
+
+
+“session keeps working until it expires.”
+
+the fix detects password changes and explicitly invokes _invalidate_user_sessions(user.id) after the database update. this is applied in both edit_user_core() and admin_edit_user_core().
+
+version impacted >=3.3.0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81826" target="_blank">CVE-2026-81826</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Affected versions of Flowintel do not revoke existing authenticated sessions when a user’s password is changed.
+
+
+This means that if an attacker already possesses a valid session—for example, from prior access or a stolen session token—the victim changing their password does not terminate that attacker’s access. The session remains usable until it expires naturally. The upstream commit describes this directly as:
+
+
+“session keeps working until it expires.”
+
+The fix detects password changes and explicitly invokes _invalidate_user_sessions(user.id) after the database update. This is applied in both edit_user_core() and admin_edit_user_core().
+
+Version impacted >=3.3.0</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81820" data-description="affected versions of flowintel construct timeline html using attacker-controllable misp object fields such as:
+
+
+
+  *  
+object uuid;
+
+
+  *  
+object name;
+
+
+  *  
+attribute value;
+
+
+  *  
+attribute type;
+
+
+  *  
+comment;
+
+
+  *  
+first/last seen values;
+
+
+  *  
+ids flag.
+
+
+
+
+
+those values were concatenated directly into html strings before rendering. the upstream commit explicitly states that dompurify removed xss vectors but still allowed other html elements, such as forms, through.
+
+the fix replaces direct string interpolation with dom construction via document.createelement() and assigns all attacker-controlled values using textcontent. the headline is similarly converted to escaped html through a temporary element.
+
+version impacted =>3.3.0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81820" target="_blank">CVE-2026-81820</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Affected versions of Flowintel construct timeline HTML using attacker-controllable MISP object fields such as:
+
+
+
+  *  
+object UUID;
+
+
+  *  
+object name;
+
+
+  *  
+attribute value;
+
+
+  *  
+attribute type;
+
+
+  *  
+comment;
+
+
+  *  
+first/last seen values;
+
+
+  *  
+IDS flag.
+
+
+
+
+
+Those values were concatenated directly into HTML strings before rendering. The upstream commit explicitly states that DOMPurify removed XSS vectors but still allowed other HTML elements, such as forms, through.
+
+The fix replaces direct string interpolation with DOM construction via document.createElement() and assigns all attacker-controlled values using textContent. The headline is similarly converted to escaped HTML through a temporary element.
+
+Version impacted =>3.3.0</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81819" data-description="affected versions of flowintel expose the /my_assignment/user api endpoint to any authenticated api user. the endpoint accepts a user_id parameter identifying the user whose assignments should be returned, but previously had no role restriction beyond general api authentication.
+
+
+as a result, a lower-privileged authenticated user could potentially query another user’s assignment information by supplying that user’s identifier.
 
 
 the fix changes:
 
 
-titleel.innerhtml = arg.event.title
+method_decorators = [api_required]
 
 
 to:
 
 
-titleel.textcontent = arg.event.title || ''
+method_decorators = [admin_or_org_admin_required, api_required]
 
-and similarly stops using innerhtml for the static download icon.
+so only administrators or organization administrators can perform cross-user assignment queries.
 
 version impacted =>3.3.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81814" target="_blank">CVE-2026-81814</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:43 CDT</p>
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81819" target="_blank">CVE-2026-81819</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:05 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Affected versions of Flowintel render calendar event titles using innerHTML. Because those titles are derived from case titles, a user able to create or modify a case title could store HTML or script-capable content that is later interpreted by the browser when another user views the calendar.
+                    <p>Affected versions of Flowintel expose the /my_assignment/user API endpoint to any authenticated API user. The endpoint accepts a user_id parameter identifying the user whose assignments should be returned, but previously had no role restriction beyond general API authentication.
+
+
+As a result, a lower-privileged authenticated user could potentially query another user’s assignment information by supplying that user’s identifier.
 
 
 The fix changes:
 
 
-titleEl.innerHTML = arg.event.title
+method_decorators = [api_required]
 
 
 to:
 
 
-titleEl.textContent = arg.event.title || ''
+method_decorators = [admin_or_org_admin_required, api_required]
 
-and similarly stops using innerHTML for the static download icon.
+so only administrators or organization administrators can perform cross-user assignment queries.
 
 Version impacted =>3.3.0</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-81753" data-description="affected versions of flowintel render mermaid blocks contained in stored case notes without sufficiently neutralizing attacker-controlled markup. because mermaid note content is persisted and later rendered for other users, an attacker with permission to create or edit a note could store a crafted mermaid payload that results in javascript execution when another user views the affected case note.
-
-the patch adds explicit mermaid detection and html escaping around the token content before the generated mermaid wrapper is returned. it also moves the wrapping logic earlier in page initialization so markdown instances are protected consistently.
-
-version impacted >= 3.3.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81753" target="_blank">CVE-2026-81753</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Affected versions of Flowintel render Mermaid blocks contained in stored case notes without sufficiently neutralizing attacker-controlled markup. Because Mermaid note content is persisted and later rendered for other users, an attacker with permission to create or edit a note could store a crafted Mermaid payload that results in JavaScript execution when another user views the affected case note.
-
-The patch adds explicit Mermaid detection and HTML escaping around the token content before the generated Mermaid wrapper is returned. It also moves the wrapping logic earlier in page initialization so Markdown instances are protected consistently.
-
-Version impacted >= 3.3.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81743" data-description="affected versions of flowintel allow the log_file configuration value to be modified through system settings without restricting it to a filename inside the intended log directory.
+                <div class="cve-entry" data-cve-id="CVE-2026-81818" data-description="affected versions of flowintel contain an authorization flaw in the administrative user-edit api.
 
 
-because the application constructs the log destination from this configurable value, an administrator could set log_file to an arbitrary filesystem path. since attackers can influence logged content, this enables controlled data to be written into unintended files. the upstream commit specifically describes an exploitation chain in which an attacker injects a template into a chosen file and subsequently abuses application rendering behavior to execute code.
-
-the patch removes log_file from the web-editable settings, introduces validate_log_file_name() to reject absolute paths, traversal, windows paths, null bytes, and directory components, and centralizes log path construction through resolve_log_file_path().
-
-version impacted: >=3.3.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81743" target="_blank">CVE-2026-81743</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Affected versions of Flowintel allow the LOG_FILE configuration value to be modified through system settings without restricting it to a filename inside the intended log directory.
+the existing authorization check correctly prevented an organization administrator from editing users in another organization, but it did not prevent them from editing a full administrator within their own organization. as a result, an org admin could modify that full administrator account, including changing its password. the upstream commit explicitly describes the issue as:
 
 
-Because the application constructs the log destination from this configurable value, an administrator could set LOG_FILE to an arbitrary filesystem path. Since attackers can influence logged content, this enables controlled data to be written into unintended files. The upstream commit specifically describes an exploitation chain in which an attacker injects a template into a chosen file and subsequently abuses application rendering behavior to execute code.
-
-The patch removes LOG_FILE from the web-editable settings, introduces validate_log_file_name() to reject absolute paths, traversal, Windows paths, null bytes, and directory components, and centralizes log path construction through resolve_log_file_path().
-
-Version impacted: >=3.3.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81677" data-description="the ‘/ws/apiprensa/getvideo’ endpoint is vulnerable to sql injection due to improper validation of the get parameter `id_ambito`. an attacker can inject sql syntax that breaks the underlying structure of the mariadb query, resulting in syntax errors and the exposure of database error messages via pdoexception. this confirms that user input is being incorporated directly into sql statements without proper sanitization or the use of prepared statements.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81677" target="_blank">CVE-2026-81677</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The ‘/ws/apiprensa/getVideo’ endpoint is vulnerable to SQL injection due to improper validation of the GET parameter `id_ambito`. An attacker can inject SQL syntax that breaks the underlying structure of the MariaDB query, resulting in syntax errors and the exposure of database error messages via PDOException. This confirms that user input is being incorporated directly into SQL statements without proper sanitization or the use of prepared statements.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81676" data-description="a vulnerability in the endpoint ‘/ws/apitribuna/ultimosvideos’ where the `limit_videos` parameter is directly concatenated into a mariadb sql query without proper sanitization or parameterization. by injecting sql syntax into this parameter, a remote attacker can cause sql syntax errors and potentially manipulate backend queries. the issue results in an error-based sql injection and exposes internal database error messages and stack traces, revealing implementation details of the backend system.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81676" target="_blank">CVE-2026-81676</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A vulnerability in the endpoint ‘/ws/apitribuna/ultimosVideos’ where the `limit_videos` parameter is directly concatenated into a MariaDB SQL query without proper sanitization or parameterization. By injecting SQL syntax into this parameter, a remote attacker can cause SQL syntax errors and potentially manipulate backend queries. The issue results in an error-based SQL injection and exposes internal database error messages and stack traces, revealing implementation details of the backend system.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81675" data-description="the endpoint ‘/ws/apiprensa/getvideoultimasseccion’ contains an sql injection vulnerability in the id_seccion parameter. the parameter is directly embedded in a complex sql query that includes grouping and sorting operations. by injecting sql syntax, an attacker can disrupt the query structure and cause database errors, exposing the internal logic of the queries. the complexity of the query increases the potential impact, as it could allow for broader manipulation of the content retrieval logic.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81675" target="_blank">CVE-2026-81675</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The endpoint ‘/ws/apiprensa/getVideoUltimasSeccion’ contains an SQL injection vulnerability in the id_seccion parameter. The parameter is directly embedded in a complex SQL query that includes grouping and sorting operations. By injecting SQL syntax, an attacker can disrupt the query structure and cause database errors, exposing the internal logic of the queries. The complexity of the query increases the potential impact, as it could allow for broader manipulation of the content retrieval logic.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81674" data-description="the endpoint ‘/ws/apiprensa/getvideonextprev’ is vulnerable to sql injection via the id_ambito parameter. unsanitized input is directly incorporated into a mariadb query, allowing attackers to inject sql syntax that interrupts the query's execution. the vulnerability results in detailed database error messages and exposes the internal structure of the queries, which could facilitate further exploitation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81674" target="_blank">CVE-2026-81674</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The endpoint ‘/ws/apiprensa/getVideoNextPrev’ is vulnerable to SQL injection via the id_ambito parameter. Unsanitized input is directly incorporated into a MariaDB query, allowing attackers to inject SQL syntax that interrupts the query's execution. The vulnerability results in detailed database error messages and exposes the internal structure of the queries, which could facilitate further exploitation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81673" data-description="the ‘/ws/apitribuna/setvisita’ endpoint is vulnerable to sql injection through the id_video and id_ambito parameters. the application does not validate or sanitize these inputs before including them in sql queries. this allows a remote attacker to inject sql syntax and disrupt the execution of queries, causing database errors and potentially manipulating visit tracking records. given the nature of the endpoint, this could also affect the integrity of analytics and the accuracy of records.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81673" target="_blank">CVE-2026-81673</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The ‘/ws/apitribuna/setVisita’ endpoint is vulnerable to SQL injection through the id_video and id_ambito parameters. The application does not validate or sanitize these inputs before including them in SQL queries. This allows a remote attacker to inject SQL syntax and disrupt the execution of queries, causing database errors and potentially manipulating visit tracking records. Given the nature of the endpoint, this could also affect the integrity of analytics and the accuracy of records.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81672" data-description="sql injection vulnerability in the ‘/ws/apiprensa/getvideosubcanal’ endpoint due to improper handling of the id_video parameter. the application does not sanitize input before constructing sql queries, which results in execution errors when malicious input is provided. the vulnerability exposes internal file paths and complete stack traces through the slim framework’s error handler, which increases the severity due to the combination of information disclosure and sql injection.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81672" target="_blank">CVE-2026-81672</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>SQL injection vulnerability in the ‘/ws/apiprensa/getVideoSubcanal’ endpoint due to improper handling of the id_video parameter. The application does not sanitize input before constructing SQL queries, which results in execution errors when malicious input is provided. The vulnerability exposes internal file paths and complete stack traces through the Slim framework’s error handler, which increases the severity due to the combination of information disclosure and SQL injection.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81668" data-description="a flaw was found in katello where the content view filter rules api does not properly enforce authorization on the parent content view filter. an authenticated, low-privileged user with content view permissions in one organization may be able to access and modify filter rules belonging to a content view filter in another organization by supplying that filter's identifier. this can result in unauthorized disclosure of filter-rule information and unauthorized changes to unpublished content view filter configuration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81668" target="_blank">CVE-2026-81668</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>A flaw was found in Katello where the Content View Filter Rules API does not properly enforce authorization on the parent Content View Filter. An authenticated, low-privileged user with Content View permissions in one organization may be able to access and modify filter rules belonging to a Content View Filter in another organization by supplying that filter's identifier. This can result in unauthorized disclosure of filter-rule information and unauthorized changes to unpublished Content View filter configuration.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81662" data-description="affected versions of flowintel improperly trust configuration keys supplied to the alerts settings update endpoint. while configuration values were normalized to python literals, the corresponding keys were used directly when constructing and replacing lines in conf/config_module.py.
+“org admin can change the password of a full admin in the same organization.”
 
 
-the vulnerable code used requester-controlled keys in both the regular expression and the generated assignment:
+the fix adds a higher-privilege boundary check:
 
 
-f'{key} = {py_val}'
+if user_to_edit.is_admin(): return ... 403
 
-and appended an assignment if the key was not already present. the modified python configuration module was subsequently reloaded using importlib.reload(). this creates a code-generation boundary in which specially crafted configuration keys can alter the python source structure and result in execution of attacker-controlled python statements. 
+so organization administrators can no longer modify full administrator accounts.
 
 version impacted >=3.3.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81662" target="_blank">CVE-2026-81662</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81818" target="_blank">CVE-2026-81818</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:05 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Affected versions of Flowintel improperly trust configuration keys supplied to the alerts settings update endpoint. While configuration values were normalized to Python literals, the corresponding keys were used directly when constructing and replacing lines in conf/config_module.py.
+                    <p>Affected versions of Flowintel contain an authorization flaw in the administrative user-edit API.
 
 
-The vulnerable code used requester-controlled keys in both the regular expression and the generated assignment:
+The existing authorization check correctly prevented an organization administrator from editing users in another organization, but it did not prevent them from editing a full administrator within their own organization. As a result, an org admin could modify that full administrator account, including changing its password. The upstream commit explicitly describes the issue as:
 
 
-f'{key} = {py_val}'
+“Org admin can change the password of a full admin in the same organization.”
 
-and appended an assignment if the key was not already present. The modified Python configuration module was subsequently reloaded using importlib.reload(). This creates a code-generation boundary in which specially crafted configuration keys can alter the Python source structure and result in execution of attacker-controlled Python statements. 
+
+The fix adds a higher-privilege boundary check:
+
+
+if user_to_edit.is_admin(): return ... 403
+
+so organization administrators can no longer modify full administrator accounts.
 
 Version impacted >=3.3.0</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-81659" data-description="affected versions of flowintel allow attacker-controlled note content to be processed by pandoc and xelatex during pdf export in a way that can cause local files on the flowintel server to be read and incorporated into the generated export.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81659" target="_blank">CVE-2026-81659</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81817" data-description="affected versions of flowintel contain an insecure direct object reference / broken object-level authorization issue across numerous task endpoints.
+
+
+the routes generally received both a case identifier and a task identifier, but previously they did not enforce that the task actually belonged to the supplied case. as a result, an authenticated user with editor-level access to one case could potentially substitute the id of a task from another case and invoke operations against that foreign task.
+
+
+the patch introduces task_case_bound_required, which loads both objects and returns 404 unless the task belongs to the requested case. this protection is applied to edit, delete, note, assignment, status, file, export, misp-linking, subtask, external-reference, and other task-related endpoints.
+
+the fix also adds explicit checks that a requested note_id belongs to the current task before returning or exporting it, closing related cross-object access paths.
+
+version impacted =>3.3.0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81817" target="_blank">CVE-2026-81817</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:05 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Affected versions of Flowintel allow attacker-controlled note content to be processed by Pandoc and XeLaTeX during PDF export in a way that can cause local files on the Flowintel server to be read and incorporated into the generated export.</p>
+                    <p>Affected versions of Flowintel contain an insecure direct object reference / broken object-level authorization issue across numerous task endpoints.
+
+
+The routes generally received both a case identifier and a task identifier, but previously they did not enforce that the task actually belonged to the supplied case. As a result, an authenticated user with editor-level access to one case could potentially substitute the ID of a task from another case and invoke operations against that foreign task.
+
+
+The patch introduces task_case_bound_required, which loads both objects and returns 404 unless the task belongs to the requested case. This protection is applied to edit, delete, note, assignment, status, file, export, MISP-linking, subtask, external-reference, and other task-related endpoints.
+
+The fix also adds explicit checks that a requested note_id belongs to the current task before returning or exporting it, closing related cross-object access paths.
+
+Version impacted =>3.3.0</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-81658" data-description="a flaw was found in foreman. the template revision endpoint does not enforce object-level authorization when retrieving an audited template revision. an authenticated, low privileged user with a template-related permission, such as view_ptables, can obtain historical template contents belonging to another organization or location by supplying the corresponding audit id. this can result in unauthorized disclosure of historical template contents, which may contain sensitive configuration information, credentials, or other secrets. the rest api revision endpoints correctly restrict this lookup.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81658" target="_blank">CVE-2026-81658</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A flaw was found in Foreman. The template revision endpoint does not enforce object-level authorization when retrieving an audited template revision. An authenticated, low privileged user with a template-related permission, such as view_ptables, can obtain historical template contents belonging to another organization or location by supplying the corresponding audit ID. This can result in unauthorized disclosure of historical template contents, which may contain sensitive configuration information, credentials, or other secrets. The REST API revision endpoints correctly restrict this lookup.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81562" data-description="a security flaw has been discovered in alexgladkov claude-in-mobile 3.10.2. this affects the function execsync of the file src/adb/client.ts. performing a manipulation results in os command injection. the attack requires a local approach. the exploit has been released to the public and may be used for attacks. upgrading to version 3.10.3 is able to mitigate this issue. the patch is named a86d9e55694c98a122943eeff859461d0b9aa6d6. it is suggested to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81562" target="_blank">CVE-2026-81562</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A security flaw has been discovered in AlexGladkov claude-in-mobile 3.10.2. This affects the function execSync of the file src/adb/client.ts. Performing a manipulation results in os command injection. The attack requires a local approach. The exploit has been released to the public and may be used for attacks. Upgrading to version 3.10.3 is able to mitigate this issue. The patch is named a86d9e55694c98a122943eeff859461d0b9aa6d6. It is suggested to upgrade the affected component.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-81560" data-description="a vulnerability was identified in blackms aistack up to 1.6.1. affected by this issue is some unknown functionality of the file src/web/server.ts of the component static file handler. such manipulation of the argument req.url leads to path traversal. the attack can be executed remotely. the exploit is publicly available and might be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81560" target="_blank">CVE-2026-81560</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability was identified in blackms aistack up to 1.6.1. Affected by this issue is some unknown functionality of the file src/web/server.ts of the component Static File Handler. Such manipulation of the argument req.url leads to path traversal. The attack can be executed remotely. The exploit is publicly available and might be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74233" data-description="zbtlink we1326, we357, we5926, we5926-wd, we826-q, we826-t2, we826-wd, wg108, and wg3526 firmware 19.1101, zbtlink we2426-c firmware 19.1112, zbtlink we5926-ec_qp firmware 20.0516, zbtlink wf3526-p firmware 19.051, ctn720-w1, lf-1541, and mt7620n firmware 19.1101, and wrc1 firmware 20.0622 contain an unauthenticated command injection in the infosrvd service (udp/9992). a remote unauthenticated attacker can send a crafted udp packet to execute arbitrary commands as root. the service's authentication uses a hardcoded salt and an all-zero wildcard mac bypass, rendering it ineffective.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74233" target="_blank">CVE-2026-74233</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:34 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81735" data-description="startserver.ts in the mcp-http-server package of ui-tars-desktop defaulted its listen address to '::' when no host was given, so startsseandstreamablehttpmcpserver bound the streamable http and sse mcp transports to every interface, and its authentication middleware was optional: middlewares are applied only when a caller supplies them. the @agent-infra/mcp-server-commands and @agent-infra/mcp-server-filesystem entry points call startsseandstreamablehttpmcpserver with a host and port alone and pass no middleware, so neither server required a credential. the commands server exposes a run_command tool that hands its caller-supplied command string to promisify(child_process.exec), so any unauthenticated client able to reach the port could run arbitrary commands as the user running the server, and the filesystem server exposed its file read and write tools on the same terms. the listen default became 127.0.0.1 in commit c2ad42e3eb9b27830db41a3e6f51ca7179d9b168; the package version stayed at 1.2.4 across that change, so the boundary is the commit rather than a release.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81735" target="_blank">CVE-2026-81735</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Zbtlink WE1326, WE357, WE5926, WE5926-WD, WE826-Q, WE826-T2, WE826-WD, WG108, and WG3526 firmware 19.1101, Zbtlink WE2426-C firmware 19.1112, Zbtlink WE5926-EC_QP firmware 20.0516, Zbtlink WF3526-P firmware 19.051, CTN720-W1, LF-1541, and MT7620N firmware 19.1101, and WRC1 firmware 20.0622 contain an unauthenticated command injection in the infosrvd service (UDP/9992). A remote unauthenticated attacker can send a crafted UDP packet to execute arbitrary commands as root. The service's authentication uses a hardcoded salt and an all-zero wildcard MAC bypass, rendering it ineffective.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
+                    <p>startServer.ts in the mcp-http-server package of UI-TARS-desktop defaulted its listen address to '::' when no host was given, so startSseAndStreamableHttpMcpServer bound the Streamable HTTP and SSE MCP transports to every interface, and its authentication middleware was optional: middlewares are applied only when a caller supplies them. The @agent-infra/mcp-server-commands and @agent-infra/mcp-server-filesystem entry points call startSseAndStreamableHttpMcpServer with a host and port alone and pass no middleware, so neither server required a credential. The commands server exposes a run_command tool that hands its caller-supplied command string to promisify(child_process.exec), so any unauthenticated client able to reach the port could run arbitrary commands as the user running the server, and the filesystem server exposed its file read and write tools on the same terms. The listen default became 127.0.0.1 in commit c2ad42e3eb9b27830db41a3e6f51ca7179d9b168; the package version stayed at 1.2.4 across that change, so the boundary is the commit rather than a release.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-74232" data-description="zbtlink l3_v2_8 firmware 3.0.0.4.528, zbtlink we826-t2 firmware 19.1101, zbtlink zbt-7628 firmware 1.0.0.2.007, zbtlink zbt-zbt7621 firmware 1.0.0.3.001, morequick mqac-7620, mqac-7620a, mqap-7620, mqap-7620a, and mqap-7628 firmware 1.0.0.2.000, ap522 firmware 1.0.0.2.014, ap7628 and hc5661a firmware 3.0.0.4.380, apg721b firmware 19.0809, hk300 firmware 1.0.0.2.032, and map-n10 firmware 1.0.0.2.044 ship a backdoor command-and-control implant (yunmgrd) reachable over an unauthenticated cleartext udp channel to a hardcoded c2 server. a remote unauthenticated attacker on the network path can hijack the channel and execute arbitrary commands as root. the attacker can also modify dns entries, exfiltrate pppoe credentials, and open reverse ssh tunnels.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74232" target="_blank">CVE-2026-74232</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Zbtlink L3_V2_8 firmware 3.0.0.4.528, Zbtlink WE826-T2 firmware 19.1101, Zbtlink ZBT-7628 firmware 1.0.0.2.007, Zbtlink ZBT-ZBT7621 firmware 1.0.0.3.001, MoreQuick MQAC-7620, MQAC-7620A, MQAP-7620, MQAP-7620A, and MQAP-7628 firmware 1.0.0.2.000, AP522 firmware 1.0.0.2.014, AP7628 and HC5661A firmware 3.0.0.4.380, APG721B firmware 19.0809, HK300 firmware 1.0.0.2.032, and MAP-N10 firmware 1.0.0.2.044 ship a backdoor command-and-control implant (yunmgrd) reachable over an unauthenticated cleartext UDP channel to a hardcoded C2 server. A remote unauthenticated attacker on the network path can hijack the channel and execute arbitrary commands as root. The attacker can also modify DNS entries, exfiltrate PPPoE credentials, and open reverse SSH tunnels.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66155" data-description="a vulnerability has been identified in element maps-ng v47 (all versions < v47.12.3), element maps-ng v48 (all versions < v48.11.3), element maps-ng v49 (all versions < v49.16.1). the si-map component does not properly neutralize user-controllable input of the points property that is used to render the tooltip label of map pins.
-this could allow an attacker to craft a malicious url that, when loaded by a victim and the map pin is hovered over, executes arbitrary script code within the victim's browser session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66155" target="_blank">CVE-2026-66155</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:31 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81727" data-description="nltk versions before 3.10.3 contain a filesystem containment bypass vulnerability in the downloader.download and downloader.incr_download methods that allows attackers to overwrite files outside the install root through pre-existing hardlinks. attackers with write access to a shared downloader directory can create hardlinks pointing to outside-root files that are then overwritten during normal package extraction, mutating files outside the intended install tree.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81727" target="_blank">CVE-2026-81727</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>A vulnerability has been identified in Element maps-ng V47 (All versions < V47.12.3), Element maps-ng V48 (All versions < V48.11.3), Element maps-ng V49 (All versions < V49.16.1). The si-map component does not properly neutralize user-controllable input of the points property that is used to render the tooltip label of map pins.
-This could allow an attacker to craft a malicious URL that, when loaded by a victim and the map pin is hovered over, executes arbitrary script code within the victim's browser session.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>NLTK versions before 3.10.3 contain a filesystem containment bypass vulnerability in the Downloader.download and Downloader.incr_download methods that allows attackers to overwrite files outside the install root through pre-existing hardlinks. Attackers with write access to a shared downloader directory can create hardlinks pointing to outside-root files that are then overwritten during normal package extraction, mutating files outside the intended install tree.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-5218" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in softtr informatics technology trading limited company e-commerce pack allows cross-site scripting (xss).
-
-this issue affects e-commerce pack: before 5.03.01.49.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-5218" target="_blank">CVE-2026-5218</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:18:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Improper neutralization of Script-Related HTML tags in a web page (basic XSS) vulnerability in Softtr Informatics Technology Trading Limited Company E-Commerce Pack allows Cross-Site Scripting (XSS).
-
-This issue affects E-Commerce Pack: before 5.03.01.49.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81726" data-description="nltk through 3.10.3 contains a path traversal vulnerability in model-artifact apis that bypass pathsec enforcement by using raw file operations on caller-controlled paths. attackers can read or write files outside allowed sandbox roots through transitionparser, averagedperceptron, perceptrontagger, and maxent parameter apis when pathsec is enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81726" target="_blank">CVE-2026-81726</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
+                    <p>NLTK through 3.10.3 contains a path traversal vulnerability in model-artifact APIs that bypass pathsec enforcement by using raw file operations on caller-controlled paths. Attackers can read or write files outside allowed sandbox roots through TransitionParser, AveragedPerceptron, PerceptronTagger, and maxent parameter APIs when pathsec is enabled.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-17562" data-description="authorization bypass through user-controlled key vulnerability in summit security systems adisyonpro allows accessing functionality not properly constrained by acls.
-
-this issue affects adisyonpro: before v5.21.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17562" target="_blank">CVE-2026-17562</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-27 08:16:56 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81725" data-description="nltk before 3.10.3 contains a regular expression denial of service vulnerability in pl196xcorpusreader that allows attackers to cause quadratic cpu consumption by supplying malformed tei blocks with many unmatched opening tags. attackers can exploit lazy regex patterns in the read_block method through public apis like words() and tagged_words() to force repeated rescans and achieve near-quadratic runtime growth.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81725" target="_blank">CVE-2026-81725</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>NLTK before 3.10.3 contains a regular expression denial of service vulnerability in Pl196xCorpusReader that allows attackers to cause quadratic CPU consumption by supplying malformed TEI blocks with many unmatched opening tags. Attackers can exploit lazy regex patterns in the read_block method through public APIs like words() and tagged_words() to force repeated rescans and achieve near-quadratic runtime growth.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81724" data-description="nltk before 3.10.3 contains an uncontrolled recursion vulnerability in nltk.featstruct.featstructreader that allows unauthenticated attackers to cause a denial of service by supplying deeply nested feature-structure input. attackers can craft trivial payloads with nested brackets that exceed python's recursion limit and raise an unhandled recursionerror, crashing applications that parse user-supplied feature structures or feature grammars.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81724" target="_blank">CVE-2026-81724</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:03 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Authorization bypass through User-Controlled key vulnerability in Summit Security Systems AdisyonPro allows Accessing Functionality Not Properly Constrained by ACLs.
-
-This issue affects AdisyonPro: before v5.21.0.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>NLTK before 3.10.3 contains an uncontrolled recursion vulnerability in nltk.featstruct.FeatStructReader that allows unauthenticated attackers to cause a denial of service by supplying deeply nested feature-structure input. Attackers can craft trivial payloads with nested brackets that exceed Python's recursion limit and raise an unhandled RecursionError, crashing applications that parse user-supplied feature structures or feature grammars.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81723" data-description="nltk versions before 3.10.3 contain a quadratic cpu exhaustion vulnerability in xmlcorpusview._read_xml_fragment() that rescans accumulated xml fragments on every 1 kib block read. attackers can provide malformed xml corpus files to cause severe cpu consumption and denial of service through affected readers like bnccorpusreader.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81723" target="_blank">CVE-2026-81723</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>NLTK versions before 3.10.3 contain a quadratic CPU exhaustion vulnerability in XMLCorpusView._read_xml_fragment() that rescans accumulated XML fragments on every 1 KiB block read. Attackers can provide malformed XML corpus files to cause severe CPU consumption and denial of service through affected readers like BNCCorpusReader.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81722" data-description="nltk porterstemmer in versions <= 3.10.2 (fixed in 3.10.3) contains an inefficient-algorithmic-complexity denial of service in porterstemmer.stem(). the _is_consonant() helper walks backward over the entire run of trailing 'y' characters on every call, and _measure() invokes it for each stem position, causing o(n^2) behavior. a single ~20-50 kb untrusted token consisting of a long run of the letter 'y' followed by a matching suffix (e.g., 'ness') can pin a cpu core for seconds to minutes, causing availability impact.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81722" target="_blank">CVE-2026-81722</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>nltk PorterStemmer in versions <= 3.10.2 (fixed in 3.10.3) contains an inefficient-algorithmic-complexity denial of service in PorterStemmer.stem(). The _is_consonant() helper walks backward over the entire run of trailing 'y' characters on every call, and _measure() invokes it for each stem position, causing O(n^2) behavior. A single ~20-50 KB untrusted token consisting of a long run of the letter 'y' followed by a matching suffix (e.g., 'ness') can pin a CPU core for seconds to minutes, causing availability impact.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81721" data-description="openssl_encrypt before 1.4.9 fails to validate kdf cost parameters in encrypted file metadata and keystore headers, allowing attackers to trigger unbounded memory allocation. attackers can craft malicious encrypted files declaring arbitrarily large argon2, scrypt, or balloon kdf parameters to exhaust system memory and crash the process without authentication.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81721" target="_blank">CVE-2026-81721</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>openssl_encrypt before 1.4.9 fails to validate KDF cost parameters in encrypted file metadata and keystore headers, allowing attackers to trigger unbounded memory allocation. Attackers can craft malicious encrypted files declaring arbitrarily large Argon2, scrypt, or balloon KDF parameters to exhaust system memory and crash the process without authentication.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81720" data-description="openssl_encrypt before 1.4.9 fails to validate the memory_cost parameter from identity file protection blocks, allowing attackers to trigger out-of-memory conditions during key derivation. attackers with write access to local identity stores can craft malicious identity files with excessive memory_cost values that cause the host to crash when unlocking identities before authentication.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81720" target="_blank">CVE-2026-81720</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.2</p>
+                    <p>openssl_encrypt before 1.4.9 fails to validate the memory_cost parameter from identity file protection blocks, allowing attackers to trigger out-of-memory conditions during key derivation. Attackers with write access to local identity stores can craft malicious identity files with excessive memory_cost values that cause the host to crash when unlocking identities before authentication.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81719" data-description="openssl_encrypt before 1.4.9 executes untrusted third-party plugins with insufficient controls: the plugin signature policy defaulted to warn, so an unsigned/unverifiable non-built-in plugin was compiled and executed in the host process at import time, before the runtime sandbox is installed. the only default gate was an incomplete, bypassable ast denylist. if a user is induced to load an attacker's plugin, this results in arbitrary code execution with the privileges of the user running openssl_encrypt. fixed in 1.4.9 by defaulting the signature policy to enforce for non-built-in plugins.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81719" target="_blank">CVE-2026-81719</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>openssl_encrypt before 1.4.9 executes untrusted third-party plugins with insufficient controls: the plugin signature policy defaulted to WARN, so an unsigned/unverifiable non-built-in plugin was compiled and executed in the host process at import time, before the runtime sandbox is installed. The only default gate was an incomplete, bypassable AST denylist. If a user is induced to load an attacker's plugin, this results in arbitrary code execution with the privileges of the user running openssl_encrypt. Fixed in 1.4.9 by defaulting the signature policy to ENFORCE for non-built-in plugins.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81718" data-description="openssl_encrypt versions before 1.4.9 use under-parameterized pbkdf2-hmac-sha256 with only 100,000 iterations to protect pqc keyfile private keys and 10,000 iterations for dual-encryption file-password verification. attackers who obtain keyfiles or encrypted files can brute-force wrapping passwords offline using gpu or asic acceleration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81718" target="_blank">CVE-2026-81718</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>openssl_encrypt versions before 1.4.9 use under-parameterized PBKDF2-HMAC-SHA256 with only 100,000 iterations to protect PQC keyfile private keys and 10,000 iterations for dual-encryption file-password verification. Attackers who obtain keyfiles or encrypted files can brute-force wrapping passwords offline using GPU or ASIC acceleration.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81717" data-description="openssl_encrypt (pip package openssl-encrypt) before 1.4.9 contains two weaknesses in the portable usb drive feature, whose threat model treats the removable drive as untrusted (attacker with physical write access). usbdrivecreator._verify_integrity_file only validates files listed in the manifest, so files added to the drive — including a root-level autorun payload — are not detected and integrity verification still passes. additionally, a globally constant, source-embedded kdf salt (_legacy_fixed_salt) is used to derive the drive encryption key for any drive lacking a per-drive salt file, defeating precomputation resistance and enabling an offline rainbow-table attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81717" target="_blank">CVE-2026-81717</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.5</p>
+                    <p>openssl_encrypt (pip package openssl-encrypt) before 1.4.9 contains two weaknesses in the portable USB drive feature, whose threat model treats the removable drive as untrusted (attacker with physical write access). USBDriveCreator._verify_integrity_file only validates files listed in the manifest, so files added to the drive — including a root-level autorun payload — are not detected and integrity verification still passes. Additionally, a globally constant, source-embedded KDF salt (_LEGACY_FIXED_SALT) is used to derive the drive encryption key for any drive lacking a per-drive salt file, defeating precomputation resistance and enabling an offline rainbow-table attack.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81716" data-description="openssl_encrypt (pip: openssl-encrypt) versions before 1.4.9 contain a path traversal flaw in pluginsandbox._is_safe_path, which authorized file access using a bare string-prefix match. a sandboxed plugin without the read_files permission could read or write another plugin's directory that merely shares a name prefix (e.g., .../plugins/foobar matching allowed .../plugins/foo), breaking per-plugin isolation within the same user. fixed by matching each allowed directory exactly or with a trailing path separator.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81716" target="_blank">CVE-2026-81716</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.2</p>
+                    <p>openssl_encrypt (pip: openssl-encrypt) versions before 1.4.9 contain a path traversal flaw in PluginSandbox._is_safe_path, which authorized file access using a bare string-prefix match. A sandboxed plugin without the READ_FILES permission could read or write another plugin's directory that merely shares a name prefix (e.g., .../plugins/foobar matching allowed .../plugins/foo), breaking per-plugin isolation within the same user. Fixed by matching each allowed directory exactly or with a trailing path separator.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81715" data-description="openssl_encrypt (pip package openssl-encrypt) versions <= 1.4.8 do not redact the keyserver bearer token passed as the positional argument to 'keyserver set-token' in the --debug argv dump, because sanitize_argv_for_debug fails to sanitize it. as a result the token is printed in cleartext to stderr under --debug (even without --unsafe-show-secrets), persisting the credential in logs and terminal history. fixed in 1.4.9.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81715" target="_blank">CVE-2026-81715</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-27 12:21:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
+                    <p>openssl_encrypt (pip package openssl-encrypt) versions <= 1.4.8 do not redact the keyserver bearer token passed as the positional argument to 'keyserver set-token' in the --debug argv dump, because sanitize_argv_for_debug fails to sanitize it. As a result the token is printed in cleartext to stderr under --debug (even without --unsafe-show-secrets), persisting the credential in logs and terminal history. Fixed in 1.4.9.</p>
                 </div>
         
             </div>
