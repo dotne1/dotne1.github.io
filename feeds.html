@@ -34,6 +34,230 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-82417" data-description="### summary
+
+
+
+`qs.stringify` throws a `typeerror` when it serializes an object whose own `constructor` property has a truthy, non-callable `isbuffer` member. `utils.isbuffer` duck-types buffers by calling `obj.constructor.isbuffer(obj)` after checking only that the property is truthy, so a value such as `{ constructor: { isbuffer: "x" } }` makes the call throw `typeerror: obj.constructor.isbuffer is not a function`.
+
+
+
+### details
+
+
+
+`lib/stringify.js:127` calls `utils.isbuffer` on every non-primitive value it serializes. `utils.isbuffer` (`lib/utils.js:332`) reads `obj.constructor.isbuffer` and invokes it without verifying that it is a function. `constructor` and `isbuffer` are ordinary property names, so any object carrying them as own properties reaches the unchecked call.
+
+
+
+such an object can be built from untrusted input. `qs.parse("x[constructor][isbuffer]=y", { plainobjects: true })` or `{ allowprototypes: true }` keeps the `constructor` key as an own property (the default parse options drop it), and `json.parse("{\"a\":{\"constructor\":{\"isbuffer\":\"x\"}}}")` produces the same shape with no qs option involved. express 4 with its default `query parser` setting and body-parser with `extended: true` both call `qs.parse` with `allowprototypes: true`, so on those stacks `req.query` and `req.body` can carry the shape directly.
+
+
+
+#### poc
+
+
+
+```js
+
+
+
+var qs = require("qs");
+
+
+
+qs.stringify(qs.parse("x[constructor][isbuffer]=y", { plainobjects: true }));
+
+
+
+qs.stringify(json.parse("{\"a\":{\"constructor\":{\"isbuffer\":\"x\"}}}"));
+
+
+
+// typeerror: obj.constructor.isbuffer is not a function
+
+
+
+//     at object.isbuffer (lib/utils.js:332:78)
+
+
+
+//     at stringify (lib/stringify.js:127:45)
+
+
+
+```
+
+
+
+#### fix
+
+
+
+`lib/utils.js`, applied in e83d321 on `main` and released as v6.16.0:
+
+
+
+```diff
+
+
+
+- return !!(obj.constructor && obj.constructor.isbuffer && obj.constructor.isbuffer(obj));
+
+
+
++ return !!(obj.constructor && typeof obj.constructor.isbuffer === "function" && obj.constructor.isbuffer(obj));
+
+
+
+```
+
+
+
+real `buffer`, `safer-buffer`, and browserify `buffer` polyfill instances serialize exactly as before; only the throw is removed.
+
+
+
+### affected versions
+
+
+
+`>=2.2.5 <6.16.0`, fixed in v6.16.0.
+
+
+
+the unguarded duck-type was introduced in 3768a75 and first shipped in v2.2.5 (september 2014). v2.2.4 and earlier used `buffer.isbuffer` and are not affected. every release from v2.2.5 through v6.15.3 contains the unguarded call.
+
+
+
+### impact
+
+
+
+an unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed json body) throw synchronously. in a typical node.js http framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. where the call runs outside an error boundary, such as an `async` express 4 handler (where the throw becomes an unhandled promise rejection) or a background job, the process exits, so the impact in that case depends on the application error handling rather than on qs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82417" target="_blank">CVE-2026-82417</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 19:16:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>### Summary
+
+
+
+`qs.stringify` throws a `TypeError` when it serializes an object whose own `constructor` property has a truthy, non-callable `isBuffer` member. `utils.isBuffer` duck-types buffers by calling `obj.constructor.isBuffer(obj)` after checking only that the property is truthy, so a value such as `{ constructor: { isBuffer: "x" } }` makes the call throw `TypeError: obj.constructor.isBuffer is not a function`.
+
+
+
+### Details
+
+
+
+`lib/stringify.js:127` calls `utils.isBuffer` on every non-primitive value it serializes. `utils.isBuffer` (`lib/utils.js:332`) reads `obj.constructor.isBuffer` and invokes it without verifying that it is a function. `constructor` and `isBuffer` are ordinary property names, so any object carrying them as own properties reaches the unchecked call.
+
+
+
+Such an object can be built from untrusted input. `qs.parse("x[constructor][isBuffer]=y", { plainObjects: true })` or `{ allowPrototypes: true }` keeps the `constructor` key as an own property (the default parse options drop it), and `JSON.parse("{\"a\":{\"constructor\":{\"isBuffer\":\"x\"}}}")` produces the same shape with no qs option involved. Express 4 with its default `query parser` setting and body-parser with `extended: true` both call `qs.parse` with `allowPrototypes: true`, so on those stacks `req.query` and `req.body` can carry the shape directly.
+
+
+
+#### PoC
+
+
+
+```js
+
+
+
+var qs = require("qs");
+
+
+
+qs.stringify(qs.parse("x[constructor][isBuffer]=y", { plainObjects: true }));
+
+
+
+qs.stringify(JSON.parse("{\"a\":{\"constructor\":{\"isBuffer\":\"x\"}}}"));
+
+
+
+// TypeError: obj.constructor.isBuffer is not a function
+
+
+
+//     at Object.isBuffer (lib/utils.js:332:78)
+
+
+
+//     at stringify (lib/stringify.js:127:45)
+
+
+
+```
+
+
+
+#### Fix
+
+
+
+`lib/utils.js`, applied in e83d321 on `main` and released as v6.16.0:
+
+
+
+```diff
+
+
+
+- return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
+
+
+
++ return !!(obj.constructor && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj));
+
+
+
+```
+
+
+
+Real `Buffer`, `safer-buffer`, and browserify `buffer` polyfill instances serialize exactly as before; only the throw is removed.
+
+
+
+### Affected versions
+
+
+
+`>=2.2.5 <6.16.0`, fixed in v6.16.0.
+
+
+
+The unguarded duck-type was introduced in 3768a75 and first shipped in v2.2.5 (September 2014). v2.2.4 and earlier used `Buffer.isBuffer` and are not affected. Every release from v2.2.5 through v6.15.3 contains the unguarded call.
+
+
+
+### Impact
+
+
+
+An unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed JSON body) throw synchronously. In a typical Node.js HTTP framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. Where the call runs outside an error boundary, such as an `async` Express 4 handler (where the throw becomes an unhandled promise rejection) or a background job, the process exits, so the impact in that case depends on the application error handling rather than on qs.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82424" data-description="a weakness has been identified in phpgurukul student information system 1.0. affected by this vulnerability is an unknown functionality of the file /student_edit1.php. executing a manipulation of the argument id can lead to sql injection. the attack can be launched remotely. the exploit has been made available to the public and could be used for attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82424" target="_blank">CVE-2026-82424</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 18:17:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A weakness has been identified in PHPGurukul Student Information System 1.0. Affected by this vulnerability is an unknown functionality of the file /student_edit1.php. Executing a manipulation of the argument ID can lead to sql injection. The attack can be launched remotely. The exploit has been made available to the public and could be used for attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82423" data-description="a vulnerability has been found in macrozheng mall up to 1.0.3. the affected element is an unknown function of the file /order/paysuccess of the component payment status endpoint. the manipulation of the argument orderid leads to enforcement of behavioral workflow. the attack is possible to be carried out remotely. the vendor deleted the github issue for this vulnerability without any explanation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82423" target="_blank">CVE-2026-82423</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 18:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>A vulnerability has been found in macrozheng mall up to 1.0.3. The affected element is an unknown function of the file /order/paySuccess of the component Payment Status Endpoint. The manipulation of the argument orderId leads to enforcement of behavioral workflow. The attack is possible to be carried out remotely. The vendor deleted the GitHub issue for this vulnerability without any explanation.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-82422" data-description="a security flaw has been discovered in itsourcecode sales and inventory system 1.0. impacted is an unknown function of the file /pages/emp_del.php. the manipulation of the argument id results in sql injection. the attack may be launched remotely. the exploit has been released to the public and may be used for attacks.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82422" target="_blank">CVE-2026-82422</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-08-29 17:16:32 CDT</p>
@@ -168,30 +392,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
                     <p>pac4j-oidc before 6.5.6 accepts OIDC callbacks carrying only an access token without authorization code or ID token validation. Attackers can substitute access tokens minted for other clients to create authenticated sessions without proper issuer, audience, nonce, or subject verification.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82461" data-description="pac4j-oidc before 6.5.6 fails to verify access token signatures, issuers, audiences, or expiry when extracting keycloak realm and client roles. attackers can forge access tokens with administrative roles paired with valid id tokens to bypass authorization checks in applications relying on pac4j role validation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82461" target="_blank">CVE-2026-82461</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>pac4j-oidc before 6.5.6 fails to verify access token signatures, issuers, audiences, or expiry when extracting Keycloak realm and client roles. Attackers can forge access tokens with administrative roles paired with valid ID tokens to bypass authorization checks in applications relying on pac4j role validation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82460" data-description="cloud commander before 19.20.2 contains a directory traversal vulnerability in rest file-operation and markdown endpoints that fails to properly validate path normalization. attackers can use path traversal sequences to read, write, move, or copy files outside the configured root directory.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82460" target="_blank">CVE-2026-82460</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Cloud Commander before 19.20.2 contains a directory traversal vulnerability in REST file-operation and markdown endpoints that fails to properly validate path normalization. Attackers can use path traversal sequences to read, write, move, or copy files outside the configured root directory.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82481" data-description="the cohttp package before 6.3.0 for ocaml allows directory traversal.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82481" target="_blank">CVE-2026-82481</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 10:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The cohttp package before 6.3.0 for OCaml allows directory traversal.</p>
                 </div>
         
             </div>
