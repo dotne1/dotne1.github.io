@@ -34,6 +34,214 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-82562" data-description="### summary
+
+
+
+when `qs.parse` is called with `comma: true` and `throwonlimitexceeded: true`, a comma-separated value under a bracket-push key (`a[]=1,2,3,4`) is split into an array without being compared against `arraylimit`, while the same value under a flat key (`a=1,2,3,4`), an indexed key (`a[0]=`), a nested key (`a[b]=`), or a dotted key (`a.b=` with `allowdots`) throws the documented `rangeerror`. a single parameter such as `a[]=1,2,2,...` therefore produces an inner array of arbitrary length even though the caller opted into the hard limit. this is the `[]=` key form that the fix for cve-2026-2391 (qs 6.14.2) did not cover.
+
+
+
+### details
+
+
+
+in `lib/parse.js`, a comma-separated value under a `[]=` key is split and then wrapped as a single nested element (`val = [val]`, so that each `a[]=x,y` group counts as one element of the outer array). the `arraylimit` check that 6.14.2 added for comma values runs after that wrap, so for `[]=` parts it only ever saw the wrapper of length 1. 6.15.3 added a pre-split comma count so that an oversized value throws before it is allocated, but gated it on an `isflatarrayvalue` flag that `parsevalues` set to `false` for any part containing `[]=`, and did not pass it for object-valued input, so the gap remained.
+
+
+
+#### poc
+
+
+
+```js
+
+
+
+var qs = require('qs');
+
+
+
+var options = { comma: true, arraylimit: 3, throwonlimitexceeded: true };
+
+
+
+qs.parse('a=1,2,3,4', options);   // rangeerror: array limit exceeded. only 3 elements allowed in an array.
+
+
+
+qs.parse('a[]=1,2,3,4', options); // { a: [ [ '1', '2', '3', '4' ] ] }  (no throw)
+
+
+
+qs.parse('a[]=' + '1,'.repeat(1000000) + '1', { comma: true, arraylimit: 20, throwonlimitexceeded: true });
+
+
+
+// no throw; a 1,000,001-element inner array is allocated
+
+
+
+```
+
+
+
+#### fix
+
+
+
+`lib/parse.js`, applied in 8859c37 on `main` and released as v6.16.0: the `isflatarrayvalue` gate is removed, so every comma-split value is counted against `arraylimit` before splitting regardless of key form. an in-limit group under `a[]=` still counts as one element of the outer array, and the default (`throwonlimitexceeded: false`) path is unchanged.
+
+
+
+### affected versions
+
+
+
+`>=6.14.2 <6.16.0`, fixed in v6.16.0.
+
+
+
+v6.14.2 introduced `arraylimit` enforcement for comma values (the fix for cve-2026-2391) but only for values not under a `[]=` key, and every release from v6.14.2 through v6.15.3 has the same gap. v6.14.0 and v6.14.1, where `throwonlimitexceeded` exists but does not apply to any comma form, are covered by cve-2026-2391 rather than this record. earlier lines (6.7.x through 6.13.x) have `comma` but no `throwonlimitexceeded`, so there is no hard cap on any comma path to bypass; releases before 6.7.0 have no `comma` option.
+
+
+
+### impact
+
+
+
+an unauthenticated attacker who can reach an application that parses untrusted query strings or urlencoded bodies with both `comma: true` and `throwonlimitexceeded: true` (both non-default) can bypass the configured limit with a single `a[]=` parameter and force the parser to allocate an array proportional to the request size. the cost is strictly linear in the attacker-supplied bytes (about 0.1 microseconds and 6 to 7 retained bytes per input byte; the same out-of-memory threshold as the documented default `throwonlimitexceeded: false` path), so a transport-layer request or body size limit bounds it completely (and node's default maximum http header size of 16 kb already bounds the request line, so multi-megabyte payloads need a body parser). the impact is that an opt-in hard limit fails open on one key spelling, not unbounded allocation from a small input.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82562" target="_blank">CVE-2026-82562</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 20:20:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>### Summary
+
+
+
+When `qs.parse` is called with `comma: true` and `throwOnLimitExceeded: true`, a comma-separated value under a bracket-push key (`a[]=1,2,3,4`) is split into an array without being compared against `arrayLimit`, while the same value under a flat key (`a=1,2,3,4`), an indexed key (`a[0]=`), a nested key (`a[b]=`), or a dotted key (`a.b=` with `allowDots`) throws the documented `RangeError`. A single parameter such as `a[]=1,2,2,...` therefore produces an inner array of arbitrary length even though the caller opted into the hard limit. This is the `[]=` key form that the fix for CVE-2026-2391 (qs 6.14.2) did not cover.
+
+
+
+### Details
+
+
+
+In `lib/parse.js`, a comma-separated value under a `[]=` key is split and then wrapped as a single nested element (`val = [val]`, so that each `a[]=x,y` group counts as one element of the outer array). The `arrayLimit` check that 6.14.2 added for comma values runs after that wrap, so for `[]=` parts it only ever saw the wrapper of length 1. 6.15.3 added a pre-split comma count so that an oversized value throws before it is allocated, but gated it on an `isFlatArrayValue` flag that `parseValues` set to `false` for any part containing `[]=`, and did not pass it for object-valued input, so the gap remained.
+
+
+
+#### PoC
+
+
+
+```js
+
+
+
+var qs = require('qs');
+
+
+
+var options = { comma: true, arrayLimit: 3, throwOnLimitExceeded: true };
+
+
+
+qs.parse('a=1,2,3,4', options);   // RangeError: Array limit exceeded. Only 3 elements allowed in an array.
+
+
+
+qs.parse('a[]=1,2,3,4', options); // { a: [ [ '1', '2', '3', '4' ] ] }  (no throw)
+
+
+
+qs.parse('a[]=' + '1,'.repeat(1000000) + '1', { comma: true, arrayLimit: 20, throwOnLimitExceeded: true });
+
+
+
+// no throw; a 1,000,001-element inner array is allocated
+
+
+
+```
+
+
+
+#### Fix
+
+
+
+`lib/parse.js`, applied in 8859c37 on `main` and released as v6.16.0: the `isFlatArrayValue` gate is removed, so every comma-split value is counted against `arrayLimit` before splitting regardless of key form. An in-limit group under `a[]=` still counts as one element of the outer array, and the default (`throwOnLimitExceeded: false`) path is unchanged.
+
+
+
+### Affected versions
+
+
+
+`>=6.14.2 <6.16.0`, fixed in v6.16.0.
+
+
+
+v6.14.2 introduced `arrayLimit` enforcement for comma values (the fix for CVE-2026-2391) but only for values not under a `[]=` key, and every release from v6.14.2 through v6.15.3 has the same gap. v6.14.0 and v6.14.1, where `throwOnLimitExceeded` exists but does not apply to any comma form, are covered by CVE-2026-2391 rather than this record. Earlier lines (6.7.x through 6.13.x) have `comma` but no `throwOnLimitExceeded`, so there is no hard cap on any comma path to bypass; releases before 6.7.0 have no `comma` option.
+
+
+
+### Impact
+
+
+
+An unauthenticated attacker who can reach an application that parses untrusted query strings or urlencoded bodies with both `comma: true` and `throwOnLimitExceeded: true` (both non-default) can bypass the configured limit with a single `a[]=` parameter and force the parser to allocate an array proportional to the request size. The cost is strictly linear in the attacker-supplied bytes (about 0.1 microseconds and 6 to 7 retained bytes per input byte; the same out-of-memory threshold as the documented default `throwOnLimitExceeded: false` path), so a transport-layer request or body size limit bounds it completely (and node's default maximum HTTP header size of 16 KB already bounds the request line, so multi-megabyte payloads need a body parser). The impact is that an opt-in hard limit fails open on one key spelling, not unbounded allocation from a small input.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77970" data-description="cleartext storage of sensitive information vulnerability in ash-project ash_paper_trail allows an attacker with read access to the generated version resource to recover sensitive values nested inside embedded resources, unions, or lists.
+
+sensitive_attributes :redact and :ignore only act on the tracked resource's top-level attributes. maybe_redact_changes/3 and the stored-action-input path in ashpapertrail.resource.changes.createnewversion derive the sensitive set from the resource's own attributes and never descend into embedded, union, or list values, so a non-sensitive attribute or action argument that holds an embed with a sensitive? field (for example an accepted credentials embed carrying a token) is written to the version table in cleartext.
+
+this issue affects ash_paper_trail: from 0.3.0 before 0.7.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77970" target="_blank">CVE-2026-77970</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 20:20:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Cleartext Storage of Sensitive Information vulnerability in ash-project ash_paper_trail allows an attacker with read access to the generated version resource to recover sensitive values nested inside embedded resources, unions, or lists.
+
+sensitive_attributes :redact and :ignore only act on the tracked resource's top-level attributes. maybe_redact_changes/3 and the stored-action-input path in AshPaperTrail.Resource.Changes.CreateNewVersion derive the sensitive set from the resource's own attributes and never descend into embedded, union, or list values, so a non-sensitive attribute or action argument that holds an embed with a sensitive? field (for example an accepted credentials embed carrying a token) is written to the version table in cleartext.
+
+This issue affects ash_paper_trail: from 0.3.0 before 0.7.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77831" data-description="inefficient algorithmic complexity vulnerability in ash-project ash_paper_trail allows a user who can submit a large array attribute to a paper-trailed create or update action to cause a denial of service through excessive cpu and memory use.
+
+with full-diff change tracking, ashpapertrail.changebuilders.fulldiff.listchange pairs each prior array element against the new list by rebuilding the remaining-elements accumulator with acc ++ [tuple] on every step, copying the growing list each time, so the pairing scales cubically in the array length. nothing bounds the length and the value comes straight from action input, so one request carrying a large accepted {:array, _} attribute forces tens of seconds of cpu and multi-gigabyte allocations.
+
+this issue affects ash_paper_trail: from 0.1.1 before 0.7.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77831" target="_blank">CVE-2026-77831</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 20:20:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Inefficient Algorithmic Complexity vulnerability in ash-project ash_paper_trail allows a user who can submit a large array attribute to a paper-trailed create or update action to cause a denial of service through excessive CPU and memory use.
+
+With full-diff change tracking, AshPaperTrail.ChangeBuilders.FullDiff.ListChange pairs each prior array element against the new list by rebuilding the remaining-elements accumulator with acc ++ [tuple] on every step, copying the growing list each time, so the pairing scales cubically in the array length. Nothing bounds the length and the value comes straight from action input, so one request carrying a large accepted {:array, _} attribute forces tens of seconds of CPU and multi-gigabyte allocations.
+
+This issue affects ash_paper_trail: from 0.1.1 before 0.7.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-75847" data-description="cleartext storage of sensitive information vulnerability in ash-project ash_paper_trail allows an attacker with read access to the generated version resource to recover the plaintext of sensitive? attributes.
+
+ashpapertrail stores the values of tracked sensitive? attributes in the generated version resource's changes map, which is declared public? true and sensitive? false, so the values are returned by the version resource's default read action and printed in logs, inspect output, and error messages instead of being redacted. ashpapertrail.resource.transformers.createversionresource derives the changes map's sensitivity from the ignore_attributes list (the attributes excluded from changes) rather than from the tracked attributes actually stored in it, and ignore_attributes defaults to empty, so the flag is effectively always false.
+
+this issue affects ash_paper_trail: from 0.1.1 before 0.7.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75847" target="_blank">CVE-2026-75847</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-29 20:20:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Cleartext Storage of Sensitive Information vulnerability in ash-project ash_paper_trail allows an attacker with read access to the generated version resource to recover the plaintext of sensitive? attributes.
+
+AshPaperTrail stores the values of tracked sensitive? attributes in the generated version resource's changes map, which is declared public? true and sensitive? false, so the values are returned by the version resource's default read action and printed in logs, inspect output, and error messages instead of being redacted. AshPaperTrail.Resource.Transformers.CreateVersionResource derives the changes map's sensitivity from the ignore_attributes list (the attributes excluded from changes) rather than from the tracked attributes actually stored in it, and ignore_attributes defaults to empty, so the flag is effectively always false.
+
+This issue affects ash_paper_trail: from 0.1.1 before 0.7.0.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-82417" data-description="### summary
 
 
@@ -360,38 +568,6 @@ An unauthenticated request can make any code path that re-serializes attacker-in
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.7</p>
                     <p>Rodauth before 2.46.0 contains an authentication bypass vulnerability in the webauthn_login route that allows logged-in users to authenticate as any other account. Attackers can exploit improper account resolution logic that falls back to session account identifiers instead of validating the credential binding to complete authentication as arbitrary users.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82465" data-description="pac4j-saml before 6.5.6 does not require signature validation of saml logoutrequest messages in saml2logoutvalidator.validatelogoutrequest(). when an idp sends no sessionindex, a session can be destroyed based solely on the nameid, allowing an unauthenticated attacker to submit an unsigned logoutrequest with a guessed identifier (e.g., an email address used as nameid) to terminate a victim's saml session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82465" target="_blank">CVE-2026-82465</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>pac4j-saml before 6.5.6 does not require signature validation of SAML LogoutRequest messages in SAML2LogoutValidator.validateLogoutRequest(). When an IdP sends no SessionIndex, a session can be destroyed based solely on the NameID, allowing an unauthenticated attacker to submit an unsigned LogoutRequest with a guessed identifier (e.g., an email address used as NameID) to terminate a victim's SAML session.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82464" data-description="pac4j-core before 6.5.6 contains an open redirect vulnerability in defaultlogoutlogic.perform() that accepts backslash-prefixed logout redirect targets matching logouturlpattern. attackers can craft logout links with backslash-prefixed external hosts that browsers normalize into network-path references, redirecting victims to attacker-controlled sites after logout.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82464" target="_blank">CVE-2026-82464</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>pac4j-core before 6.5.6 contains an open redirect vulnerability in DefaultLogoutLogic.perform() that accepts backslash-prefixed logout redirect targets matching logoutUrlPattern. Attackers can craft logout links with backslash-prefixed external hosts that browsers normalize into network-path references, redirecting victims to attacker-controlled sites after logout.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82463" data-description="pac4j-core before 6.5.6 contains an authentication bypass vulnerability in checkprofiletypeauthorizer that reverses the profile type validation logic. attackers can authenticate through a weaker client and access resources requiring a stronger profile type by satisfying generic profile checks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82463" target="_blank">CVE-2026-82463</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>pac4j-core before 6.5.6 contains an authentication bypass vulnerability in CheckProfileTypeAuthorizer that reverses the profile type validation logic. Attackers can authenticate through a weaker client and access resources requiring a stronger profile type by satisfying generic profile checks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82462" data-description="pac4j-oidc before 6.5.6 accepts oidc callbacks carrying only an access token without authorization code or id token validation. attackers can substitute access tokens minted for other clients to create authenticated sessions without proper issuer, audience, nonce, or subject verification.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82462" target="_blank">CVE-2026-82462</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-29 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>pac4j-oidc before 6.5.6 accepts OIDC callbacks carrying only an access token without authorization code or ID token validation. Attackers can substitute access tokens minted for other clients to create authenticated sessions without proper issuer, audience, nonce, or subject verification.</p>
                 </div>
         
             </div>
