@@ -34,6 +34,254 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-82749" data-description="incorrect authorization vulnerability in ash-project ash widens a relationship's parent(...) scoping filter to match unintended records when the referenced parent field cannot be resolved.
+
+loading a relationship whose filter references parent(...) resolves that expression against the parent record. resolve_parent_in_filter/3 (lib/ash/actions/read/relationships.ex) resolved an unresolvable parent reference (for example when the referenced field was not selected on the source query) to nil rather than failing. a scoping predicate such as org_id == parent(org_id) then becomes an is null match, and a guard like is_nil(parent(org_id)) or org_id == parent(org_id) activates its unrestricted branch, so the relationship returns records the scope was meant to exclude. the fix fails the read with an error when a parent(...) reference cannot be resolved, instead of defaulting to nil.
+
+this issue affects ash: from 3.13.2 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82749" target="_blank">CVE-2026-82749</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Incorrect Authorization vulnerability in ash-project ash widens a relationship's parent(...) scoping filter to match unintended records when the referenced parent field cannot be resolved.
+
+Loading a relationship whose filter references parent(...) resolves that expression against the parent record. resolve_parent_in_filter/3 (lib/ash/actions/read/relationships.ex) resolved an unresolvable parent reference (for example when the referenced field was not selected on the source query) to nil rather than failing. A scoping predicate such as org_id == parent(org_id) then becomes an IS NULL match, and a guard like is_nil(parent(org_id)) or org_id == parent(org_id) activates its unrestricted branch, so the relationship returns records the scope was meant to exclude. The fix fails the read with an error when a parent(...) reference cannot be resolved, instead of defaulting to nil.
+
+This issue affects ash: from 3.13.2 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82748" data-description="incorrect authorization vulnerability in ash-project ash authorizes an aggregate under one read action while computing it under another, so an aggregate can run with policies that do not match the action it was authorized against.
+
+ash.actions.aggregate groups aggregates by their {authorize?, read_action} and authorizes each group under that read action, but when building the data query it selected the action as opts[:action] || read_action || <primary read> (lib/ash/actions/aggregate.ex). when a caller passed an :action option, the aggregate query ran under that action while authorization had been computed for the group's own read_action. if the run action's read policies are more permissive than the authorized one, the aggregate (a count or sum) is computed over records the authorized action's policies would have excluded, disclosing information about data the actor cannot read. the fix runs the aggregate under the same read_action it is authorized against.
+
+this issue affects ash: from 3.5.13 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82748" target="_blank">CVE-2026-82748</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Incorrect Authorization vulnerability in ash-project ash authorizes an aggregate under one read action while computing it under another, so an aggregate can run with policies that do not match the action it was authorized against.
+
+Ash.Actions.Aggregate groups aggregates by their {authorize?, read_action} and authorizes each group under that read action, but when building the data query it selected the action as opts[:action] || read_action || <primary read> (lib/ash/actions/aggregate.ex). When a caller passed an :action option, the aggregate query ran under that action while authorization had been computed for the group's own read_action. If the run action's read policies are more permissive than the authorized one, the aggregate (a count or sum) is computed over records the authorized action's policies would have excluded, disclosing information about data the actor cannot read. The fix runs the aggregate under the same read_action it is authorized against.
+
+This issue affects ash: from 3.5.13 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82746" data-description="missing authorization vulnerability in ash-project ash allows an actor to update records forbidden by resource policies through the atomic path of ash.update_many/4.
+
+ash.update_many/4 runs as a single atomic statement (a data-layer update_many, for example a sql merge) whenever an atomic strategy is used and the data layer supports it. ash.actions.update.updatemany (lib/ash/actions/update/update_many.ex) took that path even under authorize?: true without applying the resource's policies, so the statement updated every row matched by primary key regardless of the policy filter that authorization would impose. an actor could therefore update records the policies forbid, such as rows belonging to another actor or tenant. the fix restricts the atomic path to data layers supporting changeset filters when authorizing, authorizes each changeset, and merges the resulting policy filter into each changeset so the statement only touches authorized rows.
+
+this issue affects ash: from 3.29.0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82746" target="_blank">CVE-2026-82746</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing Authorization vulnerability in ash-project ash allows an actor to update records forbidden by resource policies through the atomic path of Ash.update_many/4.
+
+Ash.update_many/4 runs as a single atomic statement (a data-layer update_many, for example a SQL MERGE) whenever an atomic strategy is used and the data layer supports it. Ash.Actions.Update.UpdateMany (lib/ash/actions/update/update_many.ex) took that path even under authorize?: true without applying the resource's policies, so the statement updated every row matched by primary key regardless of the policy filter that authorization would impose. An actor could therefore update records the policies forbid, such as rows belonging to another actor or tenant. The fix restricts the atomic path to data layers supporting changeset filters when authorizing, authorizes each changeset, and merges the resulting policy filter into each changeset so the statement only touches authorized rows.
+
+This issue affects ash: from 3.29.0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82745" data-description="improper access control vulnerability in ash-project ash lets a create action overwrite an existing record when the ets or mnesia data layer is used, because neither enforced primary-key uniqueness on insert.
+
+unlike a sql data layer, whose unique primary-key constraint rejects a duplicate, the ets and mnesia data layers implemented create as a keyed insert that replaces any existing entry with the same primary key (lib/ash/data_layer/ets/ets.ex, lib/ash/data_layer/mnesia/mnesia.ex). an actor who can set the primary key on a create (for example a user-supplied string or integer key) can submit a create whose key matches an existing record and silently overwrite it, destroying and replacing another entity's data without going through the update action or its policies. the fix rejects a create whose primary key already exists with an already-taken error, and only allows duplicates for keyless resources.
+
+this issue affects ash: from 0.4.0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82745" target="_blank">CVE-2026-82745</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Access Control vulnerability in ash-project ash lets a create action overwrite an existing record when the ETS or Mnesia data layer is used, because neither enforced primary-key uniqueness on insert.
+
+Unlike a SQL data layer, whose unique primary-key constraint rejects a duplicate, the ETS and Mnesia data layers implemented create as a keyed insert that replaces any existing entry with the same primary key (lib/ash/data_layer/ets/ets.ex, lib/ash/data_layer/mnesia/mnesia.ex). An actor who can set the primary key on a create (for example a user-supplied string or integer key) can submit a create whose key matches an existing record and silently overwrite it, destroying and replacing another entity's data without going through the update action or its policies. The fix rejects a create whose primary key already exists with an already-taken error, and only allows duplicates for keyless resources.
+
+This issue affects ash: from 0.4.0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82744" data-description="not failing securely (failing open) vulnerability in ash-project ash skips an ash.reactor change when the guard controlling it raises, so a change meant to run does not.
+
+an ash.reactor change step can be gated by where validations that decide whether the change runs. ash.reactor.changestep (lib/ash/reactor/steps/change_step.ex) evaluated those guards in apply_where_clauses/3, and apply_validation rescued any exception into {:error, error}. the reduce treated that identically to a guard whose condition was simply not met and bypassed the change. so when a guard raises (for example on attacker-influenced input), a change that enforces a security-relevant modification is skipped rather than failing the step. the fix distinguishes a raised exception (now {:raised, error}) and halts the step with an error, failing closed.
+
+this issue affects ash: from 3.0.0-rc.17 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82744" target="_blank">CVE-2026-82744</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Not Failing Securely (Failing Open) vulnerability in ash-project ash skips an Ash.Reactor change when the guard controlling it raises, so a change meant to run does not.
+
+An Ash.Reactor change step can be gated by where validations that decide whether the change runs. Ash.Reactor.ChangeStep (lib/ash/reactor/steps/change_step.ex) evaluated those guards in apply_where_clauses/3, and apply_validation rescued any exception into {:error, error}. The reduce treated that identically to a guard whose condition was simply not met and bypassed the change. So when a guard raises (for example on attacker-influenced input), a change that enforces a security-relevant modification is skipped rather than failing the step. The fix distinguishes a raised exception (now {:raised, error}) and halts the step with an error, failing closed.
+
+This issue affects ash: from 3.0.0-rc.17 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82743" data-description="uncontrolled resource consumption vulnerability in ash-project ash lets a slow asynchronous read spin a scheduler thread at full cpu while the framework waits for it.
+
+ash.actions.read.asynclimiter.await_at_least_one/1 (lib/ash/actions/read/async_limiter.ex) waited for concurrent async read tasks by polling each with task.yield(task, 0) in a tight loop rather than blocking. while every outstanding task is still running (a slow related-data load or calculation), the loop returns immediately and repeats, busy-spinning and holding a beam scheduler at full cpu for the whole duration of the slow read; concurrent slow reads tie up further schedulers. the fix waits with task.yield_many (a non-blocking sweep followed by a blocking wait with timeout: :infinity), so the process sleeps until a task completes instead of spinning.
+
+this issue affects ash: from 2.19.0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82743" target="_blank">CVE-2026-82743</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled Resource Consumption vulnerability in ash-project ash lets a slow asynchronous read spin a scheduler thread at full CPU while the framework waits for it.
+
+Ash.Actions.Read.AsyncLimiter.await_at_least_one/1 (lib/ash/actions/read/async_limiter.ex) waited for concurrent async read tasks by polling each with Task.yield(task, 0) in a tight loop rather than blocking. While every outstanding task is still running (a slow related-data load or calculation), the loop returns immediately and repeats, busy-spinning and holding a BEAM scheduler at full CPU for the whole duration of the slow read; concurrent slow reads tie up further schedulers. The fix waits with Task.yield_many (a non-blocking sweep followed by a blocking wait with timeout: :infinity), so the process sleeps until a task completes instead of spinning.
+
+This issue affects ash: from 2.19.0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82742" data-description="uncontrolled resource consumption vulnerability in ash-project ash lets an attacker exhaust node memory by matching a filter that spans multiple to-many relationships in memory.
+
+ash.filter.runtime matches a filter against an in-memory record by first expanding the record into combinations of its related rows. flatten_relationships/2 (lib/ash/filter/runtime.ex) eagerly built the full cartesian product across the filter's to-many relationship paths, so a record with k to-many relationships of m rows each materialized on the order of m^k scenarios before any predicate was checked. a filter or dataset that reaches several sizeable to-many relationships therefore allocates memory combinatorially and can exhaust the node. the fix streams the expansion lazily and short-circuits on the first matching scenario, bounding the work.
+
+this issue affects ash: from 1.29.0-rc0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82742" target="_blank">CVE-2026-82742</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled Resource Consumption vulnerability in ash-project ash lets an attacker exhaust node memory by matching a filter that spans multiple to-many relationships in memory.
+
+Ash.Filter.Runtime matches a filter against an in-memory record by first expanding the record into combinations of its related rows. flatten_relationships/2 (lib/ash/filter/runtime.ex) eagerly built the full Cartesian product across the filter's to-many relationship paths, so a record with K to-many relationships of M rows each materialized on the order of M^K scenarios before any predicate was checked. A filter or dataset that reaches several sizeable to-many relationships therefore allocates memory combinatorially and can exhaust the node. The fix streams the expansion lazily and short-circuits on the first matching scenario, bounding the work.
+
+This issue affects ash: from 1.29.0-rc0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82741" data-description="improper validation of specified type of input vulnerability in ash-project ash lets an attacker confuse the stored type tag of an ash.type.union value that uses storage: :map_with_tag, bypassing that member's validation and any tag-based authorization.
+
+for a union with storage: :map_with_tag, each member is identified in storage by a configured tag and tag_value. ash.type.union.dump_to_native/2 (lib/ash/type/union.ex) did not force the configured tag when writing the value, so a tag carried in the submitted value was persisted verbatim. an attacker can therefore store a value whose data belongs to one member but whose tag names a different member. on read the value is re-selected by its tag and treated as the incompatible member (a type confusion), bypassing the real member's constraints and any logic or policy that branches on the union tag. the fix drops any incoming tag and forces the configured tag value on dump.
+
+this issue affects ash: from 2.14.18 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82741" target="_blank">CVE-2026-82741</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Validation of Specified Type of Input vulnerability in ash-project ash lets an attacker confuse the stored type tag of an Ash.Type.Union value that uses storage: :map_with_tag, bypassing that member's validation and any tag-based authorization.
+
+For a union with storage: :map_with_tag, each member is identified in storage by a configured tag and tag_value. Ash.Type.Union.dump_to_native/2 (lib/ash/type/union.ex) did not force the configured tag when writing the value, so a tag carried in the submitted value was persisted verbatim. An attacker can therefore store a value whose data belongs to one member but whose tag names a different member. On read the value is re-selected by its tag and treated as the incompatible member (a type confusion), bypassing the real member's constraints and any logic or policy that branches on the union tag. The fix drops any incoming tag and forces the configured tag value on dump.
+
+This issue affects ash: from 2.14.18 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82740" data-description="improper input validation vulnerability in ash-project ash fails to enforce the outer array constraints on a doubly-nested {:array, {:array, type}} attribute, letting invalid input pass validation.
+
+ash.type.apply_constraints/3 (lib/ash/type/type.ex) handled the {:array, {:array, type}} case by mapping only the inner {:array, type} constraints over each element, so constraints declared on the outer array (such as min_length, max_length, and nil_items?) were never applied. an attacker could submit an outer list that violates those constraints (too many elements, or nil entries where disallowed) and have it accepted and persisted. the fix enforces the outer array constraints and adds explicit handling for nil and non-list inputs.
+
+this issue affects ash: from 2.16.1 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82740" target="_blank">CVE-2026-82740</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Input Validation vulnerability in ash-project ash fails to enforce the outer array constraints on a doubly-nested {:array, {:array, type}} attribute, letting invalid input pass validation.
+
+Ash.Type.apply_constraints/3 (lib/ash/type/type.ex) handled the {:array, {:array, type}} case by mapping only the inner {:array, type} constraints over each element, so constraints declared on the outer array (such as min_length, max_length, and nil_items?) were never applied. An attacker could submit an outer list that violates those constraints (too many elements, or nil entries where disallowed) and have it accepted and persisted. The fix enforces the outer array constraints and adds explicit handling for nil and non-list inputs.
+
+This issue affects ash: from 2.16.1 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82739" data-description="generation of error message containing sensitive information vulnerability in ash-project ash discloses the stored value of a confirmed field to an actor who fails its confirmation check.
+
+ash.resource.validation.confirm's atomic implementation (atomic/2 in lib/ash/resource/validation/confirm.ex) built the mismatch error with its value set to the field being confirmed. when the actor supplies only the confirmation argument and not the field itself, value resolves through atomic_ref/2 to the field's current stored value, so the mismatch error echoes that stored value back to the actor. against a confirmation guarding a sensitive attribute, an actor can submit a deliberately wrong confirmation and read the real value from the returned error. the fix reports the actor-supplied confirmation in the error instead of the stored field value.
+
+this issue affects ash: from 2.17.20 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82739" target="_blank">CVE-2026-82739</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Generation of Error Message Containing Sensitive Information vulnerability in ash-project ash discloses the stored value of a confirmed field to an actor who fails its confirmation check.
+
+Ash.Resource.Validation.Confirm's atomic implementation (atomic/2 in lib/ash/resource/validation/confirm.ex) built the mismatch error with its value set to the field being confirmed. When the actor supplies only the confirmation argument and not the field itself, value resolves through atomic_ref/2 to the field's current stored value, so the mismatch error echoes that stored value back to the actor. Against a confirmation guarding a sensitive attribute, an actor can submit a deliberately wrong confirmation and read the real value from the returned error. The fix reports the actor-supplied confirmation in the error instead of the stored field value.
+
+This issue affects ash: from 2.17.20 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82738" data-description="improper input validation vulnerability in ash-project ash allows an attacker to persistently deny reads of a record by storing a non-version-7 uuid in an ash.type.uuidv7 attribute.
+
+ash.type.uuidv7.cast_input/2 accepts any well-formed uuid string, including non-version-7 uuids, and stores it as a 16-byte binary. on read, cast_stored/2 (lib/ash/type/uuid_v7.ex) routes the stored binary back through cast_input/2, which since an input-validation tightening in v3.6.3 matches only version-7 (and optionally version-4) 16-byte binaries and otherwise expects a 36-character string. a stored non-v7 16-byte binary matches neither clause and returns :error, so every later read of that record fails. an attacker able to set such an attribute poisons the row permanently. the fix decodes any 16-byte stored binary directly in cast_stored/2.
+
+this issue affects ash: from 3.6.3 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82738" target="_blank">CVE-2026-82738</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Input Validation vulnerability in ash-project ash allows an attacker to persistently deny reads of a record by storing a non-version-7 UUID in an Ash.Type.UUIDv7 attribute.
+
+Ash.Type.UUIDv7.cast_input/2 accepts any well-formed UUID string, including non-version-7 UUIDs, and stores it as a 16-byte binary. On read, cast_stored/2 (lib/ash/type/uuid_v7.ex) routes the stored binary back through cast_input/2, which since an input-validation tightening in v3.6.3 matches only version-7 (and optionally version-4) 16-byte binaries and otherwise expects a 36-character string. A stored non-v7 16-byte binary matches neither clause and returns :error, so every later read of that record fails. An attacker able to set such an attribute poisons the row permanently. The fix decodes any 16-byte stored binary directly in cast_stored/2.
+
+This issue affects ash: from 3.6.3 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82737" data-description="integer overflow or wraparound vulnerability in ash-project ash lets an attacker corrupt a stored vector and crash later reads of it by submitting a vector with more than 65,535 elements.
+
+ash.vector.new/1 (lib/ash/vector.ex) encodes a vector as <<dim::unsigned-16, 0::unsigned-16>> followed by the element floats, packing the element count into a 16-bit field without checking its range. a list of more than 65,535 elements wraps the dimension modulo 65,536, so the encoded header records a dimension that disagrees with the number of stored floats. from_binary/1 later reads binary-size(dim)-unit(32) from the wrapped header, so every read of the corrupted value misparses and raises, denying access to the affected record. the fix rejects any vector whose dimension exceeds 65,535.
+
+this issue affects ash: from 2.14.13 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82737" target="_blank">CVE-2026-82737</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Integer Overflow or Wraparound vulnerability in ash-project ash lets an attacker corrupt a stored vector and crash later reads of it by submitting a vector with more than 65,535 elements.
+
+Ash.Vector.new/1 (lib/ash/vector.ex) encodes a vector as <<dim::unsigned-16, 0::unsigned-16>> followed by the element floats, packing the element count into a 16-bit field without checking its range. A list of more than 65,535 elements wraps the dimension modulo 65,536, so the encoded header records a dimension that disagrees with the number of stored floats. from_binary/1 later reads binary-size(dim)-unit(32) from the wrapped header, so every read of the corrupted value misparses and raises, denying access to the affected record. The fix rejects any vector whose dimension exceeds 65,535.
+
+This issue affects ash: from 2.14.13 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82736" data-description="incorrect behavior order: validate before canonicalize vulnerability in ash-project ash lets an attacker store a case-insensitive string value that violates its length or match constraints.
+
+ash.type.cistring.apply_constraints/2 (lib/ash/type/ci_string.ex) validated the max_length, min_length, and match constraints against the value as submitted, while the type case-folds the string (per its casing) for storage and comparison. because validation ran before folding, an attacker can submit a value whose folded form breaks a constraint but whose original form passes: for example, against a match pattern requiring uppercase, an uppercase value that is stored lowercased persists a value the pattern rejects. the fix case-folds the value at the start of apply_constraints/2, so the constraints are checked against the form that is actually stored.
+
+this issue affects ash: from 1.29.0-rc0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82736" target="_blank">CVE-2026-82736</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Incorrect Behavior Order: Validate Before Canonicalize vulnerability in ash-project ash lets an attacker store a case-insensitive string value that violates its length or match constraints.
+
+Ash.Type.CiString.apply_constraints/2 (lib/ash/type/ci_string.ex) validated the max_length, min_length, and match constraints against the value as submitted, while the type case-folds the string (per its casing) for storage and comparison. Because validation ran before folding, an attacker can submit a value whose folded form breaks a constraint but whose original form passes: for example, against a match pattern requiring uppercase, an uppercase value that is stored lowercased persists a value the pattern rejects. The fix case-folds the value at the start of apply_constraints/2, so the constraints are checked against the form that is actually stored.
+
+This issue affects ash: from 1.29.0-rc0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82735" data-description="uncontrolled resource consumption vulnerability in ash-project ash allows an attacker to force an expensive regular expression to run on input that a length constraint should have already rejected.
+
+ash.type.string.apply_constraints/2 (lib/ash/type/string.ex) evaluated the :match regex regardless of the min_length and max_length constraints on the same attribute. because the length check did not gate the regex, an over-length value that the length constraint rejects still had the pattern applied to it, so the length limit that would otherwise bound the work never constrained the regex input. against a backtracking pattern this yields catastrophic regex evaluation on attacker-sized input, and even a linear pattern runs on arbitrarily large input, consuming cpu per request. the fix skips the :match regex whenever a length constraint is violated, making the two checks order-independent.
+
+this issue affects ash: from 0.10.0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82735" target="_blank">CVE-2026-82735</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled Resource Consumption vulnerability in ash-project ash allows an attacker to force an expensive regular expression to run on input that a length constraint should have already rejected.
+
+Ash.Type.String.apply_constraints/2 (lib/ash/type/string.ex) evaluated the :match regex regardless of the min_length and max_length constraints on the same attribute. Because the length check did not gate the regex, an over-length value that the length constraint rejects still had the pattern applied to it, so the length limit that would otherwise bound the work never constrained the regex input. Against a backtracking pattern this yields catastrophic regex evaluation on attacker-sized input, and even a linear pattern runs on arbitrarily large input, consuming CPU per request. The fix skips the :match regex whenever a length constraint is violated, making the two checks order-independent.
+
+This issue affects ash: from 0.10.0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82734" data-description="improper validation of specified quantity in input vulnerability in ash-project ash allows an attacker to submit a non-finite decimal value that bypasses numeric bounds constraints or fails later operations on the value.
+
+ash.type.decimal cast input through ecto's decimal cast in cast_input/2 and cast_stored/2 (lib/ash/type/decimal.ex) without checking that the resulting value is finite. elixir's decimal represents infinity and nan as valid structs, so a value such as "infinity" or "nan" passed casting and was persisted. because nan compares as false against every bound, min and max constraints do not reject it, and the stored special value later raises when used in decimal arithmetic or is refused by the data layer, failing subsequent requests. the fix rejects any non-finite decimal during casting.
+
+this issue affects ash: from 1.28.0 before 3.32.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82734" target="_blank">CVE-2026-82734</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper Validation of Specified Quantity in Input vulnerability in ash-project ash allows an attacker to submit a non-finite decimal value that bypasses numeric bounds constraints or fails later operations on the value.
+
+Ash.Type.Decimal cast input through Ecto's decimal cast in cast_input/2 and cast_stored/2 (lib/ash/type/decimal.ex) without checking that the resulting value is finite. Elixir's Decimal represents Infinity and NaN as valid structs, so a value such as "Infinity" or "NaN" passed casting and was persisted. Because NaN compares as false against every bound, min and max constraints do not reject it, and the stored special value later raises when used in Decimal arithmetic or is refused by the data layer, failing subsequent requests. The fix rejects any non-finite Decimal during casting.
+
+This issue affects ash: from 1.28.0 before 3.32.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19032" data-description="jackson-databind's deserializer for java.nio.file.path resolves an attacker-supplied uri without restricting the uri scheme. in jdkfromstringdeserializer.niopathhelper.deserialize, a string bound from untrusted json is passed to new uri(value) and then to path.of(uri). when that throws filesystemnotfoundexception, the code enumerates serviceloader<filesystemprovider> and calls provider.getpath(uri) on the first provider whose scheme matches the attacker-chosen scheme. untrusted json can therefore select and drive an arbitrary registered filesystemprovider during readvalue under a default jsonmapper, and forces provider class loading at the same time. with only the jdk built-in providers (file, jar/zipfs) present, the resolved path is inert and no mount or network i/o occurs; further impact requires a side-effecting third-party filesystemprovider on the classpath. this affects com.fasterxml.jackson.core:jackson-databind from 2.8.0 before 2.18.10, from 2.19.0 before 2.21.6, and from 2.22.0 before 2.22.2, and tools.jackson.core:jackson-databind from 3.0.0 before 3.1.6 and from 3.2.0 before 3.2.2. users should upgrade to 2.18.10, 2.21.6, 2.22.2, 3.1.6, or 3.2.2. binding java.nio.file.path from untrusted json should be avoided regardless of version.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19032" target="_blank">CVE-2026-19032</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-08-31 23:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>jackson-databind's deserializer for java.nio.file.Path resolves an attacker-supplied URI without restricting the URI scheme. In JDKFromStringDeserializer.NioPathHelper.deserialize, a string bound from untrusted JSON is passed to new URI(value) and then to Path.of(uri). When that throws FileSystemNotFoundException, the code enumerates ServiceLoader<FileSystemProvider> and calls provider.getPath(uri) on the first provider whose scheme matches the attacker-chosen scheme. Untrusted JSON can therefore select and drive an arbitrary registered FileSystemProvider during readValue under a default JsonMapper, and forces provider class loading at the same time. With only the JDK built-in providers (file, jar/zipfs) present, the resolved path is inert and no mount or network I/O occurs; further impact requires a side-effecting third-party FileSystemProvider on the classpath. This affects com.fasterxml.jackson.core:jackson-databind from 2.8.0 before 2.18.10, from 2.19.0 before 2.21.6, and from 2.22.0 before 2.22.2, and tools.jackson.core:jackson-databind from 3.0.0 before 3.1.6 and from 3.2.0 before 3.2.2. Users should upgrade to 2.18.10, 2.21.6, 2.22.2, 3.1.6, or 3.2.2. Binding java.nio.file.Path from untrusted JSON should be avoided regardless of version.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-82733" data-description="generation of error message containing sensitive information vulnerability in ash-project ash_typescript allows an unauthenticated attacker to read internal application data from an http 500 response body.
 
 when a typed-controller route handler returns anything other than a %plug.conn{}, dispatch/3 in lib/ash_typescript/typed_controller/request_handler.ex passes the value to unexpected_return/2, which interpolates inspect(value, limit: 50) directly into the response message. the limit option bounds elements per collection rather than the term as a whole, so a handler falling through with a term such as {:error, %user{}} or a changeset serialises its full field set, including hashed passwords, tokens, and tenant identifiers, into the json error returned to the caller.
@@ -112,178 +360,6 @@ When a field policy denies an attribute, Ash substitutes %Ash.ForbiddenField{}, 
 The simplest trigger is an action returning an embedded resource as a map, which routes through normalize_resource_struct/2 with an empty template. normalize_value_for_json/1 is a public, unguarded entry point to the same path.
 
 This issue affects ash_typescript: from 0.11.0 before 0.18.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-77950" data-description="generation of error message containing sensitive information vulnerability in ash-project ash_typescript allows an unauthenticated attacker to receive unredacted internal error data by provoking an error shape the configured error handler does not match.
-
-apply_error_handler/3 in lib/ash_typescript/rpc/errors.ex is the only hook an application has for redacting or suppressing errors before they reach the client, with a nil return dropping the error entirely. its rescue clause logs a warning and then returns the original, pre-handler error map. error handlers are conventionally written as pattern-matching functions over expected error shapes, so an unmatched shape raises functionclauseerror and the raw transformed error, including any secrets carried in vars, is emitted instead. an intent to suppress an error becomes an intent to publish it. the rescue catches exceptions only, so a handler that throws or exits still propagates.
-
-this issue affects ash_typescript: from 0.8.0 before 0.18.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77950" target="_blank">CVE-2026-77950</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Generation of Error Message Containing Sensitive Information vulnerability in ash-project ash_typescript allows an unauthenticated attacker to receive unredacted internal error data by provoking an error shape the configured error handler does not match.
-
-apply_error_handler/3 in lib/ash_typescript/rpc/errors.ex is the only hook an application has for redacting or suppressing errors before they reach the client, with a nil return dropping the error entirely. Its rescue clause logs a warning and then returns the original, pre-handler error map. Error handlers are conventionally written as pattern-matching functions over expected error shapes, so an unmatched shape raises FunctionClauseError and the raw transformed error, including any secrets carried in vars, is emitted instead. An intent to suppress an error becomes an intent to publish it. The rescue catches exceptions only, so a handler that throws or exits still propagates.
-
-This issue affects ash_typescript: from 0.8.0 before 0.18.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-77856" data-description="allocation of resources without limits or throttling vulnerability in ash-project ash_typescript allows an unauthenticated attacker to exhaust the beam atom table and abort the node via client-supplied typed struct field names.
-
-resolve_typed_struct_field/2 in lib/ash_typescript/rpc/field_processing/field_selector.ex looks a client-supplied field name up in the typed struct's reverse map and, when it finds no match, falls back to string.to_atom/1. because this runs before any field-existence check, an unresolvable name mints a permanent atom rather than being rejected as unknown. atoms are never garbage collected, so a request carrying many distinct names on a typed struct field grows the atom table until the vm aborts at its limit.
-
-this issue affects ash_typescript: from 0.11.0 before 0.18.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77856" target="_blank">CVE-2026-77856</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Allocation of Resources Without Limits or Throttling vulnerability in ash-project ash_typescript allows an unauthenticated attacker to exhaust the BEAM atom table and abort the node via client-supplied typed struct field names.
-
-resolve_typed_struct_field/2 in lib/ash_typescript/rpc/field_processing/field_selector.ex looks a client-supplied field name up in the typed struct's reverse map and, when it finds no match, falls back to String.to_atom/1. Because this runs before any field-existence check, an unresolvable name mints a permanent atom rather than being rejected as unknown. Atoms are never garbage collected, so a request carrying many distinct names on a typed struct field grows the atom table until the VM aborts at its limit.
-
-This issue affects ash_typescript: from 0.11.0 before 0.18.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-75865" data-description="the wplp cookie consent – cookie banner & consent management for gdpr, ccpa & google consent mode plugin for wordpress is vulnerable to arbitrary file upload due to missing file type validation in the saas_upload_logo() function combined with an authorization bypass on the wplp connector rest endpoints in all versions up to, and including, 4.4.1. this makes it possible for unauthenticated attackers to upload arbitrary files on the affected site's server which may make remote code execution possible.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75865" target="_blank">CVE-2026-75865</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>The WPLP Cookie Consent – Cookie Banner & Consent Management for GDPR, CCPA & Google Consent Mode plugin for WordPress is vulnerable to arbitrary file upload due to missing file type validation in the saas_upload_logo() function combined with an authorization bypass on the WPLP connector REST endpoints in all versions up to, and including, 4.4.1. This makes it possible for unauthenticated attackers to upload arbitrary files on the affected site's server which may make remote code execution possible.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-74837" data-description="allocation of resources without limits or throttling vulnerability in ash-project ash_typescript allows an unauthenticated attacker to exhaust the beam atom table and abort the node via client-supplied rpc field names.
-
-ashtypescript.fieldformatter.convert_to_field_atom/2 in lib/ash_typescript/field_formatter.ex converts a client-supplied field name to an atom with string.to_atom/1 when no matching atom already exists. it delegates first to parse_input_field/2, which resolves the name with string.to_existing_atom/1 and falls back to returning the plain string; convert_to_field_atom/2 then mints an atom from that string rather than treating the name as unknown.
-
-rpc field selection reaches it for every requested field name through ashtypescript.rpc.fieldprocessing.fieldselector, which resolves each name before checking that the field exists, with no allowlist, length bound, or rate limit. atoms are never garbage collected, so each distinct name mints a permanent one and the vm aborts once the atom table limit is reached. a field name over 255 characters additionally raises an uncaught systemlimiterror.
-
-this issue affects ash_typescript: from 0.1.0 before 0.18.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74837" target="_blank">CVE-2026-74837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Allocation of Resources Without Limits or Throttling vulnerability in ash-project ash_typescript allows an unauthenticated attacker to exhaust the BEAM atom table and abort the node via client-supplied RPC field names.
-
-AshTypescript.FieldFormatter.convert_to_field_atom/2 in lib/ash_typescript/field_formatter.ex converts a client-supplied field name to an atom with String.to_atom/1 when no matching atom already exists. It delegates first to parse_input_field/2, which resolves the name with String.to_existing_atom/1 and falls back to returning the plain string; convert_to_field_atom/2 then mints an atom from that string rather than treating the name as unknown.
-
-RPC field selection reaches it for every requested field name through AshTypescript.Rpc.FieldProcessing.FieldSelector, which resolves each name before checking that the field exists, with no allowlist, length bound, or rate limit. Atoms are never garbage collected, so each distinct name mints a permanent one and the VM aborts once the atom table limit is reached. A field name over 255 characters additionally raises an uncaught SystemLimitError.
-
-This issue affects ash_typescript: from 0.1.0 before 0.18.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67395" data-description="a path traversal vulnerability exists in sage employee self service’s custom logo functionality due to improper validation of file path parameters. by leveraging directory traversal sequences and their encoded variants, an attacker may bypass directory restrictions and access files outside the application's intended file system scope. successful exploitation would require knowledge of valid file names and paths.
-
-depending on the privileges of the affected component, exploitation could result in the disclosure of sensitive information, including configuration files, environment settings, application assets, and log data.
-
-the vulnerability has been remediated through enhanced path validation and secure path resolution controls that prevent access to unauthorised locations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67395" target="_blank">CVE-2026-67395</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>A path traversal vulnerability exists in Sage Employee Self Service’s custom logo functionality due to improper validation of file path parameters. By leveraging directory traversal sequences and their encoded variants, an attacker may bypass directory restrictions and access files outside the application's intended file system scope. Successful exploitation would require knowledge of valid file names and paths.
-
-Depending on the privileges of the affected component, exploitation could result in the disclosure of sensitive information, including configuration files, environment settings, application assets, and log data.
-
-The vulnerability has been remediated through enhanced path validation and secure path resolution controls that prevent access to unauthorised locations.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-67394" data-description="a critical local privilege escalation via os command injection vulnerability has been discovered in plesk for linux, affecting all versions from 18.0.34 before 18.0.79.9 and 18.0.80.5. the vulnerability allows a customer or reseller with shell access (or allowed to change their own shell access) to elevate privileges to the root account on the hosting server.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67394" target="_blank">CVE-2026-67394</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A critical local privilege escalation via OS command injection vulnerability has been discovered in Plesk for Linux, affecting all versions from 18.0.34 before 18.0.79.9 and 18.0.80.5. The vulnerability allows a customer or reseller with shell access (or allowed to change their own shell access) to elevate privileges to the root account on the hosting server.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-65643" data-description="eval injection in cpanel 11.138.0.0 and earlier allows remote authenticated users to execute arbitrary code as root.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65643" target="_blank">CVE-2026-65643</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Eval injection in cPanel 11.138.0.0 and earlier allows remote authenticated users to execute arbitrary code as root.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-48932" data-description="a flaw in node.js http client can cause a request desynchronization for node.js-based forwarding proxies that rebuild outbound headers from the visible `incomingmessage` headers while piping the original body to a reused backend connection.
-
-node.js can omit headers beyond `maxheaderscount` / `maxheaderpairs` from `req.headers`, `req.rawheaders`, and `req.headersdistinct`, while still using those omitted headers internally for http message framing. in particular, `content-length` can be hidden from userland while the request body is still delivered.
-
-this vulnerability affects all supported release lines: **node.js 22**, **node.js 24**, and **node.js 26**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48932" target="_blank">CVE-2026-48932</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 22:16:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>A flaw in Node.js HTTP client can cause a request desynchronization for Node.js-based forwarding proxies that rebuild outbound headers from the visible `IncomingMessage` headers while piping the original body to a reused backend connection.
-
-Node.js can omit headers beyond `maxHeadersCount` / `maxHeaderPairs` from `req.headers`, `req.rawHeaders`, and `req.headersDistinct`, while still using those omitted headers internally for HTTP message framing. In particular, `Content-Length` can be hidden from userland while the request body is still delivered.
-
-This vulnerability affects all supported release lines: **Node.js 22**, **Node.js 24**, and **Node.js 26**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-18743" data-description="a flaw was found in popt. this vulnerability allows an attacker to provide specially crafted configuration content to a host, which, when loaded, can lead to a small memory corruption issue. this occurs because of an error in how the `poptconfigfiletostring` function reallocates memory for buffers. successful exploitation could result in heap metadata corruption, potentially causing the affected process to become unavailable (denial of service).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18743" target="_blank">CVE-2026-18743</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 21:16:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.5</p>
-                    <p>A flaw was found in popt. This vulnerability allows an attacker to provide specially crafted configuration content to a host, which, when loaded, can lead to a small memory corruption issue. This occurs because of an error in how the `poptConfigFileToString` function reallocates memory for buffers. Successful exploitation could result in heap metadata corruption, potentially causing the affected process to become unavailable (denial of service).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-19820" data-description="a vulnerability in the backblaze client allows a local user to make the system not bootable by creating a link from backblaze's folder to windows os system files during a backup. successful exploitation requires an administrator-level system change that results in the absence of specific windows os security controls. this vulnerability is due to improper link resolution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19820" target="_blank">CVE-2026-19820</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 20:16:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A vulnerability in the Backblaze Client allows a local user to make the system not bootable by creating a link from Backblaze's folder to Windows OS system files during a backup. Successful exploitation requires an administrator-level system change that results in the absence of specific Windows OS security controls. This vulnerability is due to improper link resolution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-83524" data-description="a security vulnerability has been detected in redport optimizer wxa-203, optimizer wxa-213 and optimizer wxa-223 up to 20260704. this impacts the function exec of the file /xgatev1/system/datetime.php of the component system clock. the manipulation leads to command injection. the attack may be initiated remotely. the exploit has been disclosed publicly and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-83524" target="_blank">CVE-2026-83524</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 18:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>A security vulnerability has been detected in RedPort Optimizer wXa-203, Optimizer wXa-213 and Optimizer wXa-223 up to 20260704. This impacts the function exec of the file /xgatev1/system/datetime.php of the component System Clock. The manipulation leads to command injection. The attack may be initiated remotely. The exploit has been disclosed publicly and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82971" data-description="a vulnerability was determined in qvidium opera11 3.3.2a26-ax4x-opera11. this affects an unknown part of the file /cgi-bin/net_tr.cgi of the component cgi script. this manipulation of the argument ipaddr causes command injection. the attack may be initiated remotely. the exploit has been publicly disclosed and may be utilized. the vendor explains: "qvidium has now closed its doors and no longer will be able to sell products or provide support." this vulnerability only affects products that are no longer supported by the maintainer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82971" target="_blank">CVE-2026-82971</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 18:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>A vulnerability was determined in QVidium Opera11 3.3.2a26-Ax4x-opera11. This affects an unknown part of the file /cgi-bin/net_tr.cgi of the component CGI Script. This manipulation of the argument ipaddr causes command injection. The attack may be initiated remotely. The exploit has been publicly disclosed and may be utilized. The vendor explains: "QVidium has now closed its doors and no longer will be able to sell products or provide support." This vulnerability only affects products that are no longer supported by the maintainer.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-4560" data-description="rejected reason: ** reject ** do not use this candidate number. reason: this candidate was issued in error. notes: all references and descriptions in this candidate have been removed to prevent accidental usage.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-4560" target="_blank">CVE-2026-4560</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 18:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: ** REJECT ** DO NOT USE THIS CANDIDATE NUMBER. Reason: This candidate was issued in error. Notes: All references and descriptions in this candidate have been removed to prevent accidental usage.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82957" data-description="a vulnerability was found in hyperledger-firefly firefly up to 1.4.0. the impacted element is the function validateoptions of the file internal/events/webhooks/webhooks.go of the component webhook subscription. performing a manipulation of the argument url results in server-side request forgery. remote exploitation of the attack is possible. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82957" target="_blank">CVE-2026-82957</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 17:17:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was found in hyperledger-firefly firefly up to 1.4.0. The impacted element is the function ValidateOptions of the file internal/events/webhooks/webhooks.go of the component Webhook Subscription. Performing a manipulation of the argument url results in server-side request forgery. Remote exploitation of the attack is possible. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82954" data-description="a vulnerability was detected in dokploy up to 0.29.7. this issue affects the function writetraefikconfiginpath of the file packages/server/src/utils/traefik/application.ts of the component settings. the manipulation of the argument path results in path traversal. the attack can be launched remotely. the exploit is now public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82954" target="_blank">CVE-2026-82954</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 17:17:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>A vulnerability was detected in Dokploy up to 0.29.7. This issue affects the function writeTraefikConfigInPath of the file packages/server/src/utils/traefik/application.ts of the component Settings. The manipulation of the argument path results in path traversal. The attack can be launched remotely. The exploit is now public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82922" data-description="a security vulnerability has been detected in shopex ecshop up to 2.5.1. this vulnerability affects the function flow_update_cart of the file /flow.php?step=update_cart. the manipulation of the argument rec_id leads to sql injection. the attack can be initiated remotely. the exploit has been disclosed publicly and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82922" target="_blank">CVE-2026-82922</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-08-31 17:17:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A security vulnerability has been detected in ShopEx ECShop up to 2.5.1. This vulnerability affects the function flow_update_cart of the file /flow.php?step=update_cart. The manipulation of the argument rec_id leads to sql injection. The attack can be initiated remotely. The exploit has been disclosed publicly and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
                 </div>
         
             </div>
