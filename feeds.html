@@ -34,270 +34,270 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-85230" data-description="a persistent unsafe url injection vulnerability exists in the misp dashboard buttonwidget configuration. dashboard widget urls were validated only when the widget was rendered and were not validated when the configuration was saved. as a result, an authenticated user able to modify dashboard widget settings could persist arbitrary url values, including urls using the javascript: scheme, through either of the dashboard settings persistence paths.
+                <div class="cve-entry" data-cve-id="CVE-2026-85239" data-description="a vulnerability in misp's event template handling allowed an authenticated user with permission to create or modify event templates to bypass validation of the template definition field.
 
-a malicious javascript: url stored in a dashboard button could potentially result in client-side script execution in the misp security context if the value reached a rendering or navigation path without the existing runtime validation. such execution could allow an attacker to perform actions with the privileges of the affected user or access information available to their misp session.
+the eventtemplate::beforevalidate() method only performed semantic validation when the supplied definition was already represented as an array. if a caller instead supplied a pre-encoded string, including malformed json or json representing an unexpected data type, the value bypassed validatedefinition() and only needed to satisfy the generic notblank validation rule. as a result, an invalid event template definition could be stored persistently in the database.
 
-the practical exploitability of this issue is reduced by the fact that misp already applied url validation at render time, which neutralized known malicious values before they were presented to the user. the vulnerability therefore represents a persistence-layer validation gap and a defense-in-depth weakness rather than evidence of a direct bypass of the existing rendering protection.
+when event templates were subsequently retrieved, eventtemplate::afterfind() attempted to decode the stored definition using jsontool::decode() without handling decoding failures. a definition containing invalid json could therefore trigger an exception during retrieval. because the event template index is available to all authenticated users, a single malicious or malformed template could make the event template listing and other functionality relying on eventtemplate queries return http 500 errors until the offending database row was manually repaired.
 
-the patch introduces a canonical url schema type and validates dashboard widget configuration before it is persisted through either settings save mechanism. buttonwidget urls must now be strings resolving to an absolute path on the current misp instance or a full url with the same origin. values using javascript:, external origins, malformed url forms, and non-string values are rejected at save time.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85230" target="_blank">CVE-2026-85230</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:41 CDT</p>
+valid json representing an unexpected type, rather than the expected json object, could similarly result in invalid data reaching downstream consumers.
+
+the vulnerability can therefore be exploited by a user capable of saving event templates to persist malformed template data and cause a persistent denial of service against event-template functionality for other users.
+
+the patch enforces that event template definitions must be supplied as structured objects before saving and always applies semantic validation. on retrieval, malformed json and definitions that do not decode to the expected structure are caught, logged, and replaced with an empty definition, preventing a malformed database entry from breaking all event template queries.
+
+ poisoning doesn't seem reachable according to the lead developer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85239" target="_blank">CVE-2026-85239</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A persistent unsafe URL injection vulnerability exists in the MISP dashboard ButtonWidget configuration. Dashboard widget URLs were validated only when the widget was rendered and were not validated when the configuration was saved. As a result, an authenticated user able to modify dashboard widget settings could persist arbitrary URL values, including URLs using the javascript: scheme, through either of the dashboard settings persistence paths.
+                    <p>A vulnerability in MISP's event template handling allowed an authenticated user with permission to create or modify event templates to bypass validation of the template definition field.
 
-A malicious javascript: URL stored in a dashboard button could potentially result in client-side script execution in the MISP security context if the value reached a rendering or navigation path without the existing runtime validation. Such execution could allow an attacker to perform actions with the privileges of the affected user or access information available to their MISP session.
+The EventTemplate::beforeValidate() method only performed semantic validation when the supplied definition was already represented as an array. If a caller instead supplied a pre-encoded string, including malformed JSON or JSON representing an unexpected data type, the value bypassed validateDefinition() and only needed to satisfy the generic notBlank validation rule. As a result, an invalid event template definition could be stored persistently in the database.
 
-The practical exploitability of this issue is reduced by the fact that MISP already applied URL validation at render time, which neutralized known malicious values before they were presented to the user. The vulnerability therefore represents a persistence-layer validation gap and a defense-in-depth weakness rather than evidence of a direct bypass of the existing rendering protection.
+When event templates were subsequently retrieved, EventTemplate::afterFind() attempted to decode the stored definition using JsonTool::decode() without handling decoding failures. A definition containing invalid JSON could therefore trigger an exception during retrieval. Because the event template index is available to all authenticated users, a single malicious or malformed template could make the event template listing and other functionality relying on EventTemplate queries return HTTP 500 errors until the offending database row was manually repaired.
 
-The patch introduces a canonical url schema type and validates dashboard widget configuration before it is persisted through either settings save mechanism. ButtonWidget URLs must now be strings resolving to an absolute path on the current MISP instance or a full URL with the same origin. Values using javascript:, external origins, malformed URL forms, and non-string values are rejected at save time.</p>
+Valid JSON representing an unexpected type, rather than the expected JSON object, could similarly result in invalid data reaching downstream consumers.
+
+The vulnerability can therefore be exploited by a user capable of saving event templates to persist malformed template data and cause a persistent denial of service against event-template functionality for other users.
+
+The patch enforces that event template definitions must be supplied as structured objects before saving and always applies semantic validation. On retrieval, malformed JSON and definitions that do not decode to the expected structure are caught, logged, and replaced with an empty definition, preventing a malformed database entry from breaking all event template queries.
+
+ Poisoning doesn't seem reachable according to the lead developer.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85227" data-description="misp contains a reflected cross-site scripting (xss) vulnerability in the event attribute filtering query builder. the taggedattributes and galaxyattachedattributes url parameters were inserted into the query-builder rules without html escaping before being serialized as json and embedded inside a <script> element.
+                <div class="cve-entry" data-cve-id="CVE-2026-85238" data-description="misp contains a session fixation vulnerability in the customauth authentication (a custom configuration) flow. when a user was successfully authenticated through customauth, misp stored the authenticated user identity in the existing session without first rotating the session identifier.
 
 
-because jsontool::encode() uses json_unescaped_slashes, an attacker-controlled value containing a closing </script> sequence could terminate the surrounding script element and inject arbitrary html or javascript. for example, a specially crafted vieweventattributes url could contain malicious content in one of the affected filter parameters.
+as a result, if an attacker can cause a victim to use a session identifier known to the attacker before authentication, that same session identifier remains valid after the victim successfully authenticates. the attacker could subsequently reuse the fixed session identifier to access the victim's authenticated misp session, potentially gaining the privileges associated with the victim's account.
 
 
-an attacker could exploit the vulnerability by convincing an authenticated misp user to follow a crafted url. successful exploitation would execute attacker-controlled javascript in the security context of the misp instance and with the privileges of the victim's authenticated browser session. this could allow access to information available to the victim, modification of data through authenticated requests, or other actions permitted by the victim's misp permissions.
-
-
-the vulnerability is addressed by applying html escaping with h() to both scalar and array values before they are inserted into the dom.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85227" target="_blank">CVE-2026-85227</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:41 CDT</p>
+the issue occurs because __customauthentication() wrote the authenticated user into the existing cakephp session while the call to session->renew() had previously been disabled. the patch restores session identifier rotation when a new authentication occurs or when the authenticated user changes, while avoiding unnecessary session renewal on every request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85238" target="_blank">CVE-2026-85238</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains a reflected Cross-Site Scripting (XSS) vulnerability in the event attribute filtering query builder. The taggedAttributes and galaxyAttachedAttributes URL parameters were inserted into the query-builder rules without HTML escaping before being serialized as JSON and embedded inside a <script> element.
+                    <p>MISP contains a session fixation vulnerability in the CustomAuth authentication (a custom configuration) flow. When a user was successfully authenticated through CustomAuth, MISP stored the authenticated user identity in the existing session without first rotating the session identifier.
 
 
-Because JsonTool::encode() uses JSON_UNESCAPED_SLASHES, an attacker-controlled value containing a closing </script> sequence could terminate the surrounding script element and inject arbitrary HTML or JavaScript. For example, a specially crafted viewEventAttributes URL could contain malicious content in one of the affected filter parameters.
+As a result, if an attacker can cause a victim to use a session identifier known to the attacker before authentication, that same session identifier remains valid after the victim successfully authenticates. The attacker could subsequently reuse the fixed session identifier to access the victim's authenticated MISP session, potentially gaining the privileges associated with the victim's account.
 
 
-An attacker could exploit the vulnerability by convincing an authenticated MISP user to follow a crafted URL. Successful exploitation would execute attacker-controlled JavaScript in the security context of the MISP instance and with the privileges of the victim's authenticated browser session. This could allow access to information available to the victim, modification of data through authenticated requests, or other actions permitted by the victim's MISP permissions.
-
-
-The vulnerability is addressed by applying HTML escaping with h() to both scalar and array values before they are inserted into the DOM.</p>
+The issue occurs because __customAuthentication() wrote the authenticated user into the existing CakePHP session while the call to Session->renew() had previously been disabled. The patch restores session identifier rotation when a new authentication occurs or when the authenticated user changes, while avoiding unnecessary session renewal on every request.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85226" data-description="misp contains an authorization flaw in the ondemand correlation engine where correlations were calculated solely from matching attribute values without applying the distribution, sharing group, organization, or other access-control restrictions associated with the correlated attributes and events. as a result, an authenticated user could receive correlation results referring to attributes or events that the user was not authorized to access. 
+                <div class="cve-entry" data-cve-id="CVE-2026-85237" data-description="a vulnerability in misp's email-based one-time password (otp) authentication flow allowed an attacker to perform an unrestricted number of otp verification attempts.
 
 
-the vulnerable correlation collection path did not take the requesting user into account. the patch changes the correlation collector to accept the current user and filters the resulting attribute identifiers through misp's existing fetchattributessimple() authorization logic, which evaluates event-, attribute-, object-, distribution-, and sharing-group-level restrictions against the live data.  
+the email_otp() endpoint did not apply brute-force protection when validating submitted otp values. an attacker who had reached the otp verification stage, for example after successfully providing a user's primary authentication credentials, could repeatedly submit candidate otp values while the same otp remained valid. this significantly increased the feasibility of guessing the otp and bypassing the additional authentication factor, potentially resulting in unauthorized access to the affected user's account.
 
 
-the issue also affected paths relying on previously stored correlation data. because the ondemand engine does not maintain the stored correlation table, its denormalized access-control information could be stale. the patch therefore validates correlated attribute identifiers against the current acls before returning them and additionally applies normal event visibility conditions when retrieving related events.  
+the issue was exacerbated by the fact that the otp is associated with the user rather than with an individual pending login session, allowing multiple concurrent sessions to attempt guesses against the same valid otp.
 
 
-an authenticated low-privileged user could exploit this issue by querying or creating attributes that correlate with restricted misp content, potentially learning information about otherwise inaccessible events or attributes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85226" target="_blank">CVE-2026-85226</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:41 CDT</p>
+the patch integrates the existing misp brute-force protection mechanism into the email otp flow. failed otp attempts are now counted against the user, further attempts are rejected once the configured threshold is reached, and the active otp is invalidated when the attempt budget is exhausted. blocklisted users are also prevented from requesting the generation of a fresh otp. in addition, otp comparison now uses hash_equals() and validates that the submitted value is a string.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85237" target="_blank">CVE-2026-85237</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains an authorization flaw in the OnDemand correlation engine where correlations were calculated solely from matching attribute values without applying the distribution, sharing group, organization, or other access-control restrictions associated with the correlated attributes and events. As a result, an authenticated user could receive correlation results referring to attributes or events that the user was not authorized to access. 
+                    <p>A vulnerability in MISP's email-based one-time password (OTP) authentication flow allowed an attacker to perform an unrestricted number of OTP verification attempts.
 
 
-The vulnerable correlation collection path did not take the requesting user into account. The patch changes the correlation collector to accept the current user and filters the resulting attribute identifiers through MISP's existing fetchAttributesSimple() authorization logic, which evaluates event-, attribute-, object-, distribution-, and sharing-group-level restrictions against the live data.  
+The email_otp() endpoint did not apply brute-force protection when validating submitted OTP values. An attacker who had reached the OTP verification stage, for example after successfully providing a user's primary authentication credentials, could repeatedly submit candidate OTP values while the same OTP remained valid. This significantly increased the feasibility of guessing the OTP and bypassing the additional authentication factor, potentially resulting in unauthorized access to the affected user's account.
 
 
-The issue also affected paths relying on previously stored correlation data. Because the OnDemand engine does not maintain the stored correlation table, its denormalized access-control information could be stale. The patch therefore validates correlated attribute identifiers against the current ACLs before returning them and additionally applies normal event visibility conditions when retrieving related events.  
+The issue was exacerbated by the fact that the OTP is associated with the user rather than with an individual pending login session, allowing multiple concurrent sessions to attempt guesses against the same valid OTP.
 
 
-An authenticated low-privileged user could exploit this issue by querying or creating attributes that correlate with restricted MISP content, potentially learning information about otherwise inaccessible events or attributes.</p>
+The patch integrates the existing MISP brute-force protection mechanism into the email OTP flow. Failed OTP attempts are now counted against the user, further attempts are rejected once the configured threshold is reached, and the active OTP is invalidated when the attempt budget is exhausted. Blocklisted users are also prevented from requesting the generation of a fresh OTP. In addition, OTP comparison now uses hash_equals() and validates that the submitted value is a string.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85221" data-description="misp contains an improper tls certificate validation vulnerability in curlclient. the curlclient::$verifypeer property was not explicitly initialized and therefore defaulted to null. when passed to curl, this value effectively disabled tls peer verification unless the calling code explicitly enabled it.
+                <div class="cve-entry" data-cve-id="CVE-2026-85236" data-description="a cross-site request forgery (csrf) vulnerability existed in the cullemptyevents action of misp. the endpoint performed a state-changing and irreversible operation while accepting http get requests.
 
 
-as a result, https connections made through affected curlclient instances could accept certificates that were not issued by a trusted certificate authority. an attacker capable of intercepting or manipulating network traffic between a misp instance and a remote https service could impersonate the remote endpoint and perform a man-in-the-middle attack.
+because bodyless get requests are not subject to cakephp's csrf validation, an attacker could cause an authenticated misp user with sufficient privileges to invoke the endpoint simply by causing their browser to load a crafted url, for example through an embedded image or other automatically requested resource.
 
 
-successful exploitation could allow an attacker to observe sensitive information transmitted by misp, including authentication material or exchanged threat intelligence, and to modify responses returned to the misp instance. the impact depends on the functionality using curlclient and the data exchanged with the remote service.
+successful exploitation triggers the deletion of published empty events. the deletion is particularly significant because the operation uses skipblocklist, meaning the removed events do not leave blocklist entries that could prevent or track their subsequent synchronization. this can result in unintended and potentially irreversible deletion of misp event records without explicit user interaction.
 
 
-the patch enables tls peer verification by default while preserving explicit support for configured self-signed certificates. it also corrects the self-signed certificate handling in synctool so that peer verification is disabled only when no pinned ca certificate is configured.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85221" target="_blank">CVE-2026-85221</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:41 CDT</p>
+the vulnerability was addressed by restricting cullemptyevents to http post requests, ensuring that cakephp's normal csrf protections are applied to the operation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85236" target="_blank">CVE-2026-85236</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains an improper TLS certificate validation vulnerability in CurlClient. The CurlClient::$verifyPeer property was not explicitly initialized and therefore defaulted to null. When passed to cURL, this value effectively disabled TLS peer verification unless the calling code explicitly enabled it.
+                    <p>A cross-site request forgery (CSRF) vulnerability existed in the cullEmptyEvents action of MISP. The endpoint performed a state-changing and irreversible operation while accepting HTTP GET requests.
 
 
-As a result, HTTPS connections made through affected CurlClient instances could accept certificates that were not issued by a trusted certificate authority. An attacker capable of intercepting or manipulating network traffic between a MISP instance and a remote HTTPS service could impersonate the remote endpoint and perform a man-in-the-middle attack.
+Because bodyless GET requests are not subject to CakePHP's CSRF validation, an attacker could cause an authenticated MISP user with sufficient privileges to invoke the endpoint simply by causing their browser to load a crafted URL, for example through an embedded image or other automatically requested resource.
 
 
-Successful exploitation could allow an attacker to observe sensitive information transmitted by MISP, including authentication material or exchanged threat intelligence, and to modify responses returned to the MISP instance. The impact depends on the functionality using CurlClient and the data exchanged with the remote service.
+Successful exploitation triggers the deletion of published empty events. The deletion is particularly significant because the operation uses skipBlocklist, meaning the removed events do not leave blocklist entries that could prevent or track their subsequent synchronization. This can result in unintended and potentially irreversible deletion of MISP event records without explicit user interaction.
 
 
-The patch enables TLS peer verification by default while preserving explicit support for configured self-signed certificates. It also corrects the self-signed certificate handling in SyncTool so that peer verification is disabled only when no pinned CA certificate is configured.</p>
+The vulnerability was addressed by restricting cullEmptyEvents to HTTP POST requests, ensuring that CakePHP's normal CSRF protections are applied to the operation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85216" data-description="misp contains an authentication bypass vulnerability in its ldap and linotp authentication components due to insufficient validation of user-supplied credentials.
-
-the custom ldapauthenticate and linotpauthenticate components replace cakephp's formauthenticate implementation but did not replicate its credential validation checks. as a result, empty or non-string values could reach the underlying authentication mechanisms.
-
-in the ldap authentication path, an attacker able to identify a valid directory user's email address could submit an empty password. the empty credential could be passed to ldap_bind(), where an ldap server accepting unauthenticated binds may return a successful result for a valid distinguished name combined with an empty password. misp could consequently treat the attacker as the corresponding authenticated directory user without verification of the user's password.
-
-the issue also affected the linotp authentication component. invalid credential types were not rejected before being processed, and when mixed authentication was enabled, an empty password could be checked against a locally stored misp password hash. ldap-provisioned misp accounts could additionally be created with an empty local password because account creation skipped normal validation, resulting in a hash corresponding to an empty password. this could permit authentication through the local fallback mechanism when such an account was no longer resolved through ldap.
-
-successful exploitation could allow a remote unauthenticated attacker to impersonate an existing misp user. if the targeted account has administrative or other privileged permissions, the attacker could gain corresponding access to sensitive threat-intelligence data, modify or delete information, alter configuration, or perform other privileged operations.
-
-the patch resolves the vulnerability by requiring authentication identifiers and passwords to be valid strings, rejecting empty passwords where they are not explicitly permitted, and assigning a randomly generated local password to ldap-provisioned accounts instead of storing a hash derived from an empty password.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85216" target="_blank">CVE-2026-85216</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains an authentication bypass vulnerability in its LDAP and LinOTP authentication components due to insufficient validation of user-supplied credentials.
-
-The custom LdapAuthenticate and LinOTPAuthenticate components replace CakePHP's FormAuthenticate implementation but did not replicate its credential validation checks. As a result, empty or non-string values could reach the underlying authentication mechanisms.
-
-In the LDAP authentication path, an attacker able to identify a valid directory user's email address could submit an empty password. The empty credential could be passed to ldap_bind(), where an LDAP server accepting unauthenticated binds may return a successful result for a valid distinguished name combined with an empty password. MISP could consequently treat the attacker as the corresponding authenticated directory user without verification of the user's password.
-
-The issue also affected the LinOTP authentication component. Invalid credential types were not rejected before being processed, and when mixed authentication was enabled, an empty password could be checked against a locally stored MISP password hash. LDAP-provisioned MISP accounts could additionally be created with an empty local password because account creation skipped normal validation, resulting in a hash corresponding to an empty password. This could permit authentication through the local fallback mechanism when such an account was no longer resolved through LDAP.
-
-Successful exploitation could allow a remote unauthenticated attacker to impersonate an existing MISP user. If the targeted account has administrative or other privileged permissions, the attacker could gain corresponding access to sensitive threat-intelligence data, modify or delete information, alter configuration, or perform other privileged operations.
-
-The patch resolves the vulnerability by requiring authentication identifiers and passwords to be valid strings, rejecting empty passwords where they are not explicitly permitted, and assigning a randomly generated local password to LDAP-provisioned accounts instead of storing a hash derived from an empty password.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85214" data-description="vhr fails to validate user authorization in the put /hr/info endpoint, allowing authenticated users to modify arbitrary hr profiles by supplying any profile id in the request body. attackers can overwrite other users' names, addresses, and disable accounts including administrators to cause denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85214" target="_blank">CVE-2026-85214</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:40 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-85138" data-description="a vulnerability was detected in seacms up to 13.6. affected is the function addslashes of the file weixin/index.php of the component wechat module. the manipulation of the argument content results in sql injection. the attack may be launched remotely. the exploit is now public and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85138" target="_blank">CVE-2026-85138</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:26 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>vhr fails to validate user authorization in the PUT /hr/info endpoint, allowing authenticated users to modify arbitrary HR profiles by supplying any profile ID in the request body. Attackers can overwrite other users' names, addresses, and disable accounts including administrators to cause denial of service.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability was detected in SeaCMS up to 13.6. Affected is the function addslashes of the file weixin/index.php of the component WeChat Module. The manipulation of the argument Content results in sql injection. The attack may be launched remotely. The exploit is now public and may be used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85213" data-description="kill bill through 0.24.21 fails to enforce permission annotations on several adminresource endpoints including getqueueentries, invalidatescache, and putoutofrotation. authenticated users with minimal account:read permissions can read internal queues, flush server caches, and disable the server by putting the host out of rotation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85213" target="_blank">CVE-2026-85213</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:40 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-85137" data-description="a security vulnerability has been detected in seacms up to 13.6. this impacts the function parseif of the file seacms_locoy_news.php of the component locoy collector. the manipulation of the argument pwd leads to code injection. the attack may be initiated remotely. the exploit has been disclosed publicly and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85137" target="_blank">CVE-2026-85137</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:26 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>Kill Bill through 0.24.21 fails to enforce permission annotations on several AdminResource endpoints including getQueueEntries, invalidatesCache, and putOutOfRotation. Authenticated users with minimal account:read permissions can read internal queues, flush server caches, and disable the server by putting the host out of rotation.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A security vulnerability has been detected in SeaCMS up to 13.6. This impacts the function parseIf of the file seacms_locoy_news.php of the component Locoy Collector. The manipulation of the argument pwd leads to code injection. The attack may be initiated remotely. The exploit has been disclosed publicly and may be used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85212" data-description="crmeb contains an authentication bypass vulnerability in the verifyauth() method of systemroleservices.php that returns true from both conditional branches. sub-administrators and accounts with no roles can access restricted admin endpoints by exploiting the inert role check that always permits requests.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85212" target="_blank">CVE-2026-85212</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
-                    <p>CRMEB contains an authentication bypass vulnerability in the verifyAuth() method of SystemRoleServices.php that returns true from both conditional branches. Sub-administrators and accounts with no roles can access restricted admin endpoints by exploiting the inert role check that always permits requests.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85211" data-description="label studio fails to apply organization filters when resolving storage uris for tasks and projects in proxy_api.py endpoints. attackers can access other tenants' cloud storage objects by creating a separate organization and supplying arbitrary file uris to presign or stream bucket contents.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85211" target="_blank">CVE-2026-85211</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>Label Studio fails to apply organization filters when resolving storage URIs for tasks and projects in proxy_api.py endpoints. Attackers can access other tenants' cloud storage objects by creating a separate organization and supplying arbitrary file URIs to presign or stream bucket contents.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85210" data-description="oppia's adminrolehandler get endpoint in core/controllers/admin.py is decorated with open_access, allowing any registered user to enumerate privileged accounts and roles. attackers can query the endpoint with filter_criterion parameters to retrieve usernames holding specific roles, banned flags, and managed topic identifiers without authorization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85210" target="_blank">CVE-2026-85210</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:40 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-84967" data-description="a component of the mongodb extension for visual studio code does not neutralize special characters in a connection string before that value is placed into a command line the extension composes for an integrated terminal. an unauthenticated remote unauthorized-user who persuades a developer to accept a user-supplied connection target, and then to open the extension's shell feature, can place characters of the unauthorized-user’s choosing into that command line. no privileges on the developer's machine are required, but several user actions are. the confirmation the developer sees does not display the supplied text.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84967" target="_blank">CVE-2026-84967</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:25 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Oppia's AdminRoleHandler GET endpoint in core/controllers/admin.py is decorated with open_access, allowing any registered user to enumerate privileged accounts and roles. Attackers can query the endpoint with filter_criterion parameters to retrieve usernames holding specific roles, banned flags, and managed topic identifiers without authorization.</p>
+                    <p>A component of the MongoDB extension for Visual Studio Code does not neutralize special characters in a connection string before that value is placed into a command line the extension composes for an integrated terminal. An unauthenticated remote unauthorized-user who persuades a developer to accept a user-supplied connection target, and then to open the extension's shell feature, can place characters of the unauthorized-user’s choosing into that command line. No privileges on the developer's machine are required, but several user actions are. The confirmation the developer sees does not display the supplied text.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85199" data-description="eclipse aerios self-orchestrator versions prior to 1.2.1 contain a path traversal vulnerability in the rest api. user-controlled identifiers used to create, update, or delete self-orchestrator resources were incorporated into filesystem paths without adequate validation or sanitization. an unauthenticated remote attacker able to access the self-orchestrator api could therefore supply specially crafted identifiers containing path traversal sequences to write or delete json files outside the intended application directories, subject to the filesystem permissions of the self-orchestrator process.
+                <div class="cve-entry" data-cve-id="CVE-2026-84966" data-description="an incorrect numeric type conversion in the bson document building component of the mongodb c++ driver may cause a length value to be interpreted incorrectly. when an application supplies an extremely large, non-terminated field name to the builder, the library may read memory outside the intended buffer and terminate the calling process. no authentication is required, but the calling application must pass the oversized name in a specific form.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84966" target="_blank">CVE-2026-84966</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.1</p>
+                    <p>An incorrect numeric type conversion in the BSON document building component of the MongoDB C++ Driver may cause a length value to be interpreted incorrectly. When an application supplies an extremely large, non-terminated field name to the builder, the library may read memory outside the intended buffer and terminate the calling process. No authentication is required, but the calling application must pass the oversized name in a specific form.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84965" data-description="an integer wraparound in an allocation size calculation in the bson library's json parsing code can cause a buffer to be released while a following copy operation still writes through the stale pointer. on builds where sizes are 32 bits, an unauthenticated party able to supply a sufficiently large json input to an application that links the library may cause that application to terminate unexpectedly, resulting in denial of service.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84965" target="_blank">CVE-2026-84965</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.1</p>
+                    <p>An integer wraparound in an allocation size calculation in the BSON library's JSON parsing code can cause a buffer to be released while a following copy operation still writes through the stale pointer. On builds where sizes are 32 bits, an unauthenticated party able to supply a sufficiently large JSON input to an application that links the library may cause that application to terminate unexpectedly, resulting in denial of service.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84964" data-description="a double free in the openssl-based tls certificate revocation checking path of the mongodb c driver can be reached by a tls endpoint that the client already trusts. during the handshake, specially formed certificate data can cause the same heap object to be released twice. an unauthenticated party acting as the trusted endpoint may cause the connecting client application to terminate unexpectedly.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84964" target="_blank">CVE-2026-84964</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>A double free in the OpenSSL-based TLS certificate revocation checking path of the MongoDB C Driver can be reached by a TLS endpoint that the client already trusts. During the handshake, specially formed certificate data can cause the same heap object to be released twice. An unauthenticated party acting as the trusted endpoint may cause the connecting client application to terminate unexpectedly.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84963" data-description="an incorrect numeric conversion in the json parsing component of the mongodb c driver's bson library may cause an unusually large text value to be silently shortened, or the corresponding field to be omitted, while the parsing operation still reports success and returns no error. an unauthenticated party who can supply the input processed by an application that uses this component may cause that application to hold data that does not match what was submitted, which may result in unintended alteration of data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84963" target="_blank">CVE-2026-84963</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>An incorrect numeric conversion in the JSON parsing component of the MongoDB C Driver's BSON library may cause an unusually large text value to be silently shortened, or the corresponding field to be omitted, while the parsing operation still reports success and returns no error. An unauthenticated party who can supply the input processed by an application that uses this component may cause that application to hold data that does not match what was submitted, which may result in unintended alteration of data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84962" data-description="an unauthorized user with key vault write access may cause an authorized client to issue arbitrary authenticated google cloud kms api calls under the authorized user's identity, escalating database-level access into cloud key control and defeating client-side encryption.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84962" target="_blank">CVE-2026-84962</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.2</p>
+                    <p>An unauthorized user with key vault write access may cause an authorized client to issue arbitrary authenticated Google Cloud KMS API calls under the authorized user's identity, escalating database-level access into cloud key control and defeating client-side encryption.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-83961" data-description="coldfusion is affected by an improper authentication vulnerability that could result in privilege escalation. an attacker could leverage this vulnerability to gain limited read and write access. the vulnerable component is restricted to an administrative network zone by default. exploitation of this issue does not require user interaction. scope is changed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-83961" target="_blank">CVE-2026-83961</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>ColdFusion is affected by an Improper Authentication vulnerability that could result in privilege escalation. An attacker could leverage this vulnerability to gain limited read and write access. The vulnerable component is restricted to an administrative network zone by default. Exploitation of this issue does not require user interaction. Scope is changed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82525" data-description="exterro ftk imager before 8.3 contains an xml external entity (xxe) injection vulnerability that allows attackers to read arbitrary files from the host filesystem by embedding malicious external entity references and attacker-controlled xslt stylesheets within a report.xml file inside a ufdr zip evidence item. attackers can craft a malicious ufdr archive that, when previewed by an examiner, causes the xml parser to resolve file:// external entity references and execute msxsl:script within the external stylesheet to exfiltrate the resolved file contents to an attacker-controlled endpoint via a generated image url.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82525" target="_blank">CVE-2026-82525</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>Exterro FTK Imager before 8.3 contains an XML external entity (XXE) injection vulnerability that allows attackers to read arbitrary files from the host filesystem by embedding malicious external entity references and attacker-controlled XSLT stylesheets within a Report.xml file inside a UFDR ZIP evidence item. Attackers can craft a malicious UFDR archive that, when previewed by an examiner, causes the XML parser to resolve file:// external entity references and execute msxsl:script within the external stylesheet to exfiltrate the resolved file contents to an attacker-controlled endpoint via a generated image URL.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-75036" data-description="a security vulnerability was discovered in fleet's helm template preprocessing where templates evaluated by the fleet controller could reach network resources outside the management cluster. a user who can supply bundle content to a repository referenced by a `gitrepo` resource can cause the fleet controller to:
+- disclose cluster metadata available to the templating context.
+- reveal information about hosts reachable from the controller's network position.
+because the disclosure channel is name resolution, it may remain effective in environments where outbound traffic is otherwise restricted. the disclosed information is limited to values exposed to the fleet templating context and to name resolution results. integrity and availability of managed clusters are not affected.
 
-
-
-
-the impact is increased by the absence of authentication on the affected api and by the container running with elevated privileges in the affected deployment configuration.
-
-
-
-
-the issue has been addressed in version 1.2.1 by introducing validation and sanitization of user-controlled identifiers before they are used to construct filesystem paths, preventing path separator characters from being used to escape the intended directories.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85199" target="_blank">CVE-2026-85199</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:39 CDT</p>
+this issue affects fleet:
+from 0.12.0 before 0.12.19, 
+from 0.13.0 before 0.13.15, 
+from 0.14.0 before 0.14.10, 
+from 0.15.0 before 0.15.6, and
+from 0.16.0 before 0.16.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75036" target="_blank">CVE-2026-75036</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Eclipse aeriOS Self-orchestrator versions prior to 1.2.1 contain a path traversal vulnerability in the REST API. User-controlled identifiers used to create, update, or delete Self-orchestrator resources were incorporated into filesystem paths without adequate validation or sanitization. An unauthenticated remote attacker able to access the Self-orchestrator API could therefore supply specially crafted identifiers containing path traversal sequences to write or delete JSON files outside the intended application directories, subject to the filesystem permissions of the Self-orchestrator process.
+                    <p>A security vulnerability was discovered in Fleet's Helm template preprocessing where templates evaluated by the Fleet controller could reach network resources outside the management cluster. A user who can supply bundle content to a repository referenced by a `GitRepo` resource can cause the Fleet controller to:
+- Disclose cluster metadata available to the templating context.
+- Reveal information about hosts reachable from the controller's network position.
+Because the disclosure channel is name resolution, it may remain effective in environments where outbound traffic is otherwise restricted. The disclosed information is limited to values exposed to the Fleet templating context and to name resolution results. Integrity and availability of managed clusters are not affected.
 
-
-
-
-The impact is increased by the absence of authentication on the affected API and by the container running with elevated privileges in the affected deployment configuration.
-
-
-
-
-The issue has been addressed in version 1.2.1 by introducing validation and sanitization of user-controlled identifiers before they are used to construct filesystem paths, preventing path separator characters from being used to escape the intended directories.</p>
+This issue affects Fleet:
+from 0.12.0 before 0.12.19, 
+from 0.13.0 before 0.13.15, 
+from 0.14.0 before 0.14.10, 
+from 0.15.0 before 0.15.6, and
+from 0.16.0 before 0.16.1.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85183" data-description="taipy configures its socket.io server with wildcard cors origin and credential flag enabled, allowing any web page to establish credentialed websocket connections to victim applications. attackers can open socket.io sessions from arbitrary domains and invoke state variable modifications and action callbacks without csrf protection.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85183" target="_blank">CVE-2026-85183</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
-                    <p>Taipy configures its socket.io server with wildcard CORS origin and credential flag enabled, allowing any web page to establish credentialed WebSocket connections to victim applications. Attackers can open socket.io sessions from arbitrary domains and invoke state variable modifications and action callbacks without CSRF protection.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85182" data-description="vhr through commit 03abbd3 fails to verify that the account id in put /hr/pass requests belongs to the authenticated caller. authenticated attackers can change arbitrary account passwords by supplying a target account id and that account's current password in the request body.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85182" target="_blank">CVE-2026-85182</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>vhr through commit 03abbd3 fails to verify that the account ID in PUT /hr/pass requests belongs to the authenticated caller. Authenticated attackers can change arbitrary account passwords by supplying a target account ID and that account's current password in the request body.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85181" data-description="cat uses java string.hashcode as the sole integrity check for session cookies without server-side keying, allowing attackers to forge valid checksums offline. attackers can set the x-forwarded-for header to bypass ip binding validation and create admin sessions with full configuration access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85181" target="_blank">CVE-2026-85181</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>CAT uses Java String.hashCode as the sole integrity check for session cookies without server-side keying, allowing attackers to forge valid checksums offline. Attackers can set the x-forwarded-for header to bypass IP binding validation and create admin sessions with full configuration access.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85180" data-description="ollama fails to validate redirect destinations when pulling tensor-layer models, allowing unauthenticated attackers to redirect blob downloads to arbitrary hosts. an attacker can control a registry, serve a malicious tensor-layer manifest, and cause the server to issue get requests to internal hosts including cloud metadata endpoints.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85180" target="_blank">CVE-2026-85180</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Ollama fails to validate redirect destinations when pulling tensor-layer models, allowing unauthenticated attackers to redirect blob downloads to arbitrary hosts. An attacker can control a registry, serve a malicious tensor-layer manifest, and cause the server to issue GET requests to internal hosts including cloud metadata endpoints.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85179" data-description="label studio through 1.23.0 fails to validate webhook urls, allowing authenticated users to dispatch requests to internal services including rfc 1918 addresses and cloud metadata endpoints. attackers can create webhooks targeting private networks and exfiltrate annotation data by enabling payload transmission in outbound requests.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85179" target="_blank">CVE-2026-85179</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.5</p>
-                    <p>Label Studio through 1.23.0 fails to validate webhook URLs, allowing authenticated users to dispatch requests to internal services including RFC 1918 addresses and cloud metadata endpoints. Attackers can create webhooks targeting private networks and exfiltrate annotation data by enabling payload transmission in outbound requests.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85178" data-description="helicone's vaultmanager.getdecryptedproviderkeybyid() function in the get /v1/vault/key/{providerkeyid} endpoint fails to validate the requester's organization against the vault key's organization identifier. attackers with admin or owner privileges in any organization can retrieve decrypted upstream provider credentials for other tenants, including plaintext openai, anthropic, and bedrock api keys.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85178" target="_blank">CVE-2026-85178</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:38 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-75035" data-description="a flaw was found in rancher manager. when a non-administrative caller supplied a label selector naming a different user, the ext.cattle.io/v1 token store dropped its internal owner filter instead of returning an empty result. any authenticated user could therefore list and watch every other user's tokens, disclosing token metadata and the stored salted hash of the bearer token.
+
+
+
+this issue affects rancher: before 2.15.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75035" target="_blank">CVE-2026-75035</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>Helicone's VaultManager.getDecryptedProviderKeyById() function in the GET /v1/vault/key/{providerKeyId} endpoint fails to validate the requester's organization against the vault key's organization identifier. Attackers with admin or owner privileges in any organization can retrieve decrypted upstream provider credentials for other tenants, including plaintext OpenAI, Anthropic, and Bedrock API keys.</p>
+                    <p>A flaw was found in Rancher Manager. When a non-administrative caller supplied a label selector naming a different user, the ext.cattle.io/v1 Token store dropped its internal owner filter instead of returning an empty result. Any authenticated user could therefore list and watch every other user's tokens, disclosing token metadata and the stored salted hash of the bearer token.
+
+
+
+This issue affects Rancher: before 2.15.1.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85177" data-description="crmeb through 6.0.0 fails to validate message ownership in the edit_message handler of messagesystemcontroller.php, allowing authenticated users to modify arbitrary system inbox messages. attackers can update any message's columns including is_del, look, and uid to delete, mark read, or reassign victim notifications without authorization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85177" target="_blank">CVE-2026-85177</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>CRMEB through 6.0.0 fails to validate message ownership in the edit_message handler of MessageSystemController.php, allowing authenticated users to modify arbitrary system inbox messages. Attackers can update any message's columns including is_del, look, and uid to delete, mark read, or reassign victim notifications without authorization.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-75034" data-description="a flaw was found in rancher manager. the saml assertion replay protection introduced by the fix for cve-2026-44946 recorded consumed assertion ids in a per-process cache, so each replica only detected replays that reached the same pod. in a high-availability deployment, an attacker holding a captured assertion could replay it once against every other replica to obtain additional authenticated sessions as the victim.
+
+
+this issue affects rancher: before 2.15.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75034" target="_blank">CVE-2026-75034</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>A flaw was found in Rancher Manager. The SAML assertion replay protection introduced by the fix for CVE-2026-44946 recorded consumed assertion IDs in a per-process cache, so each replica only detected replays that reached the same pod. In a high-availability deployment, an attacker holding a captured assertion could replay it once against every other replica to obtain additional authenticated sessions as the victim.
+
+
+This issue affects Rancher: before 2.15.1.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85176" data-description="dbgate fails to validate jslid parameters in the jsldata controller, allowing authenticated users to read and write arbitrary files via file:// scheme resolution. attackers can exploit getjslfilename() to bypass directory containment and access sensitive files including encrypted database credentials stored in connections configuration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85176" target="_blank">CVE-2026-85176</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:38 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-71963" data-description="hermes agent 0.18.2 through 0.21.0, fixed in commit f6234d0, contains a remote code execution vulnerability that allows attackers to execute arbitrary os commands by supplying a malicious repository with a crafted .git/config that sets core.fsmonitor to an attacker-controlled command. when a user opens the malicious repository and sends any message, the agent triggers a git status index refresh which executes the injected command in the user's process context, exposing the full environment including configured provider api keys.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71963" target="_blank">CVE-2026-71963</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:18:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>DbGate fails to validate jslid parameters in the jsldata controller, allowing authenticated users to read and write arbitrary files via file:// scheme resolution. Attackers can exploit getJslFileName() to bypass directory containment and access sensitive files including encrypted database credentials stored in connections configuration.</p>
+                    <p>Hermes Agent 0.18.2 through 0.21.0, fixed in commit f6234d0, contains a remote code execution vulnerability that allows attackers to execute arbitrary OS commands by supplying a malicious repository with a crafted .git/config that sets core.fsmonitor to an attacker-controlled command. When a user opens the malicious repository and sends any message, the agent triggers a git status index refresh which executes the injected command in the user's process context, exposing the full environment including configured provider API keys.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85135" data-description="a security flaw has been discovered in ilias up to 9.21/10.9/11.2. this affects the function ilobjmediaobjectgui::uploadmultiplesubtitlefileobject of the file services/repository/service/resources/zipadapter.php of the component mediapool. the manipulation results in unrestricted upload. the attack may be launched remotely. upgrading to version 9.22, 10.10 and 11.3 is able to mitigate this issue. the patch is identified as ef5d7f99fe1ea0381db04b333a2906548b3590e4/b0d61be43671b6bfe91baf469a5ee11e764f2e23. it is recommended to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85135" target="_blank">CVE-2026-85135</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-03 10:17:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security flaw has been discovered in ILIAS up to 9.21/10.9/11.2. This affects the function ilObjMediaObjectGUI::uploadMultipleSubtitleFileObject of the file Services/Repository/Service/Resources/ZipAdapter.php of the component MediaPool. The manipulation results in unrestricted upload. The attack may be launched remotely. Upgrading to version 9.22, 10.10 and 11.3 is able to mitigate this issue. The patch is identified as ef5d7f99fe1ea0381db04b333a2906548b3590e4/b0d61be43671b6bfe91baf469a5ee11e764f2e23. It is recommended to upgrade the affected component.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-57445" data-description="gardens v2 is a modular governance framework that enables communities to create and manage multiple governance pools with customizable parameters and voting mechanisms. in dfba919e218e20d52db9f7b2e8d292d45a46c91b and prior, normal beneficiary payout paths in streamingescrow preserve depositamount() while an active stream needs an escrow reserve. however, the approve-side dispute resolution path drains the whole available escrow balance to the proposal beneficiary. at time of publication, there are no publicly known patches.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57445" target="_blank">CVE-2026-57445</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Gardens v2 is a modular governance framework that enables communities to create and manage multiple governance pools with customizable parameters and voting mechanisms. In dfba919e218e20d52db9f7b2e8d292d45a46c91b and prior, normal beneficiary payout paths in StreamingEscrow preserve depositAmount() while an active stream needs an escrow reserve. However, the approve-side dispute resolution path drains the whole available escrow balance to the proposal beneficiary. At time of publication, there are no publicly known patches.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-55658" data-description="gardens v2 is a modular governance framework that enables communities to create and manage multiple governance pools with customizable parameters and voting mechanisms. in 3e595f3 and prior, when a streaming proposal is funded, the cluster of streaming contracts moves real pool funds into the proposal's streamingescrow to back the superfluid constant flow agreement (the cfa deposit, plus a 0.5 percent margin). cancelproposal then zeroes the escrow's gda member units but never reclaims that parked balance, and the permissionless claim() forwards the escrow's entire balance, including the pool funded buffer, to the beneficiary. the beneficiary is chosen by the proposal submitter and defaults to the submitter. the only path that returns escrow funds to the pool is draintostrategy, which is onlystrategy and is reached solely from the dispute reject ruling, never from cancel or natural completion. at time of publication, there are no publicly known patches.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-55658" target="_blank">CVE-2026-55658</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-03 11:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
+                    <p>Gardens v2 is a modular governance framework that enables communities to create and manage multiple governance pools with customizable parameters and voting mechanisms. In 3e595f3 and prior, when a streaming proposal is funded, the cluster of streaming contracts moves real pool funds into the proposal's StreamingEscrow to back the Superfluid constant flow agreement (the CFA deposit, plus a 0.5 percent margin). cancelProposal then zeroes the escrow's GDA member units but never reclaims that parked balance, and the permissionless claim() forwards the escrow's entire balance, including the pool funded buffer, to the beneficiary. The beneficiary is chosen by the proposal submitter and defaults to the submitter. The only path that returns escrow funds to the pool is drainToStrategy, which is onlyStrategy and is reached solely from the dispute reject ruling, never from cancel or natural completion. At time of publication, there are no publicly known patches.</p>
                 </div>
         
             </div>
