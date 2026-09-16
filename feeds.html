@@ -34,282 +34,1064 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-89793" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-92357" data-description="a vulnerability was identified in a2ui-project a2ui 0.8/0.9/1.0. impacted is an unknown function of the file model-processor.ts of the component model processor. the manipulation of the argument current[segment] leads to information disclosure. the attack may be initiated remotely. the identifier of the patch is 1b3bff234661ce922cbc3771be642b23ec9fd0fa. to fix this issue, it is recommended to deploy a patch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92357" target="_blank">CVE-2026-92357</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A vulnerability was identified in a2ui-project a2ui 0.8/0.9/1.0. Impacted is an unknown function of the file model-processor.ts of the component Model Processor. The manipulation of the argument current[segment] leads to information disclosure. The attack may be initiated remotely. The identifier of the patch is 1b3bff234661ce922cbc3771be642b23ec9fd0fa. To fix this issue, it is recommended to deploy a patch.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-92356" data-description="a vulnerability was determined in a2ui-project a2ui 0.9/0.9.1. this issue affects the function updatecomponents of the file basic_functions.ts of the component update components. executing a manipulation can lead to resource consumption. the attack can be launched remotely. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92356" target="_blank">CVE-2026-92356</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A vulnerability was determined in a2ui-project a2ui 0.9/0.9.1. This issue affects the function updateComponents of the file basic_functions.ts of the component Update Components. Executing a manipulation can lead to resource consumption. The attack can be launched remotely. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-90049" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-ublk: clear vm_maywrite on read-only ublk char device mmap
+net: skbuff: don't skb_tx_error() the source skb in skb_zerocopy()
 
-ublk_ch_mmap() rejects mmap requests with vm_write set, but never
-clears vm_maywrite on the resulting read-only mapping. this allows
-a userspace daemon to mmap the per-queue command buffer prot_read,
-then upgrade it to prot_write via mprotect(), since vm_maywrite was
-never cleared.
+skb_zerocopy() copies frags from @from into @to. on an
+skb_orphan_frags() failure it calls skb_tx_error(@from), a destructive
+operation on the source skb the copy helper does not own. that completes
+@from's zerocopy uarg and clears skbfl_all_zerocopy, including the
+skbfl_shared_frag page-ownership marker.
 
-the command buffer holds struct ublksrv_io_desc entries that are
-kernel-written abi; a writable mapping lets an unprivileged daemon
-process corrupt fields such as addr, op_flags, nr_sectors, and
-start_sector.
+both callers already report the failure on their own drop path.
+nfnetlink_queue does it at nla_put_failure, and open vswitch does it in
+the flow-miss drop arm of ovs_dp_process_packet(), so nothing is lost by
+dropping it here.
 
-same bug class as the drm/panthor and drm/vc4 vm_maywrite fixes, and
-the 2026-08-13 ptp/vmclock fix (a5edadbae57e).
+on open vswitch's ovs_action_attr_userspace path the skb is not freed on
+this error: do_execute_actions() ignores output_userspace()'s return
+value and, unless the upcall was the last action, keeps forwarding the
+same skb through the flow's remaining actions. the uarg is completed
+while that skb is still in flight, telling the producer its buffers are
+free, and skbfl_shared_frag is cleared on an skb the rest of the stack
+still handles. that flag is what makes esp_input() call skb_cow_data()
+instead of decrypting in place, so a later local esp delivery can
+decrypt over frags the skb does not own privately.
 
-verified via mprotect() poc: before the fix, a prot_read mapping can
-be upgraded to prot_read|prot_write and a write into the command
-buffer corrupts io_desc fields (confirmed under kasan). after the
-fix, mprotect() returns -eacces.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89793" target="_blank">CVE-2026-89793</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:55 CDT</p>
+leave error reporting to the callers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90049" target="_blank">CVE-2026-90049</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:18 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ublk: clear VM_MAYWRITE on read-only ublk char device mmap
+net: skbuff: don't skb_tx_error() the source skb in skb_zerocopy()
 
-ublk_ch_mmap() rejects mmap requests with VM_WRITE set, but never
-clears VM_MAYWRITE on the resulting read-only mapping. This allows
-a userspace daemon to mmap the per-queue command buffer PROT_READ,
-then upgrade it to PROT_WRITE via mprotect(), since VM_MAYWRITE was
-never cleared.
+skb_zerocopy() copies frags from @from into @to. On an
+skb_orphan_frags() failure it calls skb_tx_error(@from), a destructive
+operation on the source skb the copy helper does not own. That completes
+@from's zerocopy uarg and clears SKBFL_ALL_ZEROCOPY, including the
+SKBFL_SHARED_FRAG page-ownership marker.
 
-The command buffer holds struct ublksrv_io_desc entries that are
-kernel-written ABI; a writable mapping lets an unprivileged daemon
-process corrupt fields such as addr, op_flags, nr_sectors, and
-start_sector.
+Both callers already report the failure on their own drop path.
+nfnetlink_queue does it at nla_put_failure, and Open vSwitch does it in
+the flow-miss drop arm of ovs_dp_process_packet(), so nothing is lost by
+dropping it here.
 
-Same bug class as the drm/panthor and drm/vc4 VM_MAYWRITE fixes, and
-the 2026-08-13 ptp/vmclock fix (a5edadbae57e).
+On Open vSwitch's OVS_ACTION_ATTR_USERSPACE path the skb is not freed on
+this error: do_execute_actions() ignores output_userspace()'s return
+value and, unless the upcall was the last action, keeps forwarding the
+same skb through the flow's remaining actions. The uarg is completed
+while that skb is still in flight, telling the producer its buffers are
+free, and SKBFL_SHARED_FRAG is cleared on an skb the rest of the stack
+still handles. That flag is what makes esp_input() call skb_cow_data()
+instead of decrypting in place, so a later local ESP delivery can
+decrypt over frags the skb does not own privately.
 
-Verified via mprotect() PoC: before the fix, a PROT_READ mapping can
-be upgraded to PROT_READ|PROT_WRITE and a write into the command
-buffer corrupts io_desc fields (confirmed under KASAN). After the
-fix, mprotect() returns -EACCES.</p>
+Leave error reporting to the callers.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86792" data-description="apache airflow apache kafka provider versions 1.15.0 before 2.0.0 resolve dotted-path strings found in a kafka connection's `extra` field into python callables via `import_string`, with no allowlist, and hand them to the confluent-kafka client which invokes them. deployments that have enabled the kafka event producer — `dag_run_events_enabled` or `task_instance_events_enabled`, both disabled by default — build that client inside the scheduler process, so a user whose only privilege is editing airflow connections gains arbitrary code execution in the control plane; the airflow security model limits connection-configuration users to code execution on workers, not the scheduler. deployments using google managed kafka are not affected, because that code path overwrites any user-supplied `oauth_cb`; plain brokers and amazon msk are exposed. users are recommended to upgrade to apache-airflow-providers-apache-kafka 2.0.0 or later, which adds an allowlist configuration option for connection-string callbacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86792" target="_blank">CVE-2026-86792</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:55 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90048" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fs/ntfs3: fix slab-out-of-bounds write in ni_create_attr_list()
+
+ni_create_attr_list() allocates a fixed buffer of al_aligned(record_size)
+(== record_size) bytes and then walks every attribute of the primary mft
+record, writing one attr_list_entry per attribute and advancing the cursor
+by le_size(name_len), with no check against the end of the buffer; the
+total size is only computed after the loop.
+
+a minimum-size resident attribute occupies sizeof_resident (0x18 = 24)
+bytes on disk, but an unnamed attribute expands to le_size(0) (0x20 = 32)
+bytes in the list.  because the number of attributes in a record is not
+bounded (mi_enum_attr() accepts arbitrarily many equal-type, nameless
+minimum-size attributes), a crafted record packed with such attributes
+produces a list larger than record_size and overflows the heap buffer.
+
+this is reachable from a crafted, loop-mounted ntfs image: opening the file
+and adding an attribute (e.g. via setxattr) drives ntfs_set_ea() ->
+ni_insert_resident() -> ni_insert_attr() -> ni_ins_attr_ext() ->
+ni_create_attr_list().
+
+  bug: kasan: slab-out-of-bounds in ni_create_attr_list+0xc48/0x1058
+  write of size 4 at addr ffff000008984c00 by task setfattr/345
+   ni_create_attr_list+0xc48/0x1058
+   ni_ins_attr_ext+0x510/0x7c0
+   ni_insert_attr+0x3f8/0x70c
+   ni_insert_resident+0xc8/0x3b0
+   ntfs_set_ea+0x66c/0xd28
+   ntfs_setxattr+0x4d8/0x5b0
+   __arm64_sys_setxattr+0xa4/0x124
+  allocated by task 345:
+   ni_create_attr_list+0x188/0x1058
+  the buggy address belongs to the cache kmalloc-1k of size 1024
+  (the write lands at object+1024).
+
+size the buffer from the actual attributes instead of assuming a single
+record_size is always enough.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90048" target="_blank">CVE-2026-90048</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:18 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Apache Airflow Apache Kafka provider versions 1.15.0 before 2.0.0 resolve dotted-path strings found in a Kafka connection's `extra` field into Python callables via `import_string`, with no allowlist, and hand them to the confluent-kafka client which invokes them. Deployments that have enabled the Kafka event producer — `dag_run_events_enabled` or `task_instance_events_enabled`, both disabled by default — build that client inside the scheduler process, so a user whose only privilege is editing Airflow connections gains arbitrary code execution in the control plane; the Airflow security model limits connection-configuration users to code execution on workers, not the scheduler. Deployments using Google Managed Kafka are not affected, because that code path overwrites any user-supplied `oauth_cb`; plain brokers and Amazon MSK are exposed. Users are recommended to upgrade to apache-airflow-providers-apache-kafka 2.0.0 or later, which adds an allowlist configuration option for connection-string callbacks.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fs/ntfs3: fix slab-out-of-bounds write in ni_create_attr_list()
+
+ni_create_attr_list() allocates a fixed buffer of al_aligned(record_size)
+(== record_size) bytes and then walks every attribute of the primary MFT
+record, writing one ATTR_LIST_ENTRY per attribute and advancing the cursor
+by le_size(name_len), with no check against the end of the buffer; the
+total size is only computed after the loop.
+
+A minimum-size resident attribute occupies SIZEOF_RESIDENT (0x18 = 24)
+bytes on disk, but an unnamed attribute expands to le_size(0) (0x20 = 32)
+bytes in the list.  Because the number of attributes in a record is not
+bounded (mi_enum_attr() accepts arbitrarily many equal-type, nameless
+minimum-size attributes), a crafted record packed with such attributes
+produces a list larger than record_size and overflows the heap buffer.
+
+This is reachable from a crafted, loop-mounted NTFS image: opening the file
+and adding an attribute (e.g. via setxattr) drives ntfs_set_ea() ->
+ni_insert_resident() -> ni_insert_attr() -> ni_ins_attr_ext() ->
+ni_create_attr_list().
+
+  BUG: KASAN: slab-out-of-bounds in ni_create_attr_list+0xc48/0x1058
+  Write of size 4 at addr ffff000008984c00 by task setfattr/345
+   ni_create_attr_list+0xc48/0x1058
+   ni_ins_attr_ext+0x510/0x7c0
+   ni_insert_attr+0x3f8/0x70c
+   ni_insert_resident+0xc8/0x3b0
+   ntfs_set_ea+0x66c/0xd28
+   ntfs_setxattr+0x4d8/0x5b0
+   __arm64_sys_setxattr+0xa4/0x124
+  Allocated by task 345:
+   ni_create_attr_list+0x188/0x1058
+  The buggy address belongs to the cache kmalloc-1k of size 1024
+  (the write lands at object+1024).
+
+Size the buffer from the actual attributes instead of assuming a single
+record_size is always enough.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86474" data-description="the lack of tls certificate validation when downloading firmware updates in veo and veo-xs wi-fi monitors, in versions prior to 01.48.001, allows an attacker to perform man-in-the-middle attacks on the update channel.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86474" target="_blank">CVE-2026-86474</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:54 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90047" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/xe: don't hand out the flat ccs storage as usable vram
+
+get_flat_ccs_offset() reads the base of the flat ccs storage from the
+hardware, scales it by the number of enabled l3 nodes, and rounds the
+result up to 128k.  everything below that offset is then handed to the
+vram allocator as usable memory.
+
+rounding a limit that means "usable memory ends here" upwards publishes
+whatever lies between the real base and the rounded one as free memory,
+and that memory belongs to the compression hardware.  the scaled value
+has no reason to be 128k aligned, and on a battlemage g21 with 16 gib it
+is not:
+
+	flat ccs base: raw 0x3fafff800, rounded 0x3fb000000
+
+so the last 2 kib of page 0x3fafff000 is ccs storage, in the allocator's
+pool.  whatever is allocated there gets that tail overwritten by the
+compression hardware, which needs no page-table entry, no buffer object
+and no gpu submission to do it, and does it before userspace exists.
+
+on this machine a mesa vm's level-3 page table landed on that page on
+every cold boot.  it lost the entry covering the compositor's
+batch-buffer heap, so the compositor's first submission faulted fetching
+its batch and gdm restarted it forever: a black screen on an otherwise
+working machine.  restarting gdm cleared it because the next vm's page
+tables were allocated somewhere else.
+
+round down instead, to the page size the allocator works in.  on this
+machine that excludes exactly one page.
+
+reading the reserved page afterwards shows what had been writing it:
+
+	[369] 0xcccc000000000000
+	[371] 0xcc77000000000000
+	[373] 0xcccc000000000000
+	[375] 0xcc77000000000000
+
+compression metadata, two bytes per sixteen, sitting where the driver
+used to hand out memory.
+
+the assertion that should have caught this compares the offset against
+gsmbase - ccs_size for equality.  that value is 128k aligned, so it
+agrees with the rounded-up offset precisely when the base is not
+aligned - the check cannot fail in the case it exists to catch, and is
+compiled out unless config_drm_xe_debug is set.  replace it with one
+that can fail: ccs storage must not run into gsm.
+
+[ and this was a debug session from hell, enormously helped by an ai
+  doing much of the grunt-work.
+
+  i'd like to call it my tireless helper, but the ai several times
+  stated flat out that this was impossible and unsolvable and that we
+  should just write a report about it.
+
+  i suspect those things have been trained by people who may not be
+  quite as stubborn as i am.
+
+  but while the ai was ready to give up several times, it did keep
+  adding debug code and analyzing it faithfully when i pushed. so credit
+  where credit is due and i let the ai write the commit message above.
+
+  this is basically a one-liner fixing a bogus "round_up()" to a
+  "round_down()", but there were 24 patches adding more and more debug
+  information to this, and 18 kernel boot to finally narrow it down to
+  this.   - linus ]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90047" target="_blank">CVE-2026-90047</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The lack of TLS certificate validation when downloading firmware updates in VEO and VEO-XS Wi-Fi monitors, in versions prior to 01.48.001, allows an attacker to perform man-in-the-middle attacks on the update channel.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/xe: Don't hand out the flat CCS storage as usable VRAM
+
+get_flat_ccs_offset() reads the base of the flat CCS storage from the
+hardware, scales it by the number of enabled L3 nodes, and rounds the
+result up to 128K.  Everything below that offset is then handed to the
+VRAM allocator as usable memory.
+
+Rounding a limit that means "usable memory ends here" upwards publishes
+whatever lies between the real base and the rounded one as free memory,
+and that memory belongs to the compression hardware.  The scaled value
+has no reason to be 128K aligned, and on a Battlemage G21 with 16 GiB it
+is not:
+
+	flat CCS base: raw 0x3fafff800, rounded 0x3fb000000
+
+so the last 2 KiB of page 0x3fafff000 is CCS storage, in the allocator's
+pool.  Whatever is allocated there gets that tail overwritten by the
+compression hardware, which needs no page-table entry, no buffer object
+and no GPU submission to do it, and does it before userspace exists.
+
+On this machine a Mesa VM's level-3 page table landed on that page on
+every cold boot.  It lost the entry covering the compositor's
+batch-buffer heap, so the compositor's first submission faulted fetching
+its batch and gdm restarted it forever: a black screen on an otherwise
+working machine.  Restarting gdm cleared it because the next VM's page
+tables were allocated somewhere else.
+
+Round down instead, to the page size the allocator works in.  On this
+machine that excludes exactly one page.
+
+Reading the reserved page afterwards shows what had been writing it:
+
+	[369] 0xcccc000000000000
+	[371] 0xcc77000000000000
+	[373] 0xcccc000000000000
+	[375] 0xcc77000000000000
+
+compression metadata, two bytes per sixteen, sitting where the driver
+used to hand out memory.
+
+The assertion that should have caught this compares the offset against
+GSMBASE - ccs_size for equality.  That value is 128K aligned, so it
+agrees with the rounded-up offset precisely when the base is not
+aligned - the check cannot fail in the case it exists to catch, and is
+compiled out unless CONFIG_DRM_XE_DEBUG is set.  Replace it with one
+that can fail: CCS storage must not run into GSM.
+
+[ And this was a debug session from hell, enormously helped by an AI
+  doing much of the grunt-work.
+
+  I'd like to call it my tireless helper, but the AI several times
+  stated flat out that this was impossible and unsolvable and that we
+  should just write a report about it.
+
+  I suspect those things have been trained by people who may not be
+  quite as stubborn as I am.
+
+  But while the AI was ready to give up several times, it did keep
+  adding debug code and analyzing it faithfully when I pushed. So credit
+  where credit is due and I let the AI write the commit message above.
+
+  This is basically a one-liner fixing a bogus "round_up()" to a
+  "round_down()", but there were 24 patches adding more and more debug
+  information to this, and 18 kernel boot to finally narrow it down to
+  this.   - Linus ]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86466" data-description="apache airflow fab provider: the authentik oauth path in the fab auth manager does not validate the issuer or audience claims of the id_token it accepts. an attacker holding a token that the same authentik identity provider minted for a different client application can present it to airflow and be authenticated as the user it names, because the audience claim is never checked. affects deployments using the fab auth manager with authentik oauth where the same authentik instance also serves other applications; the attacker needs a valid token for any of those other applications, not for airflow.
+                <div class="cve-entry" data-cve-id="CVE-2026-90046" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-cve-2026-75156 corrected the same missing validation on the azure ad path in this file; the authentik path was left unchanged and is fixed here. deployments that applied the cve-2026-75156 fix and use authentik must also upgrade for this one.
+mm/page_alloc: don't spin_trylock() in nmi on up
 
-users of apache-airflow-providers-fab are recommended to upgrade to version 3.9.0 or later, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86466" target="_blank">CVE-2026-86466</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:54 CDT</p>
+patch series "mm/page_alloc: fixes for free_pages_nolock() on rt/up".
+
+pre-existing bugs found by sashiko during review of this other series:
+https://lore.kernel.org/all/20260703-alloc-trylock-v5-0-c87b714e19d3@google.com/
+
+i have not reproduced these bugs, and i suspect there is no real-world
+user that is affected by them.
+
+
+this patch (of 2):
+
+as noted in can_spin_trylock(), using this is unsafe in this context. 
+commit 620b46ed6ae17 ("mm/page_alloc: return null early from
+alloc_frozen_pages_nolock() in nmi on up") fixed this on the alloc side
+but missed the free side.
+
+impact: if bpf programs using these features in nmi (probably tracing) are
+present on non-smp builds this might crash the kernel and is probably
+exploitable by local attackers for privilege escalation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90046" target="_blank">CVE-2026-90046</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Apache Airflow FAB provider: the Authentik OAuth path in the FAB auth manager does not validate the issuer or audience claims of the id_token it accepts. An attacker holding a token that the same Authentik identity provider minted for a different client application can present it to Airflow and be authenticated as the user it names, because the audience claim is never checked. Affects deployments using the FAB auth manager with Authentik OAuth where the same Authentik instance also serves other applications; the attacker needs a valid token for any of those other applications, not for Airflow.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-CVE-2026-75156 corrected the same missing validation on the Azure AD path in this file; the Authentik path was left unchanged and is fixed here. Deployments that applied the CVE-2026-75156 fix and use Authentik must also upgrade for this one.
+mm/page_alloc: don't spin_trylock() in NMI on UP
 
-Users of apache-airflow-providers-fab are recommended to upgrade to version 3.9.0 or later, which fixes the issue.</p>
+Patch series "mm/page_alloc: fixes for free_pages_nolock() on RT/UP".
+
+Pre-existing bugs found by Sashiko during review of this other series:
+https://lore.kernel.org/all/20260703-alloc-trylock-v5-0-c87b714e19d3@google.com/
+
+I have not reproduced these bugs, and I suspect there is no real-world
+user that is affected by them.
+
+
+This patch (of 2):
+
+As noted in can_spin_trylock(), using this is unsafe in this context. 
+commit 620b46ed6ae17 ("mm/page_alloc: return NULL early from
+alloc_frozen_pages_nolock() in NMI on UP") fixed this on the alloc side
+but missed the free side.
+
+Impact: If BPF programs using these features in NMI (probably tracing) are
+present on non-SMP builds this might crash the kernel and is probably
+exploitable by local attackers for privilege escalation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86443" data-description="cleartext storage of sensitive information in the duoxme application for android, in versions prior to 4.3.4, allows an attacker with local access to the device to retrieve the credentials stored by the application and impersonate the user account.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86443" target="_blank">CVE-2026-86443</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:54 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90045" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+usb: gadget: ffs: fix mm lifetime handling
+
+io_data stores a pointer to the submitting task's mm_struct,
+but does not currently hold a reference to it while async
+requests are pending.
+
+this can result in a use-after-free if the task exits before
+completion handling finishes.
+
+take a reference with mmgrab() when queuing the read request
+and release it with mmdrop() on request completion.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90045" target="_blank">CVE-2026-90045</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Cleartext storage of sensitive information in the DuoxMe application for Android, in versions prior to 4.3.4, allows an attacker with local access to the device to retrieve the credentials stored by the application and impersonate the user account.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+USB: gadget: ffs: fix mm lifetime handling
+
+io_data stores a pointer to the submitting task's mm_struct,
+but does not currently hold a reference to it while async
+requests are pending.
+
+This can result in a use-after-free if the task exits before
+completion handling finishes.
+
+Take a reference with mmgrab() when queuing the read request
+and release it with mmdrop() on request completion.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85628" data-description="transmission of the home wi-fi credentials without encryption during the pairing process between the duoxme application and veo and veo-xs wi-fi monitors, in versions prior to 4.3.4 of the application and 01.50.001 of the monitor firmware, allows an attacker on the wi-fi direct network to intercept the network password.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85628" target="_blank">CVE-2026-85628</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90044" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+usb: gadget: f_fs: fix use-after-free in aio error path
+
+in ffs_epfile_write_iter() and ffs_epfile_read_iter(), when ffs_epfile_io()
+fails with an error other than -eiocbqueued, the io_data structure (`p`) is
+freed. however, for aio operations, the kiocb cancel function was already
+armed and kiocb->private was set to `p`.
+
+if a concurrent cancel operation (such as sys_io_cancel()) executes after
+ffs_epfile_io() fails but before the function frees `p`, a use-after-free
+can occur when the cancellation handler accesses the freed pointer.
+
+to securely fix this race condition, we must properly un-arm the
+cancellation. invoking `kiocb->ki_complete()` does exactly this by
+acquiring `ctx->ctx_lock` and safely removing the kiocb from the active
+sequence. in doing so, it ensures that a parallel io_cancel can no longer
+discover the kiocb, effectively closing the race window.
+
+we then return -eiocbqueued to notify the vfs layer that the kiocb has been
+consumed and it should avoid attempting to complete the request again or
+triggering subsequent completion handlers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90044" target="_blank">CVE-2026-90044</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Transmission of the home Wi-Fi credentials without encryption during the pairing process between the DuoxMe application and VEO and VEO-XS Wi-Fi monitors, in versions prior to 4.3.4 of the application and 01.50.001 of the monitor firmware, allows an attacker on the Wi-Fi Direct network to intercept the network password.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+usb: gadget: f_fs: Fix Use-After-Free in AIO error path
+
+In ffs_epfile_write_iter() and ffs_epfile_read_iter(), when ffs_epfile_io()
+fails with an error other than -EIOCBQUEUED, the io_data structure (`p`) is
+freed. However, for AIO operations, the kiocb cancel function was already
+armed and kiocb->private was set to `p`.
+
+If a concurrent cancel operation (such as sys_io_cancel()) executes after
+ffs_epfile_io() fails but before the function frees `p`, a Use-After-Free
+can occur when the cancellation handler accesses the freed pointer.
+
+To securely fix this race condition, we must properly un-arm the
+cancellation. Invoking `kiocb->ki_complete()` does exactly this by
+acquiring `ctx->ctx_lock` and safely removing the kiocb from the active
+sequence. In doing so, it ensures that a parallel io_cancel can no longer
+discover the kiocb, effectively closing the race window.
+
+We then return -EIOCBQUEUED to notify the VFS layer that the kiocb has been
+consumed and it should avoid attempting to complete the request again or
+triggering subsequent completion handlers.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-84501" data-description="an unauthenticated attacker can inject arbitrary fake log lines into apache zookeeper's operational log by sending a crafted add_auth("ensemble", ...) request containing newline characters (\n). when the ensemble name doesn't match, ensembleauthenticationprovider.handleauthentication() logs the raw, unsanitized name via log.warn(). because slf4j's {} placeholder preserves embedded newlines, the attacker can forge complete log entries — with arbitrary timestamps, log levels, class names, and messages — that are visually indistinguishable from genuine zookeeper log output.
+                <div class="cve-entry" data-cve-id="CVE-2026-90043" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue affects apache zookeeper: from 3.9.0 through 3.9.5, from 3.8.0 through 3.8.6.
+zram: fix slot lock bit position on big-endian 64-bit
 
-users are recommended to upgrade to version 3.8.7 or 3.9.6, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84501" target="_blank">CVE-2026-84501</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:53 CDT</p>
+the slot lock is a bit operation on the whole __lock word, which flags and
+ac_time alias as two u32s.  on little-endian the lock bit lands in the
+position zram_entry_lock reserves in flags, so the aliasing works out.  on
+64-bit big-endian it lands in ac_time instead: with
+zram_track_entry_actime enabled, storing the access time from
+mark_slot_accessed() or slot_free() wipes out the held lock bit, letting
+another cpu take the same slot lock; an access time value with that bit
+set makes the slot look locked forever.
+
+shift the lock bit into the flags half of the word on big-endian 64-bit.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90043" target="_blank">CVE-2026-90043</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An unauthenticated attacker can inject arbitrary fake log lines into Apache ZooKeeper's operational log by sending a crafted add_auth("ensemble", ...) request containing newline characters (\n). When the ensemble name doesn't match, EnsembleAuthenticationProvider.handleAuthentication() logs the raw, unsanitized name via LOG.warn(). Because SLF4J's {} placeholder preserves embedded newlines, the attacker can forge complete log entries — with arbitrary timestamps, log levels, class names, and messages — that are visually indistinguishable from genuine ZooKeeper log output.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This issue affects Apache ZooKeeper: from 3.9.0 through 3.9.5, from 3.8.0 through 3.8.6.
+zram: fix slot lock bit position on big-endian 64-bit
 
-Users are recommended to upgrade to version 3.8.7 or 3.9.6, which fixes the issue.</p>
+The slot lock is a bit operation on the whole __lock word, which flags and
+ac_time alias as two u32s.  On little-endian the lock bit lands in the
+position ZRAM_ENTRY_LOCK reserves in flags, so the aliasing works out.  On
+64-bit big-endian it lands in ac_time instead: with
+ZRAM_TRACK_ENTRY_ACTIME enabled, storing the access time from
+mark_slot_accessed() or slot_free() wipes out the held lock bit, letting
+another CPU take the same slot lock; an access time value with that bit
+set makes the slot look locked forever.
+
+Shift the lock bit into the flags half of the word on big-endian 64-bit.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-84439" data-description="when audit logging is enabled (zookeeper.audit.enable=true), an unauthenticated attacker can inject arbitrary fields into apache zookeeper's audit log by sending a digest authentication request with tab characters (\t) embedded in the username. because the audit log uses tab-separated key=value format, the injected tabs are parsed as legitimate field separators, allowing the attacker to spoof audit results (e.g., injecting result=success), forge operation types, and corrupt forensic evidence.
+                <div class="cve-entry" data-cve-id="CVE-2026-90042" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-a log injection vulnerability in apache zookeeper allows a client that can call setacl to inject forged key-value fields into zookeeper_audit.log. when audit logging is enabled, the server serializes attacker-controlled digest acl ids into the acl= audit field without escaping tab characters. because audit events are emitted as tab-separated key=value records, a crafted acl id can make one successful setacl event appear to contain forged fields such as operation=delete and znode=/forged. this undermines the integrity of downstream audit parsing, alerting, and incident response.
+ceph: properly decrypt filenames in vmalloc() buffers
 
-this issue affects apache zookeeper: from 3.9.0 through 3.9.5, from 3.8.0 through 3.8.6.
+the fscrypt subsystem uses the scatterlist crypto api, inheriting its
+requirement that any buffers are in the linear mapping region. however,
+the messenger client uses kvmalloc() to create buffers for messages,
+which will occasionally place those buffers in the vmalloc() region when
+physical memory fragmentation doesn't permit a large enough kmalloc().
+the various callers of ceph_fname_to_usr() directly pass (slices of) raw
+messages from the mds without considering that the messages may be in
+vmalloc() buffers, resulting in oopses especially on non-x86 platforms
+(see 'closes:' for more details and a reproducer).
 
-users are recommended to upgrade to version 3.9.6 or 3.8.7, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84439" target="_blank">CVE-2026-84439</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:53 CDT</p>
+make ceph_fname_to_usr() explicitly tolerant of vmalloc()-allocated
+fname->ctext, fname->name, and/or oname->name buffers, using `tname`
+(which, when non-null, must be a linear address; when null, is briefly
+allocated as necessary) as a bounce buffer to avoid passing any
+inappropriate addresses to fscrypt_fname_disk_to_usr().
+
+additionally change parse_reply_info_readdir() -- the only function to
+supply its own `tname` -- to follow the new "tname must never come from
+vmalloc()" rule by passing null when the message is not in the linear
+region. though this causes a per-dentry kmalloc()+kfree(), this overhead
+exists only when processing the minority of messages that spill into
+vmalloc(). my (crude) testing puts this at only about 1 in 8,000 readdir
+messages. still, if the overhead proves unreasonable in the future, it
+is easy enough to mitigate: a future change could allocate a bounce
+buffer in parse_reply_info_readdir() and use that as `tname` instead.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90042" target="_blank">CVE-2026-90042</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When audit logging is enabled (zookeeper.audit.enable=true), an unauthenticated attacker can inject arbitrary fields into Apache ZooKeeper's audit log by sending a digest authentication request with tab characters (\t) embedded in the username. Because the audit log uses tab-separated key=value format, the injected tabs are parsed as legitimate field separators, allowing the attacker to spoof audit results (e.g., injecting result=success), forge operation types, and corrupt forensic evidence.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-A log injection vulnerability in Apache ZooKeeper allows a client that can call setACL to inject forged key-value fields into zookeeper_audit.log. When audit logging is enabled, the server serializes attacker-controlled digest ACL ids into the acl= audit field without escaping tab characters. Because audit events are emitted as tab-separated key=value records, a crafted ACL id can make one successful setAcl event appear to contain forged fields such as operation=delete and znode=/forged. This undermines the integrity of downstream audit parsing, alerting, and incident response.
+ceph: properly decrypt filenames in vmalloc() buffers
 
-This issue affects Apache ZooKeeper: from 3.9.0 through 3.9.5, from 3.8.0 through 3.8.6.
+The fscrypt subsystem uses the scatterlist crypto API, inheriting its
+requirement that any buffers are in the linear mapping region. However,
+the messenger client uses kvmalloc() to create buffers for messages,
+which will occasionally place those buffers in the vmalloc() region when
+physical memory fragmentation doesn't permit a large enough kmalloc().
+The various callers of ceph_fname_to_usr() directly pass (slices of) raw
+messages from the MDS without considering that the messages may be in
+vmalloc() buffers, resulting in oopses especially on non-x86 platforms
+(see 'Closes:' for more details and a reproducer).
 
-Users are recommended to upgrade to version 3.9.6 or 3.8.7, which fixes the issue.</p>
+Make ceph_fname_to_usr() explicitly tolerant of vmalloc()-allocated
+fname->ctext, fname->name, and/or oname->name buffers, using `tname`
+(which, when non-null, must be a linear address; when null, is briefly
+allocated as necessary) as a bounce buffer to avoid passing any
+inappropriate addresses to fscrypt_fname_disk_to_usr().
+
+Additionally change parse_reply_info_readdir() -- the only function to
+supply its own `tname` -- to follow the new "tname must never come from
+vmalloc()" rule by passing NULL when the message is not in the linear
+region. Though this causes a per-dentry kmalloc()+kfree(), this overhead
+exists only when processing the minority of messages that spill into
+vmalloc(). My (crude) testing puts this at only about 1 in 8,000 readdir
+messages. Still, if the overhead proves unreasonable in the future, it
+is easy enough to mitigate: a future change could allocate a bounce
+buffer in parse_reply_info_readdir() and use that as `tname` instead.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-82310" data-description="apache airflow fab provider: deactivating a user account does not stop tokens issued to that account before deactivation. password authentication correctly rejects the disabled account, but the core api continues to accept an existing, unexpired token naming it, and lets that token mint a replacement — so the account keeps its role-scoped access indefinitely after an administrator has disabled it. the user replays their own legitimate credential; no signature forgery or privilege escalation is involved, and the access stays within the roles the account already held.
+                <div class="cve-entry" data-cve-id="CVE-2026-90041" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-affects deployments using airflow 3 with the fab auth manager and core api token authentication, where an administrator deactivates an account whose row remains in the database and whose previously issued token has not expired. the trigger is administrative deactivation as a containment action, which silently fails to contain.
+hid: sony: clean up device list on probe failure
 
-users of apache-airflow-providers-fab are recommended to upgrade to version 3.9.0 or later, which rejects tokens naming a deactivated account.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82310" target="_blank">CVE-2026-82310</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:53 CDT</p>
+sony_input_configured() adds some controllers to sony_device_list before
+hid core registers their input devices. input_register_device() can fail
+after the callback returns successfully. sony_probe() then observes that
+hid_claimed_input is clear and unwinds, but only stops the hid hardware.
+the devres-managed sony_sc is freed while its list node remains linked, so
+the next matching controller traverses freed memory.
+
+initialize the list node and device id to inactive states. make list
+removal idempotent and run the driver-private cleanup on every probe
+failure path. this also makes a second cleanup safe when
+sony_input_configured() already unwound a partial initialization before
+sony_probe() handles the missing input claim.
+
+found by 0sec (https://0sec.ai) using automated source analysis;
+verified against the hid input registration and probe unwind paths.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90041" target="_blank">CVE-2026-90041</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Apache Airflow FAB provider: deactivating a user account does not stop tokens issued to that account before deactivation. Password authentication correctly rejects the disabled account, but the Core API continues to accept an existing, unexpired token naming it, and lets that token mint a replacement — so the account keeps its role-scoped access indefinitely after an administrator has disabled it. The user replays their own legitimate credential; no signature forgery or privilege escalation is involved, and the access stays within the roles the account already held.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Affects deployments using Airflow 3 with the FAB auth manager and Core API token authentication, where an administrator deactivates an account whose row remains in the database and whose previously issued token has not expired. The trigger is administrative deactivation as a containment action, which silently fails to contain.
+HID: sony: clean up device list on probe failure
 
-Users of apache-airflow-providers-fab are recommended to upgrade to version 3.9.0 or later, which rejects tokens naming a deactivated account.</p>
+sony_input_configured() adds some controllers to sony_device_list before
+HID core registers their input devices. input_register_device() can fail
+after the callback returns successfully. sony_probe() then observes that
+HID_CLAIMED_INPUT is clear and unwinds, but only stops the HID hardware.
+The devres-managed sony_sc is freed while its list node remains linked, so
+the next matching controller traverses freed memory.
+
+Initialize the list node and device ID to inactive states. Make list
+removal idempotent and run the driver-private cleanup on every probe
+failure path. This also makes a second cleanup safe when
+sony_input_configured() already unwound a partial initialization before
+sony_probe() handles the missing input claim.
+
+Found by 0sec (https://0sec.ai) using automated source analysis;
+verified against the HID input registration and probe unwind paths.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-79993" data-description="the `deletecontainer` opcode (0x14/20) is processed without verifying the caller's acl permissions, allowing any authenticated client to delete specific znodes in the data tree regardless of the acl restrictions on the znode or its parent. this opcode is considered internal-only and the official client doesn't have api for it, but a client that can open a plain tcp session on the zookeeper client port (2181 by default) - with no authentication and no acl permissions - can delete any empty persistent znode (including regular persistent nodes, container nodes, and ttl nodes) by issuing the raw protocol opcode deletecontainer (20). the deletecontainer request path completely skips both the session check and the delete acl check that are enforced by the regular delete (opcode 2) path. this is an authorization bypass / acl enforcement bug.
+                <div class="cve-entry" data-cve-id="CVE-2026-90040" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue affects apache zookeeper: from 3.9.0 through 3.9.5, from 3.8.0 through 3.8.6.
+kvm: sev: forcefully invalidate snp vmsa if its backing gmem page is zapped
 
-users are recommended to upgrade to version 3.9.6 or 3.8.7, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79993" target="_blank">CVE-2026-79993</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:53 CDT</p>
+wire up a gmem_invalidate_range() call for snp vms, and use it to force
+vcpus to reload/recheck their guest-provided vmsa if the backing gmem
+page is being invalidated, e.g. is being punch_hole'd.  use the same core
+logic to handle invalidations as vmx does for the apic-access page, as the
+two concepts are nearly identical: shove the physical address of a page
+into the vcpu's control structure:
+
+ 1. snapshot the invalidation sequence counter
+ 2. grab the pfn (from guest_memfd in this case)
+ 3. acquire mmu_lock for read
+ 4. re-request reload if retry is needed, otherwise commit the change.
+
+note, the re-request action in #4 is necessary as kvm's retry logic is
+fuzzy, i.e. can get false positives.  if the guest_memfd page has been
+dropped, at some point a subsequent reload will fail to get a pfn from
+guest_memfd, and kvm will fail kvm_run.  if the retry was due to a false
+positive, kvm will retry until there are no relevant mmu notifier events
+(and will retry in the "outer" loop, i.e. will drop locks and resched as
+needed).
+
+note #2!  take care to invalidate the vmsa when a relevant memslot is
+deleted or moved, as invalidations in response to punch_hole are predicated
+on memslot bindings (kvm doesn't know what gfn range(s) to invalidate
+without a binding).  and more importantly, the vmsa mapping requires a
+memslot, i.e. must be invalidated if its memslots disappears, regardless of
+the state of the underlying guest_memfd inode.
+
+failure to invalidate the vcpu's control.vmsa_pa (which is checked by
+pre_sev_run()) can prevent kvm from properly freeing the page as firmware
+will reject the rmpupdate to reclaim the page with fail_inuse if the vcpu
+is actively running, i.e. if vmsa page is in-use.  that in turn leads to an
+rmp #pf on the next use, as the page will still be assigned to the snp vm.
+
+  sev-snp: rmpupdate failed for pfn 78d198, pg_level: 1, ret: 3
+  sev-snp: pfn 0x78d198, rmp entry: [0xfff0000000144001 - 0x000000000000000f]
+  cpu: 3 uid: 0 pid: 31345 comm: sev_snp_vmsa_pu tainted: g     u     o
+  tainted: [u]=user, [o]=oot_module
+  hardware name: google, inc. arcadia_it_80/arcadia_it_80, bios 34.86.0-102 01/25/2026
+  call trace:
+   <task>
+   dump_stack_lvl+0x54/0x70
+   rmpupdate+0x12c/0x140
+   rmp_make_shared+0x3b/0x60
+   sev_gmem_invalidate+0xe0/0x170 [kvm_amd]
+   delete_from_page_cache_batch+0x1d8/0x220
+   truncate_inode_pages_range+0x120/0x3d0
+   kvm_gmem_fallocate+0x19a/0x270 [kvm]
+   vfs_fallocate+0x1bc/0x1f0
+   __x64_sys_fallocate+0x48/0x70
+   do_syscall_64+0x10a/0x480
+   entry_syscall_64_after_hwframe+0x4b/0x53
+  rip: 0033:0x496c7e
+   </task>
+  ------------[ cut here ]------------
+  sev: failed to update rmp entry for pfn 0x78d198 error -14
+  warning: arch/x86/kvm/svm/sev.c:5160 at sev_gmem_invalidate+0x126/0x170 [kvm_amd], cpu#3: sev_snp_vmsa_pu/31345
+  cpu: 3 uid: 0 pid: 31345 comm: sev_snp_vmsa_pu tainted: g     u     o
+  tainted: [u]=user, [o]=oot_module
+  hardware name: google, inc. arcadia_it_80/arcadia_it_80, bios 34.86.0-102 01/25/2026
+  rip: 0010:sev_gmem_invalidate+0x12b/0x170 [kvm_amd]
+  call trace:
+   <task>
+   delete_from_page_cache_batch+0x1d8/0x220
+   truncate_inode_pages_range+0x120/0x3d0
+   kvm_gmem_fallocate+0x19a/0x270 [kvm]
+   vfs_fallocate+0x1bc/0x1f0
+   __x64_sys_fallocate+0x48/0x70
+   do_syscall_64+0x10a/0x480
+   entry_syscall_64_after_hwframe+0x4b/0x53
+  rip: 0033:0x496c7e
+   </task>
+  irq event stamp: 20689
+  hardirqs last  enabled at (20699): [<ffffffff8e76092c>] __console_unlock+0x5c/0x60
+  hardirqs last disabled at (20708): [<ffffffff8e760911>] __console_unlock+0x41/0x60
+  softirqs last  enabled at (20722): [<ffffffff8e6cd74e>] __irq_exit_rcu+0x7e/0x140
+  softirqs last disabled at (20717): [<ffffffff8e6cd74e>] __irq_exit_rcu+0x7e/0x140
+  ---[ end trace 0000000000000000 ]---
+  bug: unable to handle page fault for address: ffff99
+---truncated---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90040" target="_blank">CVE-2026-90040</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The `deleteContainer` opcode (0x14/20) is processed without verifying the caller's ACL permissions, allowing any authenticated client to delete specific znodes in the data tree regardless of the ACL restrictions on the znode or its parent. This opcode is considered internal-only and the official client doesn't have API for it, but a client that can open a plain TCP session on the ZooKeeper client port (2181 by default) - with NO authentication and NO ACL permissions - can delete any empty persistent znode (including regular persistent nodes, container nodes, and TTL nodes) by issuing the raw protocol OpCode deleteContainer (20). The deleteContainer request path completely skips both the session check and the DELETE ACL check that are enforced by the regular delete (OpCode 2) path. This is an authorization bypass / ACL enforcement bug.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This issue affects Apache ZooKeeper: from 3.9.0 through 3.9.5, from 3.8.0 through 3.8.6.
+KVM: SEV: Forcefully invalidate SNP VMSA if its backing gmem page is zapped
 
-Users are recommended to upgrade to version 3.9.6 or 3.8.7, which fixes the issue.</p>
+Wire up a gmem_invalidate_range() call for SNP VMs, and use it to force
+vCPUs to reload/recheck their guest-provided VMSA if the backing gmem
+page is being invalidated, e.g. is being PUNCH_HOLE'd.  Use the same core
+logic to handle invalidations as VMX does for the APIC-access page, as the
+two concepts are nearly identical: shove the physical address of a page
+into the vCPU's control structure:
+
+ 1. Snapshot the invalidation sequence counter
+ 2. Grab the pfn (from guest_memfd in this case)
+ 3. Acquire mmu_lock for read
+ 4. Re-request reload if retry is needed, otherwise commit the change.
+
+Note, the re-request action in #4 is necessary as KVM's retry logic is
+fuzzy, i.e. can get false positives.  If the guest_memfd page has been
+dropped, at some point a subsequent reload will fail to get a PFN from
+guest_memfd, and KVM will fail KVM_RUN.  If the retry was due to a false
+positive, KVM will retry until there are no relevant MMU notifier events
+(and will retry in the "outer" loop, i.e. will drop locks and resched as
+needed).
+
+Note #2!  Take care to invalidate the VMSA when a relevant memslot is
+DELETED or MOVED, as invalidations in response to PUNCH_HOLE are predicated
+on memslot bindings (KVM doesn't know what GFN range(s) to invalidate
+without a binding).  And more importantly, the VMSA mapping requires a
+memslot, i.e. must be invalidated if its memslots disappears, regardless of
+the state of the underlying guest_memfd inode.
+
+Failure to invalidate the vCPU's control.vmsa_pa (which is checked by
+pre_sev_run()) can prevent KVM from properly freeing the page as firmware
+will reject the RMPUPDATE to reclaim the page with FAIL_INUSE if the vCPU
+is actively running, i.e. if VMSA page is in-use.  That in turn leads to an
+RMP #PF on the next use, as the page will still be assigned to the SNP VM.
+
+  SEV-SNP: RMPUPDATE failed for PFN 78d198, pg_level: 1, ret: 3
+  SEV-SNP: PFN 0x78d198, RMP entry: [0xfff0000000144001 - 0x000000000000000f]
+  CPU: 3 UID: 0 PID: 31345 Comm: sev_snp_vmsa_pu Tainted: G     U     O
+  Tainted: [U]=USER, [O]=OOT_MODULE
+  Hardware name: Google, Inc. Arcadia_IT_80/Arcadia_IT_80, BIOS 34.86.0-102 01/25/2026
+  Call Trace:
+   <TASK>
+   dump_stack_lvl+0x54/0x70
+   rmpupdate+0x12c/0x140
+   rmp_make_shared+0x3b/0x60
+   sev_gmem_invalidate+0xe0/0x170 [kvm_amd]
+   delete_from_page_cache_batch+0x1d8/0x220
+   truncate_inode_pages_range+0x120/0x3d0
+   kvm_gmem_fallocate+0x19a/0x270 [kvm]
+   vfs_fallocate+0x1bc/0x1f0
+   __x64_sys_fallocate+0x48/0x70
+   do_syscall_64+0x10a/0x480
+   entry_SYSCALL_64_after_hwframe+0x4b/0x53
+  RIP: 0033:0x496c7e
+   </TASK>
+  ------------[ cut here ]------------
+  SEV: Failed to update RMP entry for PFN 0x78d198 error -14
+  WARNING: arch/x86/kvm/svm/sev.c:5160 at sev_gmem_invalidate+0x126/0x170 [kvm_amd], CPU#3: sev_snp_vmsa_pu/31345
+  CPU: 3 UID: 0 PID: 31345 Comm: sev_snp_vmsa_pu Tainted: G     U     O
+  Tainted: [U]=USER, [O]=OOT_MODULE
+  Hardware name: Google, Inc. Arcadia_IT_80/Arcadia_IT_80, BIOS 34.86.0-102 01/25/2026
+  RIP: 0010:sev_gmem_invalidate+0x12b/0x170 [kvm_amd]
+  Call Trace:
+   <TASK>
+   delete_from_page_cache_batch+0x1d8/0x220
+   truncate_inode_pages_range+0x120/0x3d0
+   kvm_gmem_fallocate+0x19a/0x270 [kvm]
+   vfs_fallocate+0x1bc/0x1f0
+   __x64_sys_fallocate+0x48/0x70
+   do_syscall_64+0x10a/0x480
+   entry_SYSCALL_64_after_hwframe+0x4b/0x53
+  RIP: 0033:0x496c7e
+   </TASK>
+  irq event stamp: 20689
+  hardirqs last  enabled at (20699): [<ffffffff8e76092c>] __console_unlock+0x5c/0x60
+  hardirqs last disabled at (20708): [<ffffffff8e760911>] __console_unlock+0x41/0x60
+  softirqs last  enabled at (20722): [<ffffffff8e6cd74e>] __irq_exit_rcu+0x7e/0x140
+  softirqs last disabled at (20717): [<ffffffff8e6cd74e>] __irq_exit_rcu+0x7e/0x140
+  ---[ end trace 0000000000000000 ]---
+  BUG: unable to handle page fault for address: ffff99
+---truncated---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-77190" data-description="on affected platforms running arista eos, an unauthenticated attacker who is network-adjacent to the switch and able to connect to a device with pim sparse mode and mlag configured, can send malformed messages that cause the pimsm agent to terminate unexpectedly. the pimsm agent is automatically restarted, but repeated attacks can cause the agent to restart continuously, resulting in a sustained denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77190" target="_blank">CVE-2026-77190</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>On affected platforms running Arista EOS, an unauthenticated attacker who is network-adjacent to the switch and able to connect to a device with PIM Sparse Mode and MLAG configured, can send malformed messages that cause the Pimsm agent to terminate unexpectedly. The Pimsm agent is automatically restarted, but repeated attacks can cause the agent to restart continuously, resulting in a sustained denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-76187" data-description="apache airflow keycloak provider: the unauthenticated token endpoint accepts a client-credentials grant for any confidential client registered in the keycloak realm, not only the client configured for airflow. no allowlist restricts which client ids may authenticate, so the credentials of an unrelated application that happens to share the realm are valid airflow login credentials, and airflow mints a signed session token for that application's service account. the endpoint also answers unauthenticated credential guesses against keycloak under airflow's identity.
+                <div class="cve-entry" data-cve-id="CVE-2026-90039" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-affects deployments using the keycloak auth manager whose realm is shared with other confidential clients. the attacker needs valid credentials for any one of those clients, not for airflow. resource authorization is still evaluated per subject, so the access gained is whatever that service account holds, plus any endpoint gated only on being authenticated.
+nfsd: guard admin state-revocation walks with nfsd_net_up
 
-users of apache-airflow-providers-keycloak are recommended to upgrade to version 0.10.0 or later, which accepts only the configured client on that grant.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76187" target="_blank">CVE-2026-76187</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
+writing to /proc/fs/nfsd/unlock_filesystem, or sending the
+nfsd_cmd_unlock_filesystem or nfsd_cmd_unlock_export netlink command,
+walks the nfsv4 client hash tables to revoke open state and cancel
+async copy operations.  all three handlers gate that walk on
+nn->nfsd_serv, but a listener added via portlist or netlink
+listener_set sets nn->nfsd_serv before any nfsd thread starts.
+nfsd_startup_net() has not yet allocated nn->conf_id_hashtbl, so the
+walkers dereference a null table.  a local administrator with
+cap_sys_admin can crash the kernel this way without ever starting the
+server.
+
+nn->nfsd_serv is set when the service is created, which precedes
+table allocation.  nfsd_net_up instead brackets the window where the
+tables are live: set at the end of nfsd_startup_net() and cleared in
+nfsd_shutdown_net() after they are freed, both under nfsd_mutex.
+gating the three unlock paths on nfsd_net_up fixes the startup-time
+null dereference while preserving the earlier post-shutdown
+use-after-free fix.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90039" target="_blank">CVE-2026-90039</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Apache Airflow Keycloak provider: the unauthenticated token endpoint accepts a client-credentials grant for any confidential client registered in the Keycloak realm, not only the client configured for Airflow. No allowlist restricts which client ids may authenticate, so the credentials of an unrelated application that happens to share the realm are valid Airflow login credentials, and Airflow mints a signed session token for that application's service account. The endpoint also answers unauthenticated credential guesses against Keycloak under Airflow's identity.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Affects deployments using the Keycloak auth manager whose realm is shared with other confidential clients. The attacker needs valid credentials for any one of those clients, not for Airflow. Resource authorization is still evaluated per subject, so the access gained is whatever that service account holds, plus any endpoint gated only on being authenticated.
+NFSD: Guard admin state-revocation walks with NFSD_NET_UP
 
-Users of apache-airflow-providers-keycloak are recommended to upgrade to version 0.10.0 or later, which accepts only the configured client on that grant.</p>
+Writing to /proc/fs/nfsd/unlock_filesystem, or sending the
+NFSD_CMD_UNLOCK_FILESYSTEM or NFSD_CMD_UNLOCK_EXPORT netlink command,
+walks the NFSv4 client hash tables to revoke open state and cancel
+async COPY operations.  All three handlers gate that walk on
+nn->nfsd_serv, but a listener added via portlist or netlink
+listener_set sets nn->nfsd_serv before any nfsd thread starts.
+nfsd_startup_net() has not yet allocated nn->conf_id_hashtbl, so the
+walkers dereference a NULL table.  A local administrator with
+CAP_SYS_ADMIN can crash the kernel this way without ever starting the
+server.
+
+nn->nfsd_serv is set when the service is created, which precedes
+table allocation.  NFSD_NET_UP instead brackets the window where the
+tables are live: set at the end of nfsd_startup_net() and cleared in
+nfsd_shutdown_net() after they are freed, both under nfsd_mutex.
+Gating the three unlock paths on NFSD_NET_UP fixes the startup-time
+NULL dereference while preserving the earlier post-shutdown
+use-after-free fix.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-76186" data-description="apache airflow keycloak provider: from airflow 3.3 the keycloak auth manager takes a user's identity from the signed airflow session token but takes the keycloak access and refresh tokens used for every authorization decision from separate, unauthenticated cookies, and never checks that the two describe the same subject. a user who holds any valid airflow login of their own, together with another subject's keycloak access or refresh token obtained out of band, can pair the two: airflow then authorizes requests with the foreign token's privileges while the session identity, audit log and cache keys continue to name the attacker's own account. the refresh path re-issues an airflow session token for the original identity carrying the foreign tokens, so the mismatched pairing survives across sessions.
+                <div class="cve-entry" data-cve-id="CVE-2026-90038" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-affects deployments running airflow 3.3 or later with the keycloak auth manager. earlier versions carried the keycloak tokens inside the signed session token, so the binding existed and was lost when they moved into separate cookies.
+nfsd: prevent client use-after-free during export state revocation
 
-users of apache-airflow-providers-keycloak are recommended to upgrade to version 0.10.0 or later, which binds the cookie-supplied tokens to the session identity.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76186" target="_blank">CVE-2026-76186</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
+nfsd4_revoke_export_states() has the same use-after-free as
+nfsd4_revoke_states(): it drops nn->client_lock across
+revoke_one_stid() and the following read of clp->cl_minorversion, but
+the stateid reference it holds does not pin the client.  a teardown
+racing the dropped lock can free the client while revoke_one_stid()
+still dereferences it.
+
+exportfs -u drives this path through nfsd_cmd_unlock_export, so an
+administrator removing an export can race a client expiry.
+
+skip a client that is already expiring and otherwise pin it with
+cl_rpc_users under client_lock before dropping the lock, matching
+nfsd4_revoke_states().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90038" target="_blank">CVE-2026-90038</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Apache Airflow Keycloak provider: from Airflow 3.3 the Keycloak auth manager takes a user's identity from the signed Airflow session token but takes the Keycloak access and refresh tokens used for every authorization decision from separate, unauthenticated cookies, and never checks that the two describe the same subject. A user who holds any valid Airflow login of their own, together with another subject's Keycloak access or refresh token obtained out of band, can pair the two: Airflow then authorizes requests with the foreign token's privileges while the session identity, audit log and cache keys continue to name the attacker's own account. The refresh path re-issues an Airflow session token for the original identity carrying the foreign tokens, so the mismatched pairing survives across sessions.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-Affects deployments running Airflow 3.3 or later with the Keycloak auth manager. Earlier versions carried the Keycloak tokens inside the signed session token, so the binding existed and was lost when they moved into separate cookies.
+NFSD: Prevent client use-after-free during export state revocation
 
-Users of apache-airflow-providers-keycloak are recommended to upgrade to version 0.10.0 or later, which binds the cookie-supplied tokens to the session identity.</p>
+nfsd4_revoke_export_states() has the same use-after-free as
+nfsd4_revoke_states(): it drops nn->client_lock across
+revoke_one_stid() and the following read of clp->cl_minorversion, but
+the stateid reference it holds does not pin the client.  A teardown
+racing the dropped lock can free the client while revoke_one_stid()
+still dereferences it.
+
+exportfs -u drives this path through NFSD_CMD_UNLOCK_EXPORT, so an
+administrator removing an export can race a client expiry.
+
+Skip a client that is already expiring and otherwise pin it with
+cl_rpc_users under client_lock before dropping the lock, matching
+nfsd4_revoke_states().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-76151" data-description="out-of-bounds read (buffer over-read) in the http cache-control response header parsing in the qtnetwork module in qt group qt 6.0.0 through 6.8.8, and 6.9.0 through 6.11.1, allows remote attackers to cause a denial of service (application crash) via an excessively large cache-control header value returned by an untrusted or compromised http server to an application using qnetworkaccessmanager. only the client side of the connection is affected and 32-bit builds are not affected; the out-of-bounds access is read-only, with no information disclosure and no code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76151" target="_blank">CVE-2026-76151</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90037" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nfsd: prevent client use-after-free during close_lru reaping
+
+an nfs4_openowner left on nn->close_lru after its final close keeps
+its last closed stateid in oo_last_closed_stid, holding only a raw
+pointer to its nfs4_client. the laundromat reaps timed-out entries,
+drops nn->client_lock, and calls nfs4_put_stid(), which dereferences
+the client through cl_lock. nothing pins the client across that
+window, so a concurrent force_expire_client() can free it and
+nfs4_put_stid() reads freed memory. __destroy_client() hits the same
+race, walking clp->cl_openowners without cl_lock.
+
+pin the client with cl_rpc_users before dropping client_lock, and
+skip clients already expiring. __destroy_client() then cleans up its
+own close_lru entries through release_last_closed_stateid(), so
+teardown no longer races the laundromat.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90037" target="_blank">CVE-2026-90037</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:16 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Out-of-bounds read (buffer over-read) in the HTTP Cache-Control response header parsing in the QtNetwork module in Qt Group Qt 6.0.0 through 6.8.8, and 6.9.0 through 6.11.1, allows remote attackers to cause a denial of service (application crash) via an excessively large Cache-Control header value returned by an untrusted or compromised HTTP server to an application using QNetworkAccessManager. Only the client side of the connection is affected and 32-bit builds are not affected; the out-of-bounds access is read-only, with no information disclosure and no code execution.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+NFSD: Prevent client use-after-free during close_lru reaping
+
+An nfs4_openowner left on nn->close_lru after its final CLOSE keeps
+its last closed stateid in oo_last_closed_stid, holding only a raw
+pointer to its nfs4_client. The laundromat reaps timed-out entries,
+drops nn->client_lock, and calls nfs4_put_stid(), which dereferences
+the client through cl_lock. Nothing pins the client across that
+window, so a concurrent force_expire_client() can free it and
+nfs4_put_stid() reads freed memory. __destroy_client() hits the same
+race, walking clp->cl_openowners without cl_lock.
+
+Pin the client with cl_rpc_users before dropping client_lock, and
+skip clients already expiring. __destroy_client() then cleans up its
+own close_lru entries through release_last_closed_stateid(), so
+teardown no longer races the laundromat.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73469" data-description="when specific platforms are using arista eos with a loose unicast reverse path forwarding (urpf) configuration, certain traffic may not be subjected to the intended verification drop. consequently, traffic that should be dropped based on these routes could still be processed and forwarded by the device.
+                <div class="cve-entry" data-cve-id="CVE-2026-90036" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue was discovered internally by arista and the company is not aware of any malicious uses of this issue in customer networks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73469" target="_blank">CVE-2026-73469</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.8</p>
-                    <p>When specific platforms are using Arista EOS with a loose Unicast Reverse Path Forwarding (uRPF) configuration, certain traffic may not be subjected to the intended verification drop. Consequently, traffic that should be dropped based on these routes could still be processed and forwarded by the device.
+nfsd: prevent client use-after-free during blocked-lock reaping
 
-This issue was discovered internally by Arista and the company is not aware of any malicious uses of this issue in customer networks.</p>
+a bare lock owner -- its only remaining reference a blocked lock on
+nn->blocked_locks_lru -- holds a raw pointer to its nfs4_client but
+no reference keeping the client alive. when the per-net laundromat
+reaps such a lock, freeing the nbl drops the owner reference
+held through flc_owner, and the final nfs4_put_stateowner()
+takes the client's cl_lock. because the laundromat detaches the
+nbl first, __destroy_client() no longer finds it, so a concurrent
+force_expire_client() can free the client before nfs4_put_stateowner()
+runs, dereferencing cl_lock in freed memory.
+
+pin the client with cl_rpc_users before dropping
+nn->blocked_locks_lock, and skip clients already expiring, whose
+blocked locks __destroy_client() frees while holding an owner
+reference. take nn->client_lock outside nn->blocked_locks_lock.
+every other site holds nn->blocked_locks_lock as a leaf, acquiring
+no further lock, so placing nn->client_lock outside it cannot form
+a lock-order cycle.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90036" target="_blank">CVE-2026-90036</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+NFSD: Prevent client use-after-free during blocked-lock reaping
+
+A bare lock owner -- its only remaining reference a blocked lock on
+nn->blocked_locks_lru -- holds a raw pointer to its nfs4_client but
+no reference keeping the client alive. When the per-net laundromat
+reaps such a lock, freeing the nbl drops the owner reference
+held through flc_owner, and the final nfs4_put_stateowner()
+takes the client's cl_lock. Because the laundromat detaches the
+nbl first, __destroy_client() no longer finds it, so a concurrent
+force_expire_client() can free the client before nfs4_put_stateowner()
+runs, dereferencing cl_lock in freed memory.
+
+Pin the client with cl_rpc_users before dropping
+nn->blocked_locks_lock, and skip clients already expiring, whose
+blocked locks __destroy_client() frees while holding an owner
+reference. Take nn->client_lock outside nn->blocked_locks_lock.
+Every other site holds nn->blocked_locks_lock as a leaf, acquiring
+no further lock, so placing nn->client_lock outside it cannot form
+a lock-order cycle.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73468" data-description="a specially crafted packet can cause the premature expiry of multicast forwarding state on affected interfaces, potentially resulting in temporary multicast traffic loss during the affected period.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73468" target="_blank">CVE-2026-73468</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A specially crafted packet can cause the premature expiry of multicast forwarding state on affected interfaces, potentially resulting in temporary multicast traffic loss during the affected period.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90035" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/amd/display: fix division by zero in get_estimated_bw()
+
+get_estimated_bw() divides by link->dpia_bw_alloc_config.bw_granularity,
+which is zeroed by reset_bw_alloc_struct() and only populated once
+dp_tunneling_bw_alloc_cap_changed has been handled.
+
+link_dp_dpia_handle_bw_alloc_status(), the dpcd interrupt handler,
+calls get_estimated_bw() whenever dp_tunneling_estimated_bw_changed
+is set, independently of whether dp_tunneling_bw_alloc_cap_changed
+has ever fired for that link. a connected usb4/dpia tunneling device
+that reports an estimated-bandwidth change before ever reporting a
+capability change drives a division by zero in this irq path.
+
+link_dpia_send_bw_alloc_request() already guards the same
+bw_granularity division; add the identical guard here rather than
+introducing a new pattern.
+
+(cherry picked from commit f2a961457c33dc34223aad5c9e8971de34a4eed3)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90035" target="_blank">CVE-2026-90035</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/amd/display: fix division by zero in get_estimated_bw()
+
+get_estimated_bw() divides by link->dpia_bw_alloc_config.bw_granularity,
+which is zeroed by reset_bw_alloc_struct() and only populated once
+DP_TUNNELING_BW_ALLOC_CAP_CHANGED has been handled.
+
+link_dp_dpia_handle_bw_alloc_status(), the DPCD interrupt handler,
+calls get_estimated_bw() whenever DP_TUNNELING_ESTIMATED_BW_CHANGED
+is set, independently of whether DP_TUNNELING_BW_ALLOC_CAP_CHANGED
+has ever fired for that link. A connected USB4/DPIA tunneling device
+that reports an estimated-bandwidth change before ever reporting a
+capability change drives a division by zero in this IRQ path.
+
+link_dpia_send_bw_alloc_request() already guards the same
+bw_granularity division; add the identical guard here rather than
+introducing a new pattern.
+
+(cherry picked from commit f2a961457c33dc34223aad5c9e8971de34a4eed3)</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73455" data-description="on affected platforms running arista eos with open shortest path first version 3 (ospfv3) configured, a specially crafted packet can cause the ospfv3 agent to restart unexpectedly.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73455" target="_blank">CVE-2026-73455</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>On affected platforms running Arista EOS with Open Shortest Path First version 3 (OSPFv3) configured, a specially crafted packet can cause the OSPFv3 agent to restart unexpectedly.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90034" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+usb: image: mdc800: change kmalloc() to kzalloc()
+
+change the kmalloc() calls in usb_mdc800_init() for irq_urb_buffer and
+download_urb_buffer to kzalloc(), avoiding potential stack leaks if a
+shorter message is received in mdc800_usb_irq() and
+mdc800_usb_download_notify()">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90034" target="_blank">CVE-2026-90034</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+usb: image: mdc800: change kmalloc() to kzalloc()
+
+Change the kmalloc() calls in usb_mdc800_init() for irq_urb_buffer and
+download_urb_buffer to kzalloc(), avoiding potential stack leaks if a
+shorter message is received in mdc800_usb_irq() and
+mdc800_usb_download_notify()</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73453" data-description="an unauthenticated p4runtime (programming protocol-independent packet processors runtime) client can achieve arbitrary code execution under certain conditions on affected platforms running arista eos configured with p4runtime. p4runtime is disabled by default in arista eos. by crafting a malicious packet during the initiation of a p4runtime session, an attacker can obtain complete administrative control over the compromised switch.
+                <div class="cve-entry" data-cve-id="CVE-2026-90033" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue was discovered internally by arista, and the company is not aware of any malicious exploitation of this vulnerability in customer networks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73453" target="_blank">CVE-2026-73453</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>An unauthenticated P4Runtime (Programming Protocol-Independent Packet Processors Runtime) client can achieve arbitrary code execution under certain conditions on affected platforms running Arista EOS configured with P4Runtime. P4Runtime is disabled by default in Arista EOS. By crafting a malicious packet during the initiation of a P4Runtime session, an attacker can obtain complete administrative control over the compromised switch.
+alsa: usb-audio: fix oob write in snd_usbmidi_us122l_output()
 
-This issue was discovered internally by Arista, and the company is not aware of any malicious exploitation of this vulnerability in customer networks.</p>
+the snd_usbmidi_us122l_output() picks a count of 2 on anything slower
+than high speed and never relates it to ep->max_transfer.  the urb
+buffer holds exactly max_transfer bytes, so a device declaring a one
+byte bulk endpoint takes two bytes from snd_rawmidi_transmit(), and the
+memset that pads the rest computes 1 - 2 in int and wraps to size_max.
+
+only 0x800e and 0x800f are pinned to nine bytes.  the us-122mkii at
+0x0644:0x8021 falls to the default and takes usb_maxpacket(), which the
+usb core only clamps downward.
+
+the akai and novation output ops in this file were given the same guard
+recently.  do the same here.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90033" target="_blank">CVE-2026-90033</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: usb-audio: fix OOB write in snd_usbmidi_us122l_output()
+
+The snd_usbmidi_us122l_output() picks a count of 2 on anything slower
+than high speed and never relates it to ep->max_transfer.  The URB
+buffer holds exactly max_transfer bytes, so a device declaring a one
+byte bulk endpoint takes two bytes from snd_rawmidi_transmit(), and the
+memset that pads the rest computes 1 - 2 in int and wraps to SIZE_MAX.
+
+Only 0x800e and 0x800f are pinned to nine bytes.  The US-122MKII at
+0x0644:0x8021 falls to the default and takes usb_maxpacket(), which the
+USB core only clamps downward.
+
+The akai and novation output ops in this file were given the same guard
+recently.  Do the same here.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-73440" data-description="on affected platforms running arista eos with simple network management protocol (snmp) configured, snmpv3 local or remote user credentials may be exposed as a one-way hashed, localized key value within the device's running and sanitized configurations. an authenticated user who gains access to this sensitive information could leverage it to perform unauthorized read operations on snmp tables or to send fraudulent trap notifications to the network management system (nms).
+                <div class="cve-entry" data-cve-id="CVE-2026-90032" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue was discovered internally by arista, and the company is not aware of any malicious exploitation of this vulnerability in customer networks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73440" target="_blank">CVE-2026-73440</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.2</p>
-                    <p>On affected platforms running Arista EOS with Simple Network Management Protocol (SNMP) configured, SNMPv3 local or remote user credentials may be exposed as a one-way hashed, localized key value within the device's running and sanitized configurations. An authenticated user who gains access to this sensitive information could leverage it to perform unauthorized read operations on SNMP tables or to send fraudulent trap notifications to the Network Management System (NMS).
+media: usbtv: keep device alive while alsa card exists
 
-This issue was discovered internally by Arista, and the company is not aware of any malicious exploitation of this vulnerability in customer networks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73438" data-description="on affected platforms running arista eos with open shortest path first version 3 (ospfv3) configured, an unauthenticated attacker on the same ospfv3 broadcast domain can send a specially crafted set of packets that can cause the ospf3 agent to restart unexpectedly. the crash results in the loss of all ospfv3 adjacencies on the affected device and may disrupt routing across the broader ospf domain until the agent recovers.
+the alsa pcm callbacks store the driver state in pcm->private_data. an
+open pcm file can outlive usb disconnect because usbtv_audio_free() uses
+snd_card_free_when_closed(). the disconnect path can then drop the v4l2
+device reference and free struct usbtv before alsa releases the substream,
+so a later close dereferences freed memory in snd_usbtv_pcm_close().
 
-this issue was reported externally by dravanet inc., and arista is not aware of any malicious exploitation of this vulnerability in customer networks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73438" target="_blank">CVE-2026-73438</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-16 05:16:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>On affected platforms running Arista EOS with Open Shortest Path First version 3 (OSPFv3) configured, an unauthenticated attacker on the same OSPFv3 broadcast domain can send a specially crafted set of packets that can cause the Ospf3 agent to restart unexpectedly. The crash results in the loss of all OSPFv3 adjacencies on the affected device and may disrupt routing across the broader OSPF domain until the agent recovers.
+take a v4l2 device reference for the alsa card and drop it from the card
+private_free callback. this keeps struct usbtv valid until alsa has closed
+the remaining files and freed the card.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90032" target="_blank">CVE-2026-90032</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-16 06:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This issue was reported externally by Dravanet Inc., and Arista is not aware of any malicious exploitation of this vulnerability in customer networks.</p>
+media: usbtv: keep device alive while ALSA card exists
+
+The ALSA PCM callbacks store the driver state in pcm->private_data. An
+open PCM file can outlive USB disconnect because usbtv_audio_free() uses
+snd_card_free_when_closed(). The disconnect path can then drop the V4L2
+device reference and free struct usbtv before ALSA releases the substream,
+so a later close dereferences freed memory in snd_usbtv_pcm_close().
+
+Take a V4L2 device reference for the ALSA card and drop it from the card
+private_free callback. This keeps struct usbtv valid until ALSA has closed
+the remaining files and freed the card.</p>
                 </div>
         
             </div>
