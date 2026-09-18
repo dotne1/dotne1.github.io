@@ -34,164 +34,250 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-93606" data-description="vm2 (npm) versions 3.12.0 and earlier contain a sandbox escape in `vm` and `nodevm`. when an embedder exposes a host api that returns a host-realm promise, the bridge's rejection sanitizer (hostpromisesanitizereject / makesanitizedpromisecallback / normalizehostpromisecallbacks in lib/bridge.js) only wraps `then`/`catch` rejection slots that hold a function, and the sandbox-side `symbol.species`/`.then` neutralization is installed only on the sandbox intrinsic `promise.prototype`, so it never applies to a host promise. code running inside the sandbox can overwrite `p.constructor[symbol.species]` on the host promise and then call `p.then()` with no `onrejected` handler; v8 substitutes its internal thrower, which re-throws the raw host rejection value into a resolve/reject closure captured by the attacker. this delivers an unsanitized, fully functional bridge proxy of the host object to sandboxed code, bypassing handleexception and hostpromisesanitizereject. if the rejection value is host-pivotable (for example a host `process` object), this results in arbitrary code execution on the host. fixed in 3.12.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93606" target="_blank">CVE-2026-93606</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>vm2 (npm) versions 3.12.0 and earlier contain a sandbox escape in `VM` and `NodeVM`. When an embedder exposes a host API that returns a host-realm Promise, the bridge's rejection sanitizer (hostPromiseSanitizeReject / makeSanitizedPromiseCallback / normalizeHostPromiseCallbacks in lib/bridge.js) only wraps `then`/`catch` rejection slots that hold a function, and the sandbox-side `Symbol.species`/`.then` neutralization is installed only on the sandbox intrinsic `Promise.prototype`, so it never applies to a host Promise. Code running inside the sandbox can overwrite `p.constructor[Symbol.species]` on the host Promise and then call `p.then()` with no `onRejected` handler; V8 substitutes its internal Thrower, which re-throws the raw host rejection value into a resolve/reject closure captured by the attacker. This delivers an unsanitized, fully functional bridge proxy of the host object to sandboxed code, bypassing handleException and hostPromiseSanitizeReject. If the rejection value is host-pivotable (for example a host `process` object), this results in arbitrary code execution on the host. Fixed in 3.12.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93605" data-description="vm2 nodevm versions before 3.12.1 contain a sandbox escape vulnerability where the dangerous_builtins denylist omits child_process despite blocking other host-spawning modules. attackers can require child_process and execute arbitrary commands on the host system when nodevm is configured with builtin:['*'] or explicit child_process allowance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93605" target="_blank">CVE-2026-93605</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>vm2 NodeVM versions before 3.12.1 contain a sandbox escape vulnerability where the DANGEROUS_BUILTINS denylist omits child_process despite blocking other host-spawning modules. Attackers can require child_process and execute arbitrary commands on the host system when NodeVM is configured with builtin:['*'] or explicit child_process allowance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93604" data-description="vm2 through 3.12.0 exposes node.js's crypto.setfips() function to untrusted guest code when an embedder explicitly allowlists the crypto builtin for a nodevm (require.builtin: ['crypto']). the builtin sanitizer (sanitizecryptomodule in lib/builtin.js) replaces crypto.setengine but leaves crypto.setfips callable, and the readonly wrapper used to expose the host module does not localize side effects of forwarded host functions. guest code can therefore call crypto.setfips() to change the fips mode of the entire host process; the modified mode is subsequently observed by trusted host code (crypto.getfips() changed from 0 to 1 in the reported test), crossing the nodevm isolation boundary. fixed in vm2 3.12.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93604" target="_blank">CVE-2026-93604</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>vm2 through 3.12.0 exposes Node.js's crypto.setFips() function to untrusted guest code when an embedder explicitly allowlists the crypto builtin for a NodeVM (require.builtin: ['crypto']). The builtin sanitizer (sanitizeCryptoModule in lib/builtin.js) replaces crypto.setEngine but leaves crypto.setFips callable, and the readonly wrapper used to expose the host module does not localize side effects of forwarded host functions. Guest code can therefore call crypto.setFips() to change the FIPS mode of the entire host process; the modified mode is subsequently observed by trusted host code (crypto.getFips() changed from 0 to 1 in the reported test), crossing the NodeVM isolation boundary. Fixed in vm2 3.12.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93603" data-description="vm2 through 3.12.0 (fixed in 3.12.1) does not correctly handle a nullish `this` receiver in the apply trap of its bridge (lib/bridge.js): when sandboxed code calls a host-provided non-strict (sloppy-mode) function without a receiver — e.g. `fn()`, a detached method, `fn.call()`, `fn.apply(undefined)`, `reflect.apply(fn, undefined, [])`, or `fn.bind()()` — the undefined receiver is passed straight through to the host call, and v8 substitutes the host realm's global object for `this`. vm2 then wraps and returns that object to the sandbox, giving sandboxed script a live proxy of the host global. this allows a complete sandbox escape: untrusted script can reach `process` and execute arbitrary code/commands on the host (for example via `process.getbuiltinmodule('child_process').execsync`). exploitation requires that the embedding application expose at least one non-strict host function to the sandbox; strict-mode and es module host functions are not affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93603" target="_blank">CVE-2026-93603</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>vm2 through 3.12.0 (fixed in 3.12.1) does not correctly handle a nullish `this` receiver in the apply trap of its bridge (lib/bridge.js): when sandboxed code calls a host-provided non-strict (sloppy-mode) function without a receiver — e.g. `fn()`, a detached method, `fn.call()`, `fn.apply(undefined)`, `Reflect.apply(fn, undefined, [])`, or `fn.bind()()` — the undefined receiver is passed straight through to the host call, and V8 substitutes the host realm's global object for `this`. vm2 then wraps and returns that object to the sandbox, giving sandboxed script a live proxy of the host global. This allows a complete sandbox escape: untrusted script can reach `process` and execute arbitrary code/commands on the host (for example via `process.getBuiltinModule('child_process').execSync`). Exploitation requires that the embedding application expose at least one non-strict host function to the sandbox; strict-mode and ES module host functions are not affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93602" data-description="rustls-webpki versions before 0.103.10 and 0.104.0-alpha.5 contain faulty crl authority-matching logic that compares only the first distributionpoint against each crl's issuingdistributionpoint, ignoring additional distributionpoints. attackers with a compromised trusted issuing authority can present revoked certificates that pass revocation checks under unknownstatuspolicy::allow, or cause incorrect errors under the default deny policy.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93602" target="_blank">CVE-2026-93602</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:11 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93685" data-description="a flaw was found in the multicluster-observability-addon. a remote attacker can access a debug endpoint without authentication, due to a misconfiguration in the underlying addon-framework library. this allows for the disclosure of sensitive operational information, such as goroutine, heap, and command-line details, after completing a basic encrypted connection. this vulnerability does not enable direct remote code execution.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93685" target="_blank">CVE-2026-93685</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
-                    <p>rustls-webpki versions before 0.103.10 and 0.104.0-alpha.5 contain faulty CRL authority-matching logic that compares only the first distributionPoint against each CRL's IssuingDistributionPoint, ignoring additional distributionPoints. Attackers with a compromised trusted issuing authority can present revoked certificates that pass revocation checks under UnknownStatusPolicy::Allow, or cause incorrect errors under the default deny policy.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>A flaw was found in the multicluster-observability-addon. A remote attacker can access a debug endpoint without authentication, due to a misconfiguration in the underlying addon-framework library. This allows for the disclosure of sensitive operational information, such as goroutine, heap, and command-line details, after completing a basic encrypted connection. This vulnerability does not enable direct remote code execution.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93601" data-description="rustls-webpki (the rust webpki fork used by rustls) versions >= 0.101.0 and prior to 0.103.12 and 0.104.0-alpha.6 incorrectly accepted permitted-subtree dns name constraints for certificates asserting a wildcard name. for example, a name constraint of accept.example.com was treated as satisfied by a certificate for *.example.com, which could feasibly assert reject.example.com — a name outside the permitted subtree. because name constraints are restrictions applied to otherwise properly issued certificates, the issue is only reachable after signature verification succeeds and requires a misissued wildcard certificate to exploit.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93601" target="_blank">CVE-2026-93601</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:11 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93676" data-description="xdg-dbus-proxy incorrectly filters d-bus broadcast messages, bypassing configured path, interface, and member restrictions. this allows a sandboxed flatpak application to intercept broadcast signals on the d-bus session bus and at-spi bus that should be restricted, potentially exposing sensitive information to unauthorized applications.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93676" target="_blank">CVE-2026-93676</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.2</p>
-                    <p>rustls-webpki (the Rust webpki fork used by rustls) versions >= 0.101.0 and prior to 0.103.12 and 0.104.0-alpha.6 incorrectly accepted permitted-subtree DNS name constraints for certificates asserting a wildcard name. For example, a name constraint of accept.example.com was treated as satisfied by a certificate for *.example.com, which could feasibly assert reject.example.com — a name outside the permitted subtree. Because name constraints are restrictions applied to otherwise properly issued certificates, the issue is only reachable after signature verification succeeds and requires a misissued wildcard certificate to exploit.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.2</p>
+                    <p>xdg-dbus-proxy incorrectly filters D-Bus broadcast messages, bypassing configured path, interface, and member restrictions. This allows a sandboxed Flatpak application to intercept broadcast signals on the D-Bus session bus and AT-SPI bus that should be restricted, potentially exposing sensitive information to unauthorized applications.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93600" data-description="rustls-webpki (rustls/webpki) versions 0.101.0 through 0.103.11 and 0.104.0-alpha releases before 0.104.0-alpha.6 ignore x.509 name constraints that apply to uri names, causing such constraints to be accepted rather than enforced. because name constraints are restrictions on otherwise properly issued certificates, the flaw is only reachable after successful signature verification and requires a misissued certificate to exploit; the library also provides no api for asserting uri names, and uri name constraints are otherwise unimplemented. versions 0.103.12 and 0.104.0-alpha.6 reject uri name constraints unconditionally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93600" target="_blank">CVE-2026-93600</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.2</p>
-                    <p>rustls-webpki (rustls/webpki) versions 0.101.0 through 0.103.11 and 0.104.0-alpha releases before 0.104.0-alpha.6 ignore X.509 name constraints that apply to URI names, causing such constraints to be accepted rather than enforced. Because name constraints are restrictions on otherwise properly issued certificates, the flaw is only reachable after successful signature verification and requires a misissued certificate to exploit; the library also provides no API for asserting URI names, and URI name constraints are otherwise unimplemented. Versions 0.103.12 and 0.104.0-alpha.6 reject URI name constraints unconditionally.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93599" data-description="rustls-webpki through 0.103.12 (and 0.104.0-alpha releases before 0.104.0-alpha.7) contains a reachable panic in bit_string_flags() in src/der.rs. the input guard fails to reject a named-bit bit string whose content is exactly [0x00] (zero padding bits and no data bytes), so raw_bits.len() - 1 underflows on the empty slice and the subsequent index operation panics (subtract-with-overflow in debug, index-out-of-bounds in release). the condition is reachable through the public api borrowedcertrevocationlist::from_der() when a crl contains an issuingdistributionpoint extension with such an onlysomereasons value. exploitation requires an application that explicitly opts in to crl revocation checking by passing revocationoptions to verify_for_usage() and that parses crl bytes obtained from a source the attacker can influence; the default rustls configuration, which does not use revocationoptions, is unaffected. a crafted crl causes a denial of service via the panic. fixed in 0.103.13 and 0.104.0-alpha.7.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93599" target="_blank">CVE-2026-93599</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>rustls-webpki through 0.103.12 (and 0.104.0-alpha releases before 0.104.0-alpha.7) contains a reachable panic in bit_string_flags() in src/der.rs. The input guard fails to reject a named-bit BIT STRING whose content is exactly [0x00] (zero padding bits and no data bytes), so raw_bits.len() - 1 underflows on the empty slice and the subsequent index operation panics (subtract-with-overflow in debug, index-out-of-bounds in release). The condition is reachable through the public API BorrowedCertRevocationList::from_der() when a CRL contains an issuingDistributionPoint extension with such an onlySomeReasons value. Exploitation requires an application that explicitly opts in to CRL revocation checking by passing RevocationOptions to verify_for_usage() and that parses CRL bytes obtained from a source the attacker can influence; the default rustls configuration, which does not use RevocationOptions, is unaffected. A crafted CRL causes a denial of service via the panic. Fixed in 0.103.13 and 0.104.0-alpha.7.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93598" data-description="arcadedb (maven artifact com.arcadedb:arcadedb-engine) through 26.8.1 contains an incomplete deny-list in the polyglot script sandbox: com.arcadedb.query.polyglot.hostclasslookupfilter.denied lists java.util.resourcebundle as a bare class name, which is matched by exact equality and therefore does not cover its subclasses, while scripttriggerexecutor.allowed_packages permits java.util.*. a user with the update_schema privilege (sufficient to create or alter a javascript trigger; no server-admin rights required) can reference java.util.propertyresourcebundle or java.util.listresourcebundle and invoke the inherited static resourcebundle.getbundle(string) to read .properties resources from the application classpath, which the sandbox (ioaccess.none, with java.io.**, java.nio.** and java.net.** denied) is intended to make unreachable. this can disclose packaged application configuration such as database credentials and api keys; the advisory states the issue does not provide arbitrary host filesystem read or remote code execution. fixed in 26.9.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93598" target="_blank">CVE-2026-93598</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>ArcadeDB (Maven artifact com.arcadedb:arcadedb-engine) through 26.8.1 contains an incomplete deny-list in the polyglot script sandbox: com.arcadedb.query.polyglot.HostClassLookupFilter.DENIED lists java.util.ResourceBundle as a bare class name, which is matched by exact equality and therefore does not cover its subclasses, while ScriptTriggerExecutor.ALLOWED_PACKAGES permits java.util.*. A user with the UPDATE_SCHEMA privilege (sufficient to create or alter a JavaScript trigger; no server-admin rights required) can reference java.util.PropertyResourceBundle or java.util.ListResourceBundle and invoke the inherited static ResourceBundle.getBundle(String) to read .properties resources from the application classpath, which the sandbox (IOAccess.NONE, with java.io.**, java.nio.** and java.net.** denied) is intended to make unreachable. This can disclose packaged application configuration such as database credentials and API keys; the advisory states the issue does not provide arbitrary host filesystem read or remote code execution. Fixed in 26.9.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93597" data-description="arcadedb versions before 26.9.1 fail to validate ipv6 transition addresses in the ssrf guard used by import database and server commands. authenticated attackers can supply urls resolving to nat64, 6to4, or teredo addresses embedding rfc 1918 or loopback ipv4 payloads to reach internal services and cloud metadata endpoints.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93597" target="_blank">CVE-2026-93597</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:11 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>ArcadeDB versions before 26.9.1 fail to validate IPv6 transition addresses in the SSRF guard used by IMPORT DATABASE and server commands. Authenticated attackers can supply URLs resolving to NAT64, 6to4, or Teredo addresses embedding RFC 1918 or loopback IPv4 payloads to reach internal services and cloud metadata endpoints.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93596" data-description="arcadedb before 26.9.1 (com.arcadedb:arcadedb-engine <= 26.8.1) fails to bind the authenticated principal onto the databaseasynctransaction async worker threads used by the parallel edge-connect phase of post /api/v1/batch/{database}. because those workers have no current user, localdatabase.checkpermissionsonfile returns early and allows the write, bypassing per-type create_record/update_record acl enforcement. in deployments that rely on per-type or per-group acls, an authenticated low-privilege user holding create_record on an edge type e but with create_record/update_record revoked on a vertex type v can submit a graph edge-load batch request (with parallelflush at its default value of true) and durably append edges to protected vertices of type v by writing records into v's <v>_out_edges/<v>_in_edges buckets, resulting in unauthorized modification of graph adjacency. setting parallelflush=false causes the request to be correctly rejected. this is an incomplete fix of ghsa-c23x-pqcj-7hfm, which bound the principal only on the http handler thread.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93596" target="_blank">CVE-2026-93596</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>ArcadeDB before 26.9.1 (com.arcadedb:arcadedb-engine <= 26.8.1) fails to bind the authenticated principal onto the DatabaseAsyncTransaction async worker threads used by the parallel edge-connect phase of POST /api/v1/batch/{database}. Because those workers have no current user, LocalDatabase.checkPermissionsOnFile returns early and allows the write, bypassing per-type CREATE_RECORD/UPDATE_RECORD ACL enforcement. In deployments that rely on per-type or per-group ACLs, an authenticated low-privilege user holding CREATE_RECORD on an edge type E but with CREATE_RECORD/UPDATE_RECORD revoked on a vertex type V can submit a graph edge-load batch request (with parallelFlush at its default value of true) and durably append edges to protected vertices of type V by writing records into V's <V>_out_edges/<V>_in_edges buckets, resulting in unauthorized modification of graph adjacency. Setting parallelFlush=false causes the request to be correctly rejected. This is an incomplete fix of GHSA-c23x-pqcj-7hfm, which bound the principal only on the HTTP handler thread.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93595" data-description="arcadedb before 26.9.1 contains an access control bypass vulnerability in the query_database tool exposed through the ai chat endpoints. the tool executes queries without binding the authenticated principal to databasecontext, causing per-type and per-bucket acl checks to silently no-op and allowing authenticated users to read data they are explicitly denied at the per-type level. attackers can prompt the ai assistant to execute queries against restricted types or buckets to retrieve sensitive data that would be rejected through normal query endpoints.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93595" target="_blank">CVE-2026-93595</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:10 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93660" data-description="sqlbot through 1.10.1 fails to verify dashboard ownership in update_resource and update_canvas endpoints, allowing authenticated workspace members to modify other users' private dashboards. attackers can supply arbitrary dashboard ids to rename dashboards and overwrite component data, canvas styles, and view information belonging to other workspace members.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93660" target="_blank">CVE-2026-93660</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>ArcadeDB before 26.9.1 contains an access control bypass vulnerability in the query_database tool exposed through the AI chat endpoints. The tool executes queries without binding the authenticated principal to DatabaseContext, causing per-type and per-bucket ACL checks to silently no-op and allowing authenticated users to read data they are explicitly denied at the per-type level. Attackers can prompt the AI assistant to execute queries against restricted types or buckets to retrieve sensitive data that would be rejected through normal query endpoints.</p>
+                    <p>SQLBot through 1.10.1 fails to verify dashboard ownership in update_resource and update_canvas endpoints, allowing authenticated workspace members to modify other users' private dashboards. Attackers can supply arbitrary dashboard IDs to rename dashboards and overwrite component data, canvas styles, and view information belonging to other workspace members.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93594" data-description="arcadedb (maven artifact com.arcadedb:arcadedb-engine) through 26.8.1 enforces its per-type/per-record access-control rules only in localbucket, keyed on file id. query-execution paths that reach record data through lsm index files or the timeseries engine never invoke that permission check, so an authenticated user who is denied readrecord/deleterecord on a type can still, with a single ordinary sql statement, read the type's indexed key values and record ids (e.g. select key, rid from index:type[field]), read max/min values via the index shortcut, read and count timeseries samples, learn the type's record count, and delete index entries (delete from index:type[field]), which desynchronizes the index from the data and can defeat unique constraints. index and type names needed for exploitation are discoverable because select from schema:indexes is unfiltered. the issue affects both embedded and server deployments and all transports (http, bolt, postgres, gremlin) once a principal is bound. fixed in 26.9.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93594" target="_blank">CVE-2026-93594</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:10 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93659" data-description="concrete cms community store before 2.7.8 renders customer-supplied order fields without html escaping in checkout and admin views. unauthenticated attackers can store script payloads in billing name, email, or phone fields that execute in authenticated manager sessions to create rogue accounts or exfiltrate data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93659" target="_blank">CVE-2026-93659</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>ArcadeDB (Maven artifact com.arcadedb:arcadedb-engine) through 26.8.1 enforces its per-type/per-record access-control rules only in LocalBucket, keyed on file id. Query-execution paths that reach record data through LSM index files or the TimeSeries engine never invoke that permission check, so an authenticated user who is denied readRecord/deleteRecord on a type can still, with a single ordinary SQL statement, read the type's indexed key values and record IDs (e.g. SELECT key, rid FROM INDEX:Type[field]), read MAX/MIN values via the index shortcut, read and count TimeSeries samples, learn the type's record count, and delete index entries (DELETE FROM INDEX:Type[field]), which desynchronizes the index from the data and can defeat unique constraints. Index and type names needed for exploitation are discoverable because SELECT FROM schema:indexes is unfiltered. The issue affects both embedded and server deployments and all transports (HTTP, Bolt, Postgres, Gremlin) once a principal is bound. Fixed in 26.9.1.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.7</p>
+                    <p>Concrete CMS Community Store before 2.7.8 renders customer-supplied order fields without HTML escaping in checkout and admin views. Unauthenticated attackers can store script payloads in billing name, email, or phone fields that execute in authenticated manager sessions to create rogue accounts or exfiltrate data.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93593" data-description="arcadedb before 26.9.1 fails to enforce security-group types acl entries for timeseries types because the acl resolver builds permissions from bucket ids, but timeseries types do not own normal record buckets. an authenticated low-privilege user can read or insert timeseries samples despite explicit deny rules by exploiting the missing type-name-based access check that causes permission lookups to fail open.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93593" target="_blank">CVE-2026-93593</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:10 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93658" data-description="uutils coreutils versions before 0.10.0 apply setuid or setgid mode to install destinations before finalizing ownership changes, allowing privileged users to leave setuid executables owned by the privileged invoker when ownership changes fail. attackers can execute leftover setuid files with elevated privileges when ownership change operations fail on capability-restricted systems.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93658" target="_blank">CVE-2026-93658</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>ArcadeDB before 26.9.1 fails to enforce security-group types ACL entries for TimeSeries types because the ACL resolver builds permissions from bucket IDs, but TimeSeries types do not own normal record buckets. An authenticated low-privilege user can read or insert TimeSeries samples despite explicit deny rules by exploiting the missing type-name-based access check that causes permission lookups to fail open.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
+                    <p>uutils coreutils versions before 0.10.0 apply setuid or setgid mode to install destinations before finalizing ownership changes, allowing privileged users to leave setuid executables owned by the privileged invoker when ownership changes fail. Attackers can execute leftover setuid files with elevated privileges when ownership change operations fail on capability-restricted systems.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93592" data-description="vllm versions before 0.28.0 fail to validate the lower bound of token ids in the /v1/embeddings and /pooling endpoints, allowing unauthenticated attackers to crash the engine by submitting negative token ids. a single request with a negative token id triggers a cuda device-side assertion that poisons the gpu context, causing all subsequent requests to fail until the process restarts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93592" target="_blank">CVE-2026-93592</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:10 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93657" data-description="hickory-resolver versions before 0.26.2 fail to propagate bogus dnssec proof states through the resolver::lookup() and resolver::lookup_ip() apis, allowing invalid records to be returned as successful results. attackers controlling the answering zone or positioned on the network path can have forged dns records accepted as validated, bypassing dnssec authentication checks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93657" target="_blank">CVE-2026-93657</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>vLLM versions before 0.28.0 fail to validate the lower bound of token IDs in the /v1/embeddings and /pooling endpoints, allowing unauthenticated attackers to crash the engine by submitting negative token IDs. A single request with a negative token ID triggers a CUDA device-side assertion that poisons the GPU context, causing all subsequent requests to fail until the process restarts.</p>
+                    <p>hickory-resolver versions before 0.26.2 fail to propagate bogus DNSSEC proof states through the Resolver::lookup() and Resolver::lookup_ip() APIs, allowing invalid records to be returned as successful results. Attackers controlling the answering zone or positioned on the network path can have forged DNS records accepted as validated, bypassing DNSSEC authentication checks.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93591" data-description="siyuan versions before 3.8.3 contain an sql injection vulnerability in the graph.go query2stmt function where tag values are concatenated raw into sql string literals without escaping single quotes. a publish-mode reader or anonymous visitor can inject sql via inline html span tags in the getgraph endpoint to execute arbitrary queries on the read-write database and exfiltrate private data across notebooks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93591" target="_blank">CVE-2026-93591</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:10 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93653" data-description="a denial of service flaw was found in poppler's splash backend. a crafted pdf with tiling-pattern geometry approaching the int32 boundary can cause splashoutputdev::tilingpatternfill to compute an attacker-controlled repeat count that drives an excessively long loop in the pattern-fill scanline routine, without a corresponding memory allocation. an attacker could exploit this by supplying a malicious pdf to an application that renders it via poppler's splash backend, causing the rendering process to consume 100% cpu for an attacker-controlled, extended duration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93653" target="_blank">CVE-2026-93653</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>A denial of service flaw was found in Poppler's Splash backend. A crafted PDF with tiling-pattern geometry approaching the int32 boundary can cause SplashOutputDev::tilingPatternFill to compute an attacker-controlled repeat count that drives an excessively long loop in the pattern-fill scanline routine, without a corresponding memory allocation. An attacker could exploit this by supplying a malicious PDF to an application that renders it via Poppler's Splash backend, causing the rendering process to consume 100% CPU for an attacker-controlled, extended duration.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93652" data-description="integer overflow in µd3tn v0.15.0 tcpclv3 handshake causes heap overflow, allowing remote attackers to reliably cause dos">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93652" target="_blank">CVE-2026-93652</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>SiYuan versions before 3.8.3 contain an SQL injection vulnerability in the graph.go query2Stmt function where tag values are concatenated raw into SQL string literals without escaping single quotes. A publish-mode reader or anonymous visitor can inject SQL via inline HTML span tags in the getGraph endpoint to execute arbitrary queries on the read-write database and exfiltrate private data across notebooks.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Integer overflow in µD3TN v0.15.0 TCPCLv3 handshake causes heap overflow, allowing remote attackers to reliably cause DoS</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93590" data-description="imagemagick before 7.1.2-31 contains a policy bypass vulnerability in the uhdr encoder that fails to perform policy checks during buffer allocation for image pixels. attackers can bypass resource policies by processing specially crafted uhdr images, potentially causing denial of service through excessive memory allocation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93590" target="_blank">CVE-2026-93590</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>ImageMagick before 7.1.2-31 contains a policy bypass vulnerability in the UHDR encoder that fails to perform policy checks during buffer allocation for image pixels. Attackers can bypass resource policies by processing specially crafted UHDR images, potentially causing denial of service through excessive memory allocation.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93576" data-description="netty netty-codec-smtp — smtp command-name field is not crlf-validated (incomplete fix of cve-2025-59419)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93576" target="_blank">CVE-2026-93576</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Netty netty-codec-smtp — SMTP command-name field is not CRLF-validated (incomplete fix of CVE-2025-59419)</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93589" data-description="imagemagick before 7.1.2-31 and 6.9.13-56 contains a division-by-zero flaw in the flif encoder. an incorrect value for ticks per second in the image being encoded causes a divide-by-zero and crashes the encoder, resulting in a denial of service. the issue is fixed in 7.1.2-31 and 6.9.13-56.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93589" target="_blank">CVE-2026-93589</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>ImageMagick before 7.1.2-31 and 6.9.13-56 contains a division-by-zero flaw in the FLIF encoder. An incorrect value for ticks per second in the image being encoded causes a divide-by-zero and crashes the encoder, resulting in a denial of service. The issue is fixed in 7.1.2-31 and 6.9.13-56.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93573" data-description="netty split transfer-encoding fields bypass final-chunked validation and enable request smuggling">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93573" target="_blank">CVE-2026-93573</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Netty split Transfer-Encoding fields bypass final-chunked validation and enable request smuggling</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93588" data-description="imagemagick before 7.1.2-31 and before 6.9.13-56 contains a null pointer dereference in the pnm coder. when the coder reaches a memory (resource) limit at a specific point during processing, the failed allocation is not handled and a null pointer is dereferenced, which can lead to a denial of service (application crash) when processing a specially crafted or sufficiently large pnm image.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93588" target="_blank">CVE-2026-93588</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
-                    <p>ImageMagick before 7.1.2-31 and before 6.9.13-56 contains a NULL pointer dereference in the PNM coder. When the coder reaches a memory (resource) limit at a specific point during processing, the failed allocation is not handled and a NULL pointer is dereferenced, which can lead to a denial of service (application crash) when processing a specially crafted or sufficiently large PNM image.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93569" data-description="http/1 absolute-form host mismatch is translated to http/2 :authority, overriding the request-target authority">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93569" target="_blank">CVE-2026-93569</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>HTTP/1 absolute-form Host mismatch is translated to HTTP/2 :authority, overriding the request-target authority</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93587" data-description="imagemagick before 7.1.2-31 and before 6.9.13-56 contains a policy bypass in the pcd (and, per the upstream advisory, cube and hald) coder: when a specific command line option is supplied, the decoder does not check a configured resource limit, which can result in extra memory allocation. a local user able to pass command line options to imagemagick can therefore exceed the intended memory policy limit, causing a limited availability impact. the issue is fixed in 7.1.2-31 and 6.9.13-56.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93587" target="_blank">CVE-2026-93587</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 09:19:09 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93568" data-description="http/2 and http/3 extended connect requests are downgraded as regular connect requests">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93568" target="_blank">CVE-2026-93568</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>HTTP/2 and HTTP/3 Extended CONNECT requests are downgraded as regular CONNECT requests</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93567" data-description="http/1 authority-form connect is translated to malformed http/2 connect with host-controlled :authority">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93567" target="_blank">CVE-2026-93567</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>HTTP/1 authority-form CONNECT is translated to malformed HTTP/2 CONNECT with Host-controlled :authority</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93566" data-description="### summary
+netty skips strict chunk size line validation when the line has no chunk extension (`;`), so a chunk size line containing an embedded bare cr (e.g. `0\rx`) is accepted instead of rejected, enabling http request smuggling.
+
+### details
+`io.netty.handler.codec.http.httpobjectdecoder#checkchunkextensions` only runs the strict validator `httpchunklinevalidatingbyteprocessor` when a `;` is present:
+
+```java
+        int extensionsstart = line.bytesbefore((byte) ';');
+        if (extensionsstart == -1) {
+            return;
+        }
+```
+
+according to rfc 9112 https://datatracker.ietf.org/doc/html/rfc9112#appendix-a
+
+`chunk-size = 1*hexdig`
+
+### poc
+
+```java
+@test
+public void test() {
+    string requeststr = "post / http/1.1\r\n" +
+            "host: localhost\r\n" +
+            "transfer-encoding: chunked\r\n\r\n" +
+            "0\rx\r\n" +
+            "\r\n" +
+            "get /smuggled http/1.1\r\n" +
+            "host: localhost\r\n" +
+            "content-length: 0\r\n" +
+            "\r\n";
+
+    embeddedchannel channel = new embeddedchannel(new httprequestdecoder());
+    asserttrue(channel.writeinbound(unpooled.copiedbuffer(requeststr, ch">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93566" target="_blank">CVE-2026-93566</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>### Summary
+Netty skips strict chunk size line validation when the line has no chunk extension (`;`), so a chunk size line containing an embedded bare CR (e.g. `0\rX`) is accepted instead of rejected, enabling HTTP request smuggling.
+
+### Details
+`io.netty.handler.codec.http.HttpObjectDecoder#checkChunkExtensions` only runs the strict validator `HttpChunkLineValidatingByteProcessor` when a `;` is present:
+
+```java
+        int extensionsStart = line.bytesBefore((byte) ';');
+        if (extensionsStart == -1) {
+            return;
+        }
+```
+
+According to RFC 9112 https://datatracker.ietf.org/doc/html/rfc9112#appendix-A
+
+`chunk-size = 1*HEXDIG`
+
+### PoC
+
+```java
+@Test
+public void test() {
+    String requestStr = "POST / HTTP/1.1\r\n" +
+            "Host: localhost\r\n" +
+            "Transfer-Encoding: chunked\r\n\r\n" +
+            "0\rX\r\n" +
+            "\r\n" +
+            "GET /smuggled HTTP/1.1\r\n" +
+            "Host: localhost\r\n" +
+            "Content-Length: 0\r\n" +
+            "\r\n";
+
+    EmbeddedChannel channel = new EmbeddedChannel(new HttpRequestDecoder());
+    assertTrue(channel.writeInbound(Unpooled.copiedBuffer(requestStr, Ch</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93565" data-description="### summary
+`rtspmethods.valueof()` silently strips trailing control bytes (any character with code point <= 0x20, the full range that `string.trim()` removes) before performing a cache lookup against its ten pre-populated method constants. a wire-delivered rtsp request whose method token ends with a trailing control byte — for example `play\x00` or `play\r`, immediately before the separating space — is decoded by `rtspdecoder` as a fully successful play request, with `decoderresult().issuccess() == true and request.method() == rtspmethods.play` (same object reference as the cached singleton). the application layer cannot distinguish this from a clean
+`play` request.
+
+this is the same root cause as #16723 and #16971, in a sibling that those fixes did not reach. the fix for `httpmethod` hardened `httpmethod.valueof()` directly, but `rtspmethods.valueof()` has its own independent `checknonemptyaftertrim()` call that runs before the cache lookup — meaning a trailing-control-byte token hits the cache before the hardened `httpmethod` constructor ever sees it.
+
+### reproduction
+
+minimal wire-level reproduction
+
+send the following raw bytes to any netty-based rtsp server using r">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93565" target="_blank">CVE-2026-93565</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>### Summary
+`RtspMethods.valueOf()` silently strips trailing control bytes (any character with code point <= 0x20, the full range that `String.trim()` removes) before performing a cache lookup against its ten pre-populated method constants. A wire-delivered RTSP request whose method token ends with a trailing control byte — for example `PLAY\x00` or `PLAY\r`, immediately before the separating space — is decoded by `RtspDecoder` as a fully successful PLAY request, with `decoderResult().isSuccess() == true and request.method() == RtspMethods.PLAY` (same object reference as the cached singleton). The application layer cannot distinguish this from a clean
+`PLAY` request.
+
+This is the same root cause as #16723 and #16971, in a sibling that those fixes did not reach. The fix for `HttpMethod` hardened `HttpMethod.valueOf()` directly, but `RtspMethods.valueOf()` has its own independent `checkNonEmptyAfterTrim()` call that runs before the cache lookup — meaning a trailing-control-byte token hits the cache before the hardened `HttpMethod` constructor ever sees it.
+
+### Reproduction
+
+Minimal wire-level reproduction
+
+Send the following raw bytes to any Netty-based RTSP server using R</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93564" data-description="haproxy proxy-v2 nested-tlv grandchild bytebuf reference-count leak (incomplete fix of pr #16881)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93564" target="_blank">CVE-2026-93564</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>HAProxy PROXY-v2 nested-TLV grandchild ByteBuf reference-count leak (incomplete fix of PR #16881)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93558" data-description="unbounded per-connection queue growth in websocketserverextensionhandler leads to denial of service">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93558" target="_blank">CVE-2026-93558</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Unbounded Per-Connection Queue Growth in WebSocketServerExtensionHandler Leads to Denial of Service</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93506" data-description="a vulnerability was determined in sveltycms 0.0.6. this issue affects some unknown processing of the file /mediagallery/upload-media of the component file upload endpoint. executing a manipulation can lead to server-side request forgery. the attack can be launched remotely. this patch is called 05b4f9efeb79e9d72a693232334d7529687f896f. it is best practice to apply a patch to resolve this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93506" target="_blank">CVE-2026-93506</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A vulnerability was determined in SveltyCMS 0.0.6. This issue affects some unknown processing of the file /mediagallery/upload-media of the component File Upload Endpoint. Executing a manipulation can lead to server-side request forgery. The attack can be launched remotely. This patch is called 05b4f9efeb79e9d72a693232334d7529687f896f. It is best practice to apply a patch to resolve this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93505" data-description="a vulnerability was found in sveltycms 0.0.6. this vulnerability affects unknown code of the file src/utils/media/media-service.server.ts of the component svg media upload. performing a manipulation results in cross site scripting. the attack can be initiated remotely. the patch is named 05b4f9efeb79e9d72a693232334d7529687f896f. applying a patch is the recommended action to fix this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93505" target="_blank">CVE-2026-93505</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:19 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>ImageMagick before 7.1.2-31 and before 6.9.13-56 contains a policy bypass in the PCD (and, per the upstream advisory, CUBE and HALD) coder: when a specific command line option is supplied, the decoder does not check a configured resource limit, which can result in extra memory allocation. A local user able to pass command line options to ImageMagick can therefore exceed the intended memory policy limit, causing a limited availability impact. The issue is fixed in 7.1.2-31 and 6.9.13-56.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.5</p>
+                    <p>A vulnerability was found in SveltyCMS 0.0.6. This vulnerability affects unknown code of the file src/utils/media/media-service.server.ts of the component SVG Media Upload. Performing a manipulation results in cross site scripting. The attack can be initiated remotely. The patch is named 05b4f9efeb79e9d72a693232334d7529687f896f. Applying a patch is the recommended action to fix this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-85511" data-description="a flaw was found in eap's elytron. an eap application whose security domain is backed by an elytron token-realm with oauth2-introspection would allow parameter substitution due to missing url encoding.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85511" target="_blank">CVE-2026-85511</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 10:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.2</p>
+                    <p>A flaw was found in EAP's Elytron. An EAP application whose security domain is backed by an Elytron token-realm with oauth2-introspection would allow parameter substitution due to missing URL encoding.</p>
                 </div>
         
             </div>
