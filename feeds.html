@@ -34,6 +34,114 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-93578" data-description="missing extended key usage (eku) check in ocsp client allows certificate revocation bypass">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93578" target="_blank">CVE-2026-93578</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 06:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing Extended Key Usage (EKU) check in OCSP Client allows certificate revocation bypass</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93575" data-description="### summary
+netty's fix for cve-2026-44248 is incomplete. the decoder checks if the mqtt packet's `remaining length` exceeds `maxbytesinmessage`, but fails to validate the `properties length` against the `remaining length`. an attacker can bypass the size limit by sending a small `remaining length` but an enormous `properties length`. this forces netty to buffer and parse millions of properties, allowing an unauthenticated remote attacker to trigger excessive memory and cpu consumption, leading to outofmemoryerror.
+
+### details
+in `io.netty.handler.codec.mqtt.mqttdecoder`, the `decodeproperties()` helper method reads `totalpropertieslength` and attempts to parse that many bytes. if the buffer lacks the full length, a `signal` is thrown. the `catch` block inside `decode()` only enforces `maxbytesinmessage` against `bytesremainingbeforevariableheader` (the packet's `remaining length`).
+
+by sending a `connect` packet with a small `remaining length` but a huge `properties length`, the size check passes. `replayingdecoder` then buffers data from the network until the huge `properties length` is reached, parsing millions of `userproperty` objects and exhausting cpu and memory.
+
+#">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93575" target="_blank">CVE-2026-93575</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 06:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>### Summary
+Netty's fix for CVE-2026-44248 is incomplete. The decoder checks if the MQTT packet's `Remaining Length` exceeds `maxBytesInMessage`, but fails to validate the `Properties Length` against the `Remaining Length`. An attacker can bypass the size limit by sending a small `Remaining Length` but an enormous `Properties Length`. This forces Netty to buffer and parse millions of properties, allowing an unauthenticated remote attacker to trigger excessive memory and CPU consumption, leading to OutOfMemoryError.
+
+### Details
+In `io.netty.handler.codec.mqtt.MqttDecoder`, the `decodeProperties()` helper method reads `totalPropertiesLength` and attempts to parse that many bytes. If the buffer lacks the full length, a `Signal` is thrown. The `catch` block inside `decode()` only enforces `maxBytesInMessage` against `bytesRemainingBeforeVariableHeader` (the packet's `Remaining Length`).
+
+By sending a `CONNECT` packet with a small `Remaining Length` but a huge `Properties Length`, the size check passes. `ReplayingDecoder` then buffers data from the network until the huge `Properties Length` is reached, parsing millions of `UserProperty` objects and exhausting CPU and memory.
+
+#</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93572" data-description="## summary
+
+`redisarrayaggregator` recently added `maxelements` and `maxnestedarraydepth` limits to fix public redis resource-exhaustion advisories. the limits are independent, but the allocator remains eager: every positive nested resp array header creates `new arraylist<redismessage>(length)` before any child element exists.
+
+with the default constructor, an attacker can send nested array headers with length `1,000,000` until the default nesting limit of `1024` is reached. this can reserve up to `1,024,000,000` child slots from roughly 12 kb of resp input. this is backing capacity, not logical list size: `arraylist(int)` constructs an empty list with the specified initial capacity.
+
+## technical details
+
+current `decoderedisarrayheader(...)` checks the two limits independently:
+
+```java
+if (header.length() > maxelements) {
+    throw new codecexception("this codec doesn't support longer length than " + maxelements);
+}
+
+if (depths.size() >= maxnestedarraydepth) {
+    releaseandcleardepths();
+    throw new codecexception("max nested array depth exceeded: "  + maxnestedarraydepth);
+}
+depths.push(new aggregatestate((int) header.length()));
+```
+
+`aggregatestate` i">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93572" target="_blank">CVE-2026-93572</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 06:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>## Summary
+
+`RedisArrayAggregator` recently added `maxElements` and `maxNestedArrayDepth` limits to fix public Redis resource-exhaustion advisories. The limits are independent, but the allocator remains eager: every positive nested RESP array header creates `new ArrayList<RedisMessage>(length)` before any child element exists.
+
+With the default constructor, an attacker can send nested array headers with length `1,000,000` until the default nesting limit of `1024` is reached. This can reserve up to `1,024,000,000` child slots from roughly 12 KB of RESP input. This is backing capacity, not logical list size: `ArrayList(int)` constructs an empty list with the specified initial capacity.
+
+## Technical Details
+
+Current `decodeRedisArrayHeader(...)` checks the two limits independently:
+
+```java
+if (header.length() > maxElements) {
+    throw new CodecException("this codec doesn't support longer length than " + maxElements);
+}
+
+if (depths.size() >= maxNestedArrayDepth) {
+    releaseAndClearDepths();
+    throw new CodecException("max nested array depth exceeded: "  + maxNestedArrayDepth);
+}
+depths.push(new AggregateState((int) header.length()));
+```
+
+`AggregateState` i</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93563" data-description="unbounded multi-line response accumulation in smtpresponsedecoder leads to memory-exhaustion dos">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93563" target="_blank">CVE-2026-93563</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 06:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Unbounded multi-line response accumulation in SmtpResponseDecoder leads to memory-exhaustion DoS</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-93561" data-description="memcache binary codec signed/unsigned type mismatch causes frame desynchronization and response smuggling">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93561" target="_blank">CVE-2026-93561</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 06:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Memcache binary codec signed/unsigned type mismatch causes frame desynchronization and response smuggling</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-81627" data-description="a flaw was found in qemu. the vapic setup hypercall in hw/i386/vapic.c does not validate that the writable ram alias remains within the option rom window. a privileged guest user on a q35/kvm machine can position this alias over locked smram, bypassing chipset d_lck protection and injecting code into system management mode memory.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81627" target="_blank">CVE-2026-81627</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-18 06:17:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
+                    <p>A flaw was found in QEMU. The VAPIC setup hypercall in hw/i386/vapic.c does not validate that the writable RAM alias remains within the option ROM window. A privileged guest user on a Q35/KVM machine can position this alias over locked SMRAM, bypassing chipset D_LCK protection and injecting code into System Management Mode memory.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-92976" data-description="a stored cross-site scripting (xss) vulnerability in the profile management functionality of t-systems’ tao 2.0 suite. an authenticated user could inject malicious html or javascript content into the fields containing their personal data. the content entered is stored and displayed without being properly sanitised when another user, including administrative staff, views the affected profile. successful exploitation could allow javascript code to be executed in the victim’s browser, access to information available within the session, or the performance of actions using the victim’s permissions.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92976" target="_blank">CVE-2026-92976</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-09-18 05:17:08 CDT</p>
@@ -144,54 +252,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>HCL BigFix Service Management is affected by an Unrestricted File Upload vulnerability due to improper file validation controls, which could allow an unauthenticated attacker to upload and execute malicious payloads, resulting in a complete server compromise.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-4036" data-description="an improper neutralization of special elements used in an sql command ('sql injection') vulnerability in sharing api in synology diskstation manager (dsm) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote authenticated users to obtain arbitrary sharing files.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-4036" target="_blank">CVE-2026-4036</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>An improper neutralization of special elements used in an SQL command ('SQL injection') vulnerability in Sharing API in Synology DiskStation Manager (DSM) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote authenticated users to obtain arbitrary sharing files.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40539" data-description="an improper certificate validation vulnerability in email api in synology diskstation manager (dsm) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows man-in-the-middle attackers to read or write arbitrary files and conduct denial-of-service attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40539" target="_blank">CVE-2026-40539</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>An improper certificate validation vulnerability in Email API in Synology DiskStation Manager (DSM) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows man-in-the-middle attackers to read or write arbitrary files and conduct denial-of-service attacks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40538" data-description="an improper restriction of excessive authentication attempts vulnerability in auto block in synology diskstation manager (dsm) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote attackers to read limited files via brute-force attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40538" target="_blank">CVE-2026-40538</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>An improper restriction of excessive authentication attempts vulnerability in Auto block in Synology DiskStation Manager (DSM) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote attackers to read limited files via brute-force attacks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40537" data-description="a server-side request forgery (ssrf) vulnerability in personmail api in synology diskstation manager (dsm) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote authenticated users to obtain non-sensitive information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40537" target="_blank">CVE-2026-40537</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A server-side request forgery (SSRF) vulnerability in PersonMail API in Synology DiskStation Manager (DSM) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote authenticated users to obtain non-sensitive information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40536" data-description="an improper limitation of a pathname to a restricted directory ('path traversal') vulnerability in audio api in synology diskstation manager (dsm) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote authenticated users to obtain non-sensitive information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40536" target="_blank">CVE-2026-40536</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 04:16:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>An improper limitation of a pathname to a restricted directory ('path traversal') vulnerability in Audio API in Synology DiskStation Manager (DSM) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote authenticated users to obtain non-sensitive information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-40535" data-description="an improper limitation of a pathname to a restricted directory ('path traversal') vulnerability in desktop api in synology diskstation manager (dsm) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote attackers to write limited files and conduct limited denial-of-service attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40535" target="_blank">CVE-2026-40535</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-18 04:16:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>An improper limitation of a pathname to a restricted directory ('path traversal') vulnerability in Desktop API in Synology DiskStation Manager (DSM) before 7.2.1-69057-10, 7.2.2-72806-7 and 7.3.2-86009-2 allows remote attackers to write limited files and conduct limited denial-of-service attacks.</p>
                 </div>
         
             </div>
