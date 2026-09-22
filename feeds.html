@@ -34,242 +34,292 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-95682" data-description="misp contains a stored cross-site scripting (xss) vulnerability in the admin email composition screen. the misp.org organization name setting was interpolated directly into a javascript string literal using an unescaped php echo: var org = "<?php echo $org;?>";. because the value was placed inside a double-quoted javascript string without any encoding, an organization name containing a double-quote character (or a backslash) could terminate the string literal and inject arbitrary javascript into the page. the injected script would execute in the context of any authenticated user who subsequently loads the admin email page, potentially allowing session hijacking, data exfiltration, or privileged actions performed on behalf of the victim.
+                <div class="cve-entry" data-cve-id="CVE-2026-95754" data-description="in misp's userscontroller login() method, the pre-authentication database query used for the totp (two-factor authentication) verification branch did not include the user.disabled column in its select fields list. the query selected only user.password, user.totp, and user.hotp_counter. when the totp branch subsequently accessed $unauth_user['user']['disabled'], the key was absent from the result set, producing a php 'undefined array key' warning and causing the expression to evaluate as null (falsy). as a result, the disabled-user guard in the totp branch was effectively a no-op: a disabled, totp-enrolled user could proceed to the totp verification step rather than being rejected at that point. 
 
-exploitation requires the ability to set or modify the misp.org organization name and a second authenticated user visiting the affected admin email view.
+the commit message explicitly states this was 'harmless in practice' because the subsequent identify() call re-validates the user and would still reject a disabled account. 
 
-the vulnerability is a classic instance of insufficient output encoding in a javascript context.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95682" target="_blank">CVE-2026-95682</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:22 CDT</p>
+the practical security impact is therefore minimal, limited to a very small information-disclosure difference in the login response (a totp prompt is presented instead of an immediate rejection) and a php warning in application logs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95754" target="_blank">CVE-2026-95754</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:28 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains a stored cross-site scripting (XSS) vulnerability in the admin email composition screen. The MISP.org organization name setting was interpolated directly into a JavaScript string literal using an unescaped PHP echo: var org = "<?php echo $org;?>";. Because the value was placed inside a double-quoted JavaScript string without any encoding, an organization name containing a double-quote character (or a backslash) could terminate the string literal and inject arbitrary JavaScript into the page. The injected script would execute in the context of any authenticated user who subsequently loads the admin email page, potentially allowing session hijacking, data exfiltration, or privileged actions performed on behalf of the victim.
+                    <p>In MISP's UsersController login() method, the pre-authentication database query used for the TOTP (two-factor authentication) verification branch did not include the User.disabled column in its SELECT fields list. The query selected only User.password, User.totp, and User.hotp_counter. When the TOTP branch subsequently accessed $unauth_user['User']['disabled'], the key was absent from the result set, producing a PHP 'Undefined array key' warning and causing the expression to evaluate as null (falsy). As a result, the disabled-user guard in the TOTP branch was effectively a no-op: a disabled, TOTP-enrolled user could proceed to the TOTP verification step rather than being rejected at that point. 
 
-Exploitation requires the ability to set or modify the MISP.org organization name and a second authenticated user visiting the affected admin email view.
+The commit message explicitly states this was 'harmless in practice' because the subsequent identify() call re-validates the user and would still reject a disabled account. 
 
-The vulnerability is a classic instance of insufficient output encoding in a JavaScript context.</p>
+The practical security impact is therefore minimal, limited to a very small information-disclosure difference in the login response (a TOTP prompt is presented instead of an immediate rejection) and a PHP warning in application logs.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95679" data-description="misp's requesthandlercomponent automatically decodes xml request bodies on all write requests. the underlying xml::build() library contains a logic error in its readfile guard condition (readfile && http || https), where php operator precedence causes the https branch to bypass the readfile check entirely. as a result, a request body containing a bare https url is treated as a locator and fetched by the server. because the cspreport endpoint accepts xml content type and is unauthenticated by design, an unauthenticated remote attacker can send a post request with a crafted xml body to cause the misp server to issue an outbound https request to an arbitrary target reachable from the server.
+                <div class="cve-entry" data-cve-id="CVE-2026-95703" data-description="in misp, the organisationscontroller::__uploadlogo method processed a caller-supplied tmp_name value with filesystem probes (file_exists, mime type detection, exif reading) before verifying that the value corresponded to a genuine php file upload via is_uploaded_file. an authenticated site-admin user could supply an arbitrary server file path as the tmp_name parameter. the application would then probe that path and return distinct validation error messages depending on whether the file existed and what its image type was, effectively creating a file-existence and image-type oracle against the server filesystem.
 
-the attacker does not receive the response body, but can use the vulnerability to probe internal services, trigger actions on internal https endpoints, or perform timing-based reconnaissance of the server's network environment. 
-
-the vulnerability affects any misp deployment where the cspreport endpoint is reachable and the server has network access to internal or external https services.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95679" target="_blank">CVE-2026-95679</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:22 CDT</p>
+the vulnerability requires site-admin privileges and does not allow arbitrary file read, code execution, or modification; the impact is limited to disclosure of whether a given path exists on the server and, for image files, their type.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95703" target="_blank">CVE-2026-95703</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:28 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP's RequestHandlerComponent automatically decodes XML request bodies on all write requests. The underlying Xml::build() library contains a logic error in its readFile guard condition (readFile && http || https), where PHP operator precedence causes the https branch to bypass the readFile check entirely. As a result, a request body containing a bare HTTPS URL is treated as a locator and fetched by the server. Because the cspReport endpoint accepts XML content type and is unauthenticated by design, an unauthenticated remote attacker can send a POST request with a crafted XML body to cause the MISP server to issue an outbound HTTPS request to an arbitrary target reachable from the server.
+                    <p>In MISP, the OrganisationsController::__uploadLogo method processed a caller-supplied tmp_name value with filesystem probes (file_exists, MIME type detection, EXIF reading) before verifying that the value corresponded to a genuine PHP file upload via is_uploaded_file. An authenticated site-admin user could supply an arbitrary server file path as the tmp_name parameter. The application would then probe that path and return distinct validation error messages depending on whether the file existed and what its image type was, effectively creating a file-existence and image-type oracle against the server filesystem.
 
-The attacker does not receive the response body, but can use the vulnerability to probe internal services, trigger actions on internal HTTPS endpoints, or perform timing-based reconnaissance of the server's network environment. 
-
-The vulnerability affects any MISP deployment where the cspReport endpoint is reachable and the server has network access to internal or external HTTPS services.</p>
+The vulnerability requires site-admin privileges and does not allow arbitrary file read, code execution, or modification; the impact is limited to disclosure of whether a given path exists on the server and, for image files, their type.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95675" data-description="d-link dap-1360 firmware version 6.14 and earlier contains an unauthenticated remote code execution vulnerability that allows remote attackers to execute arbitrary commands as root by sending crafted requests to the device's web management interface without valid credentials. attackers can fully compromise the device to persistently modify its configuration and use it as a pivot point into the local network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95675" target="_blank">CVE-2026-95675</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>D-Link DAP-1360 firmware version 6.14 and earlier contains an unauthenticated remote code execution vulnerability that allows remote attackers to execute arbitrary commands as root by sending crafted requests to the device's web management interface without valid credentials. Attackers can fully compromise the device to persistently modify its configuration and use it as a pivot point into the local network.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95674" data-description="in misp, the queryenrichment method in eventscontroller.php accepted a module name parameter and iterated over the list of enabled modules to find a match. if the specified module was not present in the enabled modules list, the code silently continued processing using default parameters (format set to 'simplified' and no module-specific configuration applied) rather than rejecting the request. this allowed an authenticated user to trigger enrichment or analysis processing through a module that was not explicitly enabled or available on the instance, bypassing the intended module availability controls. the lack of validation meant that module names outside the enabled set were not rejected, potentially exposing functionality or data processing paths that the administrator had not authorized for use.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95674" target="_blank">CVE-2026-95674</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:21 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95701" data-description="in misp, the __statisticsorgs method in userscontroller.php used the organization name directly as a file-system path component when checking for the existence of an organization logo image. the original code called file_exists() with a path constructed as app . 'webroot' . ds . 'img' . ds . 'orgs' . ds . $k . '.png', where $k is the organization name. because the referenced directory (app/webroot/img/orgs) no longer exists in current misp deployments (org logos were relocated to files/img/orgs), the check was functionally dead and never triggered. however, the underlying pattern—concatenating an attacker-influenced organization name into a file path without sanitization—constitutes a path traversal weakness. an organization name containing directory traversal sequences (e.g., '../../../../etc/passwd') would, if the target directory existed, allow an authenticated user with the ability to create or rename an organization to probe for the existence of arbitrary files on the server.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95701" target="_blank">CVE-2026-95701</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:28 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In MISP, the queryEnrichment method in EventsController.php accepted a module name parameter and iterated over the list of enabled modules to find a match. If the specified module was not present in the enabled modules list, the code silently continued processing using default parameters (format set to 'simplified' and no module-specific configuration applied) rather than rejecting the request. This allowed an authenticated user to trigger enrichment or analysis processing through a module that was not explicitly enabled or available on the instance, bypassing the intended module availability controls. The lack of validation meant that module names outside the enabled set were not rejected, potentially exposing functionality or data processing paths that the administrator had not authorized for use.</p>
+                    <p>In MISP, the __statisticsOrgs method in UsersController.php used the organization name directly as a file-system path component when checking for the existence of an organization logo image. The original code called file_exists() with a path constructed as APP . 'webroot' . DS . 'img' . DS . 'orgs' . DS . $k . '.png', where $k is the organization name. Because the referenced directory (app/webroot/img/orgs) no longer exists in current MISP deployments (org logos were relocated to files/img/orgs), the check was functionally dead and never triggered. However, the underlying pattern—concatenating an attacker-influenced organization name into a file path without sanitization—constitutes a path traversal weakness. An organization name containing directory traversal sequences (e.g., '../../../../etc/passwd') would, if the target directory existed, allow an authenticated user with the ability to create or rename an organization to probe for the existence of arbitrary files on the server.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95671" data-description="in misp, the collectionscontroller add() method enforced the sharing-group usability authorization check and element capture only when the http request method was post. however, the underlying crudcomponent::add() method persists data on both post and put requests. as a result, an authenticated user could issue a put request to the collections/add endpoint, bypassing the sharing-group authorization check entirely. this allowed the creation of a collection with distribution=4 (shared with a specific sharing group) targeting a sharing group that the user was not authorized to use. the bypassed check would normally verify that the current user has access to the specified sharing group before allowing the collection to be associated with it.
+                <div class="cve-entry" data-cve-id="CVE-2026-95698" data-description="the findorgimage method in misp's orgimghelper constructs a filesystem path by concatenating a user-supplied organization identifier with a fixed image directory and a file extension, then calls file_exists() on the resulting path. the organization name field is attacker-controllable through event import, which sets org.name. because no validation was performed on the field value before path construction, an organization name containing directory traversal sequences (e.g., ../../etc/passwd) would cause the path to resolve outside the intended org-image directory. 
 
-the security impact is that an authenticated user can place collection data into a sharing group context they do not have legitimate access to, potentially exposing that data to all members of the unauthorized sharing group and violating the intended access-control boundaries of the misp instance.
+this yields two security impacts: 
 
-the vulnerability requires an authenticated session and knowledge of a valid sharing group identifier; no user interaction or special tooling is needed beyond sending a put request instead of a post request to the same endpoint.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95671" target="_blank">CVE-2026-95671</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:21 CDT</p>
+ - an arbitrary file existence oracle, since file_exists() returns a boolean for any path the process can access.
+ - an arbitrary file read limited to files with .png or .svg extensions, because the resolved filename is returned and subsequently rendered or served to the requesting user.
+
+
+
+
+the vulnerability requires an authenticated user with the ability to create or import events that set the organization name.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95698" target="_blank">CVE-2026-95698</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In MISP, the CollectionsController add() method enforced the sharing-group usability authorization check and element capture only when the HTTP request method was POST. However, the underlying CRUDComponent::add() method persists data on both POST and PUT requests. As a result, an authenticated user could issue a PUT request to the collections/add endpoint, bypassing the sharing-group authorization check entirely. This allowed the creation of a collection with distribution=4 (shared with a specific sharing group) targeting a sharing group that the user was not authorized to use. The bypassed check would normally verify that the current user has access to the specified sharing group before allowing the collection to be associated with it.
+                    <p>The findOrgImage method in MISP's OrgImgHelper constructs a filesystem path by concatenating a user-supplied organization identifier with a fixed image directory and a file extension, then calls file_exists() on the resulting path. The organization name field is attacker-controllable through event import, which sets Org.name. Because no validation was performed on the field value before path construction, an organization name containing directory traversal sequences (e.g., ../../etc/passwd) would cause the path to resolve outside the intended org-image directory. 
 
-The security impact is that an authenticated user can place collection data into a sharing group context they do not have legitimate access to, potentially exposing that data to all members of the unauthorized sharing group and violating the intended access-control boundaries of the MISP instance.
+This yields two security impacts: 
 
-The vulnerability requires an authenticated session and knowledge of a valid sharing group identifier; no user interaction or special tooling is needed beyond sending a PUT request instead of a POST request to the same endpoint.</p>
+ - an arbitrary file existence oracle, since file_exists() returns a boolean for any path the process can access.
+ - an arbitrary file read limited to files with .png or .svg extensions, because the resolved filename is returned and subsequently rendered or served to the requesting user.
+
+
+
+
+The vulnerability requires an authenticated user with the ability to create or import events that set the organization name.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95667" data-description="the misp installer scripts (for debian 12, debian 13, ubuntu 24.04, and rhel 9.4) create a log file at /var/log/misp_install.log and a named pipe (fifo) at /var/log/misp_install.log.pipe to capture all installer output. the log captures highly sensitive data including the generated admin password, database passwords, gpg passphrase, and supervisor password. however, the log file was created by the tee command under the system default umask, resulting in world-readable permissions (typically 0644). similarly, the fifo was created with mkfifo without an explicit mode, also inheriting the default umask and remaining world-readable during the window before it was unlinked. 
+                <div class="cve-entry" data-cve-id="CVE-2026-95697" data-description="misp contains an authorization flaw in the organisation model's captureorg method. when the $force parameter is set to true, the method unconditionally overwrites organization metadata fields without verifying that the invoking user holds sufficient privileges. a user with a sharing group (sg) editor role can trigger this code path, allowing them to modify organization metadata that should be restricted to site administrators or users with sync permissions.
 
-any local unprivileged user on the system could read the log file or the fifo to obtain these credentials. 
+according to the commit message, this could lead to blueprint-based sharing group manipulation, meaning an attacker with sg editor access could alter organizational attributes in ways that influence how sharing groups and blueprints behave across the misp instance. 
 
-additionally, the log file was not removed before creation, meaning a pre-existing symlink in /var/log could have been used to redirect the write to an arbitrary location.
-
-version affected: <2.5.47">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95667" target="_blank">CVE-2026-95667</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:21 CDT</p>
+the vulnerability requires an authenticated user with at least sg editor privileges and network access to the misp web interface. the impact is primarily on the integrity of organization records and, potentially, on the integrity of sharing group configurations derived from those records.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95697" target="_blank">CVE-2026-95697</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The MISP installer scripts (for Debian 12, Debian 13, Ubuntu 24.04, and RHEL 9.4) create a log file at /var/log/misp_install.log and a named pipe (FIFO) at /var/log/misp_install.log.pipe to capture all installer output. The log captures highly sensitive data including the generated admin password, database passwords, GPG passphrase, and supervisor password. However, the log file was created by the tee command under the system default umask, resulting in world-readable permissions (typically 0644). Similarly, the FIFO was created with mkfifo without an explicit mode, also inheriting the default umask and remaining world-readable during the window before it was unlinked. 
+                    <p>MISP contains an authorization flaw in the Organisation model's captureOrg method. When the $force parameter is set to true, the method unconditionally overwrites organization metadata fields without verifying that the invoking user holds sufficient privileges. A user with a sharing group (SG) editor role can trigger this code path, allowing them to modify organization metadata that should be restricted to site administrators or users with sync permissions.
 
-Any local unprivileged user on the system could read the log file or the FIFO to obtain these credentials. 
+According to the commit message, this could lead to blueprint-based sharing group manipulation, meaning an attacker with SG editor access could alter organizational attributes in ways that influence how sharing groups and blueprints behave across the MISP instance. 
 
-Additionally, the log file was not removed before creation, meaning a pre-existing symlink in /var/log could have been used to redirect the write to an arbitrary location.
-
-Version affected: <2.5.47</p>
+The vulnerability requires an authenticated user with at least SG editor privileges and network access to the MISP web interface. The impact is primarily on the integrity of organization records and, potentially, on the integrity of sharing group configurations derived from those records.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95666" data-description="mattermost versions 11.9.x <= 11.9.1, 11.8.x <= 11.8.5, 11.7.x <= 11.7.10, 11.10.x <= 11.10.1 fail to limit the length of the post id array accepted by the bulk reactions endpoint which allows an authenticated user to cause excessive database load via a crafted request to {{post /api/v4/posts/ids/reactions}}.. mattermost advisory id: mmsa-2026-00771">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95666" target="_blank">CVE-2026-95666</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:21 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95693" data-description="in misp, the eventreport::uploadpicture method in processed a caller-supplied tmp_name field by invoking file_exists(), mime_content_type(), and exif_imagetype() on the supplied path before verifying that the value was a genuine php upload via is_uploaded_file(). an authenticated user holding the perm_add permission could supply an arbitrary filesystem path as the tmp_name value. the application would then probe that path and return distinct validation error messages depending on whether the file existed, its mime type, or its image format. by observing the differing error responses, an attacker could enumerate the existence of files at arbitrary paths on the misp server and determine their type. 
+
+this constitutes an information disclosure vulnerability: the server's filesystem layout and file types are leaked to any user with the perm_add role without requiring administrative access. 
+
+the vulnerability does not allow reading file contents, writing files, or executing code, but it can aid further attacks by revealing sensitive file locations (e.g., configuration files, private keys, or other artifacts) present on the host.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95693" target="_blank">CVE-2026-95693</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In MISP, the EventReport::uploadPicture method in processed a caller-supplied tmp_name field by invoking file_exists(), mime_content_type(), and exif_imagetype() on the supplied path before verifying that the value was a genuine PHP upload via is_uploaded_file(). An authenticated user holding the perm_add permission could supply an arbitrary filesystem path as the tmp_name value. The application would then probe that path and return distinct validation error messages depending on whether the file existed, its MIME type, or its image format. By observing the differing error responses, an attacker could enumerate the existence of files at arbitrary paths on the MISP server and determine their type. 
+
+This constitutes an information disclosure vulnerability: the server's filesystem layout and file types are leaked to any user with the perm_add role without requiring administrative access. 
+
+The vulnerability does not allow reading file contents, writing files, or executing code, but it can aid further attacks by revealing sensitive file locations (e.g., configuration files, private keys, or other artifacts) present on the host.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95685" data-description="misp contains an access control flaw in the eventreports functionality. the replacesuggestioninreport action, which allows modification of suggestion content within an event report, was incorrectly mapped to the wildcard permission ('*') in the aclcomponent, making it accessible to any authenticated user regardless of their assigned permissions. all analogous report-modification actions correctly required the perm_add permission, while read-only actions such as downloadaspdf appropriately used the wildcard. 
+
+an authenticated user without the perm_add permission could invoke the replacesuggestioninreport endpoint to alter report suggestion data, violating the intended authorization model. 
+
+this constitutes an improper authorization weakness that could lead to unauthorized modification of event report content, potentially corrupting shared threat intelligence data or injecting misleading information into reports relied upon by other analysts and automated consumers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95685" target="_blank">CVE-2026-95685</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>MISP contains an access control flaw in the EventReports functionality. The replaceSuggestionInReport action, which allows modification of suggestion content within an event report, was incorrectly mapped to the wildcard permission ('*') in the ACLComponent, making it accessible to any authenticated user regardless of their assigned permissions. All analogous report-modification actions correctly required the perm_add permission, while read-only actions such as downloadAsPDF appropriately used the wildcard. 
+
+An authenticated user without the perm_add permission could invoke the replaceSuggestionInReport endpoint to alter report suggestion data, violating the intended authorization model. 
+
+This constitutes an improper authorization weakness that could lead to unauthorized modification of event report content, potentially corrupting shared threat intelligence data or injecting misleading information into reports relied upon by other analysts and automated consumers.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95683" data-description="in misp, the overmind event view enriches an event with its most recent attached report for preview purposes. the enrichment logic fetched the report using only the event id as the lookup condition, without applying the report's own distribution/acl constraints. because misp reports carry an independent distribution setting that can be more restrictive than the parent event's distribution, an authenticated user who had read access to the event could retrieve and view a report whose distribution explicitly excluded that user. additionally, the query did not filter out soft-deleted reports, allowing retrieval of reports that had been administratively removed.
+
+the result is an unauthorized disclosure of threat-intelligence report content to users who should not have access under the report's own access-control policy.
+
+the vulnerability requires an authenticated misp user with at least read access to the affected event.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95683" target="_blank">CVE-2026-95683</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In MISP, the Overmind event view enriches an event with its most recent attached report for preview purposes. The enrichment logic fetched the report using only the event ID as the lookup condition, without applying the report's own distribution/ACL constraints. Because MISP reports carry an independent distribution setting that can be more restrictive than the parent event's distribution, an authenticated user who had read access to the event could retrieve and view a report whose distribution explicitly excluded that user. Additionally, the query did not filter out soft-deleted reports, allowing retrieval of reports that had been administratively removed.
+
+The result is an unauthorized disclosure of threat-intelligence report content to users who should not have access under the report's own access-control policy.
+
+The vulnerability requires an authenticated MISP user with at least read access to the affected event.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95501" data-description="a vulnerability was found in mtrano apencms up to 6546096d354153309693efabb9a0d824628ed4f5. the affected element is the function eval of the file cms/weasel.php of the component template engine. the manipulation of the argument $_cms['site'] results in code injection. the attack may be performed from remote. the exploit has been made public and could be used. this product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95501" target="_blank">CVE-2026-95501</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:25 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Mattermost versions 11.9.x <= 11.9.1, 11.8.x <= 11.8.5, 11.7.x <= 11.7.10, 11.10.x <= 11.10.1 fail to limit the length of the post ID array accepted by the bulk reactions endpoint which allows an authenticated user to cause excessive database load via a crafted request to {{POST /api/v4/posts/ids/reactions}}.. Mattermost Advisory ID: MMSA-2026-00771</p>
+                    <p>A vulnerability was found in mtrano APENCMS up to 6546096d354153309693efabb9a0d824628ed4f5. The affected element is the function eval of the file cms/weasel.php of the component Template Engine. The manipulation of the argument $_CMS['site'] results in code injection. The attack may be performed from remote. The exploit has been made public and could be used. This product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. The vendor was contacted early about this disclosure but did not respond in any way.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95665" data-description="misp contains a reflected cross-site scripting (xss) vulnerability in the event rest search export confirmation form. the view template app/view/events/ajax/eventrestsearchexportconfirmationform.ctp renders a url-supplied event id list into a single-quoted javascript string literal using php's json_encode() without any hex-encoding flags. by default, json_encode() escapes double quotes and backslashes but does not escape single quotes. because the javascript string is delimited by single quotes, an attacker can inject a single-quote character to terminate the string literal and execute arbitrary javascript in the victim's browser session.
-
-the vulnerability affects the default and uibeta themes, both of which render this view. the overmind theme's own copy of the form already passed the value through an escaped data attribute and was not affected by this specific sink.
-
-preconditions: the victim must be an authenticated misp user and must actively open or navigate to the attacker-crafted url. the attacker does not require an account or any prior access to the misp instance.
-
-security impact: successful exploitation allows execution of arbitrary javascript in the context of the misp web application, potentially leading to session hijacking, unauthorized actions performed on behalf of the victim, exfiltration of sensitive data visible in the session, or further client-side attacks. the vulnerable component's own confidentiality, integrity, and availability are not directly compromised; the impact is on the underlying user session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95665" target="_blank">CVE-2026-95665</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains a reflected cross-site scripting (XSS) vulnerability in the event REST search export confirmation form. The view template app/View/Events/ajax/eventRestSearchExportConfirmationForm.ctp renders a URL-supplied event ID list into a single-quoted JavaScript string literal using PHP's json_encode() without any hex-encoding flags. By default, json_encode() escapes double quotes and backslashes but does not escape single quotes. Because the JavaScript string is delimited by single quotes, an attacker can inject a single-quote character to terminate the string literal and execute arbitrary JavaScript in the victim's browser session.
-
-The vulnerability affects the Default and UiBeta themes, both of which render this view. The Overmind theme's own copy of the form already passed the value through an escaped data attribute and was not affected by this specific sink.
-
-Preconditions: the victim must be an authenticated MISP user and must actively open or navigate to the attacker-crafted URL. The attacker does not require an account or any prior access to the MISP instance.
-
-Security impact: successful exploitation allows execution of arbitrary JavaScript in the context of the MISP web application, potentially leading to session hijacking, unauthorized actions performed on behalf of the victim, exfiltration of sensitive data visible in the session, or further client-side attacks. The vulnerable component's own confidentiality, integrity, and availability are not directly compromised; the impact is on the underlying user session.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95499" data-description="a flaw has been found in josephchuks php-file-manager-with-code-editor up to 3.0. this issue affects the function move_uploaded_file of the file filemanager.php. executing a manipulation of the argument files can lead to unrestricted upload. the attack can be executed remotely. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95499" target="_blank">CVE-2026-95499</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:20 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95500" data-description="a vulnerability has been found in josephchuks php-file-manager-with-code-editor up to 3.0. impacted is the function file_put_contents of the file codeeditor.php of the component save handler. the manipulation of the argument filename/content leads to unrestricted upload. the attack is possible to be carried out remotely. the exploit has been disclosed to the public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95500" target="_blank">CVE-2026-95500</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:25 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A flaw has been found in JosephChuks php-file-manager-with-code-editor up to 3.0. This issue affects the function move_uploaded_file of the file filemanager.php. Executing a manipulation of the argument files can lead to unrestricted upload. The attack can be executed remotely. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                    <p>A vulnerability has been found in JosephChuks php-file-manager-with-code-editor up to 3.0. Impacted is the function file_put_contents of the file codeEditor.php of the component Save Handler. The manipulation of the argument filename/content leads to unrestricted upload. The attack is possible to be carried out remotely. The exploit has been disclosed to the public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95396" data-description="a vulnerability was identified in sfturing hosp_order up to 627f426331da8086ce8fff2017d65b1ddef384f8. affected is an unknown function of the file hospitalcontroller.java of the component public search handlers. the manipulation of the argument search leads to cross site scripting. the attack can be initiated remotely. the exploit is publicly available and might be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95396" target="_blank">CVE-2026-95396</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:20 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-94570" data-description="sglang contains a dos vulnerability caused by missing input validation for aux_data zeromq control messages in the decode worker, which enables an unauthenticated remote attacker with network reachability to the decode control pull socket to terminate the decode control thread and cause a denial of service against the target server.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94570" target="_blank">CVE-2026-94570</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:24 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was identified in sfturing hosp_order up to 627f426331da8086ce8fff2017d65b1ddef384f8. Affected is an unknown function of the file HospitalController.java of the component Public Search Handlers. The manipulation of the argument Search leads to cross site scripting. The attack can be initiated remotely. The exploit is publicly available and might be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>SGLang contains a DoS vulnerability caused by missing input validation for AUX_DATA ZeroMQ control messages in the Decode worker, which enables an unauthenticated remote attacker with network reachability to the Decode control PULL socket to terminate the Decode control thread and cause a denial of service against the target server.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-93343" data-description="marketking plugin for wordpress before 2.1.72 contains a missing authorization vulnerability in the marketking_admin_vendors_ajax ajax action that allows authenticated attackers with subscriber-level access or higher to retrieve the complete vendor directory by sending a crafted ajax request. attackers can exploit the absence of capability checks in the vendor management action to retrieve internal user ids, usernames, and email addresses of all registered vendors, exposing personally identifiable information to any logged-in user regardless of role.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93343" target="_blank">CVE-2026-93343</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>MarketKing plugin for WordPress before 2.1.72 contains a missing authorization vulnerability in the marketking_admin_vendors_ajax AJAX action that allows authenticated attackers with subscriber-level access or higher to retrieve the complete vendor directory by sending a crafted AJAX request. Attackers can exploit the absence of capability checks in the vendor management action to retrieve internal user IDs, usernames, and email addresses of all registered vendors, exposing personally identifiable information to any logged-in user regardless of role.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93342" data-description="marketking plugin for wordpress before 2.1.72 contains a missing authorization vulnerability in the marketking_duplicate_product ajax action that allows authenticated attackers with subscriber-level access or higher to duplicate any vendor's product by supplying an arbitrary product id. attackers can bypass ownership verification to copy any vendor's product listings, including private product metadata, and assign the duplicated copy to their own vendor account without the victim's knowledge or consent.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93342" target="_blank">CVE-2026-93342</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>MarketKing plugin for WordPress before 2.1.72 contains a missing authorization vulnerability in the marketking_duplicate_product AJAX action that allows authenticated attackers with subscriber-level access or higher to duplicate any vendor's product by supplying an arbitrary product ID. Attackers can bypass ownership verification to copy any vendor's product listings, including private product metadata, and assign the duplicated copy to their own vendor account without the victim's knowledge or consent.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93341" data-description="marketking plugin for wordpress before 2.1.72 contains a missing authorization vulnerability in the marketking_send_refund ajax action that allows authenticated attackers with subscriber-level access or higher to create refund requests against any order by supplying an arbitrary order id. attackers can submit crafted ajax requests targeting any order id to create fraudulent refund requests against orders they did not place, enabling marketplace disruption and unauthorized interference with other users' orders.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93341" target="_blank">CVE-2026-93341</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>MarketKing plugin for WordPress before 2.1.72 contains a missing authorization vulnerability in the marketking_send_refund AJAX action that allows authenticated attackers with subscriber-level access or higher to create refund requests against any order by supplying an arbitrary order ID. Attackers can submit crafted AJAX requests targeting any order ID to create fraudulent refund requests against orders they did not place, enabling marketplace disruption and unauthorized interference with other users' orders.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-12718" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in karel electronic industry and trade inc. karelips allows blind sql injection.
+                <div class="cve-entry" data-cve-id="CVE-2026-94127" data-description="when a big-ip apm access policy and an oauth profile is configured on a virtual server, specific malicious traffic can lead to remote code execution (rce).
 
-this issue affects karelips: through 22092026.
-note: the vendor was contacted and it was learned that the product is not supported.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12718" target="_blank">CVE-2026-12718</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 09:17:12 CDT</p>
+impact:
+this vulnerability allows an unauthenticated attacker to perform remote code execution. the big-ip system in appliance mode is also vulnerable. this is a data plane issue; there is no control plane exposure.
+
+ 
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94127" target="_blank">CVE-2026-94127</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:24 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Improper neutralization of special elements used in an SQL command ('SQL injection') vulnerability in Karel Electronic Industry and Trade Inc. KarelIPS allows Blind SQL Injection.
+                    <p>When a BIG-IP APM access policy and an OAuth profile is configured on a virtual server, specific malicious traffic can lead to Remote Code Execution (RCE).
 
-This issue affects KarelIPS: through 22092026.
-NOTE: The vendor was contacted and it was learned that the product is not supported.</p>
+Impact:
+This vulnerability allows an unauthenticated attacker to perform remote code execution. The BIG-IP system in Appliance mode is also vulnerable. This is a data plane issue; there is no control plane exposure.
+
+ 
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95661" data-description="misp contains a reflected cross-site scripting (xss) vulnerability in the attribute histogram view. the $selectedtypes variable, which is derived from the url path segment , was interpolated directly into a javascript array literal inside an onclick html attribute without any encoding or escaping. an attacker who can cause an authenticated misp user to visit a crafted url containing a malicious type value can execute arbitrary javascript in the victim's browser within the misp application origin.
-
-successful exploitation allows the attacker to read session cookies, perform actions on behalf of the victim, or exfiltrate sensitive data accessible from the misp interface. 
-
-the vulnerability requires the victim to be authenticated and to actively navigate to the attacker-supplied url.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95661" target="_blank">CVE-2026-95661</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 08:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains a reflected cross-site scripting (XSS) vulnerability in the attribute histogram view. The $selectedTypes variable, which is derived from the URL path segment , was interpolated directly into a JavaScript array literal inside an onClick HTML attribute without any encoding or escaping. An attacker who can cause an authenticated MISP user to visit a crafted URL containing a malicious type value can execute arbitrary JavaScript in the victim's browser within the MISP application origin.
-
-Successful exploitation allows the attacker to read session cookies, perform actions on behalf of the victim, or exfiltrate sensitive data accessible from the MISP interface. 
-
-The vulnerability requires the victim to be authenticated and to actively navigate to the attacker-supplied URL.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95659" data-description="misp contains a reflected cross-site scripting (xss) vulnerability in the analystdatacontroller::viewforobject action. the method accepted a parent object type parameter from the url without validation and passed it to the overmind-themed analystdata thread view element, where it was interpolated into two translated strings and rendered into the html response without output encoding. an authenticated attacker who can induce a victim to navigate to a crafted url can inject arbitrary javascript that executes in the victim's browser within the misp application context. this may allow the attacker to read session data, manipulate the page, or perform actions on behalf of the victim. 
-
-the vulnerability requires the victim to be authenticated to misp and to actively visit the attacker-supplied url. the affected component is the analystdata controller and the overmind theme's analystdata thread element.
-
-version affected: <2.5.47">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95659" target="_blank">CVE-2026-95659</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 08:17:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains a reflected cross-site scripting (XSS) vulnerability in the AnalystDataController::viewForObject action. The method accepted a parent object type parameter from the URL without validation and passed it to the Overmind-themed AnalystData thread view element, where it was interpolated into two translated strings and rendered into the HTML response without output encoding. An authenticated attacker who can induce a victim to navigate to a crafted URL can inject arbitrary JavaScript that executes in the victim's browser within the MISP application context. This may allow the attacker to read session data, manipulate the page, or perform actions on behalf of the victim. 
-
-The vulnerability requires the victim to be authenticated to MISP and to actively visit the attacker-supplied URL. The affected component is the AnalystData controller and the Overmind theme's AnalystData thread element.
-
-Version affected: <2.5.47</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95658" data-description="misp's workflowscontroller exposed the modulestatelessexecution action in the security component's unlockedactions list. in cakephp, listing an action in unlockedactions disables both the csrf token check and the field hash validation for that action. because modulestatelessexecution executes a workflow module's exec() method with caller-supplied input and parameters, the absence of csrf protection allowed an attacker to craft a cross-site form post (or equivalent cross-origin request) that, when submitted by an authenticated site administrator, would cause the administrator's browser to invoke the action on the misp instance. 
-
-the attacker could select any workflow module to execute, including action modules that write blocklist and warninglist entries, and supply arbitrary input and parameters of their choosing. this constitutes a cross-site request forgery (csrf) vulnerability with high integrity impact on the misp instance's security-related data. 
-
-the vulnerability was identified during an internal security review and was not externally reported. the fix is included in misp v2.5.47.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95658" target="_blank">CVE-2026-95658</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 08:17:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP's WorkflowsController exposed the moduleStatelessExecution action in the Security component's unlockedActions list. In CakePHP, listing an action in unlockedActions disables both the CSRF token check and the field hash validation for that action. Because moduleStatelessExecution executes a workflow module's exec() method with caller-supplied input and parameters, the absence of CSRF protection allowed an attacker to craft a cross-site form post (or equivalent cross-origin request) that, when submitted by an authenticated site administrator, would cause the administrator's browser to invoke the action on the MISP instance. 
-
-The attacker could select any workflow module to execute, including action modules that write blocklist and warninglist entries, and supply arbitrary input and parameters of their choosing. This constitutes a cross-site request forgery (CSRF) vulnerability with high integrity impact on the MISP instance's security-related data. 
-
-The vulnerability was identified during an internal security review and was not externally reported. The fix is included in MISP v2.5.47.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95619" data-description="a flaw was found in libstdc++. an integer overflow can occur when processing large inputs to the c++ `new` operator. this vulnerability could lead to an undersized memory allocation, potentially causing memory corruption or application instability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95619" target="_blank">CVE-2026-95619</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 08:17:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>A flaw was found in libstdc++. An integer overflow can occur when processing large inputs to the C++ `new` operator. This vulnerability could lead to an undersized memory allocation, potentially causing memory corruption or application instability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95273" data-description="a vulnerability was determined in dgtlmoon changedetection.io up to 0.60.7. this impacts the function static_content of the file changedetectionio/flask_app.py of the component visual_selector_data. executing a manipulation of the argument filename can lead to path traversal. it is possible to launch the attack remotely. the exploit has been publicly disclosed and may be utilized. distinct from cve-2026-25527, which fixed a different parameter (group) in the same function. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95273" target="_blank">CVE-2026-95273</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 08:17:13 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93344" data-description="marketking plugin for wordpress before 2.1.72 contains a missing authorization vulnerability in the marketking_get_page_content ajax action that allows authenticated attackers with subscriber-level access or higher to access arbitrary vendor administrator panel pages by supplying an arbitrary vendor user id. attackers can bypass authorization controls by submitting a target vendor id in the request to access payout pages, financial reports, and vendor dashboard content belonging to any vendor in the marketplace.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93344" target="_blank">CVE-2026-93344</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was determined in dgtlmoon changedetection.io up to 0.60.7. This impacts the function static_content of the file changedetectionio/flask_app.py of the component visual_selector_data. Executing a manipulation of the argument filename can lead to path traversal. It is possible to launch the attack remotely. The exploit has been publicly disclosed and may be utilized. Distinct from CVE-2026-25527, which fixed a different parameter (group) in the same function. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>MarketKing plugin for WordPress before 2.1.72 contains a missing authorization vulnerability in the marketking_get_page_content AJAX action that allows authenticated attackers with subscriber-level access or higher to access arbitrary vendor administrator panel pages by supplying an arbitrary vendor user ID. Attackers can bypass authorization controls by submitting a target vendor ID in the request to access payout pages, financial reports, and vendor dashboard content belonging to any vendor in the marketplace.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95272" data-description="a vulnerability was found in dgtlmoon changedetection.io up to 0.60.7. this affects the function static_content of the file changedetectionio/flask_app.py of the component screenshot handler. performing a manipulation of the argument filename results in path traversal. it is possible to initiate the attack remotely. the attack is considered to have high complexity. the exploitability is reported as difficult. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95272" target="_blank">CVE-2026-95272</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-22 08:17:12 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>A vulnerability was found in dgtlmoon changedetection.io up to 0.60.7. This affects the function static_content of the file changedetectionio/flask_app.py of the component Screenshot Handler. Performing a manipulation of the argument filename results in path traversal. It is possible to initiate the attack remotely. The attack is considered to have high complexity. The exploitability is reported as difficult. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-93088" data-description="sglang's multimodal generation runtime is vulnerable to unauthenticated arbitrary code execution because the disaggregated-diffusion orchestrator's diffusionserver binds an unauthenticated zeromq router socket to a network interface and passes the final frame of received multipart messages directly to pickle.loads() before any validation occurs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93088" target="_blank">CVE-2026-93088</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>SGLang's multimodal generation runtime is vulnerable to unauthenticated arbitrary code execution because the disaggregated-diffusion orchestrator's DiffusionServer binds an unauthenticated ZeroMQ ROUTER socket to a network interface and passes the final frame of received multipart messages directly to pickle.loads() before any validation occurs.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-89407" data-description="numberinput.lookslikevalidnumber() in fasterxml jackson-core pre-validates "stringified numbers" with two regular expressions: pattern_float ([+-]?[0-9]*[\.]?[0-9]+([ee][+-]?[0-9]+)?), present since 2.17.0, and pattern_float_trailing_dot, added in 2.17.2. pattern_float places adjacent quantifiers over the same character class -- an optional [0-9]* run, an optional dot, then a required [0-9]+ run -- so input that ultimately fails to match forces java's backtracking engine to retry every possible split point of the digit run. 
+
+
+
+matching cost therefore grows with the square of the input length. 
+
+
+
+an attacker who can supply json that an application deserializes into a numeric target type reaches this method through jackson-databind's default string-to-number coercion (stddeserializer and numberdeserializers for bigdecimal, biginteger, double and float). 
+
+
+
+because streamreadconstraints.maxstringlength defaults to 20,000,000 characters, no constraint bounds the input before it reaches the regex. 
+
+
+
+testing by the reporter confirmed o(n^2) growth across five consecutive input-size doublings, with a single 160,000-character string consuming roughly 74 seconds in one call; a small number of concurrent requests of ordinary body size can therefore exhaust a server's request-handling thread pool. 
+
+
+
+the affected method does not exist before 2.17.0, so 2.16.x and earlier releases are not affected. 
+
+
+
+the fix replaces both regular expressions with a hand-rolled single-pass scan.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89407" target="_blank">CVE-2026-89407</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>NumberInput.looksLikeValidNumber() in FasterXML jackson-core pre-validates "stringified numbers" with two regular expressions: PATTERN_FLOAT ([+-]?[0-9]*[\.]?[0-9]+([eE][+-]?[0-9]+)?), present since 2.17.0, and PATTERN_FLOAT_TRAILING_DOT, added in 2.17.2. PATTERN_FLOAT places adjacent quantifiers over the same character class -- an optional [0-9]* run, an optional dot, then a required [0-9]+ run -- so input that ultimately fails to match forces Java's backtracking engine to retry every possible split point of the digit run. 
+
+
+
+Matching cost therefore grows with the square of the input length. 
+
+
+
+An attacker who can supply JSON that an application deserializes into a numeric target type reaches this method through jackson-databind's default String-to-number coercion (StdDeserializer and NumberDeserializers for BigDecimal, BigInteger, Double and Float). 
+
+
+
+Because StreamReadConstraints.maxStringLength defaults to 20,000,000 characters, no constraint bounds the input before it reaches the regex. 
+
+
+
+Testing by the reporter confirmed O(n^2) growth across five consecutive input-size doublings, with a single 160,000-character string consuming roughly 74 seconds in one call; a small number of concurrent requests of ordinary body size can therefore exhaust a server's request-handling thread pool. 
+
+
+
+The affected method does not exist before 2.17.0, so 2.16.x and earlier releases are not affected. 
+
+
+
+The fix replaces both regular expressions with a hand-rolled single-pass scan.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84388" data-description="a improper restriction of rendered ui layers or frames vulnerability in fortinet fortipam chrome extension 8.0 all versions, fortipam chrome extension 7.4 all versions may allow attacker to information disclosure via remote unauthenticated attack">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84388" target="_blank">CVE-2026-84388</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.6</p>
+                    <p>A improper restriction of rendered ui layers or frames vulnerability in Fortinet FortiPAM Chrome Extension 8.0 all versions, FortiPAM Chrome Extension 7.4 all versions may allow attacker to information disclosure via remote unauthenticated attack</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79315" data-description="a reflected cross-site scripting vulnerability exists in x-ui 0.3.2. the management interface reflects the raw request uri into a client-side template binding expression used for sidebar menu highlighting. server-side html entity escaping is ineffective in this context: the browser decodes the entities before the client-side framework evaluates the content as a javascript expression. a logged-in panel user who visits a crafted url allows arbitrary script execution in the same-origin context of the management page, enabling data theft and unauthorized actions through the victim's session.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79315" target="_blank">CVE-2026-79315</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
+                    <p>A reflected cross-site scripting vulnerability exists in x-ui 0.3.2. The management interface reflects the raw request URI into a client-side template binding expression used for sidebar menu highlighting. Server-side HTML entity escaping is ineffective in this context: the browser decodes the entities before the client-side framework evaluates the content as a JavaScript expression. A logged-in panel user who visits a crafted URL allows arbitrary script execution in the same-origin context of the management page, enabling data theft and unauthorized actions through the victim's session.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79314" data-description="a horizontal privilege escalation vulnerability exists in x-ui 0.3.2. an authenticated user can modify the inbound proxy configurations of other users, including remark, port, protocol, settings, enabled state, expiry time and traffic quota, by submitting a request referencing the target resource identifier. the update path fails to verify that the target resource belongs to the requesting session user, allowing unauthorized cross-user modification of data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79314" target="_blank">CVE-2026-79314</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A horizontal privilege escalation vulnerability exists in x-ui 0.3.2. An authenticated user can modify the inbound proxy configurations of other users, including remark, port, protocol, settings, enabled state, expiry time and traffic quota, by submitting a request referencing the target resource identifier. The update path fails to verify that the target resource belongs to the requesting session user, allowing unauthorized cross-user modification of data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79313" data-description="webpy web.py 0.76 is vulnerable to insufficient session expiration. the application's session management relies on periodic cleanup to expire sessions instead of checking the last-access time when a session is loaded. as a result, an expired session whose record has not yet been cleaned up can still be replayed and used, allowing an attacker holding a previously valid session cookie to continue accessing protected resources after the configured idle timeout.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79313" target="_blank">CVE-2026-79313</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>webpy web.py 0.76 is vulnerable to Insufficient Session Expiration. The application's session management relies on periodic cleanup to expire sessions instead of checking the last-access time when a session is loaded. As a result, an expired session whose record has not yet been cleaned up can still be replayed and used, allowing an attacker holding a previously valid session cookie to continue accessing protected resources after the configured idle timeout.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-65179" data-description="nvidia nemo contains a vulnerability in the tabulartokenizer class where it deserializes an untrusted, attacker-controlled .pkl file via pickle.load() without validation. a successful exploit of this vulnerability may lead to code execution, data tampering, denial of service, and information disclosure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65179" target="_blank">CVE-2026-65179</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-22 10:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>NVIDIA NeMo contains a vulnerability in the TabularTokenizer class where it deserializes an untrusted, attacker-controlled .pkl file via pickle.load() without validation. A successful exploit of this vulnerability may lead to code execution, data tampering, denial of service, and information disclosure.</p>
                 </div>
         
             </div>
