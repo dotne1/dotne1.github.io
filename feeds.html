@@ -34,6 +34,158 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-96456" data-description="the reachy mini bluetooth service asks a connecting device for a pin before it will accept commands. the check protects the session but not the caller, so an attacker in bluetooth range can ride along on someone else's successful authentication.
+
+
+
+the authenticated state is kept in a single shared flag on the service instance rather than per device. bluez passes the calling device's identity to the characteristic write handler in the options argument, but writevalue(self, value, options) in src/reachy_mini/daemon/app/services/bluetooth/bluetooth_service.py ignores options entirely. the handler therefore has no idea which device sent a given write, and it cannot tell the authenticated one from any other.
+
+
+
+once any device completes the pin exchange, the flag is set and every nearby device can send cmd_ commands until it resets. an attacker simply waits within radio range for a legitimate user to authenticate, then writes commands into the same window. no pin is ever guessed or brute-forced.
+
+
+
+this is the second step of a three-step chain that jfrog documented against the robot. the first is the unrestricted file upload in the media sounds api, tracked as cve-2026-55419, which places an attacker-controlled script on the filesystem. this issue then provides command access over bluetooth. the third is the bluetooth command handler path traversal, tracked as cve-2026-62661, which runs that script as root.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96456" target="_blank">CVE-2026-96456</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>The Reachy Mini Bluetooth service asks a connecting device for a PIN before it will accept commands. The check protects the session but not the caller, so an attacker in Bluetooth range can ride along on someone else's successful authentication.
+
+
+
+The authenticated state is kept in a single shared flag on the service instance rather than per device. BlueZ passes the calling device's identity to the characteristic write handler in the options argument, but WriteValue(self, value, options) in src/reachy_mini/daemon/app/services/bluetooth/bluetooth_service.py ignores options entirely. The handler therefore has no idea which device sent a given write, and it cannot tell the authenticated one from any other.
+
+
+
+Once any device completes the PIN exchange, the flag is set and every nearby device can send CMD_ commands until it resets. An attacker simply waits within radio range for a legitimate user to authenticate, then writes commands into the same window. No PIN is ever guessed or brute-forced.
+
+
+
+This is the second step of a three-step chain that JFrog documented against the robot. The first is the unrestricted file upload in the media sounds API, tracked as CVE-2026-55419, which places an attacker-controlled script on the filesystem. This issue then provides command access over Bluetooth. The third is the Bluetooth command handler path traversal, tracked as CVE-2026-62661, which runs that script as root.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-96455" data-description="the reachy mini daemon exposes an http api for managing the robot. its app installation endpoint, post /apps/install in src/reachy_mini/daemon/app/routers/apps.py, has no authentication. the handler's only dependency is depends(get_app_manager), which just hands back the manager object from application state, so nothing in the chain ever checks a credential.
+
+
+
+the endpoint takes an appinfo body naming a hugging face space. the daemon downloads that space and installs it as a python package through install_package in src/reachy_mini/apps/sources/local_common_venv.py, using uv or pip. installing a python package runs the package's own build and setup code, so whoever chooses the space chooses what code the robot runs. anyone can publish a public hugging face space, so this is not a meaningful restriction on the attacker.
+
+
+
+how far this reaches depends on the model. in _resolve_bind_host in src/reachy_mini/daemon/app/main.py the daemon binds 0.0.0.0 when it runs as the wireless version and 127.0.0.1 otherwise, with the vendor's own comment explaining that the robot has to be reachable on the lan. on a wireless unit, then, any host on the same network can install and run code on the robot without credentials.
+
+
+
+one related change has already shipped but does not fix this. version 1.8.2 replaced the wildcard cors policy with an allow list of localhost and tauri origins. that closes the browser drive-by route, where a web page the victim visits silently calls the endpoint in the background. it has no effect on this issue: cors is enforced by browsers and governs whether script may read a response, while a direct http request from another machine on the network involves no browser, no preflight and no cors check at all.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96455" target="_blank">CVE-2026-96455</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>The Reachy Mini daemon exposes an HTTP API for managing the robot. Its app installation endpoint, POST /apps/install in src/reachy_mini/daemon/app/routers/apps.py, has no authentication. The handler's only dependency is Depends(get_app_manager), which just hands back the manager object from application state, so nothing in the chain ever checks a credential.
+
+
+
+The endpoint takes an AppInfo body naming a Hugging Face Space. The daemon downloads that Space and installs it as a Python package through install_package in src/reachy_mini/apps/sources/local_common_venv.py, using uv or pip. Installing a Python package runs the package's own build and setup code, so whoever chooses the Space chooses what code the robot runs. Anyone can publish a public Hugging Face Space, so this is not a meaningful restriction on the attacker.
+
+
+
+How far this reaches depends on the model. In _resolve_bind_host in src/reachy_mini/daemon/app/main.py the daemon binds 0.0.0.0 when it runs as the wireless version and 127.0.0.1 otherwise, with the vendor's own comment explaining that the robot has to be reachable on the LAN. On a wireless unit, then, any host on the same network can install and run code on the robot without credentials.
+
+
+
+One related change has already shipped but does not fix this. Version 1.8.2 replaced the wildcard CORS policy with an allow list of localhost and Tauri origins. That closes the browser drive-by route, where a web page the victim visits silently calls the endpoint in the background. It has no effect on this issue: CORS is enforced by browsers and governs whether script may read a response, while a direct HTTP request from another machine on the network involves no browser, no preflight and no CORS check at all.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-96442" data-description="a code execution flaw was found in emacs, affecting versions prior to 31.2. the flymake mode using language backends other than lisp would execute arbitrary code from the edited file while performing syntax checking. viewing or editing untrusted files using emacs could lead to arbitrary code execution with the privileges of the user running emacs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96442" target="_blank">CVE-2026-96442</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:18 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>A code execution flaw was found in Emacs, affecting versions prior to 31.2. The Flymake mode using language backends other than Lisp would execute arbitrary code from the edited file while performing syntax checking. Viewing or editing untrusted files using Emacs could lead to arbitrary code execution with the privileges of the user running Emacs.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-90950" data-description="the paid membership subscriptions wordpress plugin before 3.1.0 does not verify the recaptcha on its registration handler when a form field is absent from the request, allowing unauthenticated users to create accounts without solving the recaptcha the site has enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90950" target="_blank">CVE-2026-90950</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The Paid Membership Subscriptions WordPress plugin before 3.1.0 does not verify the reCAPTCHA on its registration handler when a form field is absent from the request, allowing unauthenticated users to create accounts without solving the reCAPTCHA the site has enabled.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-87978" data-description="the paymob for woocommerce wordpress plugin before 4.1.14 does not verify the request signature on one branch of its payment webhook, allowing unauthenticated attackers to mark arbitrary woocommerce orders as paid without any payment.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87978" target="_blank">CVE-2026-87978</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The Paymob for WooCommerce WordPress plugin before 4.1.14 does not verify the request signature on one branch of its payment webhook, allowing unauthenticated attackers to mark arbitrary WooCommerce orders as paid without any payment.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-87848" data-description="the mpcx lightbox wordpress plugin 1.2.2 through 1.2.5 does not have any authorisation or authentication on one of its ajax actions available to unauthenticated users, nor does it check the status of the requested post, allowing unauthenticated visitors to retrieve the title, content or excerpt of arbitrary posts, including private, draft, pending, trashed and password-protected ones.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87848" target="_blank">CVE-2026-87848</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>The MPCX Lightbox WordPress plugin 1.2.2 through 1.2.5 does not have any authorisation or authentication on one of its AJAX actions available to unauthenticated users, nor does it check the status of the requested post, allowing unauthenticated visitors to retrieve the title, content or excerpt of arbitrary posts, including private, draft, pending, trashed and password-protected ones.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-87071" data-description="the forminator forms wordpress plugin before 1.57.2.1 does not restrict which metadata keys a form submission may supply, and does not exclude the keys wordpress reserves for its own use, so unauthenticated visitors submitting a public form that collects post content can attach metadata of their choosing to the post their submission creates.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87071" target="_blank">CVE-2026-87071</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The Forminator Forms WordPress plugin before 1.57.2.1 does not restrict which metadata keys a form submission may supply, and does not exclude the keys WordPress reserves for its own use, so unauthenticated visitors submitting a public form that collects post content can attach metadata of their choosing to the post their submission creates.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-87070" data-description="the forminator forms wordpress plugin before 1.57.2.1 does not verify that a request came from a trusted proxy before preferring client-supplied forwarding headers over the connecting address, and it uses that value both to enforce its per-visitor voting limit and to record who submitted an entry. unauthenticated visitors can therefore vote without limit on any poll and can choose the address stored against every submission they make.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87070" target="_blank">CVE-2026-87070</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The Forminator Forms WordPress plugin before 1.57.2.1 does not verify that a request came from a trusted proxy before preferring client-supplied forwarding headers over the connecting address, and it uses that value both to enforce its per-visitor voting limit and to record who submitted an entry. Unauthenticated visitors can therefore vote without limit on any poll and can choose the address stored against every submission they make.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-86612" data-description="the ninja tables wordpress plugin before 5.2.17 does not restrict shortcode expansion to administrator-authored table rows which, in a non-default configuration, allows unauthenticated users to have arbitrary shortcodes executed on a public page, and to permanently break that page, by submitting an ordinary form entry.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86612" target="_blank">CVE-2026-86612</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.6</p>
+                    <p>The Ninja Tables WordPress plugin before 5.2.17 does not restrict shortcode expansion to administrator-authored table rows which, in a non-default configuration, allows unauthenticated users to have arbitrary shortcodes executed on a public page, and to permanently break that page, by submitting an ordinary form entry.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-86604" data-description="the gtranslate wordpress plugin before 5.0.1 does not remove shortcodes from the content of outgoing emails before expanding them which, in a non-default configuration, allows unauthenticated users to have arbitrary shortcodes registered on the site executed server side.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86604" target="_blank">CVE-2026-86604</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
+                    <p>The GTranslate WordPress plugin before 5.0.1 does not remove shortcodes from the content of outgoing emails before expanding them which, in a non-default configuration, allows unauthenticated users to have arbitrary shortcodes registered on the site executed server side.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-86601" data-description="the wp recipe maker wordpress plugin before 10.8.2 does not remove shortcodes from comment content before expanding it while building a page's structured metadata, allowing unauthenticated users to have arbitrary shortcodes executed server side and to read the content of unpublished recipes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86601" target="_blank">CVE-2026-86601</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The WP Recipe Maker WordPress plugin before 10.8.2 does not remove shortcodes from comment content before expanding it while building a page's structured metadata, allowing unauthenticated users to have arbitrary shortcodes executed server side and to read the content of unpublished recipes.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-5696" data-description="reflected cross-site scripting (xss) in microweber. the vulnerability lies in the ‘group’ parameter of the ‘/admin/settings’ endpoint in the administration panel. a successful exploit allows an attacker to trick an authenticated user into executing malicious javascript code in their browser. this enables the attacker to perform actions without the victim’s consent, steal confidential information or hijack the user’s session.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-5696" target="_blank">CVE-2026-5696</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Reflected Cross-Site Scripting (XSS) in Microweber. The vulnerability lies in the ‘group’ parameter of the ‘/admin/settings’ endpoint in the administration panel. A successful exploit allows an attacker to trick an authenticated user into executing malicious JavaScript code in their browser. This enables the attacker to perform actions without the victim’s consent, steal confidential information or hijack the user’s session.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-5695" data-description="arbitrary file upload vulnerability due to a lack of proper validation in upload forms. this allows authenticated users to upload files to the server without restrictions. an attacker could exploit this flaw to execute malicious code remotely (demonstrated by uploading the eicar test file), which could result in the system being completely compromised.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-5695" target="_blank">CVE-2026-5695</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-23 06:17:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Arbitrary file upload vulnerability due to a lack of proper validation in upload forms. This allows authenticated users to upload files to the server without restrictions. An attacker could exploit this flaw to execute malicious code remotely (demonstrated by uploading the EICAR test file), which could result in the system being completely compromised.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-96454" data-description="pake turns a website into a desktop application built on tauri. every application it generates inherits two settings from the upstream template, and together they hand native functionality to untrusted web content.
 
 
@@ -160,202 +312,6 @@ This issue affects Apache Sling XSS: before 2.4.12.
 
 
 Users are recommended to upgrade to version 2.4.12, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91999" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in apache sling xss.
-
-
-
-this issue affects apache sling xss: before 2.4.12.
-
-
-
-users are recommended to upgrade to version 2.4.12, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91999" target="_blank">CVE-2026-91999</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 05:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper neutralization of input during web page generation ('cross-site scripting') vulnerability in Apache Sling XSS.
-
-
-
-This issue affects Apache Sling XSS: before 2.4.12.
-
-
-
-Users are recommended to upgrade to version 2.4.12, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91928" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in apache sling xss.
-
-
-
-this issue affects apache sling xss: before 2.4.12.
-
-
-
-users are recommended to upgrade to version 2.4.12, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91928" target="_blank">CVE-2026-91928</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 05:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper neutralization of input during web page generation ('cross-site scripting') vulnerability in Apache Sling XSS.
-
-
-
-This issue affects Apache Sling XSS: before 2.4.12.
-
-
-
-Users are recommended to upgrade to version 2.4.12, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91852" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in apache sling xss.
-
-
-
-this issue affects apache sling xss: before 2.4.12.
-
-
-
-users are recommended to upgrade to version 2.4.12, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91852" target="_blank">CVE-2026-91852</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 05:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper neutralization of input during web page generation ('cross-site scripting') vulnerability in Apache Sling XSS.
-
-
-
-This issue affects Apache Sling XSS: before 2.4.12.
-
-
-
-Users are recommended to upgrade to version 2.4.12, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79616" data-description="out-of-bounds read while parsing untrusted svg path strings in qt quick's context2d.path / pathsvg.path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79616" target="_blank">CVE-2026-79616</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 05:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Out-of-bounds read while parsing untrusted SVG path strings in Qt Quick's Context2D.path / PathSvg.path.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-73192" data-description="an improper neutralization of input during web page generation ('cross-site scripting') [cwe-79] vulnerability when using the xssapi.getvalidhref() in apache sling xss version 2.4.10 and prior may allow an attacker to perform a reflected cross-site scripting (xss) attack in every feature using this method. in order to successfully attack an application, the attacker needs to be able to submit a value which is not correctly sanitized by that library.
-
-upgrade to apache sling xss >= 2.4.12">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73192" target="_blank">CVE-2026-73192</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 05:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An improper neutralization of input during web page generation ('Cross-site Scripting') [CWE-79] vulnerability when using the XSSAPI.getValidHref() in Apache Sling XSS version 2.4.10 and prior may allow an attacker to perform a reflected cross-site scripting (XSS) attack in every feature using this method. In order to successfully attack an application, the attacker needs to be able to submit a value which is not correctly sanitized by that library.
-
-Upgrade to Apache Sling XSS >= 2.4.12</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95625" data-description="the tauri updater plugin verifies update binaries using minisign signatures, but the signature covers only the raw binary bytes. the update manifest -- which contains the version number, download url, and signature -- is fetched over tls but is never itself signed or authenticated. because the only anti-rollback check compares the manifest's version field against the current version, and that field is unsigned, an attacker who can serve a crafted manifest can force installation of any older signed release without possessing the developer's private key.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95625" target="_blank">CVE-2026-95625</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 04:17:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>The Tauri updater plugin verifies update binaries using minisign signatures, but the signature covers only the raw binary bytes. The update manifest -- which contains the version number, download URL, and signature -- is fetched over TLS but is never itself signed or authenticated. Because the only anti-rollback check compares the manifest's version field against the current version, and that field is unsigned, an attacker who can serve a crafted manifest can force installation of any older signed release without possessing the developer's private key.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-93368" data-description="the rename wp-login.php to anything you want plugin for wordpress is vulnerable to time-based sql injection via 'log' (username) parameter in all versions up to, and including, 2.0.1 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing sql query. this makes it possible for unauthenticated attackers to append additional sql queries into already existing queries that can be used to extract sensitive information from the database. wordpress core applies wp_unslash() to the 'log' post value before dispatching the wp_login_failed action, stripping magic-quotes backslash escaping and allowing a raw single quote to reach the plugin's handler unimpeded.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93368" target="_blank">CVE-2026-93368</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 04:17:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The Rename wp-login.php to anything you want plugin for WordPress is vulnerable to time-based SQL Injection via 'log' (Username) Parameter in all versions up to, and including, 2.0.1 due to insufficient escaping on the user supplied parameter and lack of sufficient preparation on the existing SQL query. This makes it possible for unauthenticated attackers to append additional SQL queries into already existing queries that can be used to extract sensitive information from the database. WordPress core applies wp_unslash() to the 'log' POST value before dispatching the wp_login_failed action, stripping magic-quotes backslash escaping and allowing a raw single quote to reach the plugin's handler unimpeded.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-42801" data-description="null pointer dereference vulnerability in asr crane，falcon on linux (as_rrc module) allows pointer manipulation.
-
-this vulnerability is associated with program file 3g.mod/lib/src/urrsir.c.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-42801" target="_blank">CVE-2026-42801</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>NULL pointer dereference vulnerability in ASR Crane，Falcon on Linux (as_rrc module) allows Pointer Manipulation.
-
-This vulnerability is associated with program file 3g.mod/lib/src/urrsir.c.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-31377" data-description="an improper authentication vulnerability in the apache doris frontend (fe) meta service allows an unauthenticated remote attacker to access internal metadata service endpoints.
-
-
-
-the affected endpoints relied on client-supplied node information for authentication without providing sufficient authentication of the requesting party. under certain network configurations, a remote attacker may be able to bypass the intended access control and access internal fe metadata interfaces, potentially exposing sensitive cluster information.
-
-
-
-this issue affects apache doris: from 2.0.0 through 2.0.*, from 2.1.0 through 2.1.*, from 3.0.0 through 3.0.*, from 3.1.0 through 3.1.*, from 4.0.0 before 4.0.8, and from 4.1.0 before 4.1.4. versions 1.2.x and earlier are not affected by this header-trust vulnerability.
-
-
-
-
-users are recommended to upgrade to a fixed release (4.0.8 or 4.1.4), which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-31377" target="_blank">CVE-2026-31377</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>An Improper Authentication vulnerability in the Apache Doris Frontend (FE) meta service allows an unauthenticated remote attacker to access internal metadata service endpoints.
-
-
-
-The affected endpoints relied on client-supplied node information for authentication without providing sufficient authentication of the requesting party. Under certain network configurations, a remote attacker may be able to bypass the intended access control and access internal FE metadata interfaces, potentially exposing sensitive cluster information.
-
-
-
-This issue affects Apache Doris: from 2.0.0 through 2.0.*, from 2.1.0 through 2.1.*, from 3.0.0 through 3.0.*, from 3.1.0 through 3.1.*, from 4.0.0 before 4.0.8, and from 4.1.0 before 4.1.4. Versions 1.2.x and earlier are not affected by this header-trust vulnerability.
-
-
-
-
-Users are recommended to upgrade to a fixed release (4.0.8 or 4.1.4), which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15027" data-description="cgservisign developed by changing has a os command injection vulnerability. unauthenticated remote attackers can induce victims to visit a malicious web page and inject arbitrary os commands through the local service interface, resulting in command execution on the victim's local computer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15027" target="_blank">CVE-2026-15027</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 04:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>CGServiSign developed by Changing has a OS Command Injection vulnerability. Unauthenticated remote attackers can induce victims to visit a malicious web page and inject arbitrary OS commands through the local service interface, resulting in command execution on the victim's local computer.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-92378" data-description="a session management
-vulnerability exists in the legacy ui reduced function login feature of nt-ware
-uniflow online. under specific timing conditions during service offline
-emergency mode, a previously authenticated session may be retained after
-logout, which could allow a subsequent user to be authenticated as the previous
-user and gain unauthorised limited access to device functionality.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92378" target="_blank">CVE-2026-92378</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 03:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A session management
-vulnerability exists in the Legacy UI Reduced Function Login feature of NT-ware
-uniFLOW Online. Under specific timing conditions during Service Offline
-Emergency Mode, a previously authenticated session may be retained after
-logout, which could allow a subsequent user to be authenticated as the previous
-user and gain unauthorised limited access to device functionality.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91818" data-description="a use-after-free vulnerability exists in foxit pdf editor/reader’s javascript handling of pdf annotations. reentrant page-event processing during annotation enumeration may release the associated page object, which is subsequently accessed, resulting in an application crash.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91818" target="_blank">CVE-2026-91818</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 03:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>A use-after-free vulnerability exists in Foxit PDF Editor/Reader’s JavaScript handling of PDF annotations. Reentrant page-event processing during annotation enumeration may release the associated page object, which is subsequently accessed, resulting in an application crash.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91817" data-description="a heap-based out-of-bounds read vulnerability exists in foxit pdf editor/reader’s handling of wide strings in embedded pdf javascript. insufficient validation of string-deletion ranges can cause an integer underflow, resulting in an out-of-bounds read and application crash.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91817" target="_blank">CVE-2026-91817</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-23 03:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>A heap-based out-of-bounds read vulnerability exists in Foxit PDF Editor/Reader’s handling of wide strings in embedded PDF JavaScript. Insufficient validation of string-deletion ranges can cause an integer underflow, resulting in an out-of-bounds read and application crash.</p>
                 </div>
         
             </div>
