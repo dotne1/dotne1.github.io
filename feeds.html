@@ -34,226 +34,946 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-97898" data-description="insecure direct object reference / missing object-level authorization in the akia keyless entry cloud service. the unlock action is relying on a client-supplied room/door identifier that is not properly authorized server-side against the authenticated guest's booking. an authenticated guest could unlock rooms other than their own, resulting in unauthorized physical access to guest rooms at an affected property.
+                <div class="cve-entry" data-cve-id="CVE-2026-98159" data-description="in the linux kernel, the following vulnerability has been resolved:
 
+wifi: mt76: mt7921: validate clc firmware records
 
-
-
-as of 19th september 2026 the service is no more vulnerable to this attack (feedback received by the reporter). 
-
-
-
-
-the attack is remote but the effect is local to an affected property.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97898" target="_blank">CVE-2026-97898</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 05:17:08 CDT</p>
+the clc region is supplied by firmware, but the loader trusts the
+region count and each record length. a malformed image can make the
+region table pointer precede the firmware buffer, make the record loop
+fail to advance, or index phy->clc past its end. validate the table and
+record bounds before dereferencing or copying.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98159" target="_blank">CVE-2026-98159</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Insecure Direct Object Reference / missing object-level authorization in the Akia keyless entry cloud service. The unlock action is relying on a client-supplied room/door identifier that is not properly authorized server-side against the authenticated guest's booking. An authenticated guest could unlock rooms other than their own, resulting in unauthorized physical access to guest rooms at an affected property.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
+wifi: mt76: mt7921: validate CLC firmware records
 
-
-
-As of 19th September 2026 the service is no more vulnerable to this attack (feedback received by the reporter). 
-
-
-
-
-The attack is remote but the effect is local to an affected property.</p>
+The CLC region is supplied by firmware, but the loader trusts the
+region count and each record length. A malformed image can make the
+region table pointer precede the firmware buffer, make the record loop
+fail to advance, or index phy->clc past its end. Validate the table and
+record bounds before dereferencing or copying.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-92106" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in dashbitco lazy_html allows mutation xss via a parse and serialize round-trip of attacker-supplied html.
+                <div class="cve-entry" data-cve-id="CVE-2026-98158" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-lazyhtml.to_html/2 and lazyhtml.tree.to_html/2 decide whether to escape an element's text from its tag name alone. a style or script element inside svg or mathml foreign content is parsed with character references decoded, but is serialized as an html raw-text element, so its text is emitted unescaped. encoded markup such as &lt;/style&gt;&lt;img src=x onerror=...&gt; inside <svg><style> therefore closes the element on re-parse and becomes live markup. applications that parse untrusted html with lazy_html, filter the document or tree, and serialize it for display are affected, since the payload is a plain text node that no element or attribute filter sees.
+ppp_async: drop the errored frame instead of resetting its headroom
 
-this issue affects lazy_html: from 0.1.0 before 0.1.13.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92106" target="_blank">CVE-2026-92106</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 05:17:08 CDT</p>
+ppp_receive_nonmp_frame() prepends a two-byte direction tag before running
+the pass/active bpf filters:
+
+	*(__be16 *)skb_push(skb, 2) = htons(ppp_filter_inbound_tag);
+
+nothing on the receive path guarantees those two bytes of headroom. the
+frame-error path in ppp_async's process_input_packet() resets a reused skb's
+headroom to zero while claiming to restore it to a freshly allocated state -
+but a fresh skb from dev_alloc_skb() carries net_skb_pad:
+
+	err:
+		if (skb) {
+			/* make skb appear as freshly allocated */
+			skb_trim(skb, 0);
+			skb_reserve(skb, - skb_headroom(skb));
+		}
+
+ap->rpkt still points at that skb, so the next frame is reassembled into it
+with no headroom at all. a peer that sends a bad-fcs frame followed by one
+beginning ff 03 then leaves a single byte of headroom by the time the filter
+tag is pushed, which lands one byte below skb->head:
+
+  skbuff: skb_under_panic: len:49 put:2 head:ffff888003c10000
+          data:ffff888003c0ffff tail:0x30 end:0x640 dev:<null>
+  kernel bug at net/core/skbuff.c:214!
+  rip: 0010:skb_panic+0x13e/0x230
+  call trace:
+   skb_push+0xbd/0x100
+   ppp_receive_nonmp_frame+0x48a/0x1d10
+   ppp_input+0x4e9/0x2f80
+   ppp_async_process+0x2a/0xe0
+   tasklet_action_common+0x20f/0x8a0
+   handle_softirqs+0x18e/0x590
+  kernel panic - not syncing: fatal exception in interrupt
+
+zeroing the headroom violates the net_skb_pad guarantee that dev_alloc_skb()
+gives the rest of the receive path. besides the filter panic above, when ccp
+compression is enabled ppp_decompress_frame() hands skb->data - 2 to
+->decompress()/->incomp(), which then reads out of bounds before skb->head
+for the same reason.
+
+rather than restore the headroom, drop the errored frame - as ppp_synctty
+already does on its error path - and clear ap->rpkt so the next frame is
+reassembled into a fresh skb with proper headroom. this is simpler and fixes
+both the filter under-panic and the ccp out-of-bounds read.
+
+the original v1 of this patch made room in ppp_receive_nonmp_frame() with
+skb_cow_head(); eric pointed out that fixing the root cause in the transport
+is the right approach.
+
+found by fuzzing the ppp receive path with a mutating peer on a pty; it is an
+interesting (remote) dos: root configures ppp, the peer supplies two crashing
+frames. the reproducer (repro-ppp-skb.c, unchanged from v1) panics in about a
+second, and returns cleanly with this applied.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98158" target="_blank">CVE-2026-98158</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in dashbitco lazy_html allows mutation XSS via a parse and serialize round-trip of attacker-supplied HTML.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-LazyHTML.to_html/2 and LazyHTML.Tree.to_html/2 decide whether to escape an element's text from its tag name alone. A style or script element inside SVG or MathML foreign content is parsed with character references decoded, but is serialized as an HTML raw-text element, so its text is emitted unescaped. Encoded markup such as &lt;/style&gt;&lt;img src=x onerror=...&gt; inside <svg><style> therefore closes the element on re-parse and becomes live markup. Applications that parse untrusted HTML with lazy_html, filter the document or tree, and serialize it for display are affected, since the payload is a plain text node that no element or attribute filter sees.
+ppp_async: drop the errored frame instead of resetting its headroom
 
-This issue affects lazy_html: from 0.1.0 before 0.1.13.</p>
+ppp_receive_nonmp_frame() prepends a two-byte direction tag before running
+the pass/active BPF filters:
+
+	*(__be16 *)skb_push(skb, 2) = htons(PPP_FILTER_INBOUND_TAG);
+
+Nothing on the receive path guarantees those two bytes of headroom. The
+frame-error path in ppp_async's process_input_packet() resets a reused skb's
+headroom to zero while claiming to restore it to a freshly allocated state -
+but a fresh skb from dev_alloc_skb() carries NET_SKB_PAD:
+
+	err:
+		if (skb) {
+			/* make skb appear as freshly allocated */
+			skb_trim(skb, 0);
+			skb_reserve(skb, - skb_headroom(skb));
+		}
+
+ap->rpkt still points at that skb, so the next frame is reassembled into it
+with no headroom at all. A peer that sends a bad-FCS frame followed by one
+beginning ff 03 then leaves a single byte of headroom by the time the filter
+tag is pushed, which lands one byte below skb->head:
+
+  skbuff: skb_under_panic: len:49 put:2 head:ffff888003c10000
+          data:ffff888003c0ffff tail:0x30 end:0x640 dev:<NULL>
+  kernel BUG at net/core/skbuff.c:214!
+  RIP: 0010:skb_panic+0x13e/0x230
+  Call Trace:
+   skb_push+0xbd/0x100
+   ppp_receive_nonmp_frame+0x48a/0x1d10
+   ppp_input+0x4e9/0x2f80
+   ppp_async_process+0x2a/0xe0
+   tasklet_action_common+0x20f/0x8a0
+   handle_softirqs+0x18e/0x590
+  Kernel panic - not syncing: Fatal exception in interrupt
+
+Zeroing the headroom violates the NET_SKB_PAD guarantee that dev_alloc_skb()
+gives the rest of the receive path. Besides the filter panic above, when CCP
+compression is enabled ppp_decompress_frame() hands skb->data - 2 to
+->decompress()/->incomp(), which then reads out of bounds before skb->head
+for the same reason.
+
+Rather than restore the headroom, drop the errored frame - as ppp_synctty
+already does on its error path - and clear ap->rpkt so the next frame is
+reassembled into a fresh skb with proper headroom. This is simpler and fixes
+both the filter under-panic and the CCP out-of-bounds read.
+
+The original V1 of this patch made room in ppp_receive_nonmp_frame() with
+skb_cow_head(); Eric pointed out that fixing the root cause in the transport
+is the right approach.
+
+Found by fuzzing the PPP receive path with a mutating peer on a pty; it is an
+interesting (remote) DoS: root configures PPP, the peer supplies two crashing
+frames. The reproducer (repro-ppp-skb.c, unchanged from v1) panics in about a
+second, and returns cleanly with this applied.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-97863" data-description="the cisco_firesight_manager_acl_rule_export module in misp-modules generates a shell script (.sh) that authenticates to and calls the cisco firesight manager api. the module interpolates configuration values (ip address, login, password, domain id, policy id) and misp attribute values (destination ips, urls, event info comments) directly into single-quoted shell string assignments without any escaping or sanitization. because the values are placed inside single-quoted shell strings, any value containing a single-quote character (e.g., a crafted ip-dst or url attribute value submitted to misp) breaks out of the quoting context, allowing an attacker to inject arbitrary shell commands into the exported script. a security analyst who subsequently executes the generated .sh file unmodified would run the injected commands with their own privileges, potentially exposing firesight manager credentials, modifying acl rules, or compromising the analyst workstation. additionally, the module contained a secondary defect where the variable 'config' was only assigned inside a conditional block but referenced unconditionally afterward, causing a nameerror (denial of service) when the request payload lacked a 'config' key. the vulnerability requires the attacker to have the ability to submit misp events or attributes containing a single-quote character and the victim to execute the exported script. no authentication bypass is required beyond standard misp event-submission privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97863" target="_blank">CVE-2026-97863</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:08 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98157" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+edac/device_sysfs: use kstrtouint() for poll_msec to prevent truncation
+
+the poll_msec sysfs store file uses simple_strtoul() which accepts an unsigned
+long, but the target field (poll_msec) is unsigned int. on 64-bit systems,
+a value > uint_max is silently truncated when stored.
+
+fix the mismatch by using kstrtouint() instead. this rejects values larger
+than uint_max at parse time, making truncation impossible. also add a check
+for value < 1 to reject the 0-delay case, which would cause the poll work to
+spin without delay and consume 100% cpu.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98157" target="_blank">CVE-2026-98157</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The cisco_firesight_manager_ACL_rule_export module in misp-modules generates a shell script (.sh) that authenticates to and calls the Cisco fireSIGHT Manager API. The module interpolates configuration values (IP address, login, password, domain ID, policy ID) and MISP attribute values (destination IPs, URLs, event info comments) directly into single-quoted shell string assignments without any escaping or sanitization. Because the values are placed inside single-quoted shell strings, any value containing a single-quote character (e.g., a crafted ip-dst or url attribute value submitted to MISP) breaks out of the quoting context, allowing an attacker to inject arbitrary shell commands into the exported script. A security analyst who subsequently executes the generated .sh file unmodified would run the injected commands with their own privileges, potentially exposing fireSIGHT Manager credentials, modifying ACL rules, or compromising the analyst workstation. Additionally, the module contained a secondary defect where the variable 'config' was only assigned inside a conditional block but referenced unconditionally afterward, causing a NameError (denial of service) when the request payload lacked a 'config' key. The vulnerability requires the attacker to have the ability to submit MISP events or attributes containing a single-quote character and the victim to execute the exported script. No authentication bypass is required beyond standard MISP event-submission privileges.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+EDAC/device_sysfs: Use kstrtouint() for poll_msec to prevent truncation
+
+The poll_msec sysfs store file uses simple_strtoul() which accepts an unsigned
+long, but the target field (poll_msec) is unsigned int. On 64-bit systems,
+a value > UINT_MAX is silently truncated when stored.
+
+Fix the mismatch by using kstrtouint() instead. This rejects values larger
+than UINT_MAX at parse time, making truncation impossible. Also add a check
+for value < 1 to reject the 0-delay case, which would cause the poll work to
+spin without delay and consume 100% CPU.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-92573" data-description="improper handling of compressed data in the shared gzip decompressor used for amqp 0-8/0-9/0-9-1 and amqp 0-10 message delivery, message conversion and http management json rendering allows authenticated message producers to exhaust memory and disrupt broker availability via processing without a decompressed-output limit.
+                <div class="cve-entry" data-cve-id="CVE-2026-98156" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue affects apache qpid broker-j: through 10.1.0.
+drm/virtio: use the dma api for resource backing on xen
 
-users are recommended to upgrade to version 10.1.1, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92573" target="_blank">CVE-2026-92573</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
+on a xen pv domain page addresses bear no relation to the real machine
+addresses the host would have to use to reach it.
+virtio_ring.c handles this correctly, vring_use_map_api() returns true
+for any xen_domain() regardless of virtio_f_access_platform.
+
+virtio-gpu makes the same decision independently, but its copy
+looks only at the feature bit:
+
+	bool use_dma_api = !virtio_has_dma_quirk(vgdev->vdev);
+
+qemu does not set iommu_platform on virtio-vga by default, so
+virtio_f_access_platform is not negotiated, use_dma_api is false, and
+virtio_gpu_object_shmem_init() describes the framebuffer's backing pages
+to the host with sg_phys().  those are guest-physical addresses. in a pv
+domain they resolve, on the host side, to pages belonging to some other
+domain, so the host scans out unrelated memory.
+
+move the decision into virtio_gpu_use_dma_api() and give it the
+xen_domain() check, like vring_use_map_api() has. this
+additionally enables the dma_sync_sgtable_for_device() calls in
+virtgpu_vq.c, which are required for correctness whenever swiotlb
+is in play.
+
+reproduced with a xen 4.21 pv dom0 nested inside qemu 8.2 with
+virtio-vga, on both a distro 6.8 kernel and 6.18 lts. a pvh dom0
+works fine and doesn't need this fix because it is identity-mapped,
+only pv dom0s are affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98156" target="_blank">CVE-2026-98156</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper handling of compressed data in the shared GZIP decompressor used for AMQP 0-8/0-9/0-9-1 and AMQP 0-10 message delivery, message conversion and HTTP management JSON rendering allows authenticated message producers to exhaust memory and disrupt broker availability via processing without a decompressed-output limit.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This issue affects Apache Qpid Broker-J: through 10.1.0.
+drm/virtio: use the DMA API for resource backing on Xen
 
-Users are recommended to upgrade to version 10.1.1, which fixes the issue.</p>
+On a Xen PV domain page addresses bear no relation to the real machine
+addresses the host would have to use to reach it.
+virtio_ring.c handles this correctly, vring_use_map_api() returns true
+for any xen_domain() regardless of VIRTIO_F_ACCESS_PLATFORM.
+
+virtio-gpu makes the same decision independently, but its copy
+looks only at the feature bit:
+
+	bool use_dma_api = !virtio_has_dma_quirk(vgdev->vdev);
+
+QEMU does not set iommu_platform on virtio-vga by default, so
+VIRTIO_F_ACCESS_PLATFORM is not negotiated, use_dma_api is false, and
+virtio_gpu_object_shmem_init() describes the framebuffer's backing pages
+to the host with sg_phys().  Those are guest-physical addresses. In a PV
+domain they resolve, on the host side, to pages belonging to some other
+domain, so the host scans out unrelated memory.
+
+Move the decision into virtio_gpu_use_dma_api() and give it the
+xen_domain() check, like vring_use_map_api() has. This
+additionally enables the dma_sync_sgtable_for_device() calls in
+virtgpu_vq.c, which are required for correctness whenever swiotlb
+is in play.
+
+Reproduced with a Xen 4.21 PV dom0 nested inside QEMU 8.2 with
+virtio-vga, on both a distro 6.8 kernel and 6.18 LTS. A PVH dom0
+works fine and doesn't need this fix because it is identity-mapped,
+only PV dom0s are affected.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-92564" data-description="a pre-authentication attacker could leverage type nesting to cause a stackoverflowerror potentially leading to denial of service.
+                <div class="cve-entry" data-cve-id="CVE-2026-98155" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue affects apache qpid broker-j: through 10.1.0.
+accel/qaic: address potential out-of-bounds read in resp_worker()
 
-users are recommended to upgrade to version 10.1.1, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92564" target="_blank">CVE-2026-92564</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
+although 'commit 2feec5ae5df7 ("accel/qaic: handle dbc deactivation if the
+owner went away")' fixes the scenario it was intended for by walking the
+message and only decoding qaic_trans_deactivate_from_dev, if present, it
+skipped over the bounds checking code that is included in decode_message().
+this could lead to issues such as reading past the slab allocation's end,
+infinite loops or kernel panics. for those issues to happen, a malformed
+wire message is needed to be sent from the device.
+
+instead of duplicating the bounds checking code already present in
+decode_message(), use the function inside resp_worker().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98155" target="_blank">CVE-2026-98155</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A pre-authentication attacker could leverage type nesting to cause a StackOverflowError potentially leading to denial of service.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This issue affects Apache Qpid Broker-J: through 10.1.0.
+accel/qaic: Address potential out-of-bounds read in resp_worker()
 
-Users are recommended to upgrade to version 10.1.1, which fixes the issue.</p>
+Although 'commit 2feec5ae5df7 ("accel/qaic: Handle DBC deactivation if the
+owner went away")' fixes the scenario it was intended for by walking the
+message and only decoding QAIC_TRANS_DEACTIVATE_FROM_DEV, if present, it
+skipped over the bounds checking code that is included in decode_message().
+This could lead to issues such as reading past the slab allocation's end,
+infinite loops or kernel panics. For those issues to happen, a malformed
+wire message is needed to be sent from the device.
+
+Instead of duplicating the bounds checking code already present in
+decode_message(), use the function inside resp_worker().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-92560" data-description="a pre-authentication attacker could leverage type size/count handling to cause excessive allocation leading to potential denial of service.
+                <div class="cve-entry" data-cve-id="CVE-2026-98154" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-this issue affects apache qpid broker-j: through 10.1.0.
+nvme-rdma: fix -eio cleanup order in queue_rq
 
-users are recommended to upgrade to version 10.1.1, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92560" target="_blank">CVE-2026-92560</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
+on -eio, the rdma queue_rq path reports a host path error and then
+still cleans up the command and unmaps the sqe dma. the path error
+helper completes the request, so that is double cleanup and dma unmap
+after the request is already complete.
+
+unmap the sqe first, then report the host path error. skip the outer
+command cleanup on that path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98154" target="_blank">CVE-2026-98154</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:47 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A pre-authentication attacker could leverage type size/count handling to cause excessive allocation leading to potential denial of service.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-This issue affects Apache Qpid Broker-J: through 10.1.0.
+nvme-rdma: fix -EIO cleanup order in queue_rq
 
-Users are recommended to upgrade to version 10.1.1, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-92550" data-description="a pre-authentication attacker could leverage type size/count handling to cause excessive allocation leading to potential denial of service.
+On -EIO, the RDMA queue_rq path reports a host path error and then
+still cleans up the command and unmaps the SQE DMA. The path error
+helper completes the request, so that is double cleanup and DMA unmap
+after the request is already complete.
 
-this issue affects apache qpid broker-j: through 10.1.0.
+Unmap the SQE first, then report the host path error. Skip the outer
+command cleanup on that path.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-98153" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-users are recommended to upgrade to version 10.1.1, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92550" target="_blank">CVE-2026-92550</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A pre-authentication attacker could leverage type size/count handling to cause excessive allocation leading to potential denial of service.
+nvme: fix racy access to fdp placement id array
 
-This issue affects Apache Qpid Broker-J: through 10.1.0.
+nvme_query_fdp_info() is called per-path and therefore prone to races.
 
-Users are recommended to upgrade to version 10.1.1, which fixes the issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-88848" data-description="the masterstudy lms wordpress plugin from 1.9 before 3.7.50 does not verify that a course a member asks to enrol in is covered by their membership plan, nor that the plan identifier submitted with the request is one they actually hold, allowing any member to enrol themselves into restricted paid courses outside their plan and beyond the number of courses it entitles them to.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-88848" target="_blank">CVE-2026-88848</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.2</p>
-                    <p>The MasterStudy LMS WordPress plugin from 1.9 before 3.7.50 does not verify that a course a member asks to enrol in is covered by their membership plan, nor that the plan identifier submitted with the request is one they actually hold, allowing any member to enrol themselves into restricted paid courses outside their plan and beyond the number of courses it entitles them to.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86837" data-description="the bookly wordpress plugin before 28.3 does not properly verify a customer's identity before updating their stored details, allowing unauthenticated attackers who know a customer's primary identifier to overwrite that customer's stored personal information such as name, email and address.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86837" target="_blank">CVE-2026-86837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Bookly WordPress plugin before 28.3 does not properly verify a customer's identity before updating their stored details, allowing unauthenticated attackers who know a customer's primary identifier to overwrite that customer's stored personal information such as name, email and address.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-80514" data-description="the wpforo forum wordpress plugin from 3.0.0 before 3.1.6 does not verify the source of client-supplied ip address headers before using them to key its per-visitor rate limit on paid ai requests, allowing unauthenticated attackers to bypass the limit by spoofing the header and exhaust the site owner's metered ai credits.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-80514" target="_blank">CVE-2026-80514</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The wpForo Forum WordPress plugin from 3.0.0 before 3.1.6 does not verify the source of client-supplied IP address headers before using them to key its per-visitor rate limit on paid AI requests, allowing unauthenticated attackers to bypass the limit by spoofing the header and exhaust the site owner's metered AI credits.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-6088" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '/inventory/configuration/categories' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6088" target="_blank">CVE-2026-6088</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+it populates head->nr_plids/head->plids for fdp registration.
+but nothing protects that pair from concurrent access - two paths scanning
+the same namespace can race to populate it.
+
+avoid the race by moving this initialization work to nvme_alloc_ns_head()
+which is called once per shared namespace.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98153" target="_blank">CVE-2026-98153</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '/inventory/configuration/categories' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nvme: fix racy access to FDP placement id array
+
+nvme_query_fdp_info() is called per-path and therefore prone to races.
+
+It populates head->nr_plids/head->plids for fdp registration.
+But nothing protects that pair from concurrent access - two paths scanning
+the same namespace can race to populate it.
+
+Avoid the race by moving this initialization work to nvme_alloc_ns_head()
+which is called once per shared namespace.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6087" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '/inventory/configuration/categories' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6087" target="_blank">CVE-2026-6087</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98152" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nvmet-rdma: fix queue leak when connect backlog is exceeded
+
+when pending disconnecting queues exceed the backlog limit, the
+connect path only drops the device reference and leaks the newly
+allocated queue and its ib resources.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98152" target="_blank">CVE-2026-98152</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '/inventory/configuration/categories' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nvmet-rdma: fix queue leak when connect backlog is exceeded
+
+When pending disconnecting queues exceed the backlog limit, the
+connect path only drops the device reference and leaks the newly
+allocated queue and its IB resources.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6086" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '/inventory/configuration/serial-number-types' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6086" target="_blank">CVE-2026-6086</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98151" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: fix reg invariants violation on speculative pointer arithmetic
+
+take the following unprivileged program as an example:
+
+	r0 = bpf_map_lookup_elem(...)	/* ptr_to_map_value, offset 0 */
+	...
+	14: r0 += r1			/* r1 is a bounded scalar */
+	15: r9 = r0
+
+loading it triggers a verifier warning from reg_bounds_sanity_check():
+
+	verifier bug: reg invariants violation (alu): const subreg tnum out
+	of sync with range bounds r64={.base=0x0, .size=0x0}
+	r32={.base=0x0, .size=0xffffffff} var_off=(0x0, 0x0)
+
+what happens:
+
+1. processing insn 14 (r0 += r1) in adjust_ptr_min_max_vals(), the new
+   offset is computed into dst_reg's var_off and 32/64-bit ranges.
+
+2. because pointer registers do not track 32-bit subregister bounds,
+   __mark_reg32_unbounded() first sets r32 to the full range; r32 is
+   re-derived from the offset at the end of the function by
+   reg_bounds_sync().
+
+3. on the unprivileged path, sanitize_ptr_alu() is called and, via
+   sanitize_speculative_path() -> push_stack(), snapshots the current
+   register state and schedules the next instruction (insn 15) to be
+   verified directly as a speculative path.
+
+4. that snapshot is taken between step 2 and the final reg_bounds_sync():
+   at this point dst_reg's var_off still holds the (const) original
+   offset while r32 has just been blanked to the full range, i.e. the two
+   are out of sync. when the speculative path later verifies insn 15
+   (r9 = r0), the inconsistent state reaches reg_bounds_sanity_check() and
+   trips the warning.
+
+var_off and the 32-bit range must always be consistent. there are two
+ways to keep the snapshot consistent:
+
+  1. sync var_off and r32 before the snapshot so they match, or
+  2. leave r32 at its original (already consistent) value and blank it
+     only after the snapshot.
+
+the whole point of sanitize_ptr_alu() is to insert a harmless masking
+sequence that keeps the access in bounds under speculation, so the state
+it snapshots should faithfully represent that. take approach 2: move
+__mark_reg32_unbounded() to after sanitize_ptr_alu(), so the speculative
+snapshot keeps the pointer's original, consistent r32. the non-speculative
+path is unchanged: r32 is still blanked before the offset is applied and
+re-derived by reg_bounds_sync().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98151" target="_blank">CVE-2026-98151</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '/inventory/configuration/serial-number-types' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: Fix REG INVARIANTS VIOLATION on speculative pointer arithmetic
+
+Take the following unprivileged program as an example:
+
+	r0 = bpf_map_lookup_elem(...)	/* PTR_TO_MAP_VALUE, offset 0 */
+	...
+	14: r0 += r1			/* r1 is a bounded scalar */
+	15: r9 = r0
+
+Loading it triggers a verifier warning from reg_bounds_sanity_check():
+
+	verifier bug: REG INVARIANTS VIOLATION (alu): const subreg tnum out
+	of sync with range bounds r64={.base=0x0, .size=0x0}
+	r32={.base=0x0, .size=0xffffffff} var_off=(0x0, 0x0)
+
+What happens:
+
+1. Processing insn 14 (r0 += r1) in adjust_ptr_min_max_vals(), the new
+   offset is computed into dst_reg's var_off and 32/64-bit ranges.
+
+2. Because pointer registers do not track 32-bit subregister bounds,
+   __mark_reg32_unbounded() first sets r32 to the full range; r32 is
+   re-derived from the offset at the end of the function by
+   reg_bounds_sync().
+
+3. On the unprivileged path, sanitize_ptr_alu() is called and, via
+   sanitize_speculative_path() -> push_stack(), snapshots the current
+   register state and schedules the next instruction (insn 15) to be
+   verified directly as a speculative path.
+
+4. That snapshot is taken between step 2 and the final reg_bounds_sync():
+   at this point dst_reg's var_off still holds the (const) original
+   offset while r32 has just been blanked to the full range, i.e. the two
+   are out of sync. When the speculative path later verifies insn 15
+   (r9 = r0), the inconsistent state reaches reg_bounds_sanity_check() and
+   trips the warning.
+
+var_off and the 32-bit range must always be consistent. There are two
+ways to keep the snapshot consistent:
+
+  1. sync var_off and r32 before the snapshot so they match, or
+  2. leave r32 at its original (already consistent) value and blank it
+     only after the snapshot.
+
+The whole point of sanitize_ptr_alu() is to insert a harmless masking
+sequence that keeps the access in bounds under speculation, so the state
+it snapshots should faithfully represent that. Take approach 2: move
+__mark_reg32_unbounded() to after sanitize_ptr_alu(), so the speculative
+snapshot keeps the pointer's original, consistent r32. The non-speculative
+path is unchanged: r32 is still blanked before the offset is applied and
+re-derived by reg_bounds_sync().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6085" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '/inventory/configuration/serial-number-types' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6085" target="_blank">CVE-2026-6085</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98150" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: fix bpf_f_cpu validation for sparse cpu ids
+
+bpf_f_cpu stores the target cpu id in the upper 32 bits of the map
+operation flags. bpf_map_check_op_flags() currently compares that id
+with num_possible_cpus(), which is the number of possible cpus rather
+than a bound on cpu ids.
+
+on an arm64 qemu guest with a cpu device-tree hole, the possible cpu
+mask was 0,2-3. a userspace program using raw bpf() syscalls creates
+a bpf_map_type_percpu_array and performs update and lookup operations
+for each cpu by setting bpf_f_cpu and the cpu id in the flags.
+
+with the old check, cpu 1 is incorrectly accepted while valid cpu 3 is
+rejected with -erange. the cpu 1 update then reaches the per-cpu map
+access path and triggers:
+
+  unable to handle kernel paging request at virtual address ...
+  pc : __pi_memcpy_generic+0x5c/0x22c
+  lr : bpf_percpu_array_update+0x2dc/0x2e8
+  call trace:
+    __pi_memcpy_generic
+    bpf_map_update_value
+    map_update_elem
+    __sys_bpf
+
+check the cpu id against nr_cpu_ids and cpu_possible() instead. this
+rejects cpu ids outside the valid range and cpus absent from the
+possible mask, while allowing valid sparse cpu ids.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98150" target="_blank">CVE-2026-98150</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '/inventory/configuration/serial-number-types' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: Fix BPF_F_CPU validation for sparse CPU IDs
+
+BPF_F_CPU stores the target CPU ID in the upper 32 bits of the map
+operation flags. bpf_map_check_op_flags() currently compares that ID
+with num_possible_cpus(), which is the number of possible CPUs rather
+than a bound on CPU IDs.
+
+On an arm64 QEMU guest with a CPU device-tree hole, the possible CPU
+mask was 0,2-3. A userspace program using raw bpf() syscalls creates
+a BPF_MAP_TYPE_PERCPU_ARRAY and performs update and lookup operations
+for each CPU by setting BPF_F_CPU and the CPU ID in the flags.
+
+With the old check, CPU 1 is incorrectly accepted while valid CPU 3 is
+rejected with -ERANGE. The CPU 1 update then reaches the per-CPU map
+access path and triggers:
+
+  Unable to handle kernel paging request at virtual address ...
+  pc : __pi_memcpy_generic+0x5c/0x22c
+  lr : bpf_percpu_array_update+0x2dc/0x2e8
+  Call trace:
+    __pi_memcpy_generic
+    bpf_map_update_value
+    map_update_elem
+    __sys_bpf
+
+Check the CPU ID against nr_cpu_ids and cpu_possible() instead. This
+rejects CPU IDs outside the valid range and CPUs absent from the
+possible mask, while allowing valid sparse CPU IDs.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6084" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '/inventory/configuration/variants' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6084" target="_blank">CVE-2026-6084</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98149" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+bpf: fix percpu map update indexing with sparse cpu ids
+
+per-cpu array, hash, and cgroup storage map updates without bpf_f_cpu
+or bpf_f_all_cpus use a value buffer whose per-cpu slots are packed in
+possible-cpu order. the buffer is sized as:
+
+  round_up(value_size, 8) * num_possible_cpus()
+
+the update paths iterate over possible cpus, but use the logical cpu id
+to calculate the source offset:
+
+  value + size * cpu
+
+this only works when possible cpu ids are contiguous starting at zero.
+
+for example, with a possible cpu mask of 0,2-3, the buffer contains
+three slots corresponding to cpus 0, 2, and 3. cpu2 is therefore
+expected to use slot 1 and cpu3 slot 2. instead, the current code uses
+slots 2 and 3 respectively, causing incorrect per-cpu values and an
+out-of-bounds read from the update buffer for cpu3.
+
+the corresponding lookup paths already use a dense offset while
+iterating over possible cpus. do the same for the array, hash, and
+cgroup storage update paths, advancing the source offset once for each
+possible cpu. bpf_f_all_cpus continues to use the same value for every
+cpu.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98149" target="_blank">CVE-2026-98149</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '/inventory/configuration/variants' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+bpf: Fix percpu map update indexing with sparse CPU IDs
+
+Per-CPU array, hash, and cgroup storage map updates without BPF_F_CPU
+or BPF_F_ALL_CPUS use a value buffer whose per-CPU slots are packed in
+possible-CPU order. The buffer is sized as:
+
+  round_up(value_size, 8) * num_possible_cpus()
+
+The update paths iterate over possible CPUs, but use the logical CPU ID
+to calculate the source offset:
+
+  value + size * cpu
+
+This only works when possible CPU IDs are contiguous starting at zero.
+
+For example, with a possible CPU mask of 0,2-3, the buffer contains
+three slots corresponding to CPUs 0, 2, and 3. CPU2 is therefore
+expected to use slot 1 and CPU3 slot 2. Instead, the current code uses
+slots 2 and 3 respectively, causing incorrect per-CPU values and an
+out-of-bounds read from the update buffer for CPU3.
+
+The corresponding lookup paths already use a dense offset while
+iterating over possible CPUs. Do the same for the array, hash, and
+cgroup storage update paths, advancing the source offset once for each
+possible CPU. BPF_F_ALL_CPUS continues to use the same value for every
+CPU.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6083" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '
-/inventory/configuration/pricing-tiers' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6083" target="_blank">CVE-2026-6083</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98148" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/gud: validate gud_rotation_0 is present in supported rotations
+
+the rotation argument to drm_plane_create_rotation_property() is set to
+drm_mode_rotate_0, and the device reported rotation bitmask is used as
+the supported_rotations argument. the driver never validates that
+gud_rotation_0 is present, so a device that omits it from its
+gud_property_rotation triggers the
+warn_on(rotation & ~supported_rotations) in
+drm_plane_create_rotation_property()
+
+fix this by skipping the creation of rotation property if the device
+doesn't have the gud_rotation_0 bit">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98148" target="_blank">CVE-2026-98148</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '
-/inventory/configuration/pricing-tiers' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/gud: validate GUD_ROTATION_0 is present in supported rotations
+
+The rotation argument to drm_plane_create_rotation_property() is set to
+DRM_MODE_ROTATE_0, and the device reported rotation bitmask is used as
+the supported_rotations argument. The driver never validates that
+GUD_ROTATION_0 is present, so a device that omits it from its
+GUD_PROPERTY_ROTATION triggers the
+WARN_ON(rotation & ~supported_rotations) in
+drm_plane_create_rotation_property()
+
+Fix this by skipping the creation of rotation property if the device
+doesn't have the GUD_ROTATION_0 bit</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-6082" data-description="stored cross-site scripting (xss) vulnerability in stockagile api and management panel. the vulnerability is present on the server side in rest endpoint '/inventory/configuration/payment-methods' that allow the injection and persistence of malicious javascript code through parameters such as ‘code’, ‘name’, and other text fields. the scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary javascript code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6082" target="_blank">CVE-2026-6082</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 04:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98147" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+printk: don't warn on kthread_run failure.
+
+since __kthread_create_on_node() returns -eintr upon sigkill,
+we should not use warn_on() in order to catch kthread_run() failure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98147" target="_blank">CVE-2026-98147</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) vulnerability in StockAgile API and management panel. The vulnerability is present on the server side in REST endpoint '/inventory/configuration/payment-methods' that allow the injection and persistence of malicious JavaScript code through parameters such as ‘code’, ‘name’, and other text fields. The scripts that are entered are not filtered or validated correctly before being displayed on the web panel that authenticated users can access. Exploiting this vulnerability could allow a remote, previously authenticated attacker to execute arbitrary JavaScript code.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+printk: Don't WARN on kthread_run failure.
+
+Since __kthread_create_on_node() returns -EINTR upon SIGKILL,
+we should not use WARN_ON() in order to catch kthread_run() failure.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96752" data-description="the zero spam for wordpress plugin for wordpress is vulnerable to stored cross-site scripting via nested post array keys via contact form 7 integration in all versions up to, and including, 5.7.10 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. the payload is delivered by submitting a contact form 7 request with a nested post array key containing arbitrary html or javascript — php parses the field name into a nested array key, which is stored verbatim in the zerospam_log.submission_data column when zero spam flags the submission as spam due to the absence of the zerospam_david_walsh_key field.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96752" target="_blank">CVE-2026-96752</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Zero Spam for WordPress plugin for WordPress is vulnerable to Stored Cross-Site Scripting via Nested POST Array Keys via Contact Form 7 Integration in all versions up to, and including, 5.7.10 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. The payload is delivered by submitting a Contact Form 7 request with a nested POST array key containing arbitrary HTML or JavaScript — PHP parses the field name into a nested array key, which is stored verbatim in the zerospam_log.submission_data column when Zero Spam flags the submission as spam due to the absence of the zerospam_david_walsh_key field.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98146" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+accel/amdxdna: remove __counted_by from struct amdxdna_cmd_chain
+
+struct amdxdna_cmd_chain contains a flexible array annotated with
+__counted_by(command_count). since the structure is stored in shared
+amdxdna_bo_share memory, userspace can modify command_count concurrently.
+if command_count is changed to zero, the bounds check generated from
+__counted_by may fail and trigger a kernel panic.
+
+remove __counted_by to avoid relying on the userspace-controlled
+command_count for the flexible array bounds check.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98146" target="_blank">CVE-2026-98146</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+accel/amdxdna: Remove __counted_by from struct amdxdna_cmd_chain
+
+struct amdxdna_cmd_chain contains a flexible array annotated with
+__counted_by(command_count). Since the structure is stored in shared
+AMDXDNA_BO_SHARE memory, userspace can modify command_count concurrently.
+If command_count is changed to zero, the bounds check generated from
+__counted_by may fail and trigger a kernel panic.
+
+Remove __counted_by to avoid relying on the userspace-controlled
+command_count for the flexible array bounds check.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96568" data-description="the restaurant menu and food ordering plugin for wordpress is vulnerable to stored cross-site scripting via the 'phone_number' parameter in all versions up to, and including, 2.4.14 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96568" target="_blank">CVE-2026-96568</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Restaurant Menu and Food Ordering plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'phone_number' parameter in all versions up to, and including, 2.4.14 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98145" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+accel/amdxdna: reject a command chain that carries no commands
+
+a chain whose command_count is zero passes the payload length check,
+because struct_size(payload, data, 0) is just the header. the fill loop
+then does not run, so offset stays zero and the request is submitted with
+a zero-length buffer.
+
+on firmware without aie2_npu_command that ends at the opcode check, since
+op is still ert_invalid_cmd and aie2_get_chain_msg_op() answers
+msg_op_max_opcode. aie2_get_npu_chain_msg_op() answers
+msg_op_chain_exec_npu whatever it is given, so there the submission
+continues to drm_clflush_virt_range(cmd_buf, 0), which reads the byte
+before the buffer and faults on the vmap guard page. exec_cmd is
+reachable by any process that can open the render node.
+
+reject the request instead.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98145" target="_blank">CVE-2026-98145</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+accel/amdxdna: reject a command chain that carries no commands
+
+A chain whose command_count is zero passes the payload length check,
+because struct_size(payload, data, 0) is just the header. The fill loop
+then does not run, so offset stays zero and the request is submitted with
+a zero-length buffer.
+
+On firmware without AIE2_NPU_COMMAND that ends at the opcode check, since
+op is still ERT_INVALID_CMD and aie2_get_chain_msg_op() answers
+MSG_OP_MAX_OPCODE. aie2_get_npu_chain_msg_op() answers
+MSG_OP_CHAIN_EXEC_NPU whatever it is given, so there the submission
+continues to drm_clflush_virt_range(cmd_buf, 0), which reads the byte
+before the buffer and faults on the vmap guard page. EXEC_CMD is
+reachable by any process that can open the render node.
+
+Reject the request instead.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96448" data-description="a flaw was found in the fine-grained admin permissions (fgap v2) feature of keycloak, an identity and access management solution. the issue occurs when the system checks if a delegated administrator has permission to assign a specific role to a user. because the check does not look inside composite roles to see what other permissions they contain, an administrator with limited rights can assign a role that secretly includes full administrative control. this allows the attacker to gain complete management access over the entire realm.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96448" target="_blank">CVE-2026-96448</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.6</p>
-                    <p>A flaw was found in the Fine-Grained Admin Permissions (FGAP v2) feature of Keycloak, an identity and access management solution. The issue occurs when the system checks if a delegated administrator has permission to assign a specific role to a user. Because the check does not look inside composite roles to see what other permissions they contain, an administrator with limited rights can assign a role that secretly includes full administrative control. This allows the attacker to gain complete management access over the entire realm.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98144" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+accel/amdxdna: put the chained bo when its mapping fails
+
+amdxdna_cmd_set_error() looks up the first bo of a command chain, which
+takes a reference, and drops it at the end of the function. the mapping of
+that bo is established in between, and the failure path returns without the
+put, so the reference is leaked.
+
+ordinary use does not reach it. the chain has been submitted before any of
+this runs, so aie2_cmdlist_fill_slot() has already called
+amdxdna_cmd_get_op() on that bo and amdxdna_gem_vmap() has cached its
+address. what makes it reachable is that the bo is resolved again by
+handle here, and the handle is userspace's to recycle: closing it after
+submission and importing a dma-buf whose exporter implements no vmap onto
+the same id leaves amdxdna_gem_get_obj() returning an object this cannot
+map, since prime_import() types every import amdxdna_bo_share.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98144" target="_blank">CVE-2026-98144</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+accel/amdxdna: put the chained BO when its mapping fails
+
+amdxdna_cmd_set_error() looks up the first BO of a command chain, which
+takes a reference, and drops it at the end of the function. The mapping of
+that BO is established in between, and the failure path returns without the
+put, so the reference is leaked.
+
+Ordinary use does not reach it. The chain has been submitted before any of
+this runs, so aie2_cmdlist_fill_slot() has already called
+amdxdna_cmd_get_op() on that BO and amdxdna_gem_vmap() has cached its
+address. What makes it reachable is that the BO is resolved again by
+handle here, and the handle is userspace's to recycle: closing it after
+submission and importing a dma-buf whose exporter implements no vmap onto
+the same id leaves amdxdna_gem_get_obj() returning an object this cannot
+map, since prime_import() types every import AMDXDNA_BO_SHARE.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-98143" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+accel: ethosu: don't read the u65 rounding mode as a storage mode
+
+bits 15:14 of npu_set_{ifm,ofm}_precision select the activation storage
+mode on u85 only. on u65 the same field holds the rounding mode, and the
+command stream parser has read it as a storage mode since the driver was
+added.
+
+that went unnoticed while unknown values fell through the switch, but
+now that they are rejected, every u65 command stream that asks for
+natural rounding (2) fails cmdstream_bo_create with -einval. mesa emits
+it for average pooling, concatenation, split, unpack, strided slice, lut
+and argmax, which is 72 failures of the teflon test suite on an i.mx93.
+truncating rounding (1) is misread as well: it picks the two-tile
+address path and computes a bogus feature map size from tile bases the
+command stream never set.
+
+read the field as a storage mode only on the hardware where it is one.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98143" target="_blank">CVE-2026-98143</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+accel: ethosu: Don't read the U65 rounding mode as a storage mode
+
+Bits 15:14 of NPU_SET_{IFM,OFM}_PRECISION select the activation storage
+mode on U85 only. On U65 the same field holds the rounding mode, and the
+command stream parser has read it as a storage mode since the driver was
+added.
+
+That went unnoticed while unknown values fell through the switch, but
+now that they are rejected, every U65 command stream that asks for
+natural rounding (2) fails CMDSTREAM_BO_CREATE with -EINVAL. Mesa emits
+it for average pooling, concatenation, split, unpack, strided slice, LUT
+and argmax, which is 72 failures of the Teflon test suite on an i.MX93.
+Truncating rounding (1) is misread as well: it picks the two-tile
+address path and computes a bogus feature map size from tile bases the
+command stream never set.
+
+Read the field as a storage mode only on the hardware where it is one.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-98142" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+drm/cirrus-qemu: validate bar0 size during probe
+
+the `cirrus-qemu` driver relies on `cirrus_vram_size` (4 mb) to validate
+framebuffer sizes. however, during pci probe, the driver mapped bar0
+without verifying that its size matches `cirrus_vram_size`.
+
+if a pci device with a bar0 smaller than 4 mb is bound to the driver, the
+mapped vram will be smaller than expected. because validation checks assume
+4 mb vram, framebuffers larger than the mapped memory can be created.
+
+when the display plane is updated (e.g. during release),
+`cirrus_primary_plane_helper_atomic_update()` copies the framebuffer to
+vram using `drm_fb_memcpy()`. writing past the end of the mapped i/o memory
+causes a supervisor write page fault:
+
+bug: unable to handle page fault for address: ffffc9000389c000
+...
+rip: 0010:memcpy_toio+0x7c/0xe0 arch/x86/lib/iomem.c:110
+...
+call trace:
+ <task>
+ iosys_map_memcpy_to include/linux/iosys-map.h:285 [inline]
+ drm_fb_memcpy+0x325/0x5d0 drivers/gpu/drm/drm_format_helper.c:442
+ cirrus_primary_plane_helper_atomic_update+0x98a/0xb00
+ drivers/gpu/drm/tiny/cirrus-qemu.c:358
+ drm_atomic_helper_commit_planes+0x626/0xea0
+ drivers/gpu/drm/drm_atomic_helper.c:3038
+ drm_atomic_helper_commit_tail+0x60/0x510
+ drivers/gpu/drm/drm_atomic_helper.c:1989
+ commit_tail+0x2b1/0x3c0 drivers/gpu/drm/drm_atomic_helper.c:2074
+ drm_atomic_helper_commit+0xa77/0xb10
+ drivers/gpu/drm/drm_atomic_helper.c:2312
+
+fix this by validating in `cirrus_pci_probe()` that the pci bar0 resource
+is not less than `cirrus_vram_size`, returning `-enodev` if it is less.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98142" target="_blank">CVE-2026-98142</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+drm/cirrus-qemu: Validate BAR0 size during probe
+
+The `cirrus-qemu` driver relies on `CIRRUS_VRAM_SIZE` (4 MB) to validate
+framebuffer sizes. However, during PCI probe, the driver mapped BAR0
+without verifying that its size matches `CIRRUS_VRAM_SIZE`.
+
+If a PCI device with a BAR0 smaller than 4 MB is bound to the driver, the
+mapped VRAM will be smaller than expected. Because validation checks assume
+4 MB VRAM, framebuffers larger than the mapped memory can be created.
+
+When the display plane is updated (e.g. during release),
+`cirrus_primary_plane_helper_atomic_update()` copies the framebuffer to
+VRAM using `drm_fb_memcpy()`. Writing past the end of the mapped I/O memory
+causes a supervisor write page fault:
+
+BUG: unable to handle page fault for address: ffffc9000389c000
+...
+RIP: 0010:memcpy_toio+0x7c/0xe0 arch/x86/lib/iomem.c:110
+...
+Call Trace:
+ <TASK>
+ iosys_map_memcpy_to include/linux/iosys-map.h:285 [inline]
+ drm_fb_memcpy+0x325/0x5d0 drivers/gpu/drm/drm_format_helper.c:442
+ cirrus_primary_plane_helper_atomic_update+0x98a/0xb00
+ drivers/gpu/drm/tiny/cirrus-qemu.c:358
+ drm_atomic_helper_commit_planes+0x626/0xea0
+ drivers/gpu/drm/drm_atomic_helper.c:3038
+ drm_atomic_helper_commit_tail+0x60/0x510
+ drivers/gpu/drm/drm_atomic_helper.c:1989
+ commit_tail+0x2b1/0x3c0 drivers/gpu/drm/drm_atomic_helper.c:2074
+ drm_atomic_helper_commit+0xa77/0xb10
+ drivers/gpu/drm/drm_atomic_helper.c:2312
+
+Fix this by validating in `cirrus_pci_probe()` that the PCI BAR0 resource
+is not less than `CIRRUS_VRAM_SIZE`, returning `-ENODEV` if it is less.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-98141" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ntfs: propagate reparse index insertion failure
+
+update_reparse_data() ignores the return value of
+set_reparse_index(). when index insertion fails, the code removes
+the just-written reparse data as cleanup but still returns 0, so
+symlink(2) (and wsl special file creation) reports success while
+no reparse data exists on disk. when there was no previous reparse
+data (oldsize == 0), the failure was likewise silently ignored.
+
+propagate the error to the caller.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98141" target="_blank">CVE-2026-98141</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ntfs: propagate reparse index insertion failure
+
+update_reparse_data() ignores the return value of
+set_reparse_index(). When index insertion fails, the code removes
+the just-written reparse data as cleanup but still returns 0, so
+symlink(2) (and WSL special file creation) reports success while
+no reparse data exists on disk. When there was no previous reparse
+data (oldsize == 0), the failure was likewise silently ignored.
+
+Propagate the error to the caller.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-98140" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ntfs: fix kmap_local leak in write_mft_record_nolock() error paths
+
+write_mft_record_nolock() maps the mft record folio with
+kmap_local_folio(), but the pre_write_mst_fixup() and
+bio_add_folio() failure paths jump to the error label without
+unmapping it. kmap_local mappings are stack-ordered per task, so
+leaking one corrupts the nesting for any outer mapping.
+
+unmap the folio on those error paths too.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98140" target="_blank">CVE-2026-98140</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-25 06:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ntfs: fix kmap_local leak in write_mft_record_nolock() error paths
+
+write_mft_record_nolock() maps the MFT record folio with
+kmap_local_folio(), but the pre_write_mst_fixup() and
+bio_add_folio() failure paths jump to the error label without
+unmapping it. kmap_local mappings are stack-ordered per task, so
+leaking one corrupts the nesting for any outer mapping.
+
+Unmap the folio on those error paths too.</p>
                 </div>
         
             </div>
