@@ -34,6 +34,160 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-98163" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+cgroup: avoid iteration of dying tasks with zero refcount
+
+the commit 260fbcb92bbea ("cgroup: move dying_tasks cleanup from
+cgroup_task_release() to cgroup_task_free()") extended the lifetime of
+tasks on the dying_tasks list.
+the iterators have provision to go through dying_tasks because of
+dying threadgroup leaders or explicit css_task_iter_with_dead, however,
+it was expected that such tasks can obtain a new reference (that is
+possible before cgroup_task_release()/put_task_struct_rcu_user()).
+the tasks after cgroup_task_release() and before cgroup_task_free()
+are subject to race when they may or may not have ->usage count > 0.
+
+the race window is between css_task_iter_next() invocations
+when css_set_lock is released and we may arrive at a new ->task_pos.
+the iterator should not attempt to resurrect tasks whose ->usage count
+dropped to zero. (when that happens, __put_task_struct_rcu_cb() is
+already imminent and the returned task_struct would could be used
+after free.)
+
+as for the fix, we cannot simply check the signal->live count of a task
+on the dying list because that won't distinguish regular zombies waiting
+to be reaped from rcu remnant tasks that are going to be free'd.
+therefore add an extra check to rule out ->usage==0 tasks from any
+iteration.
+
+the repeat: loop in css_task_iter_advance() doesn't consider ->usage
+count, so add a new loop to css_task_iter_next() to skip de-used tasks
+on the dying_list.
+
+rough illustration of the possible race
+
+  r (reader of cgroup.procs)         t (thread)                       l (group leader)
+  ---------------------------------  -------------------------------- --------------------------------
+                                                                      l exits, signal->live > 0
+                                                                      cgroup_task_dead(l)
+                                                                        css_set_skip_task_iters() // skips only cset->tasks
+                                                                        list_add_tail(&l->cg_list, &cset->dying_tasks)
+  css_task_iter_next()
+    take css_set_lock
+    css_task_iter_advance()
+      leader && signal->live != 0
+      => it->task_pos = &l->cg_list
+    release css_set_lock
+                                     t exits
+                                     --signal->live == 0
+				     cgroup_task_dead(t) // css_set_lock
+                                     release_task(t)
+                                       cgroup_task_release(t)
+                                       release_task(l) // zap_leader
+                                         cgroup_task_release(l)
+                                         put_task_struct_rcu_user(l)
+                                         ...rcu...
+                                         put_task_struct(l)
+                                           l->usage = 0
+                                           /* l still on dying_tasks */
+                                           ...rcu...
+                                           __put_task_struct(l)
+  css_task_iter_next() // another iteration
+    take css_set_lock
+    it->task_pos = &l->cg_list
+    get_task_struct(l)
+      => addition on 0
+    drop css_set_lock
+                                           cgroup_task_free(l)
+                                             css_set_skip_task_iters() // dying skip comes too late
+                                           free_task(l)
+  cgroup_procs_show()
+    task_pid_vnr(l)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98163" target="_blank">CVE-2026-98163</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-26 04:16:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+cgroup: Avoid iteration of dying tasks with zero refcount
+
+The commit 260fbcb92bbea ("cgroup: Move dying_tasks cleanup from
+cgroup_task_release() to cgroup_task_free()") extended the lifetime of
+tasks on the dying_tasks list.
+The iterators have provision to go through dying_tasks because of
+dying threadgroup leaders or explicit CSS_TASK_ITER_WITH_DEAD, however,
+it was expected that such tasks can obtain a new reference (that is
+possible before cgroup_task_release()/put_task_struct_rcu_user()).
+The tasks after cgroup_task_release() and before cgroup_task_free()
+are subject to race when they may or may not have ->usage count > 0.
+
+The race window is between css_task_iter_next() invocations
+when css_set_lock is released and we may arrive at a new ->task_pos.
+The iterator should not attempt to resurrect tasks whose ->usage count
+dropped to zero. (When that happens, __put_task_struct_rcu_cb() is
+already imminent and the returned task_struct would could be used
+after free.)
+
+As for the fix, we cannot simply check the signal->live count of a task
+on the dying list because that won't distinguish regular zombies waiting
+to be reaped from RCU remnant tasks that are going to be free'd.
+Therefore add an extra check to rule out ->usage==0 tasks from any
+iteration.
+
+The repeat: loop in css_task_iter_advance() doesn't consider ->usage
+count, so add a new loop to css_task_iter_next() to skip de-used tasks
+on the dying_list.
+
+Rough illustration of the possible race
+
+  R (reader of cgroup.procs)         T (thread)                       L (group leader)
+  ---------------------------------  -------------------------------- --------------------------------
+                                                                      L exits, signal->live > 0
+                                                                      cgroup_task_dead(L)
+                                                                        css_set_skip_task_iters() // skips only cset->tasks
+                                                                        list_add_tail(&L->cg_list, &cset->dying_tasks)
+  css_task_iter_next()
+    take css_set_lock
+    css_task_iter_advance()
+      leader && signal->live != 0
+      => it->task_pos = &L->cg_list
+    release css_set_lock
+                                     T exits
+                                     --signal->live == 0
+				     cgroup_task_dead(T) // css_set_lock
+                                     release_task(T)
+                                       cgroup_task_release(T)
+                                       release_task(L) // zap_leader
+                                         cgroup_task_release(L)
+                                         put_task_struct_rcu_user(L)
+                                         ...RCU...
+                                         put_task_struct(L)
+                                           L->usage = 0
+                                           /* L still on dying_tasks */
+                                           ...RCU...
+                                           __put_task_struct(L)
+  css_task_iter_next() // another iteration
+    take css_set_lock
+    it->task_pos = &L->cg_list
+    get_task_struct(L)
+      => addition on 0
+    drop css_set_lock
+                                           cgroup_task_free(L)
+                                             css_set_skip_task_iters() // dying skip comes too late
+                                           free_task(L)
+  cgroup_procs_show()
+    task_pid_vnr(L)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-100312" data-description="a security flaw has been discovered in mathurvishal cloudclassroom-php-project up to 5dadec098bfbbf3300d60c3494db3fb95b66e7be. the impacted element is an unknown function of the file /updateguest.php. performing a manipulation of the argument gname/editassid results in sql injection. it is possible to initiate the attack remotely. the exploit has been released to the public and may be used for attacks. this product is using a rolling release to provide continious delivery. therefore, no version details for affected nor updated releases are available. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-100312" target="_blank">CVE-2026-100312</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-26 04:16:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A security flaw has been discovered in mathurvishal CloudClassroom-PHP-Project up to 5dadec098bfbbf3300d60c3494db3fb95b66e7be. The impacted element is an unknown function of the file /updateguest.php. Performing a manipulation of the argument gname/editassid results in sql injection. It is possible to initiate the attack remotely. The exploit has been released to the public and may be used for attacks. This product is using a rolling release to provide continious delivery. Therefore, no version details for affected nor updated releases are available. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-100311" data-description="a vulnerability was identified in mathurvishal cloudclassroom-php-project up to 5dadec098bfbbf3300d60c3494db3fb95b66e7be. the affected element is an unknown function of the file managevideos2.php of the component faculty video management. such manipulation of the argument v_title/v_url/v_remarks leads to cross site scripting. the attack may be performed from remote. the exploit is publicly available and might be used. this product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. the vendor was contacted early about this disclosure but did not respond in any way.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-100311" target="_blank">CVE-2026-100311</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-09-26 03:16:32 CDT</p>
@@ -180,22 +334,6 @@ The defect is in the file-manager library all three bundle, and every version be
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>The Automatic.css plugin for WordPress is vulnerable to Stored Cross-Site Scripting via REQUEST_URI in all version 4.0.0 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts that will execute whenever an administrator accesses the Activity Log settings page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-100599" data-description="openclaw versions 2026.5.1 through 2026.7.0 fail to apply the configured exec approval path to google meet node commands. the googlemeet.chrome command accepts caller-supplied audio command arrays and executes them on a paired node without going through the normal system.run approval flow. in deployments with the google meet plugin enabled, a paired chrome node, and the googlemeet.chrome node command allowed, a tool-enabled agent able to invoke that command can execute attacker-selected processes on the paired node, impacting files, credentials, browser profiles, and availability on that node. the issue is fixed in 2026.7.1; as a workaround, remove googlemeet.chrome from allowed node commands or disable the google meet plugin.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-100599" target="_blank">CVE-2026-100599</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 22:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>OpenClaw versions 2026.5.1 through 2026.7.0 fail to apply the configured exec approval path to Google Meet node commands. The googlemeet.chrome command accepts caller-supplied audio command arrays and executes them on a paired node without going through the normal system.run approval flow. In deployments with the Google Meet plugin enabled, a paired Chrome node, and the googlemeet.chrome node command allowed, a tool-enabled agent able to invoke that command can execute attacker-selected processes on the paired node, impacting files, credentials, browser profiles, and availability on that node. The issue is fixed in 2026.7.1; as a workaround, remove googlemeet.chrome from allowed node commands or disable the Google Meet plugin.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-100598" data-description="openclaw (npm package openclaw) before 2026.7.1 incorrectly binds signal approval reactions. in affected versions, a reaction intended to resolve a structured approval request could instead attach to ordinary outbound text when unrelated outbound messages and a pending approval are present in the same conversation. as a result, an approver's reaction to unrelated text could be interpreted as approving or denying a pending host action; the practical impact depends on the pending request, conversation timing, and the actions available to the openclaw process. the issue does not change the authority of correctly identified approvers. this is fixed in version 2026.7.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-100598" target="_blank">CVE-2026-100598</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-25 22:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>OpenClaw (npm package openclaw) before 2026.7.1 incorrectly binds Signal approval reactions. In affected versions, a reaction intended to resolve a structured approval request could instead attach to ordinary outbound text when unrelated outbound messages and a pending approval are present in the same conversation. As a result, an approver's reaction to unrelated text could be interpreted as approving or denying a pending host action; the practical impact depends on the pending request, conversation timing, and the actions available to the OpenClaw process. The issue does not change the authority of correctly identified approvers. This is fixed in version 2026.7.1.</p>
                 </div>
         
             </div>
