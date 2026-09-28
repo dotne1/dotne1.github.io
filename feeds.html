@@ -34,6 +34,142 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-90979" data-description="ldapcache and ldapbackingengine build ldap search filters for user lookup and role lookup by textually substituting the placeholders %u, %dn, and %fqdn (drawn from the login name, the resolved user dn, and its fully qualified namespace form) into administrator-configured filter templates (userfilter, rolefilter). before the fix, the only sanitization applied to the substituted value was double backslashed:
+
+filter = filter.replaceall(pattern.quote("%u"), matcher.quotereplacement(user));
+
+filter = filter.replace("\\", "\\\\");
+
+
+
+
+this does not escape the other characters rfc 4515 requires escaping in an ldap search filter: *, (, ), and nul. a login name containing any of these can change the structure of the resulting filter rather than being matched as a literal value (e.g. a crafted username can turn an equality match into a wildcard match, or close/reopen filter clauses), widening what the search returns and potentially causing a login or role lookup to match an ldap entry other than the intended one, over-granting roles, and depending on deployment-specific filter templates, potentially affecting which account a login resolved to.
+
+
+
+
+it's not exploitable through every entry points: ldaploginmodule and ldappubkeyloginmodule both called util.dorfc2254encoding() (correct rfc 4515 escaping) on the login name before handing it to ldapcache, which masked the missing escaping in ldapcache for those two call paths. using ldapcache directly (bypassing the login modules) does not reproduce through the normal ldaploginmodule/ldappubkeyloginmodule authentication flow for this reason. it does reproduce through two other call paths that reach ldapcache/ldapbackingengine without any prior escaping:
+
+  *  gssapildaploginmodule passes the namecallback name straight through, unescaped.
+  *  ldapbackingengine (listroles) passes principal.getname() straight through, unescaped.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90979" target="_blank">CVE-2026-90979</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>LDAPCache and LDAPBackingEngine build LDAP search filters for user lookup and role lookup by textually substituting the placeholders %u, %dn, and %fqdn (drawn from the login name, the resolved user DN, and its fully qualified namespace form) into administrator-configured filter templates (userFilter, roleFilter). Before the fix, the only sanitization applied to the substituted value was double backslashed:
+
+filter = filter.replaceAll(Pattern.quote("%u"), Matcher.quoteReplacement(user));
+
+filter = filter.replace("\\", "\\\\");
+
+
+
+
+This does not escape the other characters RFC 4515 requires escaping in an LDAP search filter: *, (, ), and NUL. A login name containing any of these can change the structure of the resulting filter rather than being matched as a literal value (e.g. a crafted username can turn an equality match into a wildcard match, or close/reopen filter clauses), widening what the search returns and potentially causing a login or role lookup to match an LDAP entry other than the intended one, over-granting roles, and depending on deployment-specific filter templates, potentially affecting which account a login resolved to.
+
+
+
+
+It's not exploitable through every entry points: LDAPLoginModule and LDAPPubkeyLoginModule both called Util.doRFC2254Encoding() (correct RFC 4515 escaping) on the login name before handing it to LDAPCache, which masked the missing escaping in LDAPCache for those two call paths. Using LDAPCache directly (bypassing the login modules) does not reproduce through the normal LDAPLoginModule/LDAPPubkeyLoginModule authentication flow for this reason. It does reproduce through two other call paths that reach LDAPCache/LDAPBackingEngine without any prior escaping:
+
+  *  GSSAPILdapLoginModule passes the NameCallback name straight through, unescaped.
+  *  LDAPBackingEngine (listRoles) passes principal.getName() straight through, unescaped.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-7172" data-description="stored cross-site scripting (xss) in tpvenlanube affecting the following endpoint and parameter:
+
+  *  cve-2026-7172: parameter 'nombre completo' in the endpoint  '/administrator/index.php?option=com_virtuemart&page=admin.user_list'.
+
+
+
+
+successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7172" target="_blank">CVE-2026-7172</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Stored Cross-Site Scripting (XSS) in TPVEnlanube affecting the following endpoint and parameter:
+
+  *  CVE-2026-7172: parameter 'Nombre Completo' in the endpoint  '/administrator/index.php?option=com_virtuemart&page=admin.user_list'.
+
+
+
+
+Successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-7171" data-description="stored cross-site scripting (xss) in tpvenlanube affecting the following endpoint and parameter:
+
+  *  cve-2026-7171: parameter 'apellido 1' in the endpoint  '/administrator/index.php?page=admin.user_add&user_id=45&option=com_virtuemart'.
+
+
+successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7171" target="_blank">CVE-2026-7171</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Stored Cross-Site Scripting (XSS) in TPVEnlanube affecting the following endpoint and parameter:
+
+  *  CVE-2026-7171: parameter 'Apellido 1' in the endpoint  '/administrator/index.php?page=admin.user_add&user_id=45&option=com_virtuemart'.
+
+
+Successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-7170" data-description="stored cross-site scripting (xss) in tpvenlanube affecting the following endpoint and parameter:
+
+  *  cve-2026-7170: parameter 'vendor_store_name' in the endpoint  '/administrator/index.php?pshop_mode=admin&page=store.store_add&option=com_virtuemart&vendor_id=[id]'.
+
+
+
+
+successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7170" target="_blank">CVE-2026-7170</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Stored Cross-Site Scripting (XSS) in TPVEnlanube affecting the following endpoint and parameter:
+
+  *  CVE-2026-7170: parameter 'vendor_store_name' in the endpoint  '/administrator/index.php?pshop_mode=admin&page=store.store_add&option=com_virtuemart&vendor_id=[ID]'.
+
+
+
+
+Successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101037" data-description="a vulnerability was found in fast fac1200r 5.0_20201119_1.0.2. affected is the function parse_advertisement_frame of the component devdiscover service. the manipulation results in stack-based buffer overflow. the attack may be launched remotely. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101037" target="_blank">CVE-2026-101037</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
+                    <p>A vulnerability was found in FAST FAC1200R 5.0_20201119_1.0.2. Affected is the function parse_advertisement_frame of the component devdiscover Service. The manipulation results in stack-based buffer overflow. The attack may be launched remotely. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101036" data-description="a vulnerability has been found in flb-music flb-music-player 1.1.8/1.1.9/1.2.0/1.2.1. this impacts the function path.join of the file /src/main/core/createparsedtrack.ts. the manipulation leads to path traversal. the attack must be carried out locally. the exploit has been disclosed to the public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101036" target="_blank">CVE-2026-101036</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability has been found in FLB-Music FLB-Music-Player 1.1.8/1.1.9/1.2.0/1.2.1. This impacts the function path.join of the file /src/main/core/createParsedTrack.ts. The manipulation leads to path traversal. The attack must be carried out locally. The exploit has been disclosed to the public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101035" data-description="a flaw has been found in aligungr ueransim up to 3.3.0. this affects the function decodeplainmmmessage in the library src/lib/nas/encode.cpp of the component nr-gnb. executing a manipulation can lead to uncaught exception. the attack can be launched remotely. the exploit has been published and may be used. this patch is called 1ae9bf2062b57595dbcbc4bc1d0a0ccf06815bac. it is best practice to apply a patch to resolve this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101035" target="_blank">CVE-2026-101035</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A flaw has been found in aligungr UERANSIM up to 3.3.0. This affects the function DecodePlainMmMessage in the library src/lib/nas/encode.cpp of the component nr-gnb. Executing a manipulation can lead to uncaught exception. The attack can be launched remotely. The exploit has been published and may be used. This patch is called 1ae9bf2062b57595dbcbc4bc1d0a0ccf06815bac. It is best practice to apply a patch to resolve this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101018" data-description="a vulnerability was determined in dayrui xunruicms up to 4.7.2. this issue affects the function group_all_edit of the file dayrui/app/member/controllers/admin/home.php of the component group editing. this manipulation of the argument groupid causes sql injection. the attack is possible to be carried out remotely. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101018" target="_blank">CVE-2026-101018</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
+                    <p>A vulnerability was determined in dayrui XunruiCMS up to 4.7.2. This issue affects the function group_all_edit of the file dayrui/App/Member/Controllers/Admin/Home.php of the component Group Editing. This manipulation of the argument groupid causes sql injection. The attack is possible to be carried out remotely. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-95104" data-description="stack-based buffer overflow vulnerability exists in buffalo wi-fi products. a non-authenticated crafted http request may cause a denial-of-service (dos) condition.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95104" target="_blank">CVE-2026-95104</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-09-28 04:17:08 CDT</p>
@@ -140,70 +276,6 @@ this issue affects eba plus document and workflow management system: from 6.7.14
                     <p>Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal') vulnerability in Bimser Solution Software Trade Inc. EBA Plus Document and Workflow Management System allows Path Traversal.
 
 This issue affects eBA Plus Document and Workflow Management System: from 6.7.141 before 10.0.11.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101017" data-description="a vulnerability was found in trusted domain project opendmarc up to 1.4.2. this vulnerability affects the function strcasecmp in the library libopendmarc/opendmarc_policy.c. the manipulation results in handling of exceptional conditions. the attack can be executed remotely. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101017" target="_blank">CVE-2026-101017</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 04:17:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A vulnerability was found in Trusted Domain Project OpenDMARC up to 1.4.2. This vulnerability affects the function strcasecmp in the library libopendmarc/opendmarc_policy.c. The manipulation results in handling of exceptional conditions. The attack can be executed remotely. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101016" data-description="a vulnerability has been found in trusted domain project opendmarc up to 1.4.2. this affects the function opendmarc_policy_parse_dmarc in the library libopendmarc/opendmarc_policy.c. the manipulation of the argument fo/rf/ri/pct/sp/adkim/aspf/rua/ruf leads to handling of exceptional conditions. remote exploitation of the attack is possible. the exploit has been disclosed to the public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101016" target="_blank">CVE-2026-101016</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 04:17:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A vulnerability has been found in Trusted Domain Project OpenDMARC up to 1.4.2. This affects the function opendmarc_policy_parse_dmarc in the library libopendmarc/opendmarc_policy.c. The manipulation of the argument fo/rf/ri/pct/sp/adkim/aspf/rua/ruf leads to handling of exceptional conditions. Remote exploitation of the attack is possible. The exploit has been disclosed to the public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101015" data-description="a flaw has been found in trusted domain project opendmarc up to 1.4.2. affected by this issue is some unknown functionality of the file policy.c of the component domain handler. executing a manipulation can lead to improper validation of unsafe equivalence in input. the attack may be launched remotely. the exploit has been published and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101015" target="_blank">CVE-2026-101015</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 04:17:05 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A flaw has been found in Trusted Domain Project OpenDMARC up to 1.4.2. Affected by this issue is some unknown functionality of the file policy.c of the component Domain Handler. Executing a manipulation can lead to improper validation of unsafe equivalence in input. The attack may be launched remotely. The exploit has been published and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101014" data-description="a vulnerability was detected in trusted domain project opendmarc up to 1.4.2. affected by this vulnerability is the function opendmarc_util_cleanup in the library libopendmarc/opendmarc_util.c of the component dmarc record parser. performing a manipulation results in off-by-one. the attack may be initiated remotely. the exploit is now public and may be used. the patch is named b3b1da9264bc80324094a27c71e7369bdedc62ae. to fix this issue, it is recommended to deploy a patch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101014" target="_blank">CVE-2026-101014</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 04:17:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was detected in Trusted Domain Project OpenDMARC up to 1.4.2. Affected by this vulnerability is the function opendmarc_util_cleanup in the library libopendmarc/opendmarc_util.c of the component DMARC Record Parser. Performing a manipulation results in off-by-one. The attack may be initiated remotely. The exploit is now public and may be used. The patch is named b3b1da9264bc80324094a27c71e7369bdedc62ae. To fix this issue, it is recommended to deploy a patch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91206" data-description="improper neutralization of input during web page generation ('cross-site scripting') in apache roller 6.1.5 allows a remote attacker to perform reflected cross-site scripting through the optional ldap comment authenticator, which writes request parameter values into its html form without escaping. this affects only sites configured to use ldapcommentauthenticator, and a victim whose session has already loaded the authenticator form must follow a crafted link. users are recommended to upgrade to apache roller 6.1.6 or later, which escapes the reflected values.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91206" target="_blank">CVE-2026-91206</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 03:16:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in Apache Roller 6.1.5 allows a remote attacker to perform reflected cross-site scripting through the optional LDAP comment authenticator, which writes request parameter values into its HTML form without escaping. This affects only sites configured to use LdapCommentAuthenticator, and a victim whose session has already loaded the authenticator form must follow a crafted link. Users are recommended to upgrade to Apache Roller 6.1.6 or later, which escapes the reflected values.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91204" data-description="improper neutralization of input during web page generation ('cross-site scripting') in apache roller 6.1.5 allows an anonymous remote attacker to store a comment containing a javascript: uri link that survives html comment formatting and can execute script in the browser of a visitor who clicks it. this affects only sites that enable html in comments (users.comments.htmlenabled=true) together with the htmlsubset comment formatter; comment moderation, where enabled, delays publication. users are recommended to upgrade to apache roller 6.1.6 or later, which restricts restored links to http, https and mailto uris.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91204" target="_blank">CVE-2026-91204</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in Apache Roller 6.1.5 allows an anonymous remote attacker to store a comment containing a javascript: URI link that survives HTML comment formatting and can execute script in the browser of a visitor who clicks it. This affects only sites that enable HTML in comments (users.comments.htmlenabled=true) together with the HTMLSubset comment formatter; comment moderation, where enabled, delays publication. Users are recommended to upgrade to Apache Roller 6.1.6 or later, which restricts restored links to http, https and mailto URIs.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82546" data-description="improper neutralization of input during web page generation ('cross-site scripting') in apache roller 6.1.5 allows an unauthenticated remote attacker to store a crafted comment-author url through the incoming trackback endpoint when a published entry accepts comments and trackbacks. the shipped trackback, verification and moderation defaults allow the value to be approved and rendered as an active link; a visitor who clicks the link executes script in the weblog's origin. users are recommended to upgrade to apache roller 6.1.6 or later, which removes incoming trackback support and suppresses non-http(s) comment-author links. users unable to upgrade should disable trackbacks and remove untrusted trackback comments.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82546" target="_blank">CVE-2026-82546</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in Apache Roller 6.1.5 allows an unauthenticated remote attacker to store a crafted comment-author URL through the incoming Trackback endpoint when a published entry accepts comments and Trackbacks. The shipped Trackback, verification and moderation defaults allow the value to be approved and rendered as an active link; a visitor who clicks the link executes script in the weblog's origin. Users are recommended to upgrade to Apache Roller 6.1.6 or later, which removes incoming Trackback support and suppresses non-HTTP(S) comment-author links. Users unable to upgrade should disable Trackbacks and remove untrusted Trackback comments.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82387" data-description="improper neutralization of input during web page generation ('cross-site scripting') in apache roller 6.1.5 allows a user with media-upload rights to store active content on roller's origin, because the media upload feature trusts the upload-supplied content type and serves the stored file back with that type. a victim who opens the uploaded file executes the stored script. media uploads are disabled by default; only installations that enable them are affected, and the shipped type restrictions do not block active content once uploads are on. users are recommended to upgrade to apache roller 6.1.6 or later, which derives the stored type from file content and serves non-image media as a download.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82387" target="_blank">CVE-2026-82387</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 03:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in Apache Roller 6.1.5 allows a user with media-upload rights to store active content on Roller's origin, because the media upload feature trusts the upload-supplied content type and serves the stored file back with that type. A victim who opens the uploaded file executes the stored script. Media uploads are disabled by default; only installations that enable them are affected, and the shipped type restrictions do not block active content once uploads are on. Users are recommended to upgrade to Apache Roller 6.1.6 or later, which derives the stored type from file content and serves non-image media as a download.</p>
                 </div>
         
             </div>
