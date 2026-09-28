@@ -34,6 +34,118 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-94194" data-description="inconsistent interpretation of http requests ('http request/response smuggling') vulnerability in elixir-mint mint allows a malicious http/1 server to desynchronize an intermediary and the mint client on a pooled connection, poisoning the responses to subsequent requests that share the connection.
+
+message_body/1 in lib/mint/http1.ex selects chunked framing when chunked is the first coding listed in a response's transfer-encoding fields. rfc 9112 section 6.3 applies chunked framing only when chunked is the final coding, and otherwise reads the body until the server closes the connection. for a response such as transfer-encoding: chunked, gzip, an intermediary that follows the rfc treats every byte up to the close as the body, while mint ends the body at the zero-length chunk and parses the remaining bytes as the response to the next request on the connection.
+
+mint also keeps the connection open after an http/1.0 response, final or 1xx, that carries transfer-encoding and connection: keep-alive. rfc 9112 section 6.1 requires treating the framing of such a message as faulty and closing the connection after it, so bytes after its chunked body are parsed as the response to the next request in the same way.
+
+this issue affects mint: from 0.1.0 before 1.11.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94194" target="_blank">CVE-2026-94194</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:42 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Inconsistent Interpretation of HTTP Requests ('HTTP Request/Response Smuggling') vulnerability in elixir-mint mint allows a malicious HTTP/1 server to desynchronize an intermediary and the Mint client on a pooled connection, poisoning the responses to subsequent requests that share the connection.
+
+message_body/1 in lib/mint/http1.ex selects chunked framing when chunked is the first coding listed in a response's Transfer-Encoding fields. RFC 9112 section 6.3 applies chunked framing only when chunked is the final coding, and otherwise reads the body until the server closes the connection. For a response such as Transfer-Encoding: chunked, gzip, an intermediary that follows the RFC treats every byte up to the close as the body, while Mint ends the body at the zero-length chunk and parses the remaining bytes as the response to the next request on the connection.
+
+Mint also keeps the connection open after an HTTP/1.0 response, final or 1xx, that carries Transfer-Encoding and Connection: keep-alive. RFC 9112 section 6.1 requires treating the framing of such a message as faulty and closing the connection after it, so bytes after its chunked body are parsed as the response to the next request in the same way.
+
+This issue affects mint: from 0.1.0 before 1.11.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-92103" data-description="allocation of resources without limits or throttling vulnerability in elixir-mint mint allows a malicious http/2 server to make the client hold up to about 16 mib per connection in frames it should reject, consuming client memory.
+
+mint.http2.frame.decode_next/2 in lib/mint/http2/frame.ex compares a frame with the client's max_frame_size (16,384 bytes by default) only once the whole declared payload has arrived. until then it returns :more, and mint.http2 keeps every received byte in the connection buffer. a server can declare a frame length of up to 16,777,215 bytes and withhold the last byte, keeping roughly 1,024 times the advertised limit buffered for as long as the connection stays open. the server has to send every byte the client buffers, so there is no amplification, and the buffer stops at the 24-bit frame length limit.
+
+this issue affects mint: from 0.1.0 before 1.11.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92103" target="_blank">CVE-2026-92103</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling vulnerability in elixir-mint mint allows a malicious HTTP/2 server to make the client hold up to about 16 MiB per connection in frames it should reject, consuming client memory.
+
+Mint.HTTP2.Frame.decode_next/2 in lib/mint/http2/frame.ex compares a frame with the client's max_frame_size (16,384 bytes by default) only once the whole declared payload has arrived. Until then it returns :more, and Mint.HTTP2 keeps every received byte in the connection buffer. A server can declare a frame length of up to 16,777,215 bytes and withhold the last byte, keeping roughly 1,024 times the advertised limit buffered for as long as the connection stays open. The server has to send every byte the client buffers, so there is no amplification, and the buffer stops at the 24-bit frame length limit.
+
+This issue affects mint: from 0.1.0 before 1.11.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-91043" data-description="allocation of resources without limits or throttling vulnerability in elixir-mint mint allows a malicious http/2 server to exhaust memory on the client host and cause a denial of service.
+
+mint.http2 enforces the client's max_header_list_size setting only on the compressed size of an inbound header block, while rfc 9113 section 6.5.2 defines the limit on the decoded header list. an hpack indexed field costs one byte on the wire and decodes to a dynamic table entry of up to 4 kb, and join_cookie_headers/1 in lib/mint/http2.ex copies every cookie value of a response into one new binary. a header block under the default 256 kb wire limit therefore makes the client allocate about 1 gb for a single response, and several such responses in one delivery exhaust the memory of the process that owns the connection or of the whole vm.
+
+this issue affects mint: from 1.1.0 before 1.11.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91043" target="_blank">CVE-2026-91043</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Allocation of Resources Without Limits or Throttling vulnerability in elixir-mint mint allows a malicious HTTP/2 server to exhaust memory on the client host and cause a denial of service.
+
+Mint.HTTP2 enforces the client's max_header_list_size setting only on the compressed size of an inbound header block, while RFC 9113 section 6.5.2 defines the limit on the decoded header list. An HPACK indexed field costs one byte on the wire and decodes to a dynamic table entry of up to 4 KB, and join_cookie_headers/1 in lib/mint/http2.ex copies every cookie value of a response into one new binary. A header block under the default 256 KB wire limit therefore makes the client allocate about 1 GB for a single response, and several such responses in one delivery exhaust the memory of the process that owns the connection or of the whole VM.
+
+This issue affects mint: from 1.1.0 before 1.11.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-87752" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in rolantis information technologies tourism industry and trade co. ltd. agentis allows xss targeting html attributes.
+
+this issue affects agentis: from 4.44 before 4.6.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87752" target="_blank">CVE-2026-87752</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:41 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>Improper neutralization of input during web page generation ('cross-site scripting') vulnerability in Rolantis Information Technologies Tourism Industry and Trade Co. Ltd. Agentis allows XSS Targeting HTML Attributes.
+
+This issue affects Agentis: from 4.44 before 4.6.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-78424" data-description="improper parameter handling in neuvector allows any authenticated user who holds the namespaced runtime policies (write) permission or anyone with access to neuvector’s internal grpc certificate key pair the ability to inject os commands in the privileged enforcer container, which can lead to the complete compromise of the worker node. this affects neuvector 5.4 before 5.4.11, neuvector 5.5 before 5.5.4, neuvector 5.6 before 5.6.2 and potentially older versions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78424" target="_blank">CVE-2026-78424</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:40 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Improper parameter handling in NeuVector allows any authenticated user who holds the namespaced Runtime Policies (write) permission or anyone with access to NeuVector’s internal gRPC certificate key pair the ability to inject OS commands in the privileged enforcer container, which can lead to the complete compromise of the worker node. This affects NeuVector 5.4 before 5.4.11, NeuVector 5.5 before 5.5.4, NeuVector 5.6 before 5.6.2 and potentially older versions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19444" data-description="a path traversal vulnerability was discovered in the kubernetes kubectl client's kubectl cp command on windows. when copying files from a container, kubectl runs tar inside the container to build a tar archive, transfers it over the network, and unpacks it on the local machine. if the tar binary in the container is malicious, it can execute arbitrary code and emit unexpected output, allowing an attacker who controls container contents to write files to arbitrary paths on the user's local machine when kubectl cp is invoked, limited only by the system permissions of the local user. this issue only affects kubectl clients running on windows.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19444" target="_blank">CVE-2026-19444</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>A path traversal vulnerability was discovered in the Kubernetes kubectl client's kubectl cp command on Windows. When copying files from a container, kubectl runs tar inside the container to build a tar archive, transfers it over the network, and unpacks it on the local machine. If the tar binary in the container is malicious, it can execute arbitrary code and emit unexpected output, allowing an attacker who controls container contents to write files to arbitrary paths on the user's local machine when kubectl cp is invoked, limited only by the system permissions of the local user. This issue only affects kubectl clients running on Windows.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12264" data-description="zohocorp manageengine ddi central versions before 6201 are vulnerable to arbitrary file write via ha failover config sync upload leading to remote code execution.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12264" target="_blank">CVE-2026-12264</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Zohocorp ManageEngine DDI Central versions before 6201 are vulnerable to Arbitrary file write via HA Failover Config sync upload leading to remote code execution.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101054" data-description="a vulnerability was identified in thinkware u3000 up to 1.02.04. affected is the function get_file of the file /tmp/wpa_supplicant.conf of the component tcp service. the manipulation leads to improper access controls. remote exploitation of the attack is possible. the exploit is publicly available and might be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101054" target="_blank">CVE-2026-101054</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability was identified in Thinkware U3000 up to 1.02.04. Affected is the function get_file of the file /tmp/wpa_supplicant.conf of the component TCP Service. The manipulation leads to improper access controls. Remote exploitation of the attack is possible. The exploit is publicly available and might be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101053" data-description="a vulnerability was determined in thinkware u3000 up to 1.02.04. this impacts the function put_file of the file /tmp/wpa_supplicant.conf of the component tcp service. executing a manipulation of the argument path can lead to improper access controls. the attack may be launched remotely. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101053" target="_blank">CVE-2026-101053</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability was determined in Thinkware U3000 up to 1.02.04. This impacts the function PUT_FILE of the file /tmp/wpa_supplicant.conf of the component TCP Service. Executing a manipulation of the argument path can lead to improper access controls. The attack may be launched remotely. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101052" data-description="a security vulnerability has been detected in refly-ai refly up to 1.1.0. this issue affects some unknown processing of the file apps/api/src/modules/config/app.config.ts of the component jwt token handler. the manipulation with the input test leads to hard-coded credentials. it is possible to initiate the attack remotely. the exploit has been disclosed publicly and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101052" target="_blank">CVE-2026-101052</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 07:17:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A security vulnerability has been detected in refly-ai refly up to 1.1.0. This issue affects some unknown processing of the file apps/api/src/modules/config/app.config.ts of the component JWT Token Handler. The manipulation with the input test leads to hard-coded credentials. It is possible to initiate the attack remotely. The exploit has been disclosed publicly and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-91006" data-description="apache karaf's instance-management service (instanceserviceimpl) builds the command line used to launch a child karaf jvm by string concatenation, then executes it through /bin/sh (unix) or cscript (windows). the caller-supplied javaopts value is spliced into that string unquoted. a javaopts value containing shell metacharacters (;, |, `, $(...)) is interpreted by the shell instead of being passed to the jvm as an option, giving arbitrary os command execution as the karaf process user.
 
 
@@ -144,158 +256,6 @@ This vulnerability was patched on 17 June 2026, and no customer action is needed
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.9</p>
                     <p>A vulnerability was determined in FAST FAC1200R 5.0_20201119_1.0.2. Affected by this vulnerability is the function MmtAtePrase of the component MmtAtePrase Parser. This manipulation causes stack-based buffer overflow. Remote exploitation of the attack is possible. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-90979" data-description="ldapcache and ldapbackingengine build ldap search filters for user lookup and role lookup by textually substituting the placeholders %u, %dn, and %fqdn (drawn from the login name, the resolved user dn, and its fully qualified namespace form) into administrator-configured filter templates (userfilter, rolefilter). before the fix, the only sanitization applied to the substituted value was double backslashed:
-
-filter = filter.replaceall(pattern.quote("%u"), matcher.quotereplacement(user));
-
-filter = filter.replace("\\", "\\\\");
-
-
-
-
-this does not escape the other characters rfc 4515 requires escaping in an ldap search filter: *, (, ), and nul. a login name containing any of these can change the structure of the resulting filter rather than being matched as a literal value (e.g. a crafted username can turn an equality match into a wildcard match, or close/reopen filter clauses), widening what the search returns and potentially causing a login or role lookup to match an ldap entry other than the intended one, over-granting roles, and depending on deployment-specific filter templates, potentially affecting which account a login resolved to.
-
-
-
-
-it's not exploitable through every entry points: ldaploginmodule and ldappubkeyloginmodule both called util.dorfc2254encoding() (correct rfc 4515 escaping) on the login name before handing it to ldapcache, which masked the missing escaping in ldapcache for those two call paths. using ldapcache directly (bypassing the login modules) does not reproduce through the normal ldaploginmodule/ldappubkeyloginmodule authentication flow for this reason. it does reproduce through two other call paths that reach ldapcache/ldapbackingengine without any prior escaping:
-
-  *  gssapildaploginmodule passes the namecallback name straight through, unescaped.
-  *  ldapbackingengine (listroles) passes principal.getname() straight through, unescaped.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90979" target="_blank">CVE-2026-90979</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>LDAPCache and LDAPBackingEngine build LDAP search filters for user lookup and role lookup by textually substituting the placeholders %u, %dn, and %fqdn (drawn from the login name, the resolved user DN, and its fully qualified namespace form) into administrator-configured filter templates (userFilter, roleFilter). Before the fix, the only sanitization applied to the substituted value was double backslashed:
-
-filter = filter.replaceAll(Pattern.quote("%u"), Matcher.quoteReplacement(user));
-
-filter = filter.replace("\\", "\\\\");
-
-
-
-
-This does not escape the other characters RFC 4515 requires escaping in an LDAP search filter: *, (, ), and NUL. A login name containing any of these can change the structure of the resulting filter rather than being matched as a literal value (e.g. a crafted username can turn an equality match into a wildcard match, or close/reopen filter clauses), widening what the search returns and potentially causing a login or role lookup to match an LDAP entry other than the intended one, over-granting roles, and depending on deployment-specific filter templates, potentially affecting which account a login resolved to.
-
-
-
-
-It's not exploitable through every entry points: LDAPLoginModule and LDAPPubkeyLoginModule both called Util.doRFC2254Encoding() (correct RFC 4515 escaping) on the login name before handing it to LDAPCache, which masked the missing escaping in LDAPCache for those two call paths. Using LDAPCache directly (bypassing the login modules) does not reproduce through the normal LDAPLoginModule/LDAPPubkeyLoginModule authentication flow for this reason. It does reproduce through two other call paths that reach LDAPCache/LDAPBackingEngine without any prior escaping:
-
-  *  GSSAPILdapLoginModule passes the NameCallback name straight through, unescaped.
-  *  LDAPBackingEngine (listRoles) passes principal.getName() straight through, unescaped.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-7172" data-description="stored cross-site scripting (xss) in tpvenlanube affecting the following endpoint and parameter:
-
-  *  cve-2026-7172: parameter 'nombre completo' in the endpoint  '/administrator/index.php?option=com_virtuemart&page=admin.user_list'.
-
-
-
-
-successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7172" target="_blank">CVE-2026-7172</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) in TPVEnlanube affecting the following endpoint and parameter:
-
-  *  CVE-2026-7172: parameter 'Nombre Completo' in the endpoint  '/administrator/index.php?option=com_virtuemart&page=admin.user_list'.
-
-
-
-
-Successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-7171" data-description="stored cross-site scripting (xss) in tpvenlanube affecting the following endpoint and parameter:
-
-  *  cve-2026-7171: parameter 'apellido 1' in the endpoint  '/administrator/index.php?page=admin.user_add&user_id=45&option=com_virtuemart'.
-
-
-successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7171" target="_blank">CVE-2026-7171</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) in TPVEnlanube affecting the following endpoint and parameter:
-
-  *  CVE-2026-7171: parameter 'Apellido 1' in the endpoint  '/administrator/index.php?page=admin.user_add&user_id=45&option=com_virtuemart'.
-
-
-Successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-7170" data-description="stored cross-site scripting (xss) in tpvenlanube affecting the following endpoint and parameter:
-
-  *  cve-2026-7170: parameter 'vendor_store_name' in the endpoint  '/administrator/index.php?pshop_mode=admin&page=store.store_add&option=com_virtuemart&vendor_id=[id]'.
-
-
-
-
-successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-7170" target="_blank">CVE-2026-7170</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Stored Cross-Site Scripting (XSS) in TPVEnlanube affecting the following endpoint and parameter:
-
-  *  CVE-2026-7170: parameter 'vendor_store_name' in the endpoint  '/administrator/index.php?pshop_mode=admin&page=store.store_add&option=com_virtuemart&vendor_id=[ID]'.
-
-
-
-
-Successful exploitation of this vulnerability could allow an authenticated attacker to inject malicious code and execute it in users' browsers without their consent.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101037" data-description="a vulnerability was found in fast fac1200r 5.0_20201119_1.0.2. affected is the function parse_advertisement_frame of the component devdiscover service. the manipulation results in stack-based buffer overflow. the attack may be launched remotely. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101037" target="_blank">CVE-2026-101037</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>A vulnerability was found in FAST FAC1200R 5.0_20201119_1.0.2. Affected is the function parse_advertisement_frame of the component devdiscover Service. The manipulation results in stack-based buffer overflow. The attack may be launched remotely. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101036" data-description="a vulnerability has been found in flb-music flb-music-player 1.1.8/1.1.9/1.2.0/1.2.1. this impacts the function path.join of the file /src/main/core/createparsedtrack.ts. the manipulation leads to path traversal. the attack must be carried out locally. the exploit has been disclosed to the public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101036" target="_blank">CVE-2026-101036</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability has been found in FLB-Music FLB-Music-Player 1.1.8/1.1.9/1.2.0/1.2.1. This impacts the function path.join of the file /src/main/core/createParsedTrack.ts. The manipulation leads to path traversal. The attack must be carried out locally. The exploit has been disclosed to the public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101035" data-description="a flaw has been found in aligungr ueransim up to 3.3.0. this affects the function decodeplainmmmessage in the library src/lib/nas/encode.cpp of the component nr-gnb. executing a manipulation can lead to uncaught exception. the attack can be launched remotely. the exploit has been published and may be used. this patch is called 1ae9bf2062b57595dbcbc4bc1d0a0ccf06815bac. it is best practice to apply a patch to resolve this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101035" target="_blank">CVE-2026-101035</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A flaw has been found in aligungr UERANSIM up to 3.3.0. This affects the function DecodePlainMmMessage in the library src/lib/nas/encode.cpp of the component nr-gnb. Executing a manipulation can lead to uncaught exception. The attack can be launched remotely. The exploit has been published and may be used. This patch is called 1ae9bf2062b57595dbcbc4bc1d0a0ccf06815bac. It is best practice to apply a patch to resolve this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101018" data-description="a vulnerability was determined in dayrui xunruicms up to 4.7.2. this issue affects the function group_all_edit of the file dayrui/app/member/controllers/admin/home.php of the component group editing. this manipulation of the argument groupid causes sql injection. the attack is possible to be carried out remotely. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101018" target="_blank">CVE-2026-101018</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 05:16:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
-                    <p>A vulnerability was determined in dayrui XunruiCMS up to 4.7.2. This issue affects the function group_all_edit of the file dayrui/App/Member/Controllers/Admin/Home.php of the component Group Editing. This manipulation of the argument groupid causes sql injection. The attack is possible to be carried out remotely. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-95104" data-description="stack-based buffer overflow vulnerability exists in buffalo wi-fi products. a non-authenticated crafted http request may cause a denial-of-service (dos) condition.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95104" target="_blank">CVE-2026-95104</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Stack-based buffer overflow vulnerability exists in BUFFALO Wi-Fi products. A non-authenticated crafted HTTP request may cause a denial-of-service (DoS) condition.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-94287" data-description="a denial of service via unsigned underflow in libxpm's write path in libxpm before 3.5.19 could be used by local attackers to cause unbounded cpu usage and memory exhaustion.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94287" target="_blank">CVE-2026-94287</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A denial of service via unsigned underflow in libXpm's write path in libXpm before 3.5.19 could be used by local attackers to cause unbounded CPU usage and memory exhaustion.</p>
                 </div>
         
             </div>
