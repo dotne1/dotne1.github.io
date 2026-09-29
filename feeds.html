@@ -34,6 +34,150 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-18747" data-description="the mcumgr smp-over-console transport decodes a base64 frame, reads a 16-bit packet length from it, verifies a crc and then unconditionally strips the trailing crc with rx_ctxt->nb->len -= 2u; in mcumgr_serial_process_frag() (subsys/mgmt/mcumgr/transport/src/serial_util.c). mcumgr_serial_extract_len() accepted any declared length, including 0 and 1, and a packet declaring length 0 passes the checksum test for free because crc16_itu_t() over zero bytes returns the zero seed. since net_buf::len is a uint16_t, the subtraction underflows and the buffer is handed to smp claiming roughly 65 kb of payload while its data area is only config_mcumgr_transport_netbuf_size bytes (default 384).
+
+the trigger is a single unauthenticated 7-byte line on the management console — the 0x06 0x09 packet marker followed by the base64 group aaa= and a newline — delivered to any transport built on this helper: config_mcumgr_transport_uart (smp_uart.c) or config_mcumgr_transport_shell (smp_shell.c), both of which select mcumgr_transport_serial_has_smp_over_console. no prior session state, fragmentation or credentials are required to trigger the underflow, and the malformed frame is mishandled before any command handler or command-level access control runs. the attacker only needs write access to that console, which on many boards is a usb cdc-acm port rather than a bare uart header.
+
+with the inflated length, smp_process_request_packet() in subsys/mgmt/mcumgr/smp/src/smp.c loses its bound: cbor_nb_reader_init() gives the cbor decoder a ~65 kb window into a 384-byte buffer, and each request header's nh_len is checked only against the inflated length. on its own the 7-byte frame re-parses whatever stale bytes the reused pool buffer still holds, typically a replay of the previously received request followed by a parse error, without leaving the buffer. because the transport is unauthenticated, though, the attacker also controls the frames sent before the trigger, and can stage buffer contents so that a request succeeds with an nh_len larger than the buffer; net_buf_pull(), guarded only by __assert_no_msg, then moves the parse cursor out of bounds and the loop reads further headers and cbor from adjacent memory. the consequence is an out-of-bounds read that can fault the mcumgr thread (denial of service); memory disclosure is also possible, since the default-enabled os echo handler (config_mcumgr_grp_os_echo) decodes its string inside that window and copies it into its response. there is no integrity gain beyond what the unauthenticated transport already permits.
+
+the fix rejects any declared packet length of two bytes or fewer in mcumgr_serial_extract_len(), so the crc-strip subtraction can no longer underflow. the identical pattern remains in the test-only loopback transport subsys/mgmt/mcumgr/transport/src/smp_dummy.c (config_mcumgr_transport_dummy), which has no external input path and therefore carries no practical exposure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18747" target="_blank">CVE-2026-18747</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
+                    <p>The MCUmgr SMP-over-console transport decodes a base64 frame, reads a 16-bit packet length from it, verifies a CRC and then unconditionally strips the trailing CRC with rx_ctxt->nb->len -= 2U; in mcumgr_serial_process_frag() (subsys/mgmt/mcumgr/transport/src/serial_util.c). mcumgr_serial_extract_len() accepted any declared length, including 0 and 1, and a packet declaring length 0 passes the checksum test for free because crc16_itu_t() over zero bytes returns the zero seed. Since net_buf::len is a uint16_t, the subtraction underflows and the buffer is handed to SMP claiming roughly 65 KB of payload while its data area is only CONFIG_MCUMGR_TRANSPORT_NETBUF_SIZE bytes (default 384).
+
+The trigger is a single unauthenticated 7-byte line on the management console — the 0x06 0x09 packet marker followed by the base64 group AAA= and a newline — delivered to any transport built on this helper: CONFIG_MCUMGR_TRANSPORT_UART (smp_uart.c) or CONFIG_MCUMGR_TRANSPORT_SHELL (smp_shell.c), both of which select MCUMGR_TRANSPORT_SERIAL_HAS_SMP_OVER_CONSOLE. No prior session state, fragmentation or credentials are required to trigger the underflow, and the malformed frame is mishandled before any command handler or command-level access control runs. The attacker only needs write access to that console, which on many boards is a USB CDC-ACM port rather than a bare UART header.
+
+With the inflated length, smp_process_request_packet() in subsys/mgmt/mcumgr/smp/src/smp.c loses its bound: cbor_nb_reader_init() gives the CBOR decoder a ~65 KB window into a 384-byte buffer, and each request header's nh_len is checked only against the inflated length. On its own the 7-byte frame re-parses whatever stale bytes the reused pool buffer still holds, typically a replay of the previously received request followed by a parse error, without leaving the buffer. Because the transport is unauthenticated, though, the attacker also controls the frames sent before the trigger, and can stage buffer contents so that a request succeeds with an nh_len larger than the buffer; net_buf_pull(), guarded only by __ASSERT_NO_MSG, then moves the parse cursor out of bounds and the loop reads further headers and CBOR from adjacent memory. The consequence is an out-of-bounds read that can fault the MCUmgr thread (denial of service); memory disclosure is also possible, since the default-enabled os echo handler (CONFIG_MCUMGR_GRP_OS_ECHO) decodes its string inside that window and copies it into its response. There is no integrity gain beyond what the unauthenticated transport already permits.
+
+The fix rejects any declared packet length of two bytes or fewer in mcumgr_serial_extract_len(), so the CRC-strip subtraction can no longer underflow. The identical pattern remains in the test-only loopback transport subsys/mgmt/mcumgr/transport/src/smp_dummy.c (CONFIG_MCUMGR_TRANSPORT_DUMMY), which has no external input path and therefore carries no practical exposure.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18746" data-description="parse_write_op() in subsys/net/lib/lwm2m/lwm2m_message_handling.c handles inbound coap write/create requests that carry a block1 option. for the first block of a transfer it called init_block_ctx() and then immediately stored the peer-selected block size with block_ctx->ctx.block_size = block_size before inspecting the return code. init_block_ctx() sets the caller's pointer to null and returns -enomem when no entry of the static block1_contexts[] pool is free or timed out, so that store dereferences a null pointer.
+
+the pool holds config_lwm2m_num_block1_context entries (default 3) and an entry is only reclaimed once its transfer completes, fails, or ages past 30 seconds. a peer that reaches the client's lwm2m socket can therefore start three block-wise writes on three distinct object paths with the coap more bit set and leave them incomplete, then send the first block of a fourth write on a new path to reach the unguarded dereference. reachability is gated only by the connected udp socket's source-address filter unless config_lwm2m_dtls_support is enabled — which has no default — so in a nosec deployment an on-path or address-spoofing attacker needs no credentials; the same sequence is also reachable from a bootstrap or lower-trust server, and can be hit accidentally by a legitimate server running four concurrent block transfers.
+
+the write targets a fixed low address with a value between 0 and 7, so the consequence is a fatal memory fault (busfault or corrupted low memory leading to a fault) rather than a usable memory-corruption primitive: the device crashes or resets. confidentiality and integrity are not affected. the fix moves the store below the guard and validates the context pointer itself instead of the return code, so the context is only touched once it is known to be valid.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18746" target="_blank">CVE-2026-18746</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>parse_write_op() in subsys/net/lib/lwm2m/lwm2m_message_handling.c handles inbound CoAP WRITE/CREATE requests that carry a Block1 option. For the first block of a transfer it called init_block_ctx() and then immediately stored the peer-selected block size with block_ctx->ctx.block_size = block_size before inspecting the return code. init_block_ctx() sets the caller's pointer to NULL and returns -ENOMEM when no entry of the static block1_contexts[] pool is free or timed out, so that store dereferences a NULL pointer.
+
+The pool holds CONFIG_LWM2M_NUM_BLOCK1_CONTEXT entries (default 3) and an entry is only reclaimed once its transfer completes, fails, or ages past 30 seconds. A peer that reaches the client's LwM2M socket can therefore start three block-wise writes on three distinct object paths with the CoAP More bit set and leave them incomplete, then send the first block of a fourth write on a new path to reach the unguarded dereference. Reachability is gated only by the connected UDP socket's source-address filter unless CONFIG_LWM2M_DTLS_SUPPORT is enabled — which has no default — so in a NoSec deployment an on-path or address-spoofing attacker needs no credentials; the same sequence is also reachable from a bootstrap or lower-trust server, and can be hit accidentally by a legitimate server running four concurrent block transfers.
+
+The write targets a fixed low address with a value between 0 and 7, so the consequence is a fatal memory fault (BusFault or corrupted low memory leading to a fault) rather than a usable memory-corruption primitive: the device crashes or resets. Confidentiality and integrity are not affected. The fix moves the store below the guard and validates the context pointer itself instead of the return code, so the context is only touched once it is known to be valid.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-18417" data-description="the native bsd-socket layer recorded a pending asynchronous socket error by type-punning it into struct net_context's void user_data field (ctx->user_data = int_to_pointer(-status) in zsock_accepted_cb(), zsock_received_cb(), zsock_connected_cb() and zsock_close_ctx() in subsys/net/lib/sockets/sockets_inet.c), reading it back with pointer_to_int(). that same field is owned by the network stack for listening tcp contexts: net_tcp_accept() stores the parent context pointer there and the tcp core passes it back to the registered accept callback. a failed accept therefore left a small integer (an errno value) where the stack expected a struct net_context .
+
+when the network interface carrying a listening tcp socket goes down, close_tcp_conn() in subsys/net/ip/tcp.c invokes the accept callback with -enetdown and the context's user_data. in v4.3.0 the callback was not disarmed afterwards, so a second interface-down event forwarded the previously stored errno to zsock_accepted_cb(), which dereferenced it as the parent context and performed several stores through it (sock_set_error()'s read-modify-write of socket_data, k_fifo_cancel_wait(&parent->recv_q)) — the crash described in the fix's commit message. v4.3.1 and v4.4.x carry a later change clearing conn->accept_cb after the error callback (269cb8823d3 on the v4.3 branch, 913fae5169425550f2364655298fceb79b320066 on main), which closes that repeat path; on those releases the poisoned cookie remains reachable only by a narrower race, a handshake completing alongside the interface-down still passing the stale cookie to k_fifo_put(&parent->accept_q, ...), and by getsockopt(so_error), which reads the field back unconditionally.
+
+on v4.3.0 an application that keeps a listening tcp socket open across repeated link-down events is sufficient to reach the defect; the triggering condition is a network-interface state change, not attacker-supplied packet data, so the practical attacker is one able to force the link down repeatedly (for example an adjacent attacker disrupting a wireless link) or one with local/physical access. because both the faulting address and the stored data are fixed small constants derived from the errno value, the outcome is a wild-pointer access leading to a kernel fatal error — a denial of service (device crash or reset) rather than an attacker-directed memory corruption.
+
+the fix stores the pending error in a dedicated net_context.sock_error field and converts every producer and consumer to sock_set_error()/sock_get_error(), leaving user_data untouched. as a side effect it also stops getsockopt(so_error) — which is evaluated unconditionally — from returning the kernel address held in user_data to a userspace application.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-18417" target="_blank">CVE-2026-18417</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The native BSD-socket layer recorded a pending asynchronous socket error by type-punning it into struct net_context's void user_data field (ctx->user_data = INT_TO_POINTER(-status) in zsock_accepted_cb(), zsock_received_cb(), zsock_connected_cb() and zsock_close_ctx() in subsys/net/lib/sockets/sockets_inet.c), reading it back with POINTER_TO_INT(). That same field is owned by the network stack for listening TCP contexts: net_tcp_accept() stores the parent context pointer there and the TCP core passes it back to the registered accept callback. A failed accept therefore left a small integer (an errno value) where the stack expected a struct net_context .
+
+When the network interface carrying a listening TCP socket goes down, close_tcp_conn() in subsys/net/ip/tcp.c invokes the accept callback with -ENETDOWN and the context's user_data. In v4.3.0 the callback was not disarmed afterwards, so a second interface-down event forwarded the previously stored errno to zsock_accepted_cb(), which dereferenced it as the parent context and performed several stores through it (sock_set_error()'s read-modify-write of socket_data, k_fifo_cancel_wait(&parent->recv_q)) — the crash described in the fix's commit message. v4.3.1 and v4.4.x carry a later change clearing conn->accept_cb after the error callback (269cb8823d3 on the v4.3 branch, 913fae5169425550f2364655298fceb79b320066 on main), which closes that repeat path; on those releases the poisoned cookie remains reachable only by a narrower race, a handshake completing alongside the interface-down still passing the stale cookie to k_fifo_put(&parent->accept_q, ...), and by getsockopt(SO_ERROR), which reads the field back unconditionally.
+
+On v4.3.0 an application that keeps a listening TCP socket open across repeated link-down events is sufficient to reach the defect; the triggering condition is a network-interface state change, not attacker-supplied packet data, so the practical attacker is one able to force the link down repeatedly (for example an adjacent attacker disrupting a wireless link) or one with local/physical access. Because both the faulting address and the stored data are fixed small constants derived from the errno value, the outcome is a wild-pointer access leading to a kernel fatal error — a denial of service (device crash or reset) rather than an attacker-directed memory corruption.
+
+The fix stores the pending error in a dedicated net_context.sock_error field and converts every producer and consumer to sock_set_error()/sock_get_error(), leaving user_data untouched. As a side effect it also stops getsockopt(SO_ERROR) — which is evaluated unconditionally — from returning the kernel address held in user_data to a userspace application.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102367" data-description="mall4j through 4.0 contains an insufficient session expiration vulnerability in the token refresh endpoint that fails to validate the enabled flag when issuing new sessions. disabled user accounts can indefinitely renew their sessions through the post /token/refresh endpoint, retaining access that account disabling was intended to remove.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102367" target="_blank">CVE-2026-102367</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>mall4j through 4.0 contains an insufficient session expiration vulnerability in the token refresh endpoint that fails to validate the enabled flag when issuing new sessions. Disabled user accounts can indefinitely renew their sessions through the POST /token/refresh endpoint, retaining access that account disabling was intended to remove.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102366" data-description="mall4j through 4.0 contains an unrestricted file upload vulnerability in filecontroller endpoints that lack authorization checks and accept arbitrary file types without validation. attackers with any authenticated token can upload html or svg files that execute scripts in administrator browsers when accessed from the local storage path, resulting in stored cross-site scripting.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102366" target="_blank">CVE-2026-102366</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
+                    <p>mall4j through 4.0 contains an unrestricted file upload vulnerability in FileController endpoints that lack authorization checks and accept arbitrary file types without validation. Attackers with any authenticated token can upload HTML or SVG files that execute scripts in administrator browsers when accessed from the local storage path, resulting in stored cross-site scripting.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102365" data-description="mall4j through 4.0 fails to enforce authorization checks on get endpoints in useraddrcontroller that retrieve customer address data. authenticated attackers can call /user/addr/page and /user/addr/info endpoints to harvest all customer addresses including names, phone numbers, and postal information.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102365" target="_blank">CVE-2026-102365</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>mall4j through 4.0 fails to enforce authorization checks on GET endpoints in UserAddrController that retrieve customer address data. Authenticated attackers can call /user/addr/page and /user/addr/info endpoints to harvest all customer addresses including names, phone numbers, and postal information.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102364" data-description="mall4j through 4.0 fails to validate the systype field in sa-token sessions, allowing storefront customers to authenticate as back-office users by reusing their session tokens. attackers can register on the public storefront and use their customer session token to access admin endpoints lacking @preauthorize permission checks, including menu listings, file uploads, and configuration endpoints.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102364" target="_blank">CVE-2026-102364</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>mall4j through 4.0 fails to validate the sysType field in sa-token sessions, allowing storefront customers to authenticate as back-office users by reusing their session tokens. Attackers can register on the public storefront and use their customer session token to access admin endpoints lacking @PreAuthorize permission checks, including menu listings, file uploads, and configuration endpoints.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102363" data-description="mall4j through 4.0 contains a missing authentication vulnerability in the deliverycontroller checkdelivery endpoint that allows unauthenticated attackers to read shipment tracking information by supplying an order number parameter. attackers can access carrier names, waybill numbers, and complete logistics trails for any order without authentication or ownership verification.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102363" target="_blank">CVE-2026-102363</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>mall4j through 4.0 contains a missing authentication vulnerability in the DeliveryController checkDelivery endpoint that allows unauthenticated attackers to read shipment tracking information by supplying an order number parameter. Attackers can access carrier names, waybill numbers, and complete logistics trails for any order without authentication or ownership verification.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102362" data-description="mall4j through 4.0 fails to implement authentication controls on the delete /prodcomm endpoint in prodcommcontroller. unauthenticated attackers can delete arbitrary product reviews by supplying the prodcommid parameter without authorization checks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102362" target="_blank">CVE-2026-102362</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>mall4j through 4.0 fails to implement authentication controls on the DELETE /prodComm endpoint in ProdCommController. Unauthenticated attackers can delete arbitrary product reviews by supplying the prodCommId parameter without authorization checks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102361" data-description="mall4j through 4.0 contains a missing authentication vulnerability in the put /user/updatepwd endpoint that allows unauthenticated attackers to reset any storefront account password. attackers can supply a target username in the request body to overwrite passwords without verification, enabling account takeover and access to orders and personal data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102361" target="_blank">CVE-2026-102361</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>mall4j through 4.0 contains a missing authentication vulnerability in the PUT /user/updatePwd endpoint that allows unauthenticated attackers to reset any storefront account password. Attackers can supply a target username in the request body to overwrite passwords without verification, enabling account takeover and access to orders and personal data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101277" data-description="a security flaw has been discovered in trusted domain project opendkim up to 2.11.0. the impacted element is the function dkim_process_set of the file dkim.c of the component tag tokenizer. performing a manipulation results in use of less trusted source. the attack may be initiated remotely. the exploit has been released to the public and may be used for attacks. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101277" target="_blank">CVE-2026-101277</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>A security flaw has been discovered in Trusted Domain Project OpenDKIM up to 2.11.0. The impacted element is the function dkim_process_set of the file dkim.c of the component Tag Tokenizer. Performing a manipulation results in use of less trusted source. The attack may be initiated remotely. The exploit has been released to the public and may be used for attacks. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101265" data-description="a vulnerability was identified in intelbras tip 125i 4.3.35/4.3.41. the affected element is an unknown function of the component básico page. such manipulation leads to inclusion of sensitive information in source code. the attack can be launched remotely. a high complexity level is associated with this attack. the exploitability is described as difficult. the exploit is publicly available and might be used. the vendor was contacted early about this disclosure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101265" target="_blank">CVE-2026-101265</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
+                    <p>A vulnerability was identified in Intelbras TIP 125i 4.3.35/4.3.41. The affected element is an unknown function of the component Básico Page. Such manipulation leads to inclusion of sensitive information in source code. The attack can be launched remotely. A high complexity level is associated with this attack. The exploitability is described as difficult. The exploit is publicly available and might be used. The vendor was contacted early about this disclosure.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101264" data-description="a vulnerability was determined in ziroom zhome a0101 1.0.1.0. impacted is an unknown function of the file /api/zrnetwork/set_passwd. this manipulation of the argument password1 causes command injection. the attack can be initiated remotely. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101264" target="_blank">CVE-2026-101264</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>A vulnerability was determined in Ziroom ZHOME A0101 1.0.1.0. Impacted is an unknown function of the file /api/ZRnetwork/set_passwd. This manipulation of the argument password1 causes command injection. The attack can be initiated remotely. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-101263" data-description="a vulnerability was found in ziroom zhome a0101 1.0.1.0. this issue affects some unknown processing of the file /api/zrqos/set_online_client. the manipulation of the argument mac results in command injection. it is possible to launch the attack remotely. the exploit has been made public and could be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101263" target="_blank">CVE-2026-101263</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-09-28 19:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>A vulnerability was found in Ziroom ZHOME A0101 1.0.1.0. This issue affects some unknown processing of the file /api/ZRQos/set_online_client. The manipulation of the argument mac results in command injection. It is possible to launch the attack remotely. The exploit has been made public and could be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-102335" data-description="nginx proxy manager through 2.16.0 fails to restrict the advanced_config field to administrators, allowing non-admin users with manage permissions to inject arbitrary nginx directives. attackers can inject malicious nginx configuration such as alias directives to serve arbitrary files or control routing for their assigned hosts.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102335" target="_blank">CVE-2026-102335</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-09-28 18:17:02 CDT</p>
@@ -80,118 +224,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.1</p>
                     <p>A flaw has been found in Ziroom ZHOME A0101 1.0.1.0. This affects an unknown part of the file /api/ZRnetwork/firstSetup_wifi. Executing a manipulation of the argument login_pwd can lead to command injection. The attack may be performed from remote. The exploit has been published and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101260" data-description="a vulnerability was detected in ziroom zhome a0101 1.0.1.0. affected by this issue is some unknown functionality of the file /api/zrnetwork/firstlogin. performing a manipulation of the argument firstlogin results in command injection. the attack is possible to be carried out remotely. the exploit is now public and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101260" target="_blank">CVE-2026-101260</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 18:17:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
-                    <p>A vulnerability was detected in Ziroom ZHOME A0101 1.0.1.0. Affected by this issue is some unknown functionality of the file /api/ZRnetwork/firstLogin. Performing a manipulation of the argument firstLogin results in command injection. The attack is possible to be carried out remotely. The exploit is now public and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-102297" data-description="zoneminder before 1.38.4 fails to apply per-monitor access restrictions in the framescontroller index endpoint. authenticated users with events view permission can call the frames api to list frame records from monitors they are denied access to, disclosing event and frame metadata across monitor boundaries.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102297" target="_blank">CVE-2026-102297</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>ZoneMinder before 1.38.4 fails to apply per-monitor access restrictions in the FramesController index endpoint. Authenticated users with Events view permission can call the frames API to list frame records from monitors they are denied access to, disclosing event and frame metadata across monitor boundaries.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-102296" data-description="zoneminder before 1.38.4 contains static buffer overflow vulnerabilities in remotecamerahttp::getresponse() that allow malicious http cameras or intercepting attackers to overflow fixed-size buffers by sending oversized response headers. attackers can send crafted http responses with oversized status messages, connection headers, content-type values, or multipart boundaries to corrupt parser state and crash the capture process or corrupt memory.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102296" target="_blank">CVE-2026-102296</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>ZoneMinder before 1.38.4 contains static buffer overflow vulnerabilities in RemoteCameraHttp::GetResponse() that allow malicious HTTP cameras or intercepting attackers to overflow fixed-size buffers by sending oversized response headers. Attackers can send crafted HTTP responses with oversized status messages, Connection headers, Content-Type values, or multipart boundaries to corrupt parser state and crash the capture process or corrupt memory.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-102281" data-description="nest is a framework for building scalable node.js server-side applications. prior to 11.2.4 and 12.0.2, a single message with a deeply nested object in its pattern can terminate a nestjs microservice using the tcp or rabbitmq transport. servertcp#handlemessage and serverrmq#handlemessage pass a client-controlled non-string pattern to json.stringify to derive the handler lookup key; sufficiently deep nesting throws rangeerror: maximum call stack size exceeded, and the unhandled promise rejection terminates node.js under its default behavior. an attacker who can reach the tcp port or publish to the consumed rabbitmq queue or exchange can crash the service on demand; other transports are not affected because their patterns arrive as strings. this issue is fixed in versions 11.2.4 and 12.0.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102281" target="_blank">CVE-2026-102281</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Nest is a framework for building scalable Node.js server-side applications. Prior to 11.2.4 and 12.0.2, a single message with a deeply nested object in its pattern can terminate a NestJS microservice using the TCP or RabbitMQ transport. ServerTCP#handleMessage and ServerRMQ#handleMessage pass a client-controlled non-string pattern to JSON.stringify to derive the handler lookup key; sufficiently deep nesting throws RangeError: Maximum call stack size exceeded, and the unhandled promise rejection terminates Node.js under its default behavior. An attacker who can reach the TCP port or publish to the consumed RabbitMQ queue or exchange can crash the service on demand; other transports are not affected because their patterns arrive as strings. This issue is fixed in versions 11.2.4 and 12.0.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101205" data-description="a vulnerability was determined in faststone image viewer up to 8.3. this impacts an unknown function of the component pcx decoder. this manipulation causes out-of-bounds read. the attack may be initiated remotely. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101205" target="_blank">CVE-2026-101205</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was determined in FastStone Image Viewer up to 8.3. This impacts an unknown function of the component PCX Decoder. This manipulation causes out-of-bounds read. The attack may be initiated remotely. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101204" data-description="a vulnerability was found in faststone image viewer up to 8.3. this affects an unknown function of the file fsviewer.exe of the component tga image handler. the manipulation results in out-of-bounds read. the attack can be launched remotely. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101204" target="_blank">CVE-2026-101204</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was found in FastStone Image Viewer up to 8.3. This affects an unknown function of the file FSViewer.exe of the component TGA Image Handler. The manipulation results in out-of-bounds read. The attack can be launched remotely. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101203" data-description="a vulnerability has been found in faststone image viewer up to 8.3. the impacted element is an unknown function of the component 1bpp rle decoder. the manipulation leads to out-of-bounds write. the attack can be initiated remotely. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101203" target="_blank">CVE-2026-101203</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability has been found in FastStone Image Viewer up to 8.3. The impacted element is an unknown function of the component 1bpp RLE Decoder. The manipulation leads to out-of-bounds write. The attack can be initiated remotely. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101202" data-description="a flaw has been found in faststone image viewer up to 8.3. the affected element is an unknown function of the component tga image handler. executing a manipulation can lead to out-of-bounds write. it is possible to launch the attack remotely. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101202" target="_blank">CVE-2026-101202</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A flaw has been found in FastStone Image Viewer up to 8.3. The affected element is an unknown function of the component TGA Image Handler. Executing a manipulation can lead to out-of-bounds write. It is possible to launch the attack remotely. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101188" data-description="a security vulnerability has been detected in netcore power13 2.0.240730.162638. this issue affects the function routerd.passwd_set of the file /ubus. such manipulation leads to weak password recovery. the attack may be performed from remote. the exploit has been disclosed publicly and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101188" target="_blank">CVE-2026-101188</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
-                    <p>A security vulnerability has been detected in Netcore POWER13 2.0.240730.162638. This issue affects the function routerd.passwd_set of the file /ubus. Such manipulation leads to weak password recovery. The attack may be performed from remote. The exploit has been disclosed publicly and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101093" data-description="cotonti through 1.0.0 contains a cross-site request forgery vulnerability in admin.users.php that allows attackers to delete user groups without token verification. attackers can craft malicious links or pages that trick authenticated administrators into deleting custom groups and their associated permissions by riding the administrator's session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101093" target="_blank">CVE-2026-101093</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Cotonti through 1.0.0 contains a cross-site request forgery vulnerability in admin.users.php that allows attackers to delete user groups without token verification. Attackers can craft malicious links or pages that trick authenticated administrators into deleting custom groups and their associated permissions by riding the administrator's session.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101092" data-description="siyuan before v3.8.4 fails to enforce publish-access checks in the getcurrentattrviewimages endpoint, allowing publish readers to retrieve image asset paths from unauthorized databases. attackers can call the endpoint with an unrendered database identifier obtained through related endpoints to leak detached-row image asset paths and filenames that the rendering endpoint would deny.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101092" target="_blank">CVE-2026-101092</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>SiYuan before v3.8.4 fails to enforce publish-access checks in the getCurrentAttrViewImages endpoint, allowing publish readers to retrieve image asset paths from unauthorized databases. Attackers can call the endpoint with an unrendered database identifier obtained through related endpoints to leak detached-row image asset paths and filenames that the rendering endpoint would deny.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-101091" data-description="siyuan versions before v3.8.4 fail to properly validate sql statements in block query embed blocks executed against siyuan.db. attackers can craft malicious .sy documents with non-read-only sql statements that execute automatically during background indexing, rendering, or export operations without authentication.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-101091" target="_blank">CVE-2026-101091</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>SiYuan versions before v3.8.4 fail to properly validate SQL statements in block query embed blocks executed against siyuan.db. Attackers can craft malicious .sy documents with non-read-only SQL statements that execute automatically during background indexing, rendering, or export operations without authentication.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2024-58386" data-description="zoneminder versions 1.37.0 before 1.38.0 contain a path traversal vulnerability in the files view that allows authenticated users to read arbitrary files. the path parameter is not properly validated before being passed to output_file, enabling attackers with events view permission to access sensitive files like configuration files containing database credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-58386" target="_blank">CVE-2024-58386</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>ZoneMinder versions 1.37.0 before 1.38.0 contain a path traversal vulnerability in the files view that allows authenticated users to read arbitrary files. The path parameter is not properly validated before being passed to output_file, enabling attackers with Events view permission to access sensitive files like configuration files containing database credentials.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2024-42002" data-description="a code injection vulnerability has been discovered in the robot operating system 2 (ros 2) 'ros2topic' command-line tool, affecting all ros 2 distributions from crystal clemmys up to and including lyrical luth and rolling ridley. the vulnerability lies in the 'hz' verb, which reports the publishing rate of a topic and accepts a user-provided python expression via the --filter option. this input is passed directly to the eval() function without sanitization, allowing a local user to craft and execute arbitrary code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2024-42002" target="_blank">CVE-2024-42002</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-09-28 17:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.4</p>
-                    <p>A code injection vulnerability has been discovered in the Robot Operating System 2 (ROS 2) 'ros2topic' command-line tool, affecting all ROS 2 distributions from Crystal Clemmys up to and including Lyrical Luth and Rolling Ridley. The vulnerability lies in the 'hz' verb, which reports the publishing rate of a topic and accepts a user-provided Python expression via the --filter option. This input is passed directly to the eval() function without sanitization, allowing a local user to craft and execute arbitrary code.</p>
                 </div>
         
             </div>
