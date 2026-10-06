@@ -34,196 +34,1294 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-94299" data-description="the elegro crypto payment wordpress plugin through 1.0.1 does not require a shared secret to be configured before trusting incoming payment notification requests, allowing unauthenticated attackers to forge payment confirmations and change the status of arbitrary orders on any installation where that secret has been left at its default empty value.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94299" target="_blank">CVE-2026-94299</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:17:00 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-84854" data-description="in the wibukey driver for windows below version 6.72, insufficient validation of user input when calculating the size of a kernel buffer could cause small amounts of data to be written outside the intended kernel buffer. this can lead to a system crash. under unfavorable circumstances, adjacent kernel memory may be modified.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84854" target="_blank">CVE-2026-84854</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 05:16:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
+                    <p>In the WibuKey driver for Windows below Version 6.72, insufficient validation of user input when calculating the size of a kernel buffer could cause small amounts of data to be written outside the intended kernel buffer. This can lead to a system crash. Under unfavorable circumstances, adjacent kernel memory may be modified.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-80327" data-description="an open redirect vulnerability exists in the pinggateway fragment filter feature. this issue affects pinggateway versions 7.1.0 and later, 2023.2.0 through 2024.11.1, and 2025.3.0 through 2025.11.1. it is fixed in versions 2024.11.2, 2025.11.2, and 2026.3.0 (and later).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-80327" target="_blank">CVE-2026-80327</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 05:16:52 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The elegro Crypto Payment WordPress plugin through 1.0.1 does not require a shared secret to be configured before trusting incoming payment notification requests, allowing unauthenticated attackers to forge payment confirmations and change the status of arbitrary orders on any installation where that secret has been left at its default empty value.</p>
+                    <p>An open redirect vulnerability exists in the PingGateway Fragment Filter feature. This issue affects PingGateway versions 7.1.0 and later, 2023.2.0 through 2024.11.1, and 2025.3.0 through 2025.11.1. It is fixed in versions 2024.11.2, 2025.11.2, and 2026.3.0 (and later).</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-94293" data-description="an unauthenticated remote attacker can modify asset administration shell submodel data via patch requests and can read all data exposed by the get endpoints.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94293" target="_blank">CVE-2026-94293</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:17:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>An unauthenticated remote attacker can modify Asset Administration Shell submodel data via PATCH requests and can read all data exposed by the GET endpoints.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-94278" data-description="the file media renamer wordpress plugin through 1.3 does not verify that the requesting user is authorised to modify a given media attachment, allowing any user with file-upload privileges to rename attachments belonging to other users, including administrators, and to corrupt unrelated stored site data that referenced the old file path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94278" target="_blank">CVE-2026-94278</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:17:00 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98372" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: iptfs: fix stack oob read in iptfs_skb_reset_frag_walk()
+
+iptfs_skb_reset_frag_walk() advances to the fragment containing @offset
+with an unbounded loop:
+
+	while (offset >= walk->past + walk->frags[walk->fragi].len)
+		walk->past += walk->frags[walk->fragi++].len;
+
+walk->fragi is advanced and walk->frags[walk->fragi] is dereferenced
+without ever checking fragi against walk->nr_frags. when the requested
+offset is at or beyond the total length spanned by the walk's fragments,
+fragi runs past nr_frags and off the end of the fixed-size on-stack
+frags[max_skb_frags + 1] array, reading out-of-bounds stack memory.
+
+the two callers behave differently: iptfs_skb_add_frags() already guards
+against this with
+
+	if (!walk->nr_frags ||
+	    offset >= walk->total + walk->initial_offset)
+		return len;
+
+but iptfs_skb_can_add_frags() has no such guard and calls
+iptfs_skb_reset_frag_walk() unconditionally, so it performs the
+out-of-range walk. its own "fragi < walk->nr_frags" bound check runs only
+afterwards, too late to prevent the read.
+
+this is reachable from the receive path: a crafted ip-tfs (aggfrag)
+payload delivered to an iptfs sa drives iptfs_reassem_cont() ->
+iptfs_skb_can_add_frags() with an offset past the fragment total, e.g.:
+
+  bug: kasan: stack-out-of-bounds in iptfs_skb_reset_frag_walk+0x235/0x250
+  read of size 4 at addr ffff888008ad7210 by task repro/345
+   iptfs_skb_reset_frag_walk+0x235/0x250 net/xfrm/xfrm_iptfs.c:392
+   iptfs_skb_can_add_frags+0x155/0x310  net/xfrm/xfrm_iptfs.c:420
+   iptfs_reassem_cont+0xcf8/0x1140      net/xfrm/xfrm_iptfs.c:902
+   iptfs_input_ordered+0x552/0x670      net/xfrm/xfrm_iptfs.c:1280
+   iptfs_input+0x3d6/0xde0              net/xfrm/xfrm_iptfs.c:1741
+   xfrm_input+0x282f/0x6140             net/xfrm/xfrm_input.c:700
+   xfrm4_esp_rcv+0x93/0x120             net/ipv4/xfrm4_protocol.c:104
+   ip_rcv+0x278/0x2d0                   net/ipv4/ip_input.c:612
+
+give iptfs_skb_can_add_frags() the same up-front guard that
+iptfs_skb_add_frags() already has, so the walk is never entered with an
+out-of-range offset. when it triggers, the caller falls back to the
+existing linearize-and-copy path, which is safe.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98372" target="_blank">CVE-2026-98372</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The File Media Renamer WordPress plugin through 1.3 does not verify that the requesting user is authorised to modify a given media attachment, allowing any user with file-upload privileges to rename attachments belonging to other users, including administrators, and to corrupt unrelated stored site data that referenced the old file path.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: iptfs: fix stack OOB read in iptfs_skb_reset_frag_walk()
+
+iptfs_skb_reset_frag_walk() advances to the fragment containing @offset
+with an unbounded loop:
+
+	while (offset >= walk->past + walk->frags[walk->fragi].len)
+		walk->past += walk->frags[walk->fragi++].len;
+
+walk->fragi is advanced and walk->frags[walk->fragi] is dereferenced
+without ever checking fragi against walk->nr_frags. When the requested
+offset is at or beyond the total length spanned by the walk's fragments,
+fragi runs past nr_frags and off the end of the fixed-size on-stack
+frags[MAX_SKB_FRAGS + 1] array, reading out-of-bounds stack memory.
+
+The two callers behave differently: iptfs_skb_add_frags() already guards
+against this with
+
+	if (!walk->nr_frags ||
+	    offset >= walk->total + walk->initial_offset)
+		return len;
+
+but iptfs_skb_can_add_frags() has no such guard and calls
+iptfs_skb_reset_frag_walk() unconditionally, so it performs the
+out-of-range walk. Its own "fragi < walk->nr_frags" bound check runs only
+afterwards, too late to prevent the read.
+
+This is reachable from the receive path: a crafted IP-TFS (AGGFRAG)
+payload delivered to an IPTFS SA drives iptfs_reassem_cont() ->
+iptfs_skb_can_add_frags() with an offset past the fragment total, e.g.:
+
+  BUG: KASAN: stack-out-of-bounds in iptfs_skb_reset_frag_walk+0x235/0x250
+  Read of size 4 at addr ffff888008ad7210 by task repro/345
+   iptfs_skb_reset_frag_walk+0x235/0x250 net/xfrm/xfrm_iptfs.c:392
+   iptfs_skb_can_add_frags+0x155/0x310  net/xfrm/xfrm_iptfs.c:420
+   iptfs_reassem_cont+0xcf8/0x1140      net/xfrm/xfrm_iptfs.c:902
+   iptfs_input_ordered+0x552/0x670      net/xfrm/xfrm_iptfs.c:1280
+   iptfs_input+0x3d6/0xde0              net/xfrm/xfrm_iptfs.c:1741
+   xfrm_input+0x282f/0x6140             net/xfrm/xfrm_input.c:700
+   xfrm4_esp_rcv+0x93/0x120             net/ipv4/xfrm4_protocol.c:104
+   ip_rcv+0x278/0x2d0                   net/ipv4/ip_input.c:612
+
+Give iptfs_skb_can_add_frags() the same up-front guard that
+iptfs_skb_add_frags() already has, so the walk is never entered with an
+out-of-range offset. When it triggers, the caller falls back to the
+existing linearize-and-copy path, which is safe.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-94271" data-description="the deema payment gateway wordpress plugin through 1.1.2 does not verify the payment with the payment provider when handling the return from the hosted checkout, and does not check the payment status or amount, allowing unauthenticated users to have orders marked as paid without any payment being taken.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94271" target="_blank">CVE-2026-94271</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98371" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: iptfs: fix runt reassembly panic from short inner tot_len
+
+when the start of an inner packet is split across two outer packets
+such that fewer than 4 bytes land at the end of the first one,
+__input_process_payload() saves those bytes as a runt and skips the
+iplen/iphlen validation performed for in-place packets. when the
+continuation packet arrives, iptfs_reassem_cont() only requires the
+declared inner length to be >= sizeof(ra_runt) (6) before allocating
+the reassembly skb with that attacker-controlled length.
+
+however, __iptfs_iphlen() always returns the fixed minimum ip header
+size (20 for ipv4, 40 for ipv6), so for an inner ipv4 tot_len in
+[6, 19] the header-completion copy writes past the declared packet
+length, and the subsequent "ipremain -= copylen" underflows to ~4gb,
+leaving the payload copy length bounded only by blkoff (up to 64kb).
+at runtime the skb_put() tailroom check turns this into
+skb_over_panic(), i.e. an unprivileged kernel panic (dos), reachable
+locally via userns+netns iptfs sas and remotely against iptfs vpn
+gateways when the decrypted outer skb is linear (e.g. af_packet taps,
+tun/tap delivery).
+
+align the runt path with the normal path by requiring the declared
+inner length to cover at least the ip header size. this also subsumes
+the previous >= sizeof(ra_runt) check, since the minimum ip header
+is always larger than the runt buffer.
+
+this issue was found by the autokbug dynamic kernel fuzzer at
+tencent yunding lab.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98371" target="_blank">CVE-2026-98371</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Deema Payment Gateway WordPress plugin through 1.1.2 does not verify the payment with the payment provider when handling the return from the hosted checkout, and does not check the payment status or amount, allowing unauthenticated users to have orders marked as paid without any payment being taken.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: iptfs: fix runt reassembly panic from short inner tot_len
+
+When the start of an inner packet is split across two outer packets
+such that fewer than 4 bytes land at the end of the first one,
+__input_process_payload() saves those bytes as a runt and skips the
+iplen/iphlen validation performed for in-place packets. When the
+continuation packet arrives, iptfs_reassem_cont() only requires the
+declared inner length to be >= sizeof(ra_runt) (6) before allocating
+the reassembly skb with that attacker-controlled length.
+
+However, __iptfs_iphlen() always returns the fixed minimum IP header
+size (20 for IPv4, 40 for IPv6), so for an inner IPv4 tot_len in
+[6, 19] the header-completion copy writes past the declared packet
+length, and the subsequent "ipremain -= copylen" underflows to ~4GB,
+leaving the payload copy length bounded only by blkoff (up to 64KB).
+At runtime the skb_put() tailroom check turns this into
+skb_over_panic(), i.e. an unprivileged kernel panic (DoS), reachable
+locally via userns+netns IPTFS SAs and remotely against IPTFS VPN
+gateways when the decrypted outer skb is linear (e.g. AF_PACKET taps,
+tun/tap delivery).
+
+Align the runt path with the normal path by requiring the declared
+inner length to cover at least the IP header size. This also subsumes
+the previous >= sizeof(ra_runt) check, since the minimum IP header
+is always larger than the runt buffer.
+
+This issue was found by the autokbug dynamic kernel fuzzer at
+Tencent Yunding Lab.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-94270" data-description="the deema payment gateway wordpress plugin through 1.1.2 does not verify the authenticity of incoming payment provider notifications, and ships with that verification disabled by default, allowing unauthenticated attackers to mark an unpaid order as paid, or to cancel or refund an existing order.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94270" target="_blank">CVE-2026-94270</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98370" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: fix compat allocspi request use-after-free
+
+xfrm_state_netlink() builds the allocspi response with
+dump_one_state(), which already calls alloc_compat() with the response
+skb and header.
+
+xfrm_alloc_userspi() then calls alloc_compat() again, but passes the
+original request skb and its header. for a compat request, the
+translator therefore interprets the 228-byte compat xfrm_userspi_info
+as the 232-byte native layout and reads four bytes past the declared
+payload. it also publishes the translated child through the request's
+frag_list.
+
+a multicast clone of the request shares skb_shared_info and can observe
+that child. xfrm_user_rcv_msg() frees it after the request handler
+returns, racing a compat receiver which may still be copying from it and
+resulting in a use-after-free.
+
+remove the redundant conversion. the response keeps its correct compat
+translation from dump_one_state(), and no child is attached to the
+inbound request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98370" target="_blank">CVE-2026-98370</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Deema Payment Gateway WordPress plugin through 1.1.2 does not verify the authenticity of incoming payment provider notifications, and ships with that verification disabled by default, allowing unauthenticated attackers to mark an unpaid order as paid, or to cancel or refund an existing order.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: fix compat ALLOCSPI request use-after-free
+
+xfrm_state_netlink() builds the ALLOCSPI response with
+dump_one_state(), which already calls alloc_compat() with the response
+skb and header.
+
+xfrm_alloc_userspi() then calls alloc_compat() again, but passes the
+original request skb and its header. For a compat request, the
+translator therefore interprets the 228-byte compat xfrm_userspi_info
+as the 232-byte native layout and reads four bytes past the declared
+payload. It also publishes the translated child through the request's
+frag_list.
+
+A multicast clone of the request shares skb_shared_info and can observe
+that child. xfrm_user_rcv_msg() frees it after the request handler
+returns, racing a compat receiver which may still be copying from it and
+resulting in a use-after-free.
+
+Remove the redundant conversion. The response keeps its correct compat
+translation from dump_one_state(), and no child is attached to the
+inbound request.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-89289" data-description="the fast courier  wordpress plugin through 5.2.3 does not restrict an unauthenticated rest route that writes order fulfillment data, allowing unauthenticated attackers to overwrite the courier status and customer-facing tracking details of any woocommerce order by supplying its id.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89289" target="_blank">CVE-2026-89289</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98369" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: add missing rcu_read_lock(), skb_dst_force() and dev_hold() for xfrm_trans_reinject()
+
+syzbot reported a suspicious rcu usage warning in ip6_pkt_drop():
+
+  warning: suspicious rcu usage in ip6_pkt_drop
+  include/net/addrconf.h:389 suspicious rcu_dereference_check() usage!
+
+  call trace:
+   __in6_dev_get_safely include/net/addrconf.h:389 [inline]
+   ip6_pkt_drop+0x596/0x610 net/ipv6/route.c:4620
+   ip6_pkt_discard+0x1c/0x30 net/ipv6/route.c:4651
+   xfrm_trans_reinject+0x324/0x630 net/xfrm/xfrm_input.c:806
+   process_one_work kernel/workqueue.c:3322 [inline]
+   process_scheduled_works+0xa8e/0x14e0 kernel/workqueue.c:3405
+   worker_thread+0xa47/0xfb0 kernel/workqueue.c:3486
+
+when commit 4f4920669d21 ("xfrm: reinject transport-mode packets through
+workqueue") converted xfrm_trans_reinject from a tasklet to a workqueue,
+the reinjection loop ceased running in softirq context. workqueue workers
+run in process context where local_bh_disable() does not enter an rcu
+read-side critical section under config_preempt_rcu.
+
+because finish callbacks (such as ip6_rcv_finish) expect to run under an
+rcu read lock (performing route lookups, l3mdev lookups, and accessing
+rcu-protected data structures), invoking them in workqueue context without
+rcu_read_lock() triggers rcu lockdep warnings.
+
+furthermore, packets queued to the workqueue via xfrm_trans_queue_net()
+may carry non-refcounted (noref) dst entries (e.g. from ip_route_input_noref).
+additionally, on netdevice unregistration, dst_dev_put() replaces dst->dev
+with blackhole_netdev, so dst entries do not keep skb->dev alive while
+queued in the workqueue.
+
+fix these issues by:
+1. calling skb_dst_force(skb) in xfrm_trans_queue_net() while still in the
+   caller's rcu section to ensure dst is reference-counted before queuing.
+2. holding a reference on skb->dev via dev_hold()/dev_put() across workqueue
+   deferral so skb->dev remains valid during finish() callback processing.
+3. acquiring rcu_read_lock() around the finish callback invocation loop in
+   xfrm_trans_reinject().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98369" target="_blank">CVE-2026-98369</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Fast Courier  WordPress plugin through 5.2.3 does not restrict an unauthenticated REST route that writes order fulfillment data, allowing unauthenticated attackers to overwrite the courier status and customer-facing tracking details of any WooCommerce order by supplying its id.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: add missing rcu_read_lock(), skb_dst_force() and dev_hold() for xfrm_trans_reinject()
+
+syzbot reported a suspicious RCU usage warning in ip6_pkt_drop():
+
+  WARNING: suspicious RCU usage in ip6_pkt_drop
+  include/net/addrconf.h:389 suspicious rcu_dereference_check() usage!
+
+  Call Trace:
+   __in6_dev_get_safely include/net/addrconf.h:389 [inline]
+   ip6_pkt_drop+0x596/0x610 net/ipv6/route.c:4620
+   ip6_pkt_discard+0x1c/0x30 net/ipv6/route.c:4651
+   xfrm_trans_reinject+0x324/0x630 net/xfrm/xfrm_input.c:806
+   process_one_work kernel/workqueue.c:3322 [inline]
+   process_scheduled_works+0xa8e/0x14e0 kernel/workqueue.c:3405
+   worker_thread+0xa47/0xfb0 kernel/workqueue.c:3486
+
+When commit 4f4920669d21 ("xfrm: Reinject transport-mode packets through
+workqueue") converted xfrm_trans_reinject from a tasklet to a workqueue,
+the reinjection loop ceased running in softirq context. Workqueue workers
+run in process context where local_bh_disable() does not enter an RCU
+read-side critical section under CONFIG_PREEMPT_RCU.
+
+Because finish callbacks (such as ip6_rcv_finish) expect to run under an
+RCU read lock (performing route lookups, l3mdev lookups, and accessing
+RCU-protected data structures), invoking them in workqueue context without
+rcu_read_lock() triggers RCU lockdep warnings.
+
+Furthermore, packets queued to the workqueue via xfrm_trans_queue_net()
+may carry non-refcounted (noref) dst entries (e.g. from ip_route_input_noref).
+Additionally, on netdevice unregistration, dst_dev_put() replaces dst->dev
+with blackhole_netdev, so dst entries do not keep skb->dev alive while
+queued in the workqueue.
+
+Fix these issues by:
+1. Calling skb_dst_force(skb) in xfrm_trans_queue_net() while still in the
+   caller's RCU section to ensure dst is reference-counted before queuing.
+2. Holding a reference on skb->dev via dev_hold()/dev_put() across workqueue
+   deferral so skb->dev remains valid during finish() callback processing.
+3. Acquiring rcu_read_lock() around the finish callback invocation loop in
+   xfrm_trans_reinject().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86786" data-description="the slider pro wordpress plugin through 1.0.0 does not perform any capability or authorisation check on one of its ajax actions, allowing unauthenticated users to retrieve the title, excerpt and permalink of non-public posts, including drafts, pending, scheduled, private and trashed posts, as well as post revisions and media metadata.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86786" target="_blank">CVE-2026-86786</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98368" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+esp: downgrade zerocopy managed frags before mutating skb frags
+
+on the out-of-place output path (esp->inplace == false) esp rewrites the
+skb frag array: esp_output_head() appends a trailer frag and
+esp_output_tail() replaces the frags with a destination page, both
+referenced with get_page().
+
+when the skb carries zerocopy managed frags (skbfl_managed_frag_refs) the
+payload frags are owned by the ubuf and must not be referenced or
+unreferenced individually, but esp mutates the frag array without ever
+downgrading the skb.  this breaks the managed-frag invariant two ways:
+
+  - esp_ssg_unref() walks the source scatterlist and drops a page
+    reference for every frag, including the ubuf-owned payload frags,
+    pushing their refcount below the gup pin bias while the pages are
+    still pinned, i.e. a use-after-free of the zerocopy pages;
+
+  - esp_output_tail() installs its destination page as frag 0 with
+    get_page() but leaves skbfl_managed_frag_refs set, so
+    skb_release_data() takes the skip_unref branch and never drops that
+    reference, leaking the x->xfrag page at packet rate.
+
+fix this the way every other frag-mutating site does (__ip_append_data(),
+__ip6_append_data(), tcp_sendmsg_locked()) and call
+skb_zcopy_downgrade_managed() before esp touches the frag array: it takes
+a real reference on each existing frag and clears skbfl_managed_frag_refs,
+so the per-frag unref in esp_ssg_unref() and the frag release in
+skb_release_data() are both balanced and no mixed-ownership frag array is
+left behind.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98368" target="_blank">CVE-2026-98368</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Slider Pro WordPress plugin through 1.0.0 does not perform any capability or authorisation check on one of its AJAX actions, allowing unauthenticated users to retrieve the title, excerpt and permalink of non-public posts, including drafts, pending, scheduled, private and trashed posts, as well as post revisions and media metadata.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+esp: downgrade zerocopy managed frags before mutating skb frags
+
+On the out-of-place output path (esp->inplace == false) ESP rewrites the
+skb frag array: esp_output_head() appends a trailer frag and
+esp_output_tail() replaces the frags with a destination page, both
+referenced with get_page().
+
+When the skb carries zerocopy managed frags (SKBFL_MANAGED_FRAG_REFS) the
+payload frags are owned by the ubuf and must not be referenced or
+unreferenced individually, but ESP mutates the frag array without ever
+downgrading the skb.  This breaks the managed-frag invariant two ways:
+
+  - esp_ssg_unref() walks the source scatterlist and drops a page
+    reference for every frag, including the ubuf-owned payload frags,
+    pushing their refcount below the GUP pin bias while the pages are
+    still pinned, i.e. a use-after-free of the zerocopy pages;
+
+  - esp_output_tail() installs its destination page as frag 0 with
+    get_page() but leaves SKBFL_MANAGED_FRAG_REFS set, so
+    skb_release_data() takes the skip_unref branch and never drops that
+    reference, leaking the x->xfrag page at packet rate.
+
+Fix this the way every other frag-mutating site does (__ip_append_data(),
+__ip6_append_data(), tcp_sendmsg_locked()) and call
+skb_zcopy_downgrade_managed() before ESP touches the frag array: it takes
+a real reference on each existing frag and clears SKBFL_MANAGED_FRAG_REFS,
+so the per-frag unref in esp_ssg_unref() and the frag release in
+skb_release_data() are both balanced and no mixed-ownership frag array is
+left behind.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-59358" data-description="improper authentication (cwe-287) in the oauth token endpoint in cloud foundry uaa allows a remote, authenticated attacker holding a valid user access token to obtain a fully-privileged client_credentials token for the oauth client that issued it, by presenting the user token as an oauth 2.0 bearer credential on a client_credentials grant request in place of the client’s configured secret.
+                <div class="cve-entry" data-cve-id="CVE-2026-98367" data-description="in the linux kernel, the following vulnerability has been resolved:
 
+rdma/siw: clear association under lock if siw_qp_modify fails in siw_accept
 
+we need to clear cep before release state_lock as siw_qp_llp_close and
+siw_qp_modify->siw_qp_llp_close did.
 
-uaa’s client_credentials handling does not verify that the bearer credential supplied for client authentication is actually a client credential (a client secret or a valid configured client authentication method); it accepts any valid access token whose client_id matches the request. a token obtained by a normal end user through a public authorization_code + pkce flow — scoped only to uaa.user, carrying a user_id, and recording client_auth_method=none — satisfies this check. that user token cannot itself administer oauth clients (post /oauth/clients correctly returns 403), but when replayed as bearer authentication on a client_credentials request for the same client, uaa issues a new client-only token carrying the client’s full authorities, such as clients.write. an attacker can use that token to create arbitrary new oauth clients, including clients with attacker-chosen authorities, without ever possessing the client’s actual secret.
+otherwise if siw_qp_modify() fails in siw_accept(), the qp's state_lock
+is released before the error path cleanup. a concurrent ibv_modify_qp()
+transitioning the qp to error can race in this window:
 
+  siw_accept()                       ibv_modify_qp(error)
+  ----------------------             ----------------------
+  siw_qp_modify() fails
+  up_write(&qp->state_lock)
+                                     down_write(&qp->state_lock)
+                                     nextstate_from_idle():
+				     if (qp->cep)
+                                       siw_cep_put(qp->cep) <- frees cep
+                                       qp->cep = null
+  goto error
+    cep->qp = null                   <- uaf
 
-
-exploitation requires a valid user access token (the attacker’s own) for a client that is configured to support both a public, user-facing authorization flow and the client_credentials grant type on the same client_id — a non-default combination. practical impact scales with the authorities assigned to that client.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59358" target="_blank">CVE-2026-59358</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
+clear qp->cep and drop the association reference taken by siw_cep_get(),
+all under the write lock held from the initial down_write(&qp->state_lock).
+thread b therefore sees qp->cep == null, skips its own put, and cannot free
+the cep before siw_accept() is done with it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98367" target="_blank">CVE-2026-98367</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper authentication (CWE-287) in the OAuth token endpoint in Cloud Foundry UAA allows a remote, authenticated attacker holding a valid user access token to obtain a fully-privileged client_credentials token for the OAuth client that issued it, by presenting the user token as an OAuth 2.0 Bearer credential on a client_credentials grant request in place of the client’s configured secret.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
+RDMA/siw: Clear association under lock if siw_qp_modify fails in siw_accept
 
+We need to clear cep before release state_lock as siw_qp_llp_close and
+siw_qp_modify->siw_qp_llp_close did.
 
-UAA’s client_credentials handling does not verify that the Bearer credential supplied for client authentication is actually a client credential (a client secret or a valid configured client authentication method); it accepts any valid access token whose client_id matches the request. A token obtained by a normal end user through a public authorization_code + PKCE flow — scoped only to uaa.user, carrying a user_id, and recording client_auth_method=none — satisfies this check. That user token cannot itself administer OAuth clients (POST /oauth/clients correctly returns 403), but when replayed as Bearer authentication on a client_credentials request for the same client, UAA issues a new client-only token carrying the client’s full authorities, such as clients.write. An attacker can use that token to create arbitrary new OAuth clients, including clients with attacker-chosen authorities, without ever possessing the client’s actual secret.
+Otherwise if siw_qp_modify() fails in siw_accept(), the QP's state_lock
+is released before the error path cleanup. A concurrent ibv_modify_qp()
+transitioning the QP to ERROR can race in this window:
 
+  siw_accept()                       ibv_modify_qp(ERROR)
+  ----------------------             ----------------------
+  siw_qp_modify() fails
+  up_write(&qp->state_lock)
+                                     down_write(&qp->state_lock)
+                                     nextstate_from_idle():
+				     if (qp->cep)
+                                       siw_cep_put(qp->cep) <- frees cep
+                                       qp->cep = NULL
+  goto error
+    cep->qp = NULL                   <- UAF
 
-
-Exploitation requires a valid user access token (the attacker’s own) for a client that is configured to support both a public, user-facing authorization flow and the client_credentials grant type on the same client_id — a non-default combination. Practical impact scales with the authorities assigned to that client.</p>
+Clear qp->cep and drop the association reference taken by siw_cep_get(),
+all under the write lock held from the initial down_write(&qp->state_lock).
+Thread B therefore sees qp->cep == NULL, skips its own put, and cannot free
+the cep before siw_accept() is done with it.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-59357" data-description="insufficient verification of data authenticity (cwe-345) in the external oidc login callback in cloud foundry uaa v4.5.0 to v79.6.0 (inclusive) allows an authenticated uaa user to bypass the oauth authorization-code exchange and establish an authenticated external-oidc browser session, via submitting a uaa access token or a cross-client id token as the callback’s id_token parameter.
+                <div class="cve-entry" data-cve-id="CVE-2026-98366" data-description="in the linux kernel, the following vulnerability has been resolved:
 
+rdma/rxe: validate access flags before swapping the mr's pd
 
+rxe_rereg_user_mr() reassigns mr->ibmr.pd first and only then
+validates the ib_mr_rereg_access argument:
 
-the issue only manifests when a uaa zone is configured with an oidc identity provider whose issuer exactly matches that zone’s own /oauth/token endpoint (a “self-uaa” oidc configuration). in this configuration, the callback takes a supplied id_token directly instead of requiring the authorization code exchange, and does not verify that the token was actually issued as an id token for the specific self-oidc relying-party client. an attacker holding any valid uaa jwt for themselves — including a plain access token with only uaa.user scope, or a valid id token issued to an unrelated client such as cf — can present it as the callback’s id_token and be authenticated into a mapped local (“shadow”) account. because the resulting session is not verified against the originating token’s true audience or user_id, its effective privilege depends entirely on the shadow account’s group memberships, which can include administrative scopes such as clients.write.
+	if (flags & ib_mr_rereg_pd) {
+		rxe_put(old_pd);
+		rxe_get(pd);
+		mr->ibmr.pd = ibpd;
+	}
 
+	if (flags & ib_mr_rereg_access) {
+		if (access & ~rxe_access_supported_mr)
+			return err_ptr(-eopnotsupp);
+		mr->access = access;
+	}
 
+both flags pass the entry check because rxe_mr_rereg_supported is
+ib_mr_rereg_pd | ib_mr_rereg_access, so a caller can reach the access
+check with mr->ibmr.pd already reassigned.
 
-exploitation requires a valid uaa user jwt, a valid browser login state for the target zone, and the presence of a self-referential oidc provider configuration — this is not a pre-authentication vulnerability, and does not by itself grant privileges beyond those already held by the mapped shadow account.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59357" target="_blank">CVE-2026-59357</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
+mr->ibmr.pd is owned by the core, which adjusts pd->usecnt only on the
+success path: ib_uverbs_rereg_mr() jumps to put_new_uobj on a driver error
+without undoing the reassignment, so mr->pd == new_pd while the usecnts
+still charge the mr to orig_pd. ib_dereg_mr_user() then decrements
+new_pd, whose count can reach zero while a memory window still references
+it; uverbs_free_pd() frees the pd on that count alone and rxe_mw_cleanup()
+writes to freed memory:
+
+  bug: kasan: slab-use-after-free in __rxe_put+0x31/0xa0
+  write of size 4 at addr ffff8881301dd690 by task rxe_poc/591
+   __rxe_put+0x31/0xa0
+   rxe_mw_cleanup+0x42/0x200
+   __rxe_cleanup+0x115/0x370
+   rxe_dealloc_mw+0x4c/0x80
+  allocated by task 591:
+   ib_uverbs_alloc_pd+0x258/0x540
+  freed by task 591:
+   ib_dealloc_pd_user+0x174/0x210
+   uverbs_free_pd+0x8d/0xc0
+   ib_uverbs_dealloc_pd+0x18e/0x1d0
+
+validate the access flags before mutating any state so the callback either
+applies every requested change or none.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98366" target="_blank">CVE-2026-98366</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Insufficient verification of data authenticity (CWE-345) in the external OIDC login callback in Cloud Foundry UAA v4.5.0 to v79.6.0 (inclusive) allows an authenticated UAA user to bypass the OAuth authorization-code exchange and establish an authenticated external-OIDC browser session, via submitting a UAA access token or a cross-client ID token as the callback’s id_token parameter.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
+RDMA/rxe: validate access flags before swapping the MR's PD
 
+rxe_rereg_user_mr() reassigns mr->ibmr.pd first and only then
+validates the IB_MR_REREG_ACCESS argument:
 
-The issue only manifests when a UAA zone is configured with an OIDC identity provider whose issuer exactly matches that zone’s own /oauth/token endpoint (a “self-UAA” OIDC configuration). In this configuration, the callback takes a supplied id_token directly instead of requiring the authorization code exchange, and does not verify that the token was actually issued as an ID token for the specific self-OIDC relying-party client. An attacker holding any valid UAA JWT for themselves — including a plain access token with only uaa.user scope, or a valid ID token issued to an unrelated client such as cf — can present it as the callback’s id_token and be authenticated into a mapped local (“shadow”) account. Because the resulting session is not verified against the originating token’s true audience or user_id, its effective privilege depends entirely on the shadow account’s group memberships, which can include administrative scopes such as clients.write.
+	if (flags & IB_MR_REREG_PD) {
+		rxe_put(old_pd);
+		rxe_get(pd);
+		mr->ibmr.pd = ibpd;
+	}
 
+	if (flags & IB_MR_REREG_ACCESS) {
+		if (access & ~RXE_ACCESS_SUPPORTED_MR)
+			return ERR_PTR(-EOPNOTSUPP);
+		mr->access = access;
+	}
 
+Both flags pass the entry check because RXE_MR_REREG_SUPPORTED is
+IB_MR_REREG_PD | IB_MR_REREG_ACCESS, so a caller can reach the access
+check with mr->ibmr.pd already reassigned.
 
-Exploitation requires a valid UAA user JWT, a valid browser login state for the target zone, and the presence of a self-referential OIDC provider configuration — this is not a pre-authentication vulnerability, and does not by itself grant privileges beyond those already held by the mapped shadow account.</p>
+mr->ibmr.pd is owned by the core, which adjusts pd->usecnt only on the
+success path: ib_uverbs_rereg_mr() jumps to put_new_uobj on a driver error
+without undoing the reassignment, so mr->pd == new_pd while the usecnts
+still charge the MR to orig_pd. ib_dereg_mr_user() then decrements
+new_pd, whose count can reach zero while a memory window still references
+it; uverbs_free_pd() frees the PD on that count alone and rxe_mw_cleanup()
+writes to freed memory:
+
+  BUG: KASAN: slab-use-after-free in __rxe_put+0x31/0xa0
+  Write of size 4 at addr ffff8881301dd690 by task rxe_poc/591
+   __rxe_put+0x31/0xa0
+   rxe_mw_cleanup+0x42/0x200
+   __rxe_cleanup+0x115/0x370
+   rxe_dealloc_mw+0x4c/0x80
+  Allocated by task 591:
+   ib_uverbs_alloc_pd+0x258/0x540
+  Freed by task 591:
+   ib_dealloc_pd_user+0x174/0x210
+   uverbs_free_pd+0x8d/0xc0
+   ib_uverbs_dealloc_pd+0x18e/0x1d0
+
+Validate the access flags before mutating any state so the callback either
+applies every requested change or none.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57559" data-description="memory corruption while processing service requests.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57559" target="_blank">CVE-2026-57559</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:59 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Memory corruption while processing service requests.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98365" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/rxe: fix integer overflow in mr_check_range() leading to oob access
+
+mr_check_range() validates that [iova, iova+length) falls within the
+registered mr range using wraparound-prone arithmetic:
+
+    if (iova < mr->ibmr.iova ||
+        iova + length > mr->ibmr.iova + mr->ibmr.length)
+
+a remote peer can craft an rdma-write/read reth so that iova + length
+wraps to 0 (e.g. iova=0xfffffffffffffff8, length=8), bypassing the
+check. rxe_mr_iova_to_index() then computes a huge index (int idx, only
+guarded by warn_on) and rxe_mr_copy_xarray() dereferences
+mr->page_info[huge], causing an out-of-bounds read/write and a kernel
+oops that is triggerable by an unauthenticated remote peer.
+
+rewrite the check in overflow-safe form; the first two clauses guarantee
+that the subsequent subtractions do not underflow:
+
+    if (iova < mr->ibmr.iova ||
+        length > mr->ibmr.length ||
+        iova - mr->ibmr.iova > mr->ibmr.length - length)
+
+with the fix, mr_check_range() returns -einval for the crafted iova and
+the responder reports remote_access_error instead of triggering the oob.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98365" target="_blank">CVE-2026-98365</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/rxe: Fix integer overflow in mr_check_range() leading to OOB access
+
+mr_check_range() validates that [iova, iova+length) falls within the
+registered MR range using wraparound-prone arithmetic:
+
+    if (iova < mr->ibmr.iova ||
+        iova + length > mr->ibmr.iova + mr->ibmr.length)
+
+A remote peer can craft an RDMA-Write/Read RETH so that iova + length
+wraps to 0 (e.g. iova=0xfffffffffffffff8, length=8), bypassing the
+check. rxe_mr_iova_to_index() then computes a huge index (int idx, only
+guarded by WARN_ON) and rxe_mr_copy_xarray() dereferences
+mr->page_info[huge], causing an out-of-bounds read/write and a kernel
+oops that is triggerable by an unauthenticated remote peer.
+
+Rewrite the check in overflow-safe form; the first two clauses guarantee
+that the subsequent subtractions do not underflow:
+
+    if (iova < mr->ibmr.iova ||
+        length > mr->ibmr.length ||
+        iova - mr->ibmr.iova > mr->ibmr.length - length)
+
+With the fix, mr_check_range() returns -EINVAL for the crafted iova and
+the responder reports REMOTE_ACCESS_ERROR instead of triggering the OOB.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57555" data-description="memory corruption when executing system service routines due to improper handling of user input buffers.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57555" target="_blank">CVE-2026-57555</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Memory Corruption when executing system service routines due to improper handling of user input buffers.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98364" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xfrm: hold net_device reference under rcu in bundle creation
+
+xfrm_bundle_create() and xfrm_create_dummy_bundle() read dst->dev into
+a local pointer without taking a device reference, then pass it to
+xfrm_fill_dst(). a concurrent rtm_dellink replaces dst->dev via
+dst_dev_put() and frees the old net_device, causing a use-after-free
+when xfrm6_fill_dst() later dereferences the stale dev pointer.
+
+  bug: kasan: slab-use-after-free in xfrm6_fill_dst+0x82c/0x860
+  (net/ipv6/xfrm6_policy.c:86 netdev_hold())
+  read of size 8 at addr ffff8880142fe588 by task exploit/153
+  call trace:
+   xfrm6_fill_dst+0x82c/0x860
+   xfrm_resolve_and_create_bundle+0x21d4/0x2bd0
+   xfrm_lookup_with_ifid+0x485/0x1640
+   ip6_dst_lookup_flow+0x19b/0x1e0
+   udpv6_sendmsg+0x1443/0x2dd0
+
+fix this by reading dst->dev via dst_dev_rcu() and keeping the rcu
+read-side critical section active until xfrm_fill_dst() has taken the
+required device references.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98364" target="_blank">CVE-2026-98364</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xfrm: hold net_device reference under RCU in bundle creation
+
+xfrm_bundle_create() and xfrm_create_dummy_bundle() read dst->dev into
+a local pointer without taking a device reference, then pass it to
+xfrm_fill_dst(). A concurrent RTM_DELLINK replaces dst->dev via
+dst_dev_put() and frees the old net_device, causing a use-after-free
+when xfrm6_fill_dst() later dereferences the stale dev pointer.
+
+  BUG: KASAN: slab-use-after-free in xfrm6_fill_dst+0x82c/0x860
+  (net/ipv6/xfrm6_policy.c:86 netdev_hold())
+  Read of size 8 at addr ffff8880142fe588 by task exploit/153
+  Call Trace:
+   xfrm6_fill_dst+0x82c/0x860
+   xfrm_resolve_and_create_bundle+0x21d4/0x2bd0
+   xfrm_lookup_with_ifid+0x485/0x1640
+   ip6_dst_lookup_flow+0x19b/0x1e0
+   udpv6_sendmsg+0x1443/0x2dd0
+
+Fix this by reading dst->dev via dst_dev_rcu() and keeping the RCU
+read-side critical section active until xfrm_fill_dst() has taken the
+required device references.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57554" data-description="memory corruption when asynchronous threads access shared performance counter data simultaneously during fastrpc invocations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57554" target="_blank">CVE-2026-57554</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Memory Corruption when asynchronous threads access shared performance counter data simultaneously during FastRPC invocations.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98363" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+firmware: arm_scpi: reject dvfs opp count above max_dvfs_opps
+
+scpi_dvfs_get_info() already rejected a zero opp_count, but still trusted
+any larger value from the scp firmware. the shared-memory reply only holds
+max_dvfs_opps entries in buf.opps[]; a bigger count over-reads that array
+and then sizes the allocated opp table incorrectly (garbage opps / oob).
+the missing upper bound dates back to the original scpi dvfs support.
+
+reject zero and out-of-range counts in one check and return -einval.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98363" target="_blank">CVE-2026-98363</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+firmware: arm_scpi: reject DVFS OPP count above MAX_DVFS_OPPS
+
+scpi_dvfs_get_info() already rejected a zero opp_count, but still trusted
+any larger value from the SCP firmware. The shared-memory reply only holds
+MAX_DVFS_OPPS entries in buf.opps[]; a bigger count over-reads that array
+and then sizes the allocated OPP table incorrectly (garbage OPPs / OOB).
+The missing upper bound dates back to the original SCPI DVFS support.
+
+Reject zero and out-of-range counts in one check and return -EINVAL.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57546" data-description="transient dos when processing a continuous receive command with a zero-sized global configuration override.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57546" target="_blank">CVE-2026-57546</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Transient DOS when processing a continuous receive command with a zero-sized global configuration override.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98362" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+clk: scpi: bound-check dvfs index in scpi_dvfs_recalc_rate
+
+dvfs_get_idx() may return an out-of-range index if the scp firmware is
+buggy or returns a stale value. only negative indexes were rejected, so a
+large index walked past info->opps and could treat garbage as a clock rate
+(kasan oob / wrong frequency to consumers). the missing upper bound dates
+back to the original scpi clock driver.
+
+treat indexes >= opp count as invalid and return 0, same as idx < 0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98362" target="_blank">CVE-2026-98362</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+clk: scpi: bound-check DVFS index in scpi_dvfs_recalc_rate
+
+dvfs_get_idx() may return an out-of-range index if the SCP firmware is
+buggy or returns a stale value. Only negative indexes were rejected, so a
+large index walked past info->opps and could treat garbage as a clock rate
+(KASAN OOB / wrong frequency to consumers). The missing upper bound dates
+back to the original SCPI clock driver.
+
+Treat indexes >= opp count as invalid and return 0, same as idx < 0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57545" data-description="memory corruption when processing draw objects of incorrect type during graphics command list execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57545" target="_blank">CVE-2026-57545</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Memory corruption when processing draw objects of incorrect type during graphics command list execution.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98361" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/rxe: restore hmm_pfn_write check in odp write paths
+
+commit 0b261d7c1cd3 ("rdma/rxe: break endless pagefault loop for ro
+pages") dropped the access permission test from rxe_check_pagefault()
+and left only hmm_pfn_valid. a page faulted in read-only, for example
+a page-cache folio behind a prot_read file mapping, then satisfies the
+check and odp write operations (rdma write, rdma read response, send
+payload, atomics) modify it through kmap without ever breaking cow.
+
+an unprivileged user can register an odp mr over such a mapping and
+have incoming rdma traffic overwrite the page cache of a file it only
+holds o_rdonly, including /etc/passwd or setuid binaries. this is the
+same primitive class as dirty cow and cve-2022-2590.
+
+mlx5 has the missing invariant: its odp path sets the device write bit
+only for pfns that carry hmm_pfn_write. restore it in rxe by requiring
+hmm_pfn_write in rxe_check_pagefault() for every operation except
+rxe_pagefault_rdonly. a write to a non-writable vma now fails the one
+fault attempt with -eperm from hmm_vma_fault() instead of re-faulting
+forever. for a writable vma the fault breaks cow and the write lands
+in the private page.
+
+keep pmem flushes on the read-only check. arch_wb_cache_pmem() never
+modifies memory, and the flush access bits do not make the umem
+writable, so classifying flushes as writes would make every flush
+against a flush-only mr fail.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98361" target="_blank">CVE-2026-98361</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/rxe: Restore HMM_PFN_WRITE check in ODP write paths
+
+Commit 0b261d7c1cd3 ("RDMA/rxe: Break endless pagefault loop for RO
+pages") dropped the access permission test from rxe_check_pagefault()
+and left only HMM_PFN_VALID. A page faulted in read-only, for example
+a page-cache folio behind a PROT_READ file mapping, then satisfies the
+check and ODP write operations (RDMA WRITE, RDMA READ response, SEND
+payload, atomics) modify it through kmap without ever breaking CoW.
+
+An unprivileged user can register an ODP MR over such a mapping and
+have incoming RDMA traffic overwrite the page cache of a file it only
+holds O_RDONLY, including /etc/passwd or setuid binaries. This is the
+same primitive class as Dirty COW and CVE-2022-2590.
+
+mlx5 has the missing invariant: its ODP path sets the device write bit
+only for pfns that carry HMM_PFN_WRITE. Restore it in rxe by requiring
+HMM_PFN_WRITE in rxe_check_pagefault() for every operation except
+RXE_PAGEFAULT_RDONLY. A write to a non-writable VMA now fails the one
+fault attempt with -EPERM from hmm_vma_fault() instead of re-faulting
+forever. For a writable VMA the fault breaks CoW and the write lands
+in the private page.
+
+Keep pmem flushes on the read-only check. arch_wb_cache_pmem() never
+modifies memory, and the FLUSH access bits do not make the umem
+writable, so classifying flushes as writes would make every flush
+against a flush-only MR fail.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57537" data-description="memory corruption when accessing and modifying geographic mapping data concurrently without proper synchronization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57537" target="_blank">CVE-2026-57537</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Memory Corruption when accessing and modifying geographic mapping data concurrently without proper synchronization.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98360" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/rxe: insert mcg into mcg_tree only after rxe_mcast_add() succeeds
+
+rxe_get_mcg() publishes a newly allocated multicast group in
+rxe->mcg_tree before programming the backing ethernet multicast address
+with rxe_mcast_add(), which runs outside mcg_lock. a local userspace
+rdma client reaches this path with attach_mcast on a ud qp; if
+rxe_mcast_add() then returns an error (for example -enodev when the
+backing netdev has been removed, or a propagated dev_mc_add() error),
+the unwind frees the published group without removing it from the tree.
+a later lookup of the same mgid dereferences the freed struct rxe_mcg
+from __rxe_lookup_mcg().
+
+fix this by keeping the new mcg private until rxe_mcast_add() succeeds.
+split the tree publication into __rxe_publish_mcg(), call rxe_mcast_add()
+before taking the tree reference, and free the still-private mcg on
+failure. because the group is never visible in mcg_tree until the
+multicast address is programmed, no concurrent caller can look it up or
+attach a qp to a group that is about to be torn down, so the error path
+needs no conditional unwind. if another caller publishes the same mgid
+while the address is being programmed, the post-add re-check under
+mcg_lock finds the winner; this caller then drops its private object and
+balances its own rxe_mcast_add() with rxe_mcast_del() before returning
+the winner.
+
+reproduced by forcing the rxe_mcast_add() error return under kasan:
+without the change the next attach to the same mgid reports a
+slab-use-after-free in __rxe_lookup_mcg(); with it the forced failure
+returns cleanly. a no-injection attach/detach regression, including a
+two-qp shared join/leave and re-attach, stays kasan- and leak-clean.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98360" target="_blank">CVE-2026-98360</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/rxe: insert mcg into mcg_tree only after rxe_mcast_add() succeeds
+
+rxe_get_mcg() publishes a newly allocated multicast group in
+rxe->mcg_tree before programming the backing Ethernet multicast address
+with rxe_mcast_add(), which runs outside mcg_lock. A local userspace
+RDMA client reaches this path with ATTACH_MCAST on a UD QP; if
+rxe_mcast_add() then returns an error (for example -ENODEV when the
+backing netdev has been removed, or a propagated dev_mc_add() error),
+the unwind frees the published group without removing it from the tree.
+A later lookup of the same MGID dereferences the freed struct rxe_mcg
+from __rxe_lookup_mcg().
+
+Fix this by keeping the new mcg private until rxe_mcast_add() succeeds.
+Split the tree publication into __rxe_publish_mcg(), call rxe_mcast_add()
+before taking the tree reference, and free the still-private mcg on
+failure. Because the group is never visible in mcg_tree until the
+multicast address is programmed, no concurrent caller can look it up or
+attach a QP to a group that is about to be torn down, so the error path
+needs no conditional unwind. If another caller publishes the same MGID
+while the address is being programmed, the post-add re-check under
+mcg_lock finds the winner; this caller then drops its private object and
+balances its own rxe_mcast_add() with rxe_mcast_del() before returning
+the winner.
+
+Reproduced by forcing the rxe_mcast_add() error return under KASAN:
+without the change the next attach to the same MGID reports a
+slab-use-after-free in __rxe_lookup_mcg(); with it the forced failure
+returns cleanly. A no-injection attach/detach regression, including a
+two-QP shared join/leave and re-attach, stays KASAN- and leak-clean.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-25302" data-description="cryptographic issue when processing non-elf partitions, authentication and signature checks are bypassed, allowing unsigned or corrupted images to be mounted and processed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25302" target="_blank">CVE-2026-25302</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Cryptographic Issue when processing non-ELF partitions, authentication and signature checks are bypassed, allowing unsigned or corrupted images to be mounted and processed.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98359" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/core: reject unregistering netdevs in ib_get_eth_speed
+
+ib_device_get_netdev() intentionally returns a referenced net_device even
+when it is unregistering, so matching and cleanup callers can still find
+the association. the reference keeps struct net_device allocated, but does
+not guarantee that the device remains operational.
+
+ib_get_eth_speed() uses the returned device operationally by invoking its
+ethtool callback. although that call is made under rtnl, the function does
+not verify the registration state first. an asynchronous rdma port query
+can therefore call into a netdev after netdev_unregister and ndo_uninit
+have completed.
+
+check for netreg_registered while holding rtnl and return -enodev for a
+device which is being unregistered. keeping rtnl across the check and the
+ethtool operation prevents unregister from starting between them.
+
+keep the speed fallback and warning under rtnl as well, so the warning can
+safely read netdev->name. drop the netdev reference before releasing rtnl
+once all accesses to the device are complete.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98359" target="_blank">CVE-2026-98359</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/core: Reject unregistering netdevs in ib_get_eth_speed
+
+ib_device_get_netdev() intentionally returns a referenced net_device even
+when it is unregistering, so matching and cleanup callers can still find
+the association. The reference keeps struct net_device allocated, but does
+not guarantee that the device remains operational.
+
+ib_get_eth_speed() uses the returned device operationally by invoking its
+ethtool callback. Although that call is made under RTNL, the function does
+not verify the registration state first. An asynchronous RDMA port query
+can therefore call into a netdev after NETDEV_UNREGISTER and ndo_uninit
+have completed.
+
+Check for NETREG_REGISTERED while holding RTNL and return -ENODEV for a
+device which is being unregistered. Keeping RTNL across the check and the
+ethtool operation prevents unregister from starting between them.
+
+Keep the speed fallback and warning under RTNL as well, so the warning can
+safely read netdev->name. Drop the netdev reference before releasing RTNL
+once all accesses to the device are complete.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-25291" data-description="memory corruption when performing concurrent operations on shared memory page lists due to lack of proper synchronization mechanisms.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25291" target="_blank">CVE-2026-25291</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Memory corruption when performing concurrent operations on shared memory page lists due to lack of proper synchronization mechanisms.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98358" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ib/iser: reject a remote invalidation of an unregistered direction
+
+a write command whose data is sent entirely as immediate data is not
+registered.  iser_reg_mem_fastreg() takes the dma key path and leaves
+rdma_reg[iser_dir_out].desc at null, while iser_dma_map_task_data() has
+already set dir[iser_dir_out].
+
+iser_check_remote_inv() looks at dir[] alone and hands the descriptor to
+iser_inv_desc(), which reads desc->sig_protected.  a target that answers
+such a command with ib_wr_send_with_inv faults the initiator.
+leaving those commands unregistered is deliberate.
+
+the same function already terminates the connection when a target sends
+a remote invalidation the initiator did not ask for.  a target that
+invalidates a direction that was never registered is in the same class,
+so give it the same answer.
+
+  oops: general protection fault, probably for non-canonical address 0xdffffc0000000004: 0000 [#1] smp kasan nopti
+  kasan: null-ptr-deref in range [0x0000000000000020-0x0000000000000027]
+  cpu: 0 uid: 0 pid: 40 comm: kworker/u8:2 not tainted 7.2.0-rc5-iserhost-gf5098b6bae76-dirty #3 preempt(lazy)
+  hardware name: qemu ubuntu 24.04 pc v2 (i440fx + piix, arch_caps fix, 1996), bios 1.16.3-debian-1.16.3-2 04/01/2014
+  workqueue: rxe_wq do_work
+  rip: 0010:iser_task_rsp+0x6d6/0xec0
+  code: 48 c1 ea 03 80 3c 02 00 0f 85 ba 06 00 00 48 8b 9b 78 01 00 00 48 b8 00 00 00 00 00 fc ff df 48 8d 7b 20 48 89 fa 48 c1 ea 03 <0f> b6 04 02 84 c0 74 06 0f 8e 76 06 00 00 80 7b 20 00 0f 84 3d 04
+  rsp: 0018:ffff88811b008db8 eflags: 00010202
+  rax: dffffc0000000000 rbx: 0000000000000000 rcx: 0000000000001848
+  rdx: 0000000000000004 rsi: 1ffff11021587b12 rdi: 0000000000000020
+  rbp: ffff88810adc1ae4 r08: ffff888109b7f860 r09: ffffffff90a922c0
+  r10: ffff88810adc1a1c r11: 000000000000003c r12: ffff888109b7f800
+  r13: ffff88810adc1acc r14: ffff888109b7f820 r15: 0000000000000000
+  fs:  0000000000000000(0000) gs:ffff88818a676000(0000) knlgs:0000000000000000
+  cs:  0010 ds: 0000 es: 0000 cr0: 0000000080050033
+  cr2: 00000000005afe2b cr3: 000000010af23005 cr4: 0000000000770ef0
+  pkru: 55555554
+  call trace:
+   <irq>
+   __ib_process_cq+0xe1/0x390
+   ib_poll_handler+0x6e/0x200
+   irq_poll_softirq+0x1df/0x480
+   ? clockevents_program_event+0x2ba/0x860
+   ? __pfx_irq_poll_softirq+0x10/0x10
+   handle_softirqs+0x18e/0x590
+   ? __pfx_handle_softirqs+0x10/0x10
+   ? __hrtimer_rearm_deferred+0x156/0x450
+   do_softirq+0x3b/0x60
+   </irq>
+   <task>
+   __local_bh_enable_ip+0x61/0x70
+   __alloc_skb+0x732/0x890
+   ? _raw_spin_lock_irqsave+0x85/0xe0
+   ? __pfx___alloc_skb+0x10/0x10
+   ? _raw_read_unlock_irqrestore+0x16/0x50
+   rxe_init_packet+0x16b/0x4f0
+   prepare_ack_packet+0xb8/0x830
+   rxe_receiver+0x499/0x9980
+   ? __pfx_rxe_receiver+0x10/0x10
+   ? rxe_completer+0x29e5/0x38c0
+   ? hrtimer_start_range_ns_common+0x75f/0x1730
+   ? hrtimer_start_range_ns+0xa6/0x2c0
+   ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+   ? __pfx_rxe_receiver+0x10/0x10
+   do_work+0x144/0x470
+   process_one_work+0x633/0x1030
+   ? assign_work+0x11d/0x370
+   worker_thread+0x45b/0xd10
+   ? __pfx_worker_thread+0x10/0x10
+   kthread+0x2c6/0x3b0
+   ? recalc_sigpending+0x15c/0x1e0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork+0x36e/0x5a0
+   ? __pfx_ret_from_fork+0x10/0x10
+   ? __switch_to+0x572/0xdd0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork_asm+0x1a/0x30
+   </task>
+  modules linked in:
+  ---[ end trace 0000000000000000 ]---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98358" target="_blank">CVE-2026-98358</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+IB/iser: reject a remote invalidation of an unregistered direction
+
+A write command whose data is sent entirely as immediate data is not
+registered.  iser_reg_mem_fastreg() takes the DMA key path and leaves
+rdma_reg[ISER_DIR_OUT].desc at NULL, while iser_dma_map_task_data() has
+already set dir[ISER_DIR_OUT].
+
+iser_check_remote_inv() looks at dir[] alone and hands the descriptor to
+iser_inv_desc(), which reads desc->sig_protected.  A target that answers
+such a command with IB_WR_SEND_WITH_INV faults the initiator.
+Leaving those commands unregistered is deliberate.
+
+The same function already terminates the connection when a target sends
+a remote invalidation the initiator did not ask for.  A target that
+invalidates a direction that was never registered is in the same class,
+so give it the same answer.
+
+  Oops: general protection fault, probably for non-canonical address 0xdffffc0000000004: 0000 [#1] SMP KASAN NOPTI
+  KASAN: null-ptr-deref in range [0x0000000000000020-0x0000000000000027]
+  CPU: 0 UID: 0 PID: 40 Comm: kworker/u8:2 Not tainted 7.2.0-rc5-ISERHOST-gf5098b6bae76-dirty #3 PREEMPT(lazy)
+  Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+  Workqueue: rxe_wq do_work
+  RIP: 0010:iser_task_rsp+0x6d6/0xec0
+  Code: 48 c1 ea 03 80 3c 02 00 0f 85 ba 06 00 00 48 8b 9b 78 01 00 00 48 b8 00 00 00 00 00 fc ff df 48 8d 7b 20 48 89 fa 48 c1 ea 03 <0f> b6 04 02 84 c0 74 06 0f 8e 76 06 00 00 80 7b 20 00 0f 84 3d 04
+  RSP: 0018:ffff88811b008db8 EFLAGS: 00010202
+  RAX: dffffc0000000000 RBX: 0000000000000000 RCX: 0000000000001848
+  RDX: 0000000000000004 RSI: 1ffff11021587b12 RDI: 0000000000000020
+  RBP: ffff88810adc1ae4 R08: ffff888109b7f860 R09: ffffffff90a922c0
+  R10: ffff88810adc1a1c R11: 000000000000003c R12: ffff888109b7f800
+  R13: ffff88810adc1acc R14: ffff888109b7f820 R15: 0000000000000000
+  FS:  0000000000000000(0000) GS:ffff88818a676000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 00000000005afe2b CR3: 000000010af23005 CR4: 0000000000770ef0
+  PKRU: 55555554
+  Call Trace:
+   <IRQ>
+   __ib_process_cq+0xe1/0x390
+   ib_poll_handler+0x6e/0x200
+   irq_poll_softirq+0x1df/0x480
+   ? clockevents_program_event+0x2ba/0x860
+   ? __pfx_irq_poll_softirq+0x10/0x10
+   handle_softirqs+0x18e/0x590
+   ? __pfx_handle_softirqs+0x10/0x10
+   ? __hrtimer_rearm_deferred+0x156/0x450
+   do_softirq+0x3b/0x60
+   </IRQ>
+   <TASK>
+   __local_bh_enable_ip+0x61/0x70
+   __alloc_skb+0x732/0x890
+   ? _raw_spin_lock_irqsave+0x85/0xe0
+   ? __pfx___alloc_skb+0x10/0x10
+   ? _raw_read_unlock_irqrestore+0x16/0x50
+   rxe_init_packet+0x16b/0x4f0
+   prepare_ack_packet+0xb8/0x830
+   rxe_receiver+0x499/0x9980
+   ? __pfx_rxe_receiver+0x10/0x10
+   ? rxe_completer+0x29e5/0x38c0
+   ? hrtimer_start_range_ns_common+0x75f/0x1730
+   ? hrtimer_start_range_ns+0xa6/0x2c0
+   ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+   ? __pfx_rxe_receiver+0x10/0x10
+   do_work+0x144/0x470
+   process_one_work+0x633/0x1030
+   ? assign_work+0x11d/0x370
+   worker_thread+0x45b/0xd10
+   ? __pfx_worker_thread+0x10/0x10
+   kthread+0x2c6/0x3b0
+   ? recalc_sigpending+0x15c/0x1e0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork+0x36e/0x5a0
+   ? __pfx_ret_from_fork+0x10/0x10
+   ? __switch_to+0x572/0xdd0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork_asm+0x1a/0x30
+   </TASK>
+  Modules linked in:
+  ---[ end trace 0000000000000000 ]---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-25274" data-description="memory corruption when processing concurrent dma buffer allocation and deallocation commands without proper synchronization.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25274" target="_blank">CVE-2026-25274</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
-                    <p>Memory Corruption when processing concurrent DMA buffer allocation and deallocation commands without proper synchronization.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98357" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ib/isert: wait for deferred control pdu completions before releasing the connection
+
+isert_send_done() hands istate_send_taskmgtrsp, istate_send_reject and
+istate_send_textrsp completions off to isert_comp_wq and returns.  the work
+item then runs isert_completion_put() -> isert_put_cmd(), which reads
+isert_conn->conn and takes conn->cmd_lock.
+
+nothing orders that work item against teardown.  isert_wait_conn() queues
+isert_release_work, which frees isert_conn, and iscsit_close_connection()
+frees the iscsit_conn right after it returns, so the queued work can run
+against freed memory.
+
+count the deferred control pdu completions per connection and let
+isert_wait_conn() wait for them before the release work is queued.
+
+istate_send_logoutrsp is deliberately not counted: that branch runs
+iscsit_logout_post_handler(), which ends up waiting for
+conn->conn_wait_comp, and that completion is only sent by
+iscsit_close_connection() after it has called iscsit_wait_conn().
+waiting for it here would deadlock.  its wait stays the existing
+isert_wait4logout().
+
+the splat below is from a kernel with tracing printk()s and an msleep(200)
+injected into isert_do_control_comp() to widen the window:
+
+  bug: kasan: slab-use-after-free in isert_put_cmd+0x53d/0x620
+  read of size 8 at addr ffff8881054f1038 by task kworker/u17:1/182
+
+  cpu: 0 uid: 0 pid: 182 comm: kworker/u17:1 tainted: g    b               7.2.0-rc5-twide-gb8babf08acc7 #1 preempt(lazy)
+  tainted: [b]=bad_page
+  hardware name: qemu ubuntu 24.04 pc v2 (i440fx + piix, arch_caps fix, 1996), bios 1.16.3-debian-1.16.3-2 04/01/2014
+  workqueue: isert_comp_wq isert_do_control_comp
+  call trace:
+   <task>
+   dump_stack_lvl+0x53/0x70
+   print_report+0xd0/0x630
+   ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+   ? _raw_spin_unlock_irqrestore+0x3e/0x70
+   ? isert_put_cmd+0x53d/0x620
+   kasan_report+0xce/0x100
+   ? isert_put_cmd+0x53d/0x620
+   isert_put_cmd+0x53d/0x620
+   ? isert_completion_put+0x305/0x330
+   ? isert_do_control_comp+0x2ef/0x310
+   process_one_work+0x633/0x1030
+   ? assign_work+0x11d/0x370
+   worker_thread+0x45b/0xd10
+   ? __pfx_worker_thread+0x10/0x10
+   ? __pfx_worker_thread+0x10/0x10
+   kthread+0x2c6/0x3b0
+   ? recalc_sigpending+0x15c/0x1e0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork+0x36e/0x5a0
+   ? __pfx_ret_from_fork+0x10/0x10
+   ? __switch_to+0x572/0xdd0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork_asm+0x1a/0x30
+   </task>
+
+  allocated by task 48:
+   kasan_save_stack+0x33/0x60
+   kasan_save_track+0x14/0x30
+   __kasan_kmalloc+0x8f/0xa0
+   __kmalloc_cache_noprof+0x158/0x370
+   isert_cma_handler+0x1e3/0x2ae0
+   cma_cm_event_handler+0x3e/0x240
+   cma_ib_req_handler+0x17d9/0x4490
+   cm_process_work+0x41/0x330
+   cm_work_handler+0x5727/0xc160
+   process_one_work+0x633/0x1030
+   worker_thread+0x45b/0xd10
+   kthread+0x2c6/0x3b0
+   ret_from_fork+0x36e/0x5a0
+   ret_from_fork_asm+0x1a/0x30
+
+  freed by task 184:
+   kasan_save_stack+0x33/0x60
+   kasan_save_track+0x14/0x30
+   kasan_save_free_info+0x3b/0x60
+   __kasan_slab_free+0x43/0x70
+   kfree+0x121/0x380
+   iscsit_close_connection+0x7cf/0x1e60
+   iscsit_take_action_for_connection_exit+0x1b6/0x360
+   iscsi_target_tx_thread+0x472/0x690
+   kthread+0x2c6/0x3b0
+   ret_from_fork+0x36e/0x5a0
+   ret_from_fork_asm+0x1a/0x30">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98357" target="_blank">CVE-2026-98357</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+IB/isert: wait for deferred control PDU completions before releasing the connection
+
+isert_send_done() hands ISTATE_SEND_TASKMGTRSP, ISTATE_SEND_REJECT and
+ISTATE_SEND_TEXTRSP completions off to isert_comp_wq and returns.  The work
+item then runs isert_completion_put() -> isert_put_cmd(), which reads
+isert_conn->conn and takes conn->cmd_lock.
+
+Nothing orders that work item against teardown.  isert_wait_conn() queues
+isert_release_work, which frees isert_conn, and iscsit_close_connection()
+frees the iscsit_conn right after it returns, so the queued work can run
+against freed memory.
+
+Count the deferred control PDU completions per connection and let
+isert_wait_conn() wait for them before the release work is queued.
+
+ISTATE_SEND_LOGOUTRSP is deliberately not counted: that branch runs
+iscsit_logout_post_handler(), which ends up waiting for
+conn->conn_wait_comp, and that completion is only sent by
+iscsit_close_connection() after it has called iscsit_wait_conn().
+Waiting for it here would deadlock.  Its wait stays the existing
+isert_wait4logout().
+
+The splat below is from a kernel with tracing printk()s and an msleep(200)
+injected into isert_do_control_comp() to widen the window:
+
+  BUG: KASAN: slab-use-after-free in isert_put_cmd+0x53d/0x620
+  Read of size 8 at addr ffff8881054f1038 by task kworker/u17:1/182
+
+  CPU: 0 UID: 0 PID: 182 Comm: kworker/u17:1 Tainted: G    B               7.2.0-rc5-TWIDE-gb8babf08acc7 #1 PREEMPT(lazy)
+  Tainted: [B]=BAD_PAGE
+  Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+  Workqueue: isert_comp_wq isert_do_control_comp
+  Call Trace:
+   <TASK>
+   dump_stack_lvl+0x53/0x70
+   print_report+0xd0/0x630
+   ? __pfx__raw_spin_lock_irqsave+0x10/0x10
+   ? _raw_spin_unlock_irqrestore+0x3e/0x70
+   ? isert_put_cmd+0x53d/0x620
+   kasan_report+0xce/0x100
+   ? isert_put_cmd+0x53d/0x620
+   isert_put_cmd+0x53d/0x620
+   ? isert_completion_put+0x305/0x330
+   ? isert_do_control_comp+0x2ef/0x310
+   process_one_work+0x633/0x1030
+   ? assign_work+0x11d/0x370
+   worker_thread+0x45b/0xd10
+   ? __pfx_worker_thread+0x10/0x10
+   ? __pfx_worker_thread+0x10/0x10
+   kthread+0x2c6/0x3b0
+   ? recalc_sigpending+0x15c/0x1e0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork+0x36e/0x5a0
+   ? __pfx_ret_from_fork+0x10/0x10
+   ? __switch_to+0x572/0xdd0
+   ? __pfx_kthread+0x10/0x10
+   ret_from_fork_asm+0x1a/0x30
+   </TASK>
+
+  Allocated by task 48:
+   kasan_save_stack+0x33/0x60
+   kasan_save_track+0x14/0x30
+   __kasan_kmalloc+0x8f/0xa0
+   __kmalloc_cache_noprof+0x158/0x370
+   isert_cma_handler+0x1e3/0x2ae0
+   cma_cm_event_handler+0x3e/0x240
+   cma_ib_req_handler+0x17d9/0x4490
+   cm_process_work+0x41/0x330
+   cm_work_handler+0x5727/0xc160
+   process_one_work+0x633/0x1030
+   worker_thread+0x45b/0xd10
+   kthread+0x2c6/0x3b0
+   ret_from_fork+0x36e/0x5a0
+   ret_from_fork_asm+0x1a/0x30
+
+  Freed by task 184:
+   kasan_save_stack+0x33/0x60
+   kasan_save_track+0x14/0x30
+   kasan_save_free_info+0x3b/0x60
+   __kasan_slab_free+0x43/0x70
+   kfree+0x121/0x380
+   iscsit_close_connection+0x7cf/0x1e60
+   iscsit_take_action_for_connection_exit+0x1b6/0x360
+   iscsi_target_tx_thread+0x472/0x690
+   kthread+0x2c6/0x3b0
+   ret_from_fork+0x36e/0x5a0
+   ret_from_fork_asm+0x1a/0x30</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-25273" data-description="memory corruption when processing camera operations due to out-of-bounds write during driver updates.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25273" target="_blank">CVE-2026-25273</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
-                    <p>Memory Corruption when processing camera operations due to out-of-bounds write during driver updates.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98356" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/bnxt_re: check create_singlethread_workqueue() in dcb setup
+
+bnxt_re_init_dcb_wq() ignores a failed allocation. the async dcb
+handler later calls queue_work() on the null pointer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98356" target="_blank">CVE-2026-98356</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/bnxt_re: check create_singlethread_workqueue() in DCB setup
+
+bnxt_re_init_dcb_wq() ignores a failed allocation. The async DCB
+handler later calls queue_work() on the NULL pointer.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-25272" data-description="memory corruption when processing camera cre driver operations with improper handling of buffer limits during hardware update preparation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-25272" target="_blank">CVE-2026-25272</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-06 02:16:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
-                    <p>Memory Corruption when processing camera CRE driver operations with improper handling of buffer limits during hardware update preparation.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-98355" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+rdma/rtrs: guard against null kobj name
+
+in the client, if `init_path()` errors, the callee tries to clean up
+with `rtrs_clt_close_conns()`. however, this can lead to calling the
+event tracing code with `clt_path->kobj->name` being `null` and thus
+causing a null pointer dereference when trying to copy from it.
+
+this just adds a guard to check that the name is not `null` before
+copying from it. the server appears to have a similar pattern.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98355" target="_blank">CVE-2026-98355</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-06 04:18:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+RDMA/rtrs: guard against null kobj name
+
+In the client, if `init_path()` errors, the callee tries to clean up
+with `rtrs_clt_close_conns()`. However, this can lead to calling the
+event tracing code with `clt_path->kobj->name` being `NULL` and thus
+causing a null pointer dereference when trying to copy from it.
+
+This just adds a guard to check that the name is not `NULL` before
+copying from it. The server appears to have a similar pattern.</p>
                 </div>
         
             </div>
