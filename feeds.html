@@ -34,6 +34,176 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-98385" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+sched/cache: decouple sched_cache_group from mm to fix uaf
+
+currently the sched cache grouping is by mm and the scheduling statistics
+sched_cache_stat lives in the mm structure.  this ties the life cycle
+of scheduling stats with mm.
+
+in account_mm_sched(), the scheduling stats are accessed by
+task->mm->sc_stat.  however, a task may be switching mm on one cpu when
+another cpu is running account_mm_sched(), and possibly accessing the
+old mm that was freed.  this problem was found when running tests with
+kasan by hyunwoo:
+
+  https://lore.kernel.org/lkml/appb-dr4npyuhqok@v4bel/
+
+instead of serializing the mm access by introducing extra acquisition of
+rq lock in the mm free path, extract sched_cache_stat from mm_struct,
+rename it as sched_cache_group and manage its life cycle apart from
+mm_struct with its own ref counting.  this allows us in the next patch
+access sched_cache_group directly from task, and add a refcount
+on sched_cache_group when a task links to it. this prevents the use
+after free issue when accessing stale and released old mm and its
+sched cache stat a task switches to a new mm while account_mm_sched()
+is done elsewhere.
+
+the other benefit of this restructure is in the future, the grouping of
+tasks to a llc would have the flexibility to be associated with a user
+defined grouping, or cgroup, cookie group, numa_group or others instead
+of just with a single mm address space.
+
+rename sched_cache_stat to sched_cache_group and turn it into a refcounted
+object allocated from mm_struct.  the mm_struct now holds a pointer
+(sched_cache_grp) to this object instead of embedding it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98385" target="_blank">CVE-2026-98385</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+sched/cache: Decouple sched_cache_group from mm to fix UAF
+
+Currently the sched cache grouping is by mm and the scheduling statistics
+sched_cache_stat lives in the mm structure.  This ties the life cycle
+of scheduling stats with mm.
+
+In account_mm_sched(), the scheduling stats are accessed by
+task->mm->sc_stat.  However, a task may be switching mm on one CPU when
+another CPU is running account_mm_sched(), and possibly accessing the
+old mm that was freed.  This problem was found when running tests with
+KASAN by Hyunwoo:
+
+  https://lore.kernel.org/lkml/apPb-Dr4nPYuHQOK@v4bel/
+
+Instead of serializing the mm access by introducing extra acquisition of
+rq lock in the mm free path, extract sched_cache_stat from mm_struct,
+rename it as sched_cache_group and manage its life cycle apart from
+mm_struct with its own ref counting.  This allows us in the next patch
+access sched_cache_group directly from task, and add a refcount
+on sched_cache_group when a task links to it. This prevents the use
+after free issue when accessing stale and released old mm and its
+sched cache stat a task switches to a new mm while account_mm_sched()
+is done elsewhere.
+
+The other benefit of this restructure is in the future, the grouping of
+tasks to a LLC would have the flexibility to be associated with a user
+defined grouping, or cgroup, cookie group, numa_group or others instead
+of just with a single mm address space.
+
+Rename sched_cache_stat to sched_cache_group and turn it into a refcounted
+object allocated from mm_struct.  The mm_struct now holds a pointer
+(sched_cache_grp) to this object instead of embedding it.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84167" data-description="the hotel booking wordpress plugin through 3.8 does not verify that a booking record belongs to the user requesting it, allowing any authenticated user such as a subscriber to read other customers' booking details, including their name, email address, phone number and postal address, by referencing an identifier they do not own.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84167" target="_blank">CVE-2026-84167</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Hotel Booking WordPress plugin through 3.8 does not verify that a booking record belongs to the user requesting it, allowing any authenticated user such as a Subscriber to read other customers' booking details, including their name, email address, phone number and postal address, by referencing an identifier they do not own.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-84166" data-description="the hotel booking wordpress plugin through 3.8 does not implement csrf protection on its administrative booking order management, allowing attackers to trick a logged-in administrator into creating, deleting, or modifying arbitrary booking order records via a forged request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84166" target="_blank">CVE-2026-84166</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Hotel Booking WordPress plugin through 3.8 does not implement CSRF protection on its administrative booking order management, allowing attackers to trick a logged-in administrator into creating, deleting, or modifying arbitrary booking order records via a forged request.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109080" data-description="sql injection in the bulk license plate search of the flock night shift hosted service allowed an authenticated user to read other customer organizations' data, including license plate recognition records, via a crafted license plate value. data could not be modified. flock identified the issue through internal security review and remediated it on 2026-08-12; no customer action is required.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109080" target="_blank">CVE-2026-109080</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>SQL injection in the bulk license plate search of the Flock Night Shift hosted service allowed an authenticated user to read other customer organizations' data, including license plate recognition records, via a crafted license plate value. Data could not be modified. Flock identified the issue through internal security review and remediated it on 2026-08-12; no customer action is required.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108806" data-description="a vulnerability has been found in krupalshah employeerecruitmentsystem up to 922ff6d208278282e7c8e36d70d9ae356adec9fe. affected by this issue is the function mysql_query of the file source/authprocessing.php of the component forgot password handler. such manipulation of the argument fpemail leads to sql injection. the attack can be launched remotely. the exploit has been disclosed to the public and may be used. this product does not use versioning. this is why information about affected and unaffected releases are unavailable. the vendor was contacted early about this disclosure but did not respond in any way. this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108806" target="_blank">CVE-2026-108806</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability has been found in krupalshah EmployeeRecruitmentSystem up to 922ff6d208278282e7c8e36d70d9ae356adec9fe. Affected by this issue is the function mysql_query of the file source/authprocessing.php of the component Forgot Password Handler. Such manipulation of the argument fpemail leads to sql injection. The attack can be launched remotely. The exploit has been disclosed to the public and may be used. This product does not use versioning. This is why information about affected and unaffected releases are unavailable. The vendor was contacted early about this disclosure but did not respond in any way. This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108805" data-description="a flaw has been found in krupalshah employeerecruitmentsystem up to 922ff6d208278282e7c8e36d70d9ae356adec9fe. affected by this vulnerability is the function mysql_query of the file source/loginprocessing.php of the component login handler. this manipulation of the argument email/password causes sql injection. the attack can be initiated remotely. the exploit has been published and may be used. continious delivery with rolling releases is used by this product. therefore, no version details of affected nor updated releases are available. the vendor was contacted early about this disclosure but did not respond in any way. this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108805" target="_blank">CVE-2026-108805</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A flaw has been found in krupalshah EmployeeRecruitmentSystem up to 922ff6d208278282e7c8e36d70d9ae356adec9fe. Affected by this vulnerability is the function mysql_query of the file source/loginprocessing.php of the component Login Handler. This manipulation of the argument email/password causes sql injection. The attack can be initiated remotely. The exploit has been published and may be used. Continious delivery with rolling releases is used by this product. Therefore, no version details of affected nor updated releases are available. The vendor was contacted early about this disclosure but did not respond in any way. This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108804" data-description="a vulnerability was detected in trendnet tew-751dr, tew-752dru and tew733gr 1.03b01/1.03b03. affected is the function fwrite of the file pigwidgeon.cgi of the component web management backend. the manipulation of the argument service results in os command injection. it is possible to launch the attack remotely. the exploit is now public and may be used. the vendor confirms: "as this router was eol'd in 2011, we have no way of testing if such vulnerability exists. we will notify our customers of a potential vulnerability on this product." this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108804" target="_blank">CVE-2026-108804</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
+                    <p>A vulnerability was detected in TRENDnet TEW-751DR, TEW-752DRU and TEW733GR 1.03B01/1.03B03. Affected is the function fwrite of the file pigwidgeon.cgi of the component Web Management Backend. The manipulation of the argument service results in os command injection. It is possible to launch the attack remotely. The exploit is now public and may be used. The vendor confirms: "As this router was EOL'd in 2011, we have no way of testing if such vulnerability exists. We will notify our customers of a potential vulnerability on this product." This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108803" data-description="a security vulnerability has been detected in y_project ruoyi up to 4.8.3. this impacts the function changestatus of the file /system/config/add of the component disable api. the manipulation leads to session expiration. it is possible to initiate the attack remotely. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108803" target="_blank">CVE-2026-108803</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A security vulnerability has been detected in y_project RuoYi up to 4.8.3. This impacts the function changeStatus of the file /system/config/add of the component Disable API. The manipulation leads to session expiration. It is possible to initiate the attack remotely. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108802" data-description="a weakness has been identified in y_project ruoyi up to 4.8.3. this affects the function renderdrawer of the file /system/dict/data/add of the component dictionary data drawer preview. executing a manipulation of the argument cssclass can lead to cross site scripting. the attack may be performed from remote. the exploit has been made available to the public and could be used for attacks. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108802" target="_blank">CVE-2026-108802</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.5</p>
+                    <p>A weakness has been identified in y_project RuoYi up to 4.8.3. This affects the function renderDrawer of the file /system/dict/data/add of the component Dictionary Data Drawer Preview. Executing a manipulation of the argument cssClass can lead to cross site scripting. The attack may be performed from remote. The exploit has been made available to the public and could be used for attacks. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-107791" data-description="the wp comment cleaner  wordpress plugin before 7.2 does not perform a capability check or validate a nonce on one of its bulk comment-deletion routines, allowing authenticated users with minimal permissions, such as subscribers, to permanently delete all comments on the site.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107791" target="_blank">CVE-2026-107791</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The WP Comment Cleaner  WordPress plugin before 7.2 does not perform a capability check or validate a nonce on one of its bulk comment-deletion routines, allowing authenticated users with minimal permissions, such as subscribers, to permanently delete all comments on the site.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-107203" data-description="an **incorrect authorization** flaw has been found in **network interface handling** in the **foreman** package. the domain and subnet interface api checks only that the caller holds a host permission. it does not apply the search limit on that permission, so the request is answered from every interface on the domain or subnet. a low-privileged network attacker or user must already be allowed to view some hosts and to view a domain or subnet shared with other hosts. they can request that domain or subnet's interfaces. the response includes interface records of hosts they are not allowed to view. if the attacker or user is also allowed to edit some hosts, they can submit a change to one of those interfaces. the interface is then saved with that change.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107203" target="_blank">CVE-2026-107203</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>An **incorrect authorization** flaw has been found in **network interface handling** in the **Foreman** package. The domain and subnet interface API checks only that the caller holds a host permission. It does not apply the search limit on that permission, so the request is answered from every interface on the domain or subnet. A low-privileged network attacker or user must already be allowed to view some hosts and to view a domain or subnet shared with other hosts. They can request that domain or subnet's interfaces. The response includes interface records of hosts they are not allowed to view. If the attacker or user is also allowed to edit some hosts, they can submit a change to one of those interfaces. The interface is then saved with that change.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-107193" data-description="a flaw has been found in **permission filters** in the **foreman** package. the api loads a filter by its identifier and does not apply the search limit on the caller's permission. a low-privileged network attacker or user must already be allowed to delete filters for one role only. they can delete filters that belong to other unlocked roles. those other roles then lose the access the deleted filters had granted.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107193" target="_blank">CVE-2026-107193</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>A flaw has been found in **permission filters** in the **foreman** package. The API loads a filter by its identifier and does not apply the search limit on the caller's permission. A low-privileged network attacker or user must already be allowed to delete filters for one role only. They can delete filters that belong to other unlocked roles. Those other roles then lose the access the deleted filters had granted.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-15703" data-description="the hirezoot  wordpress plugin before 4.0.0 does not sanitise and escape one of its job specification settings before it is reflected back into an admin-area settings page, allowing users with the hirezoot  wordpress plugin before 4.0.0's management capability (administrator by default) to store a payload that is executed in the browser of any administrator who later opens that page. as the unfiltered_html capability is not available to administrators on multisite (or where disallow_unfiltered_html is set), this leads to stored cross-site scripting.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-15703" target="_blank">CVE-2025-15703</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-12 01:16:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The HireZoot  WordPress plugin before 4.0.0 does not sanitise and escape one of its job specification settings before it is reflected back into an admin-area settings page, allowing users with the HireZoot  WordPress plugin before 4.0.0's management capability (Administrator by default) to store a payload that is executed in the browser of any administrator who later opens that page. As the unfiltered_html capability is not available to administrators on multisite (or where DISALLOW_UNFILTERED_HTML is set), this leads to Stored Cross-Site Scripting.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-87690" data-description="the metasploit framework post module post/apple_ios/gather/ios_image_gather is affected by a relative path traversal vulnerability (cwe-22). the module interpolates file names taken from a meterpreter directory listing — data fully controlled by a hostile or tampered ios device — directly into the local destination path passed to client.fs.file.download_file(), with no sanitization. the underlying stdapi sink (lib/rex/post/meterpreter/extensions/stdapi/fs/file.rb) writes to whatever path is supplied, so a listing entry such as ../../msfconsole.rc escapes the intended ~/.msf4/loot/<random> directory and overwrites ~/.msf4/msfconsole.rc, a resource file that every msfconsole invocation automatically executes at startup (lib/msf/ui/console/driver.rb:196). an attacker-controlled device that lures an operator into running this gather module achieves an arbitrary file write as the operator; because the written msfconsole.rc can load a second written file (a ruby plugin whose top-level code runs on require), this converts into persistent code execution and an interactive shell as the operator (frequently root) on the pentester's workstation at the next console launch. the same traversal was previously fixed upstream in the recursive downloader (stdapi/fs/dir.rb scrubs separators); this module omitted the equivalent scrub. the fix applies the same separator scrub (or file.basename) to listing entries before building the local path.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87690" target="_blank">CVE-2026-87690</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-12 00:17:03 CDT</p>
@@ -88,110 +258,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>Improper authentication in Samsung Flow prior to version 4.9.22.4 allows adjacent attackers to access sensitive information.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21133" data-description="path traversal in samsung flow prior to version 4.9.22.1 allows local attackers to access clipboard data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21133" target="_blank">CVE-2026-21133</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Path traversal in Samsung Flow prior to version 4.9.22.1 allows local attackers to access clipboard data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21132" data-description="improper input validation in samsung internet prior to version 30.0.5.24 allows remote attackers to inject arbitrary script. user interaction is required for triggering this vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21132" target="_blank">CVE-2026-21132</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in Samsung Internet prior to version 30.0.5.24 allows remote attackers to inject arbitrary script. User interaction is required for triggering this vulnerability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21131" data-description="incorrect default permission in samsung flow prior to version 4.9.22.4 allows local attackers to launch an arbitrary activity with samsung flow privileges on the connected device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21131" target="_blank">CVE-2026-21131</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Incorrect default permission in Samsung Flow prior to version 4.9.22.4 allows local attackers to launch an arbitrary activity with Samsung Flow privileges on the connected device.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21130" data-description="improper input validation in creditcardretrieveactivity of samsung checkout prior to version 5.1.03.1 allows local attackers to launch an arbitrary activity with samsung checkout privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21130" target="_blank">CVE-2026-21130</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in CreditCardRetrieveActivity of Samsung Checkout prior to version 5.1.03.1 allows local attackers to launch an arbitrary activity with Samsung Checkout privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21129" data-description="improper input validation in guestcreditcardregisteractivity of samsung checkout prior to version 5.1.03.1 allows local attackers to launch an arbitrary activity with samsung checkout privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21129" target="_blank">CVE-2026-21129</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in GuestCreditCardRegisterActivity of Samsung Checkout prior to version 5.1.03.1 allows local attackers to launch an arbitrary activity with Samsung Checkout privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21128" data-description="improper input validation in creditcardregisteractivity of samsung checkout prior to version 5.1.03.1 allows local attackers to launch arbitrary activity with samsung checkout privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21128" target="_blank">CVE-2026-21128</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in CreditCardRegisterActivity of Samsung Checkout prior to version 5.1.03.1 allows local attackers to launch arbitrary activity with Samsung Checkout privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21127" data-description="improper export of android application components in samsung account prior to version 15.7.01.1 allows local attackers to access sensitive data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21127" target="_blank">CVE-2026-21127</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper export of android application components in Samsung Account prior to version 15.7.01.1 allows local attackers to access sensitive data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21126" data-description="improper input validation in getting cover image in libsimba.heifdec.media.samsung.so prior to smr oct-2026 release 1 allows local attackers to write out-of-bounds memory.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21126" target="_blank">CVE-2026-21126</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in getting cover image in libsimba.heifdec.media.samsung.so prior to SMR Oct-2026 Release 1 allows local attackers to write out-of-bounds memory.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21125" data-description="improper input validation in parsing sheifd in libsimba.heifdec.media.samsung.so prior to smr oct-2026 release 1 allows local attackers to potentially execute arbitrary code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21125" target="_blank">CVE-2026-21125</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in parsing sheifd in libsimba.heifdec.media.samsung.so prior to SMR Oct-2026 Release 1 allows local attackers to potentially execute arbitrary code.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21124" data-description="improper input validation in getting cover image in libsimba.heifdec.media.samsung.so prior to smr oct-2026 release 1 allows local attackers to potentially execute arbitrary code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21124" target="_blank">CVE-2026-21124</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper input validation in getting cover image in libsimba.heifdec.media.samsung.so prior to SMR Oct-2026 Release 1 allows local attackers to potentially execute arbitrary code.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21123" data-description="improper privilege management in locksettings prior to smr oct-2026 release 1 allows local privileged attackers with root privilege to access data of the tied profile in before first unlock.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21123" target="_blank">CVE-2026-21123</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper privilege management in Locksettings prior to SMR Oct-2026 Release 1 allows local privileged attackers with root privilege to access data of the tied profile in before first unlock.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21122" data-description="out-of-bounds write in libsamsungtts.so prior to smr oct-2026 release 1 allows local attackers to execute arbitrary code.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21122" target="_blank">CVE-2026-21122</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Out-of-bounds write in libsamsungtts.so prior to SMR Oct-2026 Release 1 allows local attackers to execute arbitrary code.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-21121" data-description="improper handling of insufficient permission in cmccore prior to smr oct-2026 release 1 allows local attackers to use the privileged apis.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21121" target="_blank">CVE-2026-21121</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-12 00:17:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper handling of insufficient permission in CmcCore prior to SMR Oct-2026 Release 1 allows local attackers to use the privileged APIs.</p>
                 </div>
         
             </div>
