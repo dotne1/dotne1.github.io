@@ -34,6 +34,274 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-110816" data-description="### summary
+
+
+
+`qs.stringify` with `arrayformat: 'comma'` throws `typeerror: cannot convert object to primitive value` when an array element cannot be coerced to a string, such as an object with an own non-callable `tostring` (`{ "tostring": "x" }`) or a null-prototype object. the comma format joins array elements with `array.prototype.join` and, under `encodevaluesonly`, first passes each element through `string()` in `utils.encode`; neither guards against an element whose string coercion fails.
+
+
+
+### details
+
+
+
+in `lib/stringify.js`, the comma branch collapses the array with `obj.join(',')`. for an element whose own `tostring` is not callable, `toprimitive` skips it, falls through to `object.prototype.valueof` (which returns the object itself), and throws. under `encodevaluesonly: true`, the same element first reaches `string(str)` in `utils.encode` (`lib/utils.js`) and throws there. nested arrays (`{ "a": [[{ "tostring": "x" }]] }`) throw the same way, through `array.prototype.tostring`. the `indices`, `brackets`, and `repeat` formats walk into object elements instead of coercing them, and are not affected.
+
+
+
+such elements can come from untrusted input. `json.parse` produces `{ "a": [{ "tostring": "x" }] }` with no qs option involved. `qs.parse("a[0][tostring]=x", { allowprototypes: true })` keeps the `tostring` key, and `qs.parse("a[][b]=c", { plainobjects: true })` produces a null-prototype element; the default parse options drop `tostring` and produce ordinary objects, which do not throw. express 4's default `query parser`, express 5's `extended` query parser, and body-parser's `urlencoded({ extended: true })` all call `qs.parse` with `allowprototypes: true`.
+
+
+
+#### poc
+
+
+
+```js
+
+
+
+var qs = require("qs");
+
+
+
+qs.stringify(json.parse("{\"a\":[{\"tostring\":\"x\"}]}"), { arrayformat: "comma" });
+
+
+
+qs.stringify(qs.parse("a[0][tostring]=x", { allowprototypes: true }), { arrayformat: "comma" });
+
+
+
+qs.stringify(qs.parse("a[][b]=c", { plainobjects: true }), { arrayformat: "comma", encodevaluesonly: true });
+
+
+
+// typeerror: cannot convert object to primitive value
+
+
+
+```
+
+
+
+#### fix
+
+
+
+applied in a952e75 on `main` and released as v6.16.1: an element whose string coercion would fail is coerced to its primitive `valueof`, if any, or else to `object.prototype.tostring`, so it renders as `[object object]`, the same as any other object element already does under the comma format. nested arrays are walked the way `join` walks them. every input that did not previously throw serializes exactly as before, and a `tostring` or `valueof` that itself throws still propagates.
+
+
+
+### affected versions
+
+
+
+`>=6.7.0 <6.16.1`, fixed in v6.16.1.
+
+
+
+the `join` path was introduced with the comma format in b84acba and first shipped in v6.7.0; v6.6.x and earlier ignore `arrayformat: 'comma'` and are not affected. the `encodevaluesonly` `string()` site was introduced in 4c4b23d (v6.11.1); before that, the same input throws at `join`. every release from v6.7.0 through v6.16.0 is affected.
+
+
+
+### impact
+
+
+
+an unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` and `arrayformat: 'comma'` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed json body) throw synchronously. in a typical node.js http framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. where the call runs outside an error boundary, such as an `async` express 4 handler (where the throw becomes an unhandled promise rejection) or a bare `http` request handler, the process exits, so the impact in that case depends on the application error handling rather than on qs. the default `arrayformat` (`indices`) is not affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110816" target="_blank">CVE-2026-110816</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>### Summary
+
+
+
+`qs.stringify` with `arrayFormat: 'comma'` throws `TypeError: Cannot convert object to primitive value` when an array element cannot be coerced to a string, such as an object with an own non-callable `toString` (`{ "toString": "x" }`) or a null-prototype object. The comma format joins array elements with `Array.prototype.join` and, under `encodeValuesOnly`, first passes each element through `String()` in `utils.encode`; neither guards against an element whose string coercion fails.
+
+
+
+### Details
+
+
+
+In `lib/stringify.js`, the comma branch collapses the array with `obj.join(',')`. For an element whose own `toString` is not callable, `ToPrimitive` skips it, falls through to `Object.prototype.valueOf` (which returns the object itself), and throws. Under `encodeValuesOnly: true`, the same element first reaches `String(str)` in `utils.encode` (`lib/utils.js`) and throws there. Nested arrays (`{ "a": [[{ "toString": "x" }]] }`) throw the same way, through `Array.prototype.toString`. The `indices`, `brackets`, and `repeat` formats walk into object elements instead of coercing them, and are not affected.
+
+
+
+Such elements can come from untrusted input. `JSON.parse` produces `{ "a": [{ "toString": "x" }] }` with no qs option involved. `qs.parse("a[0][toString]=x", { allowPrototypes: true })` keeps the `toString` key, and `qs.parse("a[][b]=c", { plainObjects: true })` produces a null-prototype element; the default parse options drop `toString` and produce ordinary objects, which do not throw. Express 4's default `query parser`, Express 5's `extended` query parser, and body-parser's `urlencoded({ extended: true })` all call `qs.parse` with `allowPrototypes: true`.
+
+
+
+#### PoC
+
+
+
+```js
+
+
+
+var qs = require("qs");
+
+
+
+qs.stringify(JSON.parse("{\"a\":[{\"toString\":\"x\"}]}"), { arrayFormat: "comma" });
+
+
+
+qs.stringify(qs.parse("a[0][toString]=x", { allowPrototypes: true }), { arrayFormat: "comma" });
+
+
+
+qs.stringify(qs.parse("a[][b]=c", { plainObjects: true }), { arrayFormat: "comma", encodeValuesOnly: true });
+
+
+
+// TypeError: Cannot convert object to primitive value
+
+
+
+```
+
+
+
+#### Fix
+
+
+
+Applied in a952e75 on `main` and released as v6.16.1: an element whose string coercion would fail is coerced to its primitive `valueOf`, if any, or else to `Object.prototype.toString`, so it renders as `[object Object]`, the same as any other object element already does under the comma format. Nested arrays are walked the way `join` walks them. Every input that did not previously throw serializes exactly as before, and a `toString` or `valueOf` that itself throws still propagates.
+
+
+
+### Affected versions
+
+
+
+`>=6.7.0 <6.16.1`, fixed in v6.16.1.
+
+
+
+The `join` path was introduced with the comma format in b84acba and first shipped in v6.7.0; v6.6.x and earlier ignore `arrayFormat: 'comma'` and are not affected. The `encodeValuesOnly` `String()` site was introduced in 4c4b23d (v6.11.1); before that, the same input throws at `join`. Every release from v6.7.0 through v6.16.0 is affected.
+
+
+
+### Impact
+
+
+
+An unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` and `arrayFormat: 'comma'` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed JSON body) throw synchronously. In a typical Node.js HTTP framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. Where the call runs outside an error boundary, such as an `async` Express 4 handler (where the throw becomes an unhandled promise rejection) or a bare `http` request handler, the process exits, so the impact in that case depends on the application error handling rather than on qs. The default `arrayFormat` (`indices`) is not affected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110698" data-description="a security vulnerability has been detected in praat up to 7.0.02. affected is the function whisper_model_load of the file external/whispercpp/whisper.cpp of the component model loader. the manipulation of the argument n_dims leads to out-of-bounds write. the attack can be initiated remotely. the exploit has been disclosed publicly and may be used. the identifier of the patch is a910d21a2705ef4cd16d91f29cdc8da1ab1a7221. to fix this issue, it is recommended to deploy a patch. the project maintainer confirms: "we did a quick fix (suggested fix 1) for praat version 7.0.03, and scheduled a better fix (suggested fix 2)."">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110698" target="_blank">CVE-2026-110698</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A security vulnerability has been detected in Praat up to 7.0.02. Affected is the function whisper_model_load of the file external/whispercpp/whisper.cpp of the component Model Loader. The manipulation of the argument n_dims leads to out-of-bounds write. The attack can be initiated remotely. The exploit has been disclosed publicly and may be used. The identifier of the patch is a910d21a2705ef4cd16d91f29cdc8da1ab1a7221. To fix this issue, it is recommended to deploy a patch. The project maintainer confirms: "We did a quick fix (suggested fix 1) for Praat version 7.0.03, and scheduled a better fix (suggested fix 2)."</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110696" data-description="a weakness has been identified in itsmeravitejak online-examination-system up to e6208e630b14657999bbfe4c9912302d2a1e2449. the affected element is an unknown function of the file dbtables.sql. executing a manipulation can lead to information disclosure. the attack may be launched remotely. the exploit has been made available to the public and could be used for attacks. this product operates on a rolling release basis, ensuring continuous delivery. consequently, there are no version details for either affected or updated releases. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110696" target="_blank">CVE-2026-110696</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A weakness has been identified in itsmeravitejak Online-Examination-System up to e6208e630b14657999bbfe4c9912302d2a1e2449. The affected element is an unknown function of the file dbtables.sql. Executing a manipulation can lead to information disclosure. The attack may be launched remotely. The exploit has been made available to the public and could be used for attacks. This product operates on a rolling release basis, ensuring continuous delivery. Consequently, there are no version details for either affected or updated releases. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110695" data-description="a vulnerability was detected in turboderp exllamav2 up to 0.3.2. affected is the function stfile.get_tensor of the file exllamav2/stloader.py of the component safetensors tensor loader. performing a manipulation of the argument data_offsets results in buffer overflow. the attack is possible to be carried out remotely. the exploit is now public and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110695" target="_blank">CVE-2026-110695</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A vulnerability was detected in turboderp ExLlamaV2 up to 0.3.2. Affected is the function STFile.get_tensor of the file exllamav2/stloader.py of the component Safetensors Tensor Loader. Performing a manipulation of the argument data_offsets results in buffer overflow. The attack is possible to be carried out remotely. The exploit is now public and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108337" data-description="an administrator could retrieve the password reset code for any user and take over the account.
+
+
+
+the password reset codes were included in the output of an api and could be used to reset the password of any account. the api is limited to use by administrator accounts only.
+
+
+
+an attacker who already has administrative access to the application could compromise the credentials of other accounts on the application. device credentials and customer data cannot be accessed with this vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108337" target="_blank">CVE-2026-108337</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An administrator could retrieve the password reset code for any user and take over the account.
+
+
+
+The password reset codes were included in the output of an API and could be used to reset the password of any account. The API is limited to use by administrator accounts only.
+
+
+
+An attacker who already has administrative access to the application could compromise the credentials of other accounts on the application. Device credentials and customer data cannot be accessed with this vulnerability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108336" data-description="when the default self-signed certificate is used, an attacker could gain administrative access to the application.
+
+
+
+the ssl certificate for the web interface is used to sign jwt access tokens that are used to validate that the user is logged in. when the default ssl certificate is used, an attacker could have the capability to sign jwt access tokens and bypass login.
+
+
+
+an attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. device credentials and customer data cannot be accessed with this vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108336" target="_blank">CVE-2026-108336</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>When the default self-signed certificate is used, an attacker could gain administrative access to the application.
+
+
+
+The SSL certificate for the web interface is used to sign JWT access tokens that are used to validate that the user is logged in. When the default SSL certificate is used, an attacker could have the capability to sign JWT access tokens and bypass login.
+
+
+
+An attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. Device credentials and customer data cannot be accessed with this vulnerability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108335" data-description="when the password reset functionality is enabled, and email is configured, an attacker could take over any account using a brute-force attack.
+
+
+
+there is no rate limiting on the attempts to enter the reset code, leading to the possibility of a brute force solution to the password reset challenge.
+
+
+
+an attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. device credentials and customer data cannot be accessed with this vulnerability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108335" target="_blank">CVE-2026-108335</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>When the password reset functionality is enabled, and email is configured, an attacker could take over any account using a brute-force attack.
+
+
+
+There is no rate limiting on the attempts to enter the reset code, leading to the possibility of a brute force solution to the password reset challenge.
+
+
+
+An attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. Device credentials and customer data cannot be accessed with this vulnerability.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102298" data-description="in omada controller msp mode, the user-confirmation endpoint fails to enforce the required permission check. an authenticated user can supply a caller-controlled identifier parameter to validate credentials for another account and receive responses that distinguish nonexistent users, invalid passwords, and successful authentication. 
+
+successful exploitation may allow user enumeration, credential verification, and unauthorized access to msp resources or compromise of targeted accounts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102298" target="_blank">CVE-2026-102298</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In Omada Controller MSP mode, the user-confirmation endpoint fails to enforce the required permission check. An authenticated user can supply a caller-controlled Identifier parameter to validate credentials for another account and receive responses that distinguish nonexistent users, invalid passwords, and successful authentication. 
+
+Successful exploitation may allow user enumeration, credential verification, and unauthorized access to MSP resources or compromise of targeted accounts.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-96540" data-description="an improper access control vulnerability has been identified in the sonicwall network security manager (nsm) on-prem in export settings, potentially allowing a remote authenticated attacker to obtain sensitive information. this may allow the attacker to escalate privileges to an administrator or to intercept communications of other users of the nsm instance.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96540" target="_blank">CVE-2026-96540</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-14 16:17:39 CDT</p>
@@ -128,70 +396,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.4</p>
                     <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.16.0, FileRise treats an empty or missing users.txt file as a fresh installation even after setup previously completed. If storage loss, truncation, or another failure empties the user store, an unauthenticated remote caller can detect that setup mode reopened and create the next initial administrator account through the setup flow. The application lacked a durable setup-complete marker independent of the mutable user store. This issue is fixed in version 3.16.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-57491" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.16.0, filerise archive extraction does not apply uploadnamepolicy::isallowedforwrite() before ziparchive::extractto() writes entries into the destination directory. an authenticated user with upload and extract permissions can place a blocked extension such as a php-family file inside a zip and cause it to be written to disk even when normal uploads reject that filename. post-extraction metadata pruning does not remove the blocked file, so deployments that execute uploaded content may permit code execution. this issue is fixed in version 3.16.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57491" target="_blank">CVE-2026-57491</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.16.0, FileRise archive extraction does not apply UploadNamePolicy::isAllowedForWrite() before ZipArchive::extractTo() writes entries into the destination directory. An authenticated user with upload and extract permissions can place a blocked extension such as a PHP-family file inside a ZIP and cause it to be written to disk even when normal uploads reject that filename. Post-extraction metadata pruning does not remove the blocked file, so deployments that execute uploaded content may permit code execution. This issue is fixed in version 3.16.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-57490" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.16.0, when an administrator has enabled webdav, filerise webdav basic authentication validates only the account username and password through authmodel::authenticate() and does not enforce the account's configured totp factor. an attacker who knows valid primary credentials for a totp-enabled account can authenticate to the enabled webdav service without supplying the second factor and exercise the account's webdav file permissions. the browser login path enforces totp, but the separate public/webdav.php authentication callback did not. this issue is fixed in version 3.16.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57490" target="_blank">CVE-2026-57490</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.16.0, when an administrator has enabled WebDAV, FileRise WebDAV Basic authentication validates only the account username and password through AuthModel::authenticate() and does not enforce the account's configured TOTP factor. An attacker who knows valid primary credentials for a TOTP-enabled account can authenticate to the enabled WebDAV service without supplying the second factor and exercise the account's WebDAV file permissions. The browser login path enforces TOTP, but the separate public/webdav.php authentication callback did not. This issue is fixed in version 3.16.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-57489" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.16.0, filerise deployments with auth_bypass enabled trust the configured reverse-proxy identity header without verifying that the request originated from fr_trusted_proxies. when the backend application port is reachable directly, an unauthenticated attacker can supply x-remote-user and obtain a session for the asserted account, including an administrator account, without a password or mfa. the flaw is limited to deployments that enable proxy-header authentication and expose an untrusted path to the backend. this issue is fixed in version 3.16.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57489" target="_blank">CVE-2026-57489</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.16.0, FileRise deployments with AUTH_BYPASS enabled trust the configured reverse-proxy identity header without verifying that the request originated from FR_TRUSTED_PROXIES. When the backend application port is reachable directly, an unauthenticated attacker can supply X-Remote-User and obtain a session for the asserted account, including an administrator account, without a password or MFA. The flaw is limited to deployments that enable proxy-header authentication and expose an untrusted path to the backend. This issue is fixed in version 3.16.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110694" data-description="a vulnerability has been found in oaid tengine up to 1.12.0. this vulnerability affects the function get_tm_file_model of the file source/serializer/tmfile/tm2_serializer.c of the component tmfile model loader. such manipulation of the argument offset_root leads to out-of-bounds read. it is possible to launch the attack remotely. the exploit has been disclosed to the public and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110694" target="_blank">CVE-2026-110694</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability has been found in OAID Tengine up to 1.12.0. This vulnerability affects the function get_tm_file_model of the file source/serializer/tmfile/tm2_serializer.c of the component tmfile Model Loader. Such manipulation of the argument offset_root leads to out-of-bounds read. It is possible to launch the attack remotely. The exploit has been disclosed to the public and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110689" data-description="a security flaw has been discovered in openclaw clawscan up to 0.1.6. this impacts the function shouldskiptargetpath of the file internal/runner/runner.go of the component static scanner. performing a manipulation results in protection mechanism failure. attacking locally is a requirement. the exploit has been released to the public and may be used for attacks. upgrading to version 0.1.7 will fix this issue. the patch is named 9f6a6fbb9f1137345566d0ab44c73893dfe112fa. the affected component should be upgraded.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110689" target="_blank">CVE-2026-110689</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A security flaw has been discovered in OpenClaw ClawScan up to 0.1.6. This impacts the function shouldSkipTargetPath of the file internal/runner/runner.go of the component Static Scanner. Performing a manipulation results in protection mechanism failure. Attacking locally is a requirement. The exploit has been released to the public and may be used for attacks. Upgrading to version 0.1.7 will fix this issue. The patch is named 9f6a6fbb9f1137345566d0ab44c73893dfe112fa. The affected component should be upgraded.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110679" data-description="a vulnerability was determined in opensips up to 3.6.8/4.0.1. the impacted element is the function rtpproxy_offer/rtpproxy_answer of the component rtpproxy. this manipulation causes out-of-bounds read. the attack may be initiated remotely. upgrading to version 3.6.9 and 4.0.2 is sufficient to resolve this issue. it is advisable to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110679" target="_blank">CVE-2026-110679</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was determined in OpenSIPS up to 3.6.8/4.0.1. The impacted element is the function rtpproxy_offer/rtpproxy_answer of the component rtpproxy. This manipulation causes out-of-bounds read. The attack may be initiated remotely. Upgrading to version 3.6.9 and 4.0.2 is sufficient to resolve this issue. It is advisable to upgrade the affected component.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110670" data-description="a vulnerability was found in cemtan sar2html 4.0.0. the affected element is the function updatedb of the file sar2html.py of the component archive processing. the manipulation of the argument s2host results in sql injection. the attack can be launched remotely. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110670" target="_blank">CVE-2026-110670</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was found in cemtan sar2html 4.0.0. The affected element is the function updateDb of the file sar2html.py of the component Archive Processing. The manipulation of the argument s2host results in sql injection. The attack can be launched remotely. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-104110" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.24.0, filerise pro /api/pro/portals/get.php returns a configured client portal's full internal record to an unauthenticated caller who knows or guesses the portal slug. the response includes the internal storage folder path, client contact email, form settings, and upload-policy details, while the separate publicmeta.php endpoint intentionally exposes only curated branding data. exploitation requires the pro add-on and at least one configured portal. this issue is fixed in version 3.24.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-104110" target="_blank">CVE-2026-104110</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.24.0, FileRise Pro /api/pro/portals/get.php returns a configured client portal's full internal record to an unauthenticated caller who knows or guesses the portal slug. The response includes the internal storage folder path, client contact email, form settings, and upload-policy details, while the separate publicMeta.php endpoint intentionally exposes only curated branding data. Exploitation requires the Pro add-on and at least one configured portal. This issue is fixed in version 3.24.0.</p>
                 </div>
         
             </div>
