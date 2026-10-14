@@ -34,998 +34,350 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-98431" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-97629" data-description="description
+when nginx plus or nginx open source is configured with ssl_session_cache 
 
-rdma/uverbs: fix mmap_lock/disassociation_lock circular dependency
+shared:name:size
 
-commit 51976c6cd786 ("rdma/core: provide rdma_user_mmap_disassociate()
-to disassociate mmap pages") introduced disassociation_lock to protect
-new mmap registrations against uverbs_user_mmap_disassociate(), but
-created an abba deadlock:
+without an explicit ssl_session_ticket_key file directives to automatically rotate ssl session ticket keys, a remote unauthenticated attacker is able to forge client ssl sessions 
 
-  thread a (mmap / fork):
-    mmap_lock -> disassociation_lock
+in a non-deterministic manner that is beyond the attacker's control. an attacker could leverage this vulnerability to bypass verification of client certificates.
 
-  thread b (disassociate):
-    disassociation_lock -> mmap_lock
+impact
 
-fix by removing disassociation_lock entirely and using the pre-existing
-hw_destroy_rwsem instead. hw_destroy_rwsem already provides the same
-protection: rdma_umap_open() and ib_uverbs_mmap() both use
-down_read_trylock() before registering a new vma, so holding hw_destroy_rwsem
-in uverbs_user_mmap_disassociate() is sufficient to block new registrations.
-trylock is used in both mmap paths (not blocking down_read) because
-mmap_lock is already held on entry, and uverbs_user_mmap_disassociate()
-acquires mmap_lock internally — a blocking read would recreate the same
-deadlock.
 
-the only caller that was not taking hw_destroy_rwsem for write was
-rdma_user_mmap_disassociate(). fix it to take the rwsem per-ufile while
-iterating under lists_mutex.  this is safe because ib_uverbs_close()
-releases hw_destroy_rwsem entirely before acquiring lists_mutex, so the
-two locks are never held simultaneously.
+this vulnerability can lead to the exposure of resources or functionality to unintended actors, possibly providing attackers with access to sensitive information. there is no control plane exposure; this is a data plane issue only.
 
-lockdep warning:
 
- [  776.654252] ======================================================
- [  776.655214] warning: possible circular locking dependency detected
- [  776.656167] 6.18.0for-upstream_debug_94e244d9ccab #1 not tainted
- [  776.657114] ------------------------------------------------------
- [  776.658087] devlink/14824 is trying to acquire lock:
- [  776.658879] ffff88811170c800 (&mm->mmap_lock){++++}-{4:4}, at: uverbs_user_mmap_disassociate+0x168/0x780 [ib_uverbs]
- [  776.660479]
- [  776.660479] but task is already holding lock:
- [  776.661460] ffff888142d92b08 (&file->disassociation_lock){+.+.}-{4:4}, at: uverbs_user_mmap_disassociate+0x39/0x780 [ib_uverbs]
- [  776.663177]
- [  776.663177] which lock already depends on the new lock.
- [  776.663177]
- [  776.664525]
- [  776.664525] the existing dependency chain (in reverse order) is:
- [  776.665724]
- [  776.665724] -> #2 (&file->disassociation_lock){+.+.}-{4:4}:
- [  776.666887]        __mutex_lock+0x16d/0x2330
- [  776.667633]        rdma_umap_open+0x129/0x280 [ib_uverbs]
- [  776.668489]        dup_mmap+0xa40/0x1790
- [  776.669170]        copy_process+0x5dd2/0x6170
- [  776.669933]        kernel_clone+0xb6/0x610
- [  776.670636]        __do_sys_clone+0xb5/0xf0
- [  776.671354]        do_syscall_64+0x70/0x12e0
- [  776.672083]        entry_syscall_64_after_hwframe+0x4b/0x53
- [  776.672940]
- [  776.672940] -> #1 (&mm->mmap_lock/1){+.+.}-{4:4}:
- [  776.673985]        down_write_nested+0x90/0x1e0
- [  776.674751]        dup_mmap+0x201/0x1790
- [  776.675448]        copy_process+0x5dd2/0x6170
- [  776.676180]        kernel_clone+0xb6/0x610
- [  776.676904]        __do_sys_clone+0xb5/0xf0
- [  776.677615]        do_syscall_64+0x70/0x12e0
- [  776.678351]        entry_syscall_64_after_hwframe+0x4b/0x53
- [  776.679239]
- [  776.679239] -> #0 (&mm->mmap_lock){++++}-{4:4}:
- [  776.680253]        __lock_acquire+0x18c6/0x2ec0
- [  776.681018]        lock_acquire+0x10e/0x2e0
- [  776.681742]        down_read+0x95/0x430
- [  776.682395]        uverbs_user_mmap_disassociate+0x168/0x780 [ib_uverbs]
- [  776.683436]        uverbs_destroy_ufile_hw+0x1ae/0x270 [ib_uverbs]
- [  776.684416]        ib_uverbs_remove_one+0x22b/0x420 [ib_uverbs]
- [  776.685371]        remove_client_context+0xa6/0xf0 [ib_core]
- [  776.686342]        disable_device+0x12b/0x240 [ib_core]
- [  776.687249]        __ib_unregister_device+0x269/0x460 [ib_core]
- [  776.688233]        ib_unregister_device+0x21/0x30 [ib_core]
- [  776.689140]        mlx5r_remove+0xd0/0x170 [mlx5_ib]
- [  776.689999]        device_release_driver_internal+0x3b2/0x5
----truncated---">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98431" target="_blank">CVE-2026-98431</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-RDMA/uverbs: Fix mmap_lock/disassociation_lock circular dependency
 
-Commit 51976c6cd786 ("RDMA/core: Provide rdma_user_mmap_disassociate()
-to disassociate mmap pages") introduced disassociation_lock to protect
-new mmap registrations against uverbs_user_mmap_disassociate(), but
-created an ABBA deadlock:
 
-  Thread A (mmap / fork):
-    mmap_lock -> disassociation_lock
 
-  Thread B (disassociate):
-    disassociation_lock -> mmap_lock
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97629" target="_blank">CVE-2026-97629</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Description
+When NGINX Plus or NGINX Open Source is configured with ssl_session_cache 
 
-Fix by removing disassociation_lock entirely and using the pre-existing
-hw_destroy_rwsem instead. hw_destroy_rwsem already provides the same
-protection: rdma_umap_open() and ib_uverbs_mmap() both use
-down_read_trylock() before registering a new VMA, so holding hw_destroy_rwsem
-in uverbs_user_mmap_disassociate() is sufficient to block new registrations.
-trylock is used in both mmap paths (not blocking down_read) because
-mmap_lock is already held on entry, and uverbs_user_mmap_disassociate()
-acquires mmap_lock internally — a blocking read would recreate the same
-deadlock.
+shared:name:size
 
-The only caller that was not taking hw_destroy_rwsem for write was
-rdma_user_mmap_disassociate(). Fix it to take the rwsem per-ufile while
-iterating under lists_mutex.  This is safe because ib_uverbs_close()
-releases hw_destroy_rwsem entirely before acquiring lists_mutex, so the
-two locks are never held simultaneously.
+without an explicit ssl_session_ticket_key file directives to automatically rotate SSL session ticket keys, a remote unauthenticated attacker is able to forge client SSL sessions 
 
-lockdep warning:
+in a non-deterministic manner that is beyond the attacker's control. An attacker could leverage this vulnerability to bypass verification of client certificates.
 
- [  776.654252] ======================================================
- [  776.655214] WARNING: possible circular locking dependency detected
- [  776.656167] 6.18.0for-upstream_debug_94e244d9ccab #1 Not tainted
- [  776.657114] ------------------------------------------------------
- [  776.658087] devlink/14824 is trying to acquire lock:
- [  776.658879] ffff88811170c800 (&mm->mmap_lock){++++}-{4:4}, at: uverbs_user_mmap_disassociate+0x168/0x780 [ib_uverbs]
- [  776.660479]
- [  776.660479] but task is already holding lock:
- [  776.661460] ffff888142d92b08 (&file->disassociation_lock){+.+.}-{4:4}, at: uverbs_user_mmap_disassociate+0x39/0x780 [ib_uverbs]
- [  776.663177]
- [  776.663177] which lock already depends on the new lock.
- [  776.663177]
- [  776.664525]
- [  776.664525] the existing dependency chain (in reverse order) is:
- [  776.665724]
- [  776.665724] -> #2 (&file->disassociation_lock){+.+.}-{4:4}:
- [  776.666887]        __mutex_lock+0x16d/0x2330
- [  776.667633]        rdma_umap_open+0x129/0x280 [ib_uverbs]
- [  776.668489]        dup_mmap+0xa40/0x1790
- [  776.669170]        copy_process+0x5dd2/0x6170
- [  776.669933]        kernel_clone+0xb6/0x610
- [  776.670636]        __do_sys_clone+0xb5/0xf0
- [  776.671354]        do_syscall_64+0x70/0x12e0
- [  776.672083]        entry_SYSCALL_64_after_hwframe+0x4b/0x53
- [  776.672940]
- [  776.672940] -> #1 (&mm->mmap_lock/1){+.+.}-{4:4}:
- [  776.673985]        down_write_nested+0x90/0x1e0
- [  776.674751]        dup_mmap+0x201/0x1790
- [  776.675448]        copy_process+0x5dd2/0x6170
- [  776.676180]        kernel_clone+0xb6/0x610
- [  776.676904]        __do_sys_clone+0xb5/0xf0
- [  776.677615]        do_syscall_64+0x70/0x12e0
- [  776.678351]        entry_SYSCALL_64_after_hwframe+0x4b/0x53
- [  776.679239]
- [  776.679239] -> #0 (&mm->mmap_lock){++++}-{4:4}:
- [  776.680253]        __lock_acquire+0x18c6/0x2ec0
- [  776.681018]        lock_acquire+0x10e/0x2e0
- [  776.681742]        down_read+0x95/0x430
- [  776.682395]        uverbs_user_mmap_disassociate+0x168/0x780 [ib_uverbs]
- [  776.683436]        uverbs_destroy_ufile_hw+0x1ae/0x270 [ib_uverbs]
- [  776.684416]        ib_uverbs_remove_one+0x22b/0x420 [ib_uverbs]
- [  776.685371]        remove_client_context+0xa6/0xf0 [ib_core]
- [  776.686342]        disable_device+0x12b/0x240 [ib_core]
- [  776.687249]        __ib_unregister_device+0x269/0x460 [ib_core]
- [  776.688233]        ib_unregister_device+0x21/0x30 [ib_core]
- [  776.689140]        mlx5r_remove+0xd0/0x170 [mlx5_ib]
- [  776.689999]        device_release_driver_internal+0x3b2/0x5
----truncated---</p>
+Impact
+
+
+This vulnerability can lead to the exposure of resources or functionality to unintended actors, possibly providing attackers with access to sensitive information. There is no control plane exposure; this is a data plane issue only.
+
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98430" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-97205" data-description="nginx plus and nginx open source have a vulnerability in the ngx_http_core_module module. when asynchronous file i/o (aio) is enabled in certain configurations, processing a server side includes (ssi) page containing “include virtual” commands may trigger a use-after-free (uaf) in the nginx worker process. this may cause memory corruption or a worker process crash. additionally, attackers can execute code on systems with address space layout randomization (aslr) disabled or when the attacker can bypass aslr.
 
-rdma/efa: keep admin queues alive while irq is registered
+impact:
+this vulnerability may allow remote attackers to cause a denial-of-service (dos) on the nginx system, corrupt its memory, or possibly trigger code execution. there is no control plane exposure; this is a data plane issue only.
 
-the management irq handler accesses both the admin completion queue and the
-async event queue. the driver registered the irq before constructing these
-queues and destroyed them before freeing the irq, so the handler's lifetime
-was not contained by the resources it accesses.
 
-initialize the queues with interrupts masked, request the irq, and then
-switch to interrupt mode. on removal, reset the device and free the irq
-before destroying the queues. also reset the device before destroying the
-queues if irq registration fails, because the device already has their dma
-addresses.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98430" target="_blank">CVE-2026-98430</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-RDMA/efa: Keep admin queues alive while IRQ is registered
 
-The management IRQ handler accesses both the admin completion queue and the
-async event queue. The driver registered the IRQ before constructing these
-queues and destroyed them before freeing the IRQ, so the handler's lifetime
-was not contained by the resources it accesses.
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97205" target="_blank">CVE-2026-97205</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>NGINX Plus and NGINX Open Source have a vulnerability in the ngx_http_core_module module. When asynchronous file I/O (AIO) is enabled in certain configurations, processing a Server Side Includes (SSI) page containing “include virtual” commands may trigger a Use-After-Free (UAF) in the NGINX worker process. This may cause memory corruption or a worker process crash. Additionally, attackers can execute code on systems with Address Space Layout Randomization (ASLR) disabled or when the attacker can bypass ASLR.
 
-Initialize the queues with interrupts masked, request the IRQ, and then
-switch to interrupt mode. On removal, reset the device and free the IRQ
-before destroying the queues. Also reset the device before destroying the
-queues if IRQ registration fails, because the device already has their DMA
-addresses.</p>
+Impact:
+This vulnerability may allow remote attackers to cause a denial-of-service (DoS) on the NGINX system, corrupt its memory, or possibly trigger code execution. There is no control plane exposure; this is a data plane issue only.
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98429" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-96615" data-description="description
+nginx gateway fabric has a vulnerability when it is configured with gateway 
 
-rdma/efa: keep eq resources alive while irq is registered
+custom resource definition (crd) and have an authenticated grpc connection with nginx agent. a namespaced 
 
-the completion irq handler accesses the eq state and dma buffer. its irq was
-registered before that state was initialized, while teardown released the
-buffer before free_irq() synchronized the handler.
+ authenticated attacker with access to a service account may impersonate the authenticated nginx agent grpc connection to read tls private keys of gateway deployments in another namespace. 
 
-initialize the eq without arming it, register the irq, and then arm it.
-reverse the resource order during teardown by freeing the irq before
-destroying the eq.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98429" target="_blank">CVE-2026-98429</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+impact
+a remote authenticated attacker may be able to read tls private keys of gateway deployments in another namespace. 
 
-RDMA/efa: Keep EQ resources alive while IRQ is registered
+there is no data plane exposure; this is a control plane issue only.
 
-The completion IRQ handler accesses the EQ state and DMA buffer. Its IRQ was
-registered before that state was initialized, while teardown released the
-buffer before free_irq() synchronized the handler.
 
-Initialize the EQ without arming it, register the IRQ, and then arm it.
-Reverse the resource order during teardown by freeing the IRQ before
-destroying the EQ.</p>
+
+
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96615" target="_blank">CVE-2026-96615</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Description
+NGINX Gateway Fabric has a vulnerability when it is configured with Gateway 
+
+Custom Resource Definition (CRD) and have an authenticated gRPC connection with NGINX Agent. A namespaced 
+
+ authenticated attacker with access to a service account may impersonate the authenticated NGINX Agent gRPC connection to read TLS private keys of Gateway deployments in another namespace. 
+
+Impact
+A remote authenticated attacker may be able to read TLS private keys of Gateway deployments in another namespace. 
+
+There is no data plane exposure; this is a control plane issue only.
+
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98428" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-95101" data-description="description
+nginx plus and nginx open source have a vulnerability in the ngx_http_v3_module module. when using http/3 with 
 
-alsa: usb: 6fire: avoid embedded urbs
+proxy_request_buffering on directive, an unauthenticated attacker may be able to inject data in the proxied request.
 
-the usb 6fire driver uses urbs embedded in different structs for pcm,
-midi and communication, and this is basically a buggy implementation
-nowadays; since a urb is managed with a refcount, this may lead to a
-uaf when the urb is released asynchronously.
+impact
 
-for addressing the problem, this patch converts those embedded urbs to
-ones that are properly allocated via usb_alloc_urb().  the
-pcm_urb.packets[] is gone, as it's allocated by usb_alloc_urb(), hence
-it's found in urb.iso_frame_desc[] instead.
 
-the conversions are rather straightforward; each embedded struct urb
-is changed to a pointer, and its callers are updated accordingly.
-the resource for those structs are released in the common destructor
-functions (usb6fire_comm_free(), etc), which are called at both the
-init error path and the disconnect.
+this vulnerability may allow remote attackers to 
 
-no functional changes, only compile-tested.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98428" target="_blank">CVE-2026-98428</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+inject data in the proxied request.  there is no control plane exposure; this is a data plane issue only.
 
-ALSA: usb: 6fire: Avoid embedded URBs
 
-The USB 6fire driver uses URBs embedded in different structs for PCM,
-MIDI and communication, and this is basically a buggy implementation
-nowadays; since a URB is managed with a refcount, this may lead to a
-UAF when the URB is released asynchronously.
 
-For addressing the problem, this patch converts those embedded URBs to
-ones that are properly allocated via usb_alloc_urb().  The
-pcm_urb.packets[] is gone, as it's allocated by usb_alloc_urb(), hence
-it's found in urb.iso_frame_desc[] instead.
 
-The conversions are rather straightforward; each embedded struct urb
-is changed to a pointer, and its callers are updated accordingly.
-The resource for those structs are released in the common destructor
-functions (usb6fire_comm_free(), etc), which are called at both the
-init error path and the disconnect.
 
-No functional changes, only compile-tested.</p>
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95101" target="_blank">CVE-2026-95101</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Description
+NGINX Plus and NGINX Open Source have a vulnerability in the ngx_http_v3_module module. When using HTTP/3 with 
+
+proxy_request_buffering on directive, an unauthenticated attacker may be able to inject data in the proxied request.
+
+Impact
+
+
+This vulnerability may allow remote attackers to 
+
+inject data in the proxied request.  There is no control plane exposure; this is a data plane issue only.
+
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98427" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-94197" data-description="an authentication and authorization bypass vulnerability exists in f5 nginx kubernetes ingress controller (nic) when configured with the `externalauth` policy or ingress external authentication. client-supplied x-forwarded-prefix, x-forwarded-uri, x-original-uri, and x-forwarded-method routing and method headers are forwarded unsanitized into the internal authentication subrequest (handled by the nginx auth_request directive). as a result, an unauthenticated, remote attacker may spoof request attributes evaluated by the external authentication provider. 
 
-net/sched: codel: bound the dropping loop per dequeue call
+impact:
+this vulnerability may allow remote attackers 
 
-the codel control law schedules the next drop one interval/sqrt(count)
-after the previous drop, using the configured interval
-(codel_params.interval). for very small intervals the scheduled step
-rounds down to zero, so the dropping loop in codel_dequeue() never
-advances and drains the entire backlog under the qdisc lock in one
-call - an unprivileged user can trigger a soft lockup this way.
+unauthenticated
 
-fix in the shared codel code used by both codel and fq_codel:
+ access to protected 
 
-1. make the control-law step at least 1 tick so the dropping loop
-   always moves forward.
+paths. there is no control plane exposure; this is a data plane issue only.
 
-2. cap the dropping loop at codel_max_drops_per_dequeue (256) drops
-   per codel_dequeue() call, resyncing drop_next to now when the cap
-   is hit: the catch-up owed to the loop grows with the idle gap and
-   the backlog, which no interval threshold can bound. this is a
-   deliberate behaviour change after long idle gaps.
 
-the cap applies to fq_codel (4b549a2ef4be) and the mac80211 txq path
-(fixed interval, cap only).
 
-the target sojourn delay (codel_params.target) is not validated: it
-does not feed the control law, so a sub-tick value is aggressive
-rather than deadlock-prone.
 
-conditions to recreate the bug:
-  - tc qdisc add dev lo root handle 1: tbf rate 1kbit burst 2kb limit 1000000
-  - tc qdisc add dev lo parent 1:1 handle 10: codel interval 2us target 1ms noecn limit 1000000 (same for fq_codel)
-  - unpatched kernel: tc accepts it; a udp flood under the 1kbit tbf
-    soft-lockups (watchdog: bug: soft lockup) while one
-    codel_dequeue() call drops the backlog under the qdisc lock
-  - patched kernel: same setup, at most 256 drops per dequeue call,
-    no soft lockup
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-94197" target="_blank">CVE-2026-94197</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>An authentication and authorization bypass vulnerability exists in F5 NGINX Kubernetes Ingress Controller (NIC) when configured with the `ExternalAuth` policy or Ingress external authentication. Client-supplied X-Forwarded-Prefix, X-Forwarded-URI, X-Original-URI, and X-Forwarded-Method routing and method headers are forwarded unsanitized into the internal authentication subrequest (handled by the NGINX auth_request directive). As a result, an unauthenticated, remote attacker may spoof request attributes evaluated by the external authentication provider. 
 
-testing: claim reproducer and interval 2us/3us variants run clean;
-tdc qdisc category passes (see the selftests patch).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98427" target="_blank">CVE-2026-98427</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+Impact:
+This vulnerability may allow remote attackers 
 
-net/sched: codel: bound the dropping loop per dequeue call
+unauthenticated
 
-The CoDel control law schedules the next drop one interval/sqrt(count)
-after the previous drop, using the configured interval
-(codel_params.interval). For very small intervals the scheduled step
-rounds down to zero, so the dropping loop in codel_dequeue() never
-advances and drains the entire backlog under the qdisc lock in one
-call - an unprivileged user can trigger a soft lockup this way.
+ access to protected 
 
-Fix in the shared codel code used by both codel and fq_codel:
+paths. There is no control plane exposure; this is a data plane issue only.
 
-1. Make the control-law step at least 1 tick so the dropping loop
-   always moves forward.
 
-2. Cap the dropping loop at CODEL_MAX_DROPS_PER_DEQUEUE (256) drops
-   per codel_dequeue() call, resyncing drop_next to now when the cap
-   is hit: the catch-up owed to the loop grows with the idle gap and
-   the backlog, which no interval threshold can bound. This is a
-   deliberate behaviour change after long idle gaps.
 
-The cap applies to fq_codel (4b549a2ef4be) and the mac80211 TXQ path
-(fixed interval, cap only).
 
-The target sojourn delay (codel_params.target) is not validated: it
-does not feed the control law, so a sub-tick value is aggressive
-rather than deadlock-prone.
-
-Conditions to recreate the bug:
-  - tc qdisc add dev lo root handle 1: tbf rate 1kbit burst 2kb limit 1000000
-  - tc qdisc add dev lo parent 1:1 handle 10: codel interval 2us target 1ms noecn limit 1000000 (same for fq_codel)
-  - unpatched kernel: tc accepts it; a UDP flood under the 1kbit tbf
-    soft-lockups (watchdog: BUG: soft lockup) while one
-    codel_dequeue() call drops the backlog under the qdisc lock
-  - patched kernel: same setup, at most 256 drops per dequeue call,
-    no soft lockup
-
-Testing: claim reproducer and interval 2us/3us variants run clean;
-tdc qdisc category passes (see the selftests patch).</p>
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98426" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-93479" data-description="a vulnerability exists in nginx plus and nginx open source when a map directive uses regex matching and the root directive or access log format references the map's regex capture variables before referencing the map output variable. alternatively, the same result could be achieved by using a non-cacheable variable in a string expression under certain conditions. an unauthenticated attacker along with conditions beyond their control can exploit this vulnerability by sending crafted http requests. this may cause a heap buffer overflow in the nginx worker process leading to a restart. additionally, attackers can execute code on systems with address space layout randomization (aslr) disabled or when the attacker can bypass aslr.
 
-wifi: mwifiex: fix irq leak using wrong index in msi-x error path
+impact: 
+this vulnerability may allow remote attackers to cause a denial-of-service (dos) on the nginx system or to possibly trigger a code execution. there is no control plane exposure; this is a data plane issue only.
 
-mwifiex_pcie_request_irq() registers each msi-x vector with a per-index
-dev_id (&card->msix_ctx[i]). on a request_irq() failure the cleanup loop
-"for (j = 0; j < i; j++)" frees msix_entries[j].vector but passes the
-failed index's &card->msix_ctx[i] as the dev_id. free_irq() matches on
-(irq, dev_id), so it fails to find the action registered with
-&card->msix_ctx[j]: the already-requested irq j is not freed (leaked) and
-free_irq() warns about freeing a non-existent irq. use &card->msix_ctx[j].">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98426" target="_blank">CVE-2026-98426</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-93479" target="_blank">CVE-2026-93479</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>A vulnerability exists in NGINX Plus and NGINX Open Source when a map directive uses regex matching and the root directive or access log format references the map's regex capture variables before referencing the map output variable. Alternatively, the same result could be achieved by using a non-cacheable variable in a string expression under certain conditions. An unauthenticated attacker along with conditions beyond their control can exploit this vulnerability by sending crafted HTTP requests. This may cause a heap buffer overflow in the NGINX worker process leading to a restart. Additionally, attackers can execute code on systems with Address Space Layout Randomization (ASLR) disabled or when the attacker can bypass ASLR.
 
-wifi: mwifiex: fix IRQ leak using wrong index in MSI-X error path
+Impact: 
+This vulnerability may allow remote attackers to cause a denial-of-service (DoS) on the NGINX system or to possibly trigger a code execution. There is no control plane exposure; this is a data plane issue only.
 
-mwifiex_pcie_request_irq() registers each MSI-X vector with a per-index
-dev_id (&card->msix_ctx[i]). On a request_irq() failure the cleanup loop
-"for (j = 0; j < i; j++)" frees msix_entries[j].vector but passes the
-failed index's &card->msix_ctx[i] as the dev_id. free_irq() matches on
-(irq, dev_id), so it fails to find the action registered with
-&card->msix_ctx[j]: the already-requested IRQ j is not freed (leaked) and
-free_irq() warns about freeing a non-existent IRQ. Use &card->msix_ctx[j].</p>
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98425" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-91184" data-description="description
 
-wifi: mac80211: don't warn when an ibss has no channel to scan
+nginx gateway fabric has a vulnerability when it renders the spec.basic.realm (and spec.jwt.realm) field of a namespaced authenticationfilter verbatim, unescaped and unvalidated, into the shared data-plane nginx.conf as auth_basic "<realm>";. a namespaced authenticated attacker that configures authenticationfilter crd to an httproute/grpcroute on a shared gateway can craft a realm value that closes the quoted directive and the enclosing location {} block and injects arbitrary nginx directives into that gateway's data-plane config. 
 
-ieee80211_request_ibss_scan() warns when regulatory leaves no
-allowed channel, but that can happen as the regdomain can change
-while ibss is operating, and it can continue to operate briefly
-during the 60s grace period until it's shut down.
+impact
 
-just remove the warning in this case.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98425" target="_blank">CVE-2026-98425</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+a remote authenticated attacker can send crafted requests to configure nginx gateway fabric authenticationfilter crd and may be able to read every co-located tenant's mounted secrets, ssrf via proxy_pass, reading the pod serviceaccount token, or hijacking other tenants' routes. there is no data plane exposure; this is a control plane issue only.
 
-wifi: mac80211: don't warn when an IBSS has no channel to scan
 
-ieee80211_request_ibss_scan() warns when regulatory leaves no
-allowed channel, but that can happen as the regdomain can change
-while IBSS is operating, and it can continue to operate briefly
-during the 60s grace period until it's shut down.
 
-Just remove the warning in this case.</p>
+
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91184" target="_blank">CVE-2026-91184</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Description
+
+NGINX Gateway Fabric has a vulnerability when it renders the spec.basic.realm (and spec.jwt.realm) field of a namespaced AuthenticationFilter verbatim, unescaped and unvalidated, into the shared data-plane nginx.conf as auth_basic "<realm>";. A namespaced authenticated attacker that configures AuthenticationFilter CRD to an HTTPRoute/GRPCRoute on a shared Gateway can craft a realm value that closes the quoted directive and the enclosing location {} block and injects arbitrary NGINX directives into that Gateway's data-plane config. 
+
+Impact
+
+A remote authenticated attacker can send crafted requests to configure NGINX Gateway Fabric AuthenticationFilter CRD and may be able to read every co-located tenant's mounted secrets, SSRF via proxy_pass, reading the pod ServiceAccount token, or hijacking other tenants' routes. There is no data plane exposure; this is a control plane issue only.
+
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98424" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: cfg80211: undo netns switch if renaming the wiphy fails
-
-once all the interfaces have been moved, cfg80211_switch_netns()
-moves the wiphy itself by setting its network namespace and then
-renaming it, which makes sysfs move it. the rename can fail (but
-only on allocation failures), leaving things mixed up and hitting
-the warning there.
-
-ignoring it isn't great, undo the move and let the change fail
-in this case. if undo fails then warn, then things would again
-be stuck in two different network namespaces.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98424" target="_blank">CVE-2026-98424</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:54 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-84471" data-description="the fix for cve-2026-12996 was incomplete. a use-after-free in openvpn 2.6.0 through 2.6.22 and 2.7_alpha1 through 2.7.7 allows remote authenticated peers to potentially cause a denial of service or leak memory via crafted packets during tls session promotion or expiry.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-84471" target="_blank">CVE-2026-84471</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:26 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: cfg80211: undo netns switch if renaming the wiphy fails
-
-Once all the interfaces have been moved, cfg80211_switch_netns()
-moves the wiphy itself by setting its network namespace and then
-renaming it, which makes sysfs move it. The rename can fail (but
-only on allocation failures), leaving things mixed up and hitting
-the warning there.
-
-Ignoring it isn't great, undo the move and let the change fail
-in this case. If undo fails then WARN, then things would again
-be stuck in two different network namespaces.</p>
+                    <p>The fix for CVE-2026-12996 was incomplete. A use-after-free in OpenVPN 2.6.0 through 2.6.22 and 2.7_alpha1 through 2.7.7 allows remote authenticated peers to potentially cause a denial of service or leak memory via crafted packets during TLS session promotion or expiry.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98423" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: mac80211_hwsim: don't hand frames to mac80211 while stopping
-
-the code checks ->started for frames coming from wmediumd, but the
-radio can be stopped after the check and before frame delivery,
-causing mac80211 to hit the warn_on(!local->started).
-
-expand the mutex for this case and synchronise against it when the
-radio is stopped to avoid being able to hit the warning with hwsim.
-
-drop the error print that would've complicated the error path, it
-only triggers for allocation failures (already noisy) and malformed
-frames anyway.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98423" target="_blank">CVE-2026-98423</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-78433" data-description="gitea's web attachment handler skips its cross-repository ownership check for attachments created before 16 january 2026 and checks permissions against the repository named in the request url instead. an unauthenticated attacker who knows a private attachment's uuid can request it through a public repository's attachment path and retrieve its contents. this can expose issue and pull request attachments or release assets; the random attachment uuid must already be known to the attacker.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78433" target="_blank">CVE-2026-78433</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:25 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: mac80211_hwsim: don't hand frames to mac80211 while stopping
-
-The code checks ->started for frames coming from wmediumd, but the
-radio can be stopped after the check and before frame delivery,
-causing mac80211 to hit the WARN_ON(!local->started).
-
-Expand the mutex for this case and synchronise against it when the
-radio is stopped to avoid being able to hit the warning with hwsim.
-
-Drop the error print that would've complicated the error path, it
-only triggers for allocation failures (already noisy) and malformed
-frames anyway.</p>
+                    <p>Gitea's web attachment handler skips its cross-repository ownership check for attachments created before 16 January 2026 and checks permissions against the repository named in the request URL instead. An unauthenticated attacker who knows a private attachment's UUID can request it through a public repository's attachment path and retrieve its contents. This can expose issue and pull request attachments or release assets; the random attachment UUID must already be known to the attacker.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98422" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: mac80211: reset the ap_vlan tailroom counter on ifdown
-
-on ifup, ap_vlan interfaces get crypto_tx_tailroom_needed_cnt from
-the ap interface, but it's never decremented again unless the ap is
-also brought down. thus, bringing the same ap_vlan up again will
-increment the counter again and eventually hit the sanity check:
-
-  warn_on_once(sdata->crypto_tx_tailroom_needed_cnt !=
-               master->crypto_tx_tailroom_needed_cnt);
-
-reset it on ifdown to avoid that.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98422" target="_blank">CVE-2026-98422</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-78231" data-description="when openid sign-in is enabled, gitea processes unauthenticated assertion parameters and sends an http post request to the caller-supplied openid provider endpoint during verification. an attacker controls the destination and much of the form body, allowing interaction with internal http services reachable from the gitea server. the response is not returned to the attacker, so the issue is blind ssrf; its impact depends on the services and network addresses the server can reach.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78231" target="_blank">CVE-2026-78231</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:25 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: mac80211: reset the AP_VLAN tailroom counter on ifdown
-
-On ifup, AP_VLAN interfaces get crypto_tx_tailroom_needed_cnt from
-the AP interface, but it's never decremented again unless the AP is
-also brought down. Thus, bringing the same AP_VLAN up again will
-increment the counter again and eventually hit the sanity check:
-
-  WARN_ON_ONCE(sdata->crypto_tx_tailroom_needed_cnt !=
-               master->crypto_tx_tailroom_needed_cnt);
-
-Reset it on ifdown to avoid that.</p>
+                    <p>When OpenID sign-in is enabled, Gitea processes unauthenticated assertion parameters and sends an HTTP POST request to the caller-supplied OpenID provider endpoint during verification. An attacker controls the destination and much of the form body, allowing interaction with internal HTTP services reachable from the Gitea server. The response is not returned to the attacker, so the issue is blind SSRF; its impact depends on the services and network addresses the server can reach.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98421" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-wifi: mac80211: require a peer station for tdls setup confirm
-
-it's nonsense for the setup confirm to go to station that
-doesn't even exist, and it hits a warning when building
-the frame:
-
-  warn_on_once(!sta || !ap_sta)
-
-only accept wlan_tdls_setup_confirm when the station is
-already there as a tdls station. need to copy the call
-to ieee80211_tdls_prep_mgmt_packet() since the existing
-wlan_tdls_discovery_request already falls through to it.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98421" target="_blank">CVE-2026-98421</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73814" data-description="gitea's collaboration access-mode endpoint accepts the owner access mode from an authenticated repository collaborator with admin access. the collaborator can promote their effective permissions from admin to owner and then perform owner-only operations, including transferring the repository to their own account. this bypasses the intended boundary between repository administration and ownership.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73814" target="_blank">CVE-2026-73814</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:24 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-wifi: mac80211: require a peer station for TDLS setup confirm
-
-It's nonsense for the setup confirm to go to station that
-doesn't even exist, and it hits a warning when building
-the frame:
-
-  WARN_ON_ONCE(!sta || !ap_sta)
-
-Only accept WLAN_TDLS_SETUP_CONFIRM when the station is
-already there as a TDLS station. Need to copy the call
-to ieee80211_tdls_prep_mgmt_packet() since the existing
-WLAN_TDLS_DISCOVERY_REQUEST already falls through to it.</p>
+                    <p>Gitea's collaboration access-mode endpoint accepts the Owner access mode from an authenticated repository collaborator with Admin access. The collaborator can promote their effective permissions from Admin to Owner and then perform owner-only operations, including transferring the repository to their own account. This bypasses the intended boundary between repository administration and ownership.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98420" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-ksmbd: follow smb2 session expiration semantics
-
-ksmbd_session_register() destroys valid sessions after ten seconds of
-inactivity whenever a client starts another sessionsetup exchange. this
-confuses session.idletime with session.expirationtime. windows can create
-additional authenticated sessions on an existing connection, so deleting
-the older session invalidates its tree connects and makes mapped drives
-fail with status_network_name_deleted.
-
-the session expiration rules require the server to change a valid session
-to expired only after its credential expiration time passes. a valid or
-expired session otherwise keeps its connection from being scavenged.
-connections that have not negotiated a dialect, have no sessions, or have
-only inprogress sessions are disconnected after an implementation-specific
-timeout. use the windows-compatible 45 second value and run the expiration
-check periodically for both tcp and smb direct.
-
-keep zero as an infinite credential expiration time, and count each
-valid-to-expired transition. set expired sessions to inprogress when they
-reauthenticate. if authentication fails, remove the session from the
-global and per-connection tables immediately, including smb3 multichannel
-connections.
-
-retain protection against abandoned sessionid-zero exchanges by allowing
-only one inprogress authentication per connection. additional exchanges
-fail with status_insufficient_resources, and stale inprogress sessions are
-reaped after the same 45 second setup timeout. this bounds the original
-unauthenticated memory-exhaustion path without evicting established
-sessions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98420" target="_blank">CVE-2026-98420</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73804" data-description="gitea allows a token with write:user scope to register an attacker-controlled ssh public key on the token owner's account. api requests signed with the corresponding private key authenticate as that account through http signature without api token scope information, causing route-level token scope checks to be skipped. this converts a user-scoped token into an unscoped api authentication method while retaining the account's normal role and repository permissions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73804" target="_blank">CVE-2026-73804</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:24 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ksmbd: follow SMB2 session expiration semantics
-
-ksmbd_session_register() destroys valid sessions after ten seconds of
-inactivity whenever a client starts another SessionSetup exchange. This
-confuses Session.IdleTime with Session.ExpirationTime. Windows can create
-additional authenticated sessions on an existing connection, so deleting
-the older session invalidates its tree connects and makes mapped drives
-fail with STATUS_NETWORK_NAME_DELETED.
-
-The session expiration rules require the server to change a valid session
-to expired only after its credential expiration time passes. A valid or
-expired session otherwise keeps its connection from being scavenged.
-Connections that have not negotiated a dialect, have no sessions, or have
-only InProgress sessions are disconnected after an implementation-specific
-timeout. Use the Windows-compatible 45 second value and run the expiration
-check periodically for both TCP and SMB Direct.
-
-Keep zero as an infinite credential expiration time, and count each
-Valid-to-Expired transition. Set expired sessions to InProgress when they
-reauthenticate. If authentication fails, remove the session from the
-global and per-connection tables immediately, including SMB3 multichannel
-connections.
-
-Retain protection against abandoned SessionId-zero exchanges by allowing
-only one InProgress authentication per connection. Additional exchanges
-fail with STATUS_INSUFFICIENT_RESOURCES, and stale InProgress sessions are
-reaped after the same 45 second setup timeout. This bounds the original
-unauthenticated memory-exhaustion path without evicting established
-sessions.</p>
+                    <p>Gitea allows a token with write:user scope to register an attacker-controlled SSH public key on the token owner's account. API requests signed with the corresponding private key authenticate as that account through HTTP Signature without API token scope information, causing route-level token scope checks to be skipped. This converts a user-scoped token into an unscoped API authentication method while retaining the account's normal role and repository permissions.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98419" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-drop_monitor: fix out-of-bounds write in reset_per_cpu_data()
-
-in reset_per_cpu_data(), al is computed as:
-
-    al = sizeof(struct net_dm_alert_msg);
-    al += dm_hit_limit * sizeof(struct net_dm_drop_point);
-    al += sizeof(struct nlattr);
-
-    skb = genlmsg_new(al, gfp_kernel);
-    ...
-    nla = nla_reserve(skb, nla_unspec, sizeof(struct net_dm_alert_msg));
-    ...
-    msg = nla_data(nla);
-    memset(msg, 0, al);
-
-because al includes sizeof(struct nlattr) (the 4-byte attribute header),
-genlmsg_new() allocates al bytes of tailroom starting at nla.
-however, msg points to nla_data(nla), which is located
-sizeof(struct nlattr) bytes past nla. calling memset(msg, 0, al)
-therefore writes al bytes starting from msg, exceeding the allocated
-buffer by sizeof(struct nlattr) (4 bytes) and corrupting
-skb_shared_info.
-
-fix this by letting al represent only the payload length, allocating
-the skb with genlmsg_new(nla_total_size(al), gfp_kernel), and zeroing
-al bytes from msg.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98419" target="_blank">CVE-2026-98419</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73802" data-description="gitea runner passes workflow-controlled container options into docker job container configuration while privileged mode is disabled. host namespace settings, expanded capabilities, and security profile overrides can remain effective despite privileged being forced false. a workflow author able to run jobs on an affected docker-backed runner can use these options to access host namespaces and execute commands as root on the runner host, bypassing the intended container isolation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73802" target="_blank">CVE-2026-73802</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:24 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-drop_monitor: fix out-of-bounds write in reset_per_cpu_data()
-
-In reset_per_cpu_data(), al is computed as:
-
-    al = sizeof(struct net_dm_alert_msg);
-    al += dm_hit_limit * sizeof(struct net_dm_drop_point);
-    al += sizeof(struct nlattr);
-
-    skb = genlmsg_new(al, GFP_KERNEL);
-    ...
-    nla = nla_reserve(skb, NLA_UNSPEC, sizeof(struct net_dm_alert_msg));
-    ...
-    msg = nla_data(nla);
-    memset(msg, 0, al);
-
-Because al includes sizeof(struct nlattr) (the 4-byte attribute header),
-genlmsg_new() allocates al bytes of tailroom starting at nla.
-However, msg points to nla_data(nla), which is located
-sizeof(struct nlattr) bytes past nla. Calling memset(msg, 0, al)
-therefore writes al bytes starting from msg, exceeding the allocated
-buffer by sizeof(struct nlattr) (4 bytes) and corrupting
-skb_shared_info.
-
-Fix this by letting al represent only the payload length, allocating
-the skb with genlmsg_new(nla_total_size(al), GFP_KERNEL), and zeroing
-al bytes from msg.</p>
+                    <p>Gitea Runner passes workflow-controlled container options into Docker job container configuration while privileged mode is disabled. Host namespace settings, expanded capabilities, and security profile overrides can remain effective despite Privileged being forced false. A workflow author able to run jobs on an affected Docker-backed runner can use these options to access host namespaces and execute commands as root on the runner host, bypassing the intended container isolation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98418" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-sched/core: avoid false migration warning for proxy donors
-
-proxy execution can move a blocked donor's scheduling context to the
-lock owner's cpu even when the donor is migration-disabled. the donor
-does not execute there, and its original execution cpu remains recorded
-in wake_cpu.
-
-set_task_cpu() warns unconditionally for migration-disabled tasks, so a
-subsequent proxy migration or the wakeup path returning the donor home
-triggers a false positive: moving a blocked scheduling context does not
-violate the migration-disabled execution context.
-
-for example, creating a mutex owner on cpu1 and a migration-disabled
-waiter on cpu0 can trigger the following warning:
-
-  proxy_migrate_repro: donor blocking on cpu0 with migration disabled
-  proxy_migrate_repro: donor moved from cpu0 to cpu1
-  warning: kernel/sched/core.c:3389 at set_task_cpu+0x1d3/0x280
-  ...
-  call trace:
-   try_to_wake_up+0x43f/0x780
-   __mutex_unlock_slowpath+0x330/0x540
-   owner_fn+0x9f/0xc0 [proxy_migrate_repro]
-  ...
-  proxy_migrate_repro: donor woke on cpu0, task_cpu=0
-  proxy_migrate_repro: completed
-
-exclude blocked proxy donors from the warning. the proxy wakeup path
-restores an executable placement before clearing the blocked state.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98418" target="_blank">CVE-2026-98418</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73800" data-description="gitea resolves local reusable workflow files from a fork's head commit when a trusted base-branch workflow runs for a pull_request_target event. a fork author can modify a referenced reusable workflow so attacker-controlled code executes with the repository and organization secrets available to that event. exploitation requires a base workflow that calls a local reusable workflow, and bypasses the intended separation between trusted base code and untrusted fork code.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73800" target="_blank">CVE-2026-73800</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:24 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-sched/core: Avoid false migration warning for proxy donors
-
-Proxy execution can move a blocked donor's scheduling context to the
-lock owner's CPU even when the donor is migration-disabled. The donor
-does not execute there, and its original execution CPU remains recorded
-in wake_cpu.
-
-set_task_cpu() warns unconditionally for migration-disabled tasks, so a
-subsequent proxy migration or the wakeup path returning the donor home
-triggers a false positive: moving a blocked scheduling context does not
-violate the migration-disabled execution context.
-
-For example, creating a mutex owner on CPU1 and a migration-disabled
-waiter on CPU0 can trigger the following warning:
-
-  proxy_migrate_repro: donor blocking on CPU0 with migration disabled
-  proxy_migrate_repro: donor moved from CPU0 to CPU1
-  WARNING: kernel/sched/core.c:3389 at set_task_cpu+0x1d3/0x280
-  ...
-  Call Trace:
-   try_to_wake_up+0x43f/0x780
-   __mutex_unlock_slowpath+0x330/0x540
-   owner_fn+0x9f/0xc0 [proxy_migrate_repro]
-  ...
-  proxy_migrate_repro: donor woke on CPU0, task_cpu=0
-  proxy_migrate_repro: completed
-
-Exclude blocked proxy donors from the warning. The proxy wakeup path
-restores an executable placement before clearing the blocked state.</p>
+                    <p>Gitea resolves local reusable workflow files from a fork's head commit when a trusted base-branch workflow runs for a pull_request_target event. A fork author can modify a referenced reusable workflow so attacker-controlled code executes with the repository and organization secrets available to that event. Exploitation requires a base workflow that calls a local reusable workflow, and bypasses the intended separation between trusted base code and untrusted fork code.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98417" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net: xfrm: reject unrepresentable espintcp transport headers
-
-esp-in-tcp can hand xfrm packets whose transport header offset no longer
-fits after the stream parser trims the tcp envelope. the plain transport
-header reset truncates that offset and triggers the skb warning path.
-
-use the careful transport-header helper and drop the skb through the
-existing xfrm error path when the offset cannot be represented.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98417" target="_blank">CVE-2026-98417</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73539" data-description="gitea substitutes a url derived from the markup context field into external renderer command templates without escaping the reference path before shell-style argument splitting. a crafted context can inject additional renderer arguments, including options that load executable filter files. on deployments using a susceptible external renderer such as pandoc, a user who can place a filter file at an accessible path can cause it to execute as the gitea service account; the public repository markup endpoint itself can be reachable without authentication.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73539" target="_blank">CVE-2026-73539</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net: xfrm: reject unrepresentable espintcp transport headers
-
-ESP-in-TCP can hand xfrm packets whose transport header offset no longer
-fits after the stream parser trims the TCP envelope. The plain transport
-header reset truncates that offset and triggers the skb warning path.
-
-Use the careful transport-header helper and drop the skb through the
-existing XFRM error path when the offset cannot be represented.</p>
+                    <p>Gitea substitutes a URL derived from the markup Context field into external renderer command templates without escaping the reference path before shell-style argument splitting. A crafted Context can inject additional renderer arguments, including options that load executable filter files. On deployments using a susceptible external renderer such as pandoc, a user who can place a filter file at an accessible path can cause it to execute as the Gitea service account; the public repository markup endpoint itself can be reachable without authentication.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98416" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-dmaengine: ti: k3-udma-glue: fix null dereference in k3_udma_glue_release_rx_chn()
-
-if devm_kcalloc() for rx_chn->flows fails in a channel request function,
-the error path calls k3_udma_glue_release_rx_chn(), which dereferences
-the null rx_chn->flows pointer in k3_udma_glue_release_rx_flow().
-
-skip the flow release loop in k3_udma_glue_release_rx_chn() when
-rx_chn->flows is not allocated.
-
-found by linux verification center (linuxtesting.org) with svace.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98416" target="_blank">CVE-2026-98416</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73535" data-description="gitea's openid connect handler accepts a user's password without enforcing enrolled totp or webauthn verification before completing sign-in and linking an openid identifier. when openid sign-in is enabled, an attacker who knows the victim's password can obtain a session and link an attacker-controlled identifier. the attacker can then sign in through that identifier without the victim's password or second factor, and a password change does not remove the link.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73535" target="_blank">CVE-2026-73535</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-dmaengine: ti: k3-udma-glue: fix NULL dereference in k3_udma_glue_release_rx_chn()
-
-If devm_kcalloc() for rx_chn->flows fails in a channel request function,
-the error path calls k3_udma_glue_release_rx_chn(), which dereferences
-the NULL rx_chn->flows pointer in k3_udma_glue_release_rx_flow().
-
-Skip the flow release loop in k3_udma_glue_release_rx_chn() when
-rx_chn->flows is not allocated.
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE.</p>
+                    <p>Gitea's OpenID connect handler accepts a user's password without enforcing enrolled TOTP or WebAuthn verification before completing sign-in and linking an OpenID identifier. When OpenID sign-in is enabled, an attacker who knows the victim's password can obtain a session and link an attacker-controlled identifier. The attacker can then sign in through that identifier without the victim's password or second factor, and a password change does not remove the link.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98415" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-soc: samsung: exynos-pmu: fix use-after-free of interrupt generator node
-
-the setup_cpuhp_and_cpuidle() parses the device tree node for the
-interrupt generation block via of_parse_phandle() and decrements its
-reference count using of_node_put() immediately after fetching the resource
-address. however, later the intr_gen_node pointer is passed into
-of_syscon_register_regmap().
-
-fix this by declaring intr_gen_node with __free() and removing
-of_node_put().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98415" target="_blank">CVE-2026-98415</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73273" data-description="gitea's maven upload handler reads checksum uploads entirely into memory and returns before enforcing package-size quotas. an authenticated user with package-publish permission can submit an oversized body to a checksum endpoint despite legitimate checksum values being at most 128 bytes. this bypasses the upload quota on that path and can exhaust server memory.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73273" target="_blank">CVE-2026-73273</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-soc: samsung: exynos-pmu: fix use-after-free of interrupt generator node
-
-The setup_cpuhp_and_cpuidle() parses the device tree node for the
-interrupt generation block via of_parse_phandle() and decrements its
-reference count using of_node_put() immediately after fetching the resource
-address. However, later the intr_gen_node pointer is passed into
-of_syscon_register_regmap().
-
-Fix this by declaring intr_gen_node with __free() and removing
-of_node_put().</p>
+                    <p>Gitea's Maven upload handler reads checksum uploads entirely into memory and returns before enforcing package-size quotas. An authenticated user with package-publish permission can submit an oversized body to a checksum endpoint despite legitimate checksum values being at most 128 bytes. This bypasses the upload quota on that path and can exhaust server memory.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98414" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-memcg: avoid charging the root memcg from obj_cgroup_charge_pages()
-
-obj_cgroup_charge_pages() resolves the objcg to its memcg and calls
-try_charge_memcg(), which does not short circuit the root memcg.  that
-memcg can be the root memcg: obj_cgroup_is_root() reflects the memcg the
-objcg was created for and is never updated, while memcg_reparent_objcgs()
-does redirect objcg->memcg to the parent on rmdir.  an objcg of a dying
-child of root therefore passes every obj_cgroup_is_root() filter but
-resolves to the root memcg.
-
-folios keep the objcg they were charged with, so this is easy to reach
-through zswap: allocate anon memory in a cgroup, move the task out, remove
-the cgroup, then write to the root cgroup's memory.reclaim.  the reclaimed
-folios are charged through the reparented objcg and end up in
-refill_stock() with the root memcg:
-
-  warning: mm/memcontrol.c:2198 at refill_stock+0x644/0x940
-   refill_stock+0x644/0x940
-   try_charge_memcg+0x12d6/0x1570
-   __obj_cgroup_charge+0x35/0xf0
-   obj_cgroup_charge+0x1de/0x210
-   obj_cgroup_charge_zswap+0x83/0x270
-   zswap_store+0x1620/0x2000
-   swap_writeout+0x94c/0x14c0
-   shrink_folio_list+0x3388/0x52b0
-   [...]
-   try_to_free_mem_cgroup_pages+0x30d/0x830
-   user_proactive_reclaim+0x504/0x840
-   memory_reclaim+0x1f/0x30
-
-beyond the warning, the charge is asymmetric: obj_cgroup_uncharge_pages()
-skips refill_stock() for the root memcg, so the root's page counter grows
-and is never uncharged.  it is not user visible, since memory.current is
-not exposed on the root, but it is a leak.
-
-use try_charge(), which returns early for the root memcg, restoring the
-symmetry with obj_cgroup_uncharge_pages().
-
-the above sequence was scripted into a standalone reproducer (zswap on,
-swap on a virtio disk, 512mb of anon memory faulted in inside a child of
-the root cgroup, the task then migrated to the root cgroup, the child
-removed, followed by "echo 600m swappiness=max > memory.reclaim" on the
-root) and run in a config_debug_vm=y vm.  it reproduces the splat on the
-first zswap store of a reparented folio, with the same call chain as the
-report.  with this patch applied the splat is gone while the zswap store
-count over the run is unchanged, so the same path is still exercised. 
-cgroup selftests test_zswap, test_kmem and test_memcontrol show no new
-failures.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98414" target="_blank">CVE-2026-98414</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73135" data-description="gitea uses inconsistent repository visibility predicates, and the condition used by some repository-listing endpoints admits repositories whose owners are hidden from the viewer. those listings disclose repository metadata even though direct routes correctly deny access with a 404 response. the issue exposes repository existence and listing information across the intended owner-visibility boundary.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73135" target="_blank">CVE-2026-73135</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-memcg: avoid charging the root memcg from obj_cgroup_charge_pages()
-
-obj_cgroup_charge_pages() resolves the objcg to its memcg and calls
-try_charge_memcg(), which does not short circuit the root memcg.  That
-memcg can be the root memcg: obj_cgroup_is_root() reflects the memcg the
-objcg was created for and is never updated, while memcg_reparent_objcgs()
-does redirect objcg->memcg to the parent on rmdir.  An objcg of a dying
-child of root therefore passes every obj_cgroup_is_root() filter but
-resolves to the root memcg.
-
-Folios keep the objcg they were charged with, so this is easy to reach
-through zswap: allocate anon memory in a cgroup, move the task out, remove
-the cgroup, then write to the root cgroup's memory.reclaim.  The reclaimed
-folios are charged through the reparented objcg and end up in
-refill_stock() with the root memcg:
-
-  WARNING: mm/memcontrol.c:2198 at refill_stock+0x644/0x940
-   refill_stock+0x644/0x940
-   try_charge_memcg+0x12d6/0x1570
-   __obj_cgroup_charge+0x35/0xf0
-   obj_cgroup_charge+0x1de/0x210
-   obj_cgroup_charge_zswap+0x83/0x270
-   zswap_store+0x1620/0x2000
-   swap_writeout+0x94c/0x14c0
-   shrink_folio_list+0x3388/0x52b0
-   [...]
-   try_to_free_mem_cgroup_pages+0x30d/0x830
-   user_proactive_reclaim+0x504/0x840
-   memory_reclaim+0x1f/0x30
-
-Beyond the warning, the charge is asymmetric: obj_cgroup_uncharge_pages()
-skips refill_stock() for the root memcg, so the root's page counter grows
-and is never uncharged.  It is not user visible, since memory.current is
-not exposed on the root, but it is a leak.
-
-Use try_charge(), which returns early for the root memcg, restoring the
-symmetry with obj_cgroup_uncharge_pages().
-
-The above sequence was scripted into a standalone reproducer (zswap on,
-swap on a virtio disk, 512MB of anon memory faulted in inside a child of
-the root cgroup, the task then migrated to the root cgroup, the child
-removed, followed by "echo 600M swappiness=max > memory.reclaim" on the
-root) and run in a CONFIG_DEBUG_VM=y VM.  It reproduces the splat on the
-first zswap store of a reparented folio, with the same call chain as the
-report.  With this patch applied the splat is gone while the zswap store
-count over the run is unchanged, so the same path is still exercised. 
-cgroup selftests test_zswap, test_kmem and test_memcontrol show no new
-failures.</p>
+                    <p>Gitea uses inconsistent repository visibility predicates, and the condition used by some repository-listing endpoints admits repositories whose owners are hidden from the viewer. Those listings disclose repository metadata even though direct routes correctly deny access with a 404 response. The issue exposes repository existence and listing information across the intended owner-visibility boundary.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98413" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-selinux: always fill avc decision in avc_has_perm_noaudit()
-
-avc_has_perm_noaudit() is documented to return a copy of the access
-decision in @avd, but its early return for an empty requested permission
-set leaves the buffer untouched.  all callers pass an uninitialized
-stack variable and afterwards feed it to avc_audit(), and the inode hook
-even stores it in the per-task decision cache.
-
-fill in a deny-all, audit-all decision, similar to avd_init(), so every
-caller receives a defined value at no cost on the hot path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98413" target="_blank">CVE-2026-98413</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73130" data-description="gitea does not limit the length of the gitignores field accepted by repository-creation forms and the api. repository initialization splits the field into template names, repeatedly reads the referenced templates, and buffers their contents in memory. an attacker who can create repositories can submit an oversized value to amplify template reads and memory use, impairing availability.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73130" target="_blank">CVE-2026-73130</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-selinux: always fill AVC decision in avc_has_perm_noaudit()
-
-avc_has_perm_noaudit() is documented to return a copy of the access
-decision in @avd, but its early return for an empty requested permission
-set leaves the buffer untouched.  All callers pass an uninitialized
-stack variable and afterwards feed it to avc_audit(), and the inode hook
-even stores it in the per-task decision cache.
-
-Fill in a deny-all, audit-all decision, similar to avd_init(), so every
-caller receives a defined value at no cost on the hot path.</p>
+                    <p>Gitea does not limit the length of the gitignores field accepted by repository-creation forms and the API. Repository initialization splits the field into template names, repeatedly reads the referenced templates, and buffers their contents in memory. An attacker who can create repositories can submit an oversized value to amplify template reads and memory use, impairing availability.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98412" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-power: sequencing: fix null-pointer dereference in pwrseq_unit_new()
-
-if memory allocation fails in pwrseq_unit_setup_deps(), pwrseq_unit_put()
-is called to release the partially initialized unit. however, we've
-never initialized unit->list and pwrseq_unit_release() will
-unconditionally call list_del() on it. initialize unit->list right after
-allocating the unit struct.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98412" target="_blank">CVE-2026-98412</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 09:17:52 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-73126" data-description="gitea's actions workflow status badge endpoint does not enforce repository-read scope or the public-only restriction on the token authenticating the request. a token lacking read:repository, or restricted to public repositories, can retrieve the latest workflow status of a private repository accessible to its owner. this discloses private workflow status beyond the token's intended delegated permissions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-73126" target="_blank">CVE-2026-73126</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 10:17:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-power: sequencing: fix NULL-pointer dereference in pwrseq_unit_new()
-
-If memory allocation fails in pwrseq_unit_setup_deps(), pwrseq_unit_put()
-is called to release the partially initialized unit. However, we've
-never initialized unit->list and pwrseq_unit_release() will
-unconditionally call list_del() on it. Initialize unit->list right after
-allocating the unit struct.</p>
+                    <p>Gitea's Actions workflow status badge endpoint does not enforce repository-read scope or the public-only restriction on the token authenticating the request. A token lacking read:repository, or restricted to public repositories, can retrieve the latest workflow status of a private repository accessible to its owner. This discloses private workflow status beyond the token's intended delegated permissions.</p>
                 </div>
         
             </div>
