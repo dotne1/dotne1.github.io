@@ -34,368 +34,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-110816" data-description="### summary
-
-
-
-`qs.stringify` with `arrayformat: 'comma'` throws `typeerror: cannot convert object to primitive value` when an array element cannot be coerced to a string, such as an object with an own non-callable `tostring` (`{ "tostring": "x" }`) or a null-prototype object. the comma format joins array elements with `array.prototype.join` and, under `encodevaluesonly`, first passes each element through `string()` in `utils.encode`; neither guards against an element whose string coercion fails.
-
-
-
-### details
-
-
-
-in `lib/stringify.js`, the comma branch collapses the array with `obj.join(',')`. for an element whose own `tostring` is not callable, `toprimitive` skips it, falls through to `object.prototype.valueof` (which returns the object itself), and throws. under `encodevaluesonly: true`, the same element first reaches `string(str)` in `utils.encode` (`lib/utils.js`) and throws there. nested arrays (`{ "a": [[{ "tostring": "x" }]] }`) throw the same way, through `array.prototype.tostring`. the `indices`, `brackets`, and `repeat` formats walk into object elements instead of coercing them, and are not affected.
-
-
-
-such elements can come from untrusted input. `json.parse` produces `{ "a": [{ "tostring": "x" }] }` with no qs option involved. `qs.parse("a[0][tostring]=x", { allowprototypes: true })` keeps the `tostring` key, and `qs.parse("a[][b]=c", { plainobjects: true })` produces a null-prototype element; the default parse options drop `tostring` and produce ordinary objects, which do not throw. express 4's default `query parser`, express 5's `extended` query parser, and body-parser's `urlencoded({ extended: true })` all call `qs.parse` with `allowprototypes: true`.
-
-
-
-#### poc
-
-
-
-```js
-
-
-
-var qs = require("qs");
-
-
-
-qs.stringify(json.parse("{\"a\":[{\"tostring\":\"x\"}]}"), { arrayformat: "comma" });
-
-
-
-qs.stringify(qs.parse("a[0][tostring]=x", { allowprototypes: true }), { arrayformat: "comma" });
-
-
-
-qs.stringify(qs.parse("a[][b]=c", { plainobjects: true }), { arrayformat: "comma", encodevaluesonly: true });
-
-
-
-// typeerror: cannot convert object to primitive value
-
-
-
-```
-
-
-
-#### fix
-
-
-
-applied in a952e75 on `main` and released as v6.16.1: an element whose string coercion would fail is coerced to its primitive `valueof`, if any, or else to `object.prototype.tostring`, so it renders as `[object object]`, the same as any other object element already does under the comma format. nested arrays are walked the way `join` walks them. every input that did not previously throw serializes exactly as before, and a `tostring` or `valueof` that itself throws still propagates.
-
-
-
-### affected versions
-
-
-
-`>=6.7.0 <6.16.1`, fixed in v6.16.1.
-
-
-
-the `join` path was introduced with the comma format in b84acba and first shipped in v6.7.0; v6.6.x and earlier ignore `arrayformat: 'comma'` and are not affected. the `encodevaluesonly` `string()` site was introduced in 4c4b23d (v6.11.1); before that, the same input throws at `join`. every release from v6.7.0 through v6.16.0 is affected.
-
-
-
-### impact
-
-
-
-an unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` and `arrayformat: 'comma'` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed json body) throw synchronously. in a typical node.js http framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. where the call runs outside an error boundary, such as an `async` express 4 handler (where the throw becomes an unhandled promise rejection) or a bare `http` request handler, the process exits, so the impact in that case depends on the application error handling rather than on qs. the default `arrayformat` (`indices`) is not affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110816" target="_blank">CVE-2026-110816</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>### Summary
-
-
-
-`qs.stringify` with `arrayFormat: 'comma'` throws `TypeError: Cannot convert object to primitive value` when an array element cannot be coerced to a string, such as an object with an own non-callable `toString` (`{ "toString": "x" }`) or a null-prototype object. The comma format joins array elements with `Array.prototype.join` and, under `encodeValuesOnly`, first passes each element through `String()` in `utils.encode`; neither guards against an element whose string coercion fails.
-
-
-
-### Details
-
-
-
-In `lib/stringify.js`, the comma branch collapses the array with `obj.join(',')`. For an element whose own `toString` is not callable, `ToPrimitive` skips it, falls through to `Object.prototype.valueOf` (which returns the object itself), and throws. Under `encodeValuesOnly: true`, the same element first reaches `String(str)` in `utils.encode` (`lib/utils.js`) and throws there. Nested arrays (`{ "a": [[{ "toString": "x" }]] }`) throw the same way, through `Array.prototype.toString`. The `indices`, `brackets`, and `repeat` formats walk into object elements instead of coercing them, and are not affected.
-
-
-
-Such elements can come from untrusted input. `JSON.parse` produces `{ "a": [{ "toString": "x" }] }` with no qs option involved. `qs.parse("a[0][toString]=x", { allowPrototypes: true })` keeps the `toString` key, and `qs.parse("a[][b]=c", { plainObjects: true })` produces a null-prototype element; the default parse options drop `toString` and produce ordinary objects, which do not throw. Express 4's default `query parser`, Express 5's `extended` query parser, and body-parser's `urlencoded({ extended: true })` all call `qs.parse` with `allowPrototypes: true`.
-
-
-
-#### PoC
-
-
-
-```js
-
-
-
-var qs = require("qs");
-
-
-
-qs.stringify(JSON.parse("{\"a\":[{\"toString\":\"x\"}]}"), { arrayFormat: "comma" });
-
-
-
-qs.stringify(qs.parse("a[0][toString]=x", { allowPrototypes: true }), { arrayFormat: "comma" });
-
-
-
-qs.stringify(qs.parse("a[][b]=c", { plainObjects: true }), { arrayFormat: "comma", encodeValuesOnly: true });
-
-
-
-// TypeError: Cannot convert object to primitive value
-
-
-
-```
-
-
-
-#### Fix
-
-
-
-Applied in a952e75 on `main` and released as v6.16.1: an element whose string coercion would fail is coerced to its primitive `valueOf`, if any, or else to `Object.prototype.toString`, so it renders as `[object Object]`, the same as any other object element already does under the comma format. Nested arrays are walked the way `join` walks them. Every input that did not previously throw serializes exactly as before, and a `toString` or `valueOf` that itself throws still propagates.
-
-
-
-### Affected versions
-
-
-
-`>=6.7.0 <6.16.1`, fixed in v6.16.1.
-
-
-
-The `join` path was introduced with the comma format in b84acba and first shipped in v6.7.0; v6.6.x and earlier ignore `arrayFormat: 'comma'` and are not affected. The `encodeValuesOnly` `String()` site was introduced in 4c4b23d (v6.11.1); before that, the same input throws at `join`. Every release from v6.7.0 through v6.16.0 is affected.
-
-
-
-### Impact
-
-
-
-An unauthenticated request can make any code path that re-serializes attacker-influenced data with `qs.stringify` and `arrayFormat: 'comma'` (for example, rebuilding a query string from `req.query` for a redirect or an upstream request, or serializing a parsed JSON body) throw synchronously. In a typical Node.js HTTP framework the throw is caught by the framework error boundary and the affected request returns a 500; the process survives and other requests are unaffected. Where the call runs outside an error boundary, such as an `async` Express 4 handler (where the throw becomes an unhandled promise rejection) or a bare `http` request handler, the process exits, so the impact in that case depends on the application error handling rather than on qs. The default `arrayFormat` (`indices`) is not affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110698" data-description="a security vulnerability has been detected in praat up to 7.0.02. affected is the function whisper_model_load of the file external/whispercpp/whisper.cpp of the component model loader. the manipulation of the argument n_dims leads to out-of-bounds write. the attack can be initiated remotely. the exploit has been disclosed publicly and may be used. the identifier of the patch is a910d21a2705ef4cd16d91f29cdc8da1ab1a7221. to fix this issue, it is recommended to deploy a patch. the project maintainer confirms: "we did a quick fix (suggested fix 1) for praat version 7.0.03, and scheduled a better fix (suggested fix 2)."">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110698" target="_blank">CVE-2026-110698</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security vulnerability has been detected in Praat up to 7.0.02. Affected is the function whisper_model_load of the file external/whispercpp/whisper.cpp of the component Model Loader. The manipulation of the argument n_dims leads to out-of-bounds write. The attack can be initiated remotely. The exploit has been disclosed publicly and may be used. The identifier of the patch is a910d21a2705ef4cd16d91f29cdc8da1ab1a7221. To fix this issue, it is recommended to deploy a patch. The project maintainer confirms: "We did a quick fix (suggested fix 1) for Praat version 7.0.03, and scheduled a better fix (suggested fix 2)."</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110696" data-description="a weakness has been identified in itsmeravitejak online-examination-system up to e6208e630b14657999bbfe4c9912302d2a1e2449. the affected element is an unknown function of the file dbtables.sql. executing a manipulation can lead to information disclosure. the attack may be launched remotely. the exploit has been made available to the public and could be used for attacks. this product operates on a rolling release basis, ensuring continuous delivery. consequently, there are no version details for either affected or updated releases. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110696" target="_blank">CVE-2026-110696</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A weakness has been identified in itsmeravitejak Online-Examination-System up to e6208e630b14657999bbfe4c9912302d2a1e2449. The affected element is an unknown function of the file dbtables.sql. Executing a manipulation can lead to information disclosure. The attack may be launched remotely. The exploit has been made available to the public and could be used for attacks. This product operates on a rolling release basis, ensuring continuous delivery. Consequently, there are no version details for either affected or updated releases. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110695" data-description="a vulnerability was detected in turboderp exllamav2 up to 0.3.2. affected is the function stfile.get_tensor of the file exllamav2/stloader.py of the component safetensors tensor loader. performing a manipulation of the argument data_offsets results in buffer overflow. the attack is possible to be carried out remotely. the exploit is now public and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110695" target="_blank">CVE-2026-110695</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was detected in turboderp ExLlamaV2 up to 0.3.2. Affected is the function STFile.get_tensor of the file exllamav2/stloader.py of the component Safetensors Tensor Loader. Performing a manipulation of the argument data_offsets results in buffer overflow. The attack is possible to be carried out remotely. The exploit is now public and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108337" data-description="an administrator could retrieve the password reset code for any user and take over the account.
-
-
-
-the password reset codes were included in the output of an api and could be used to reset the password of any account. the api is limited to use by administrator accounts only.
-
-
-
-an attacker who already has administrative access to the application could compromise the credentials of other accounts on the application. device credentials and customer data cannot be accessed with this vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108337" target="_blank">CVE-2026-108337</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An administrator could retrieve the password reset code for any user and take over the account.
-
-
-
-The password reset codes were included in the output of an API and could be used to reset the password of any account. The API is limited to use by administrator accounts only.
-
-
-
-An attacker who already has administrative access to the application could compromise the credentials of other accounts on the application. Device credentials and customer data cannot be accessed with this vulnerability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108336" data-description="when the default self-signed certificate is used, an attacker could gain administrative access to the application.
-
-
-
-the ssl certificate for the web interface is used to sign jwt access tokens that are used to validate that the user is logged in. when the default ssl certificate is used, an attacker could have the capability to sign jwt access tokens and bypass login.
-
-
-
-an attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. device credentials and customer data cannot be accessed with this vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108336" target="_blank">CVE-2026-108336</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When the default self-signed certificate is used, an attacker could gain administrative access to the application.
-
-
-
-The SSL certificate for the web interface is used to sign JWT access tokens that are used to validate that the user is logged in. When the default SSL certificate is used, an attacker could have the capability to sign JWT access tokens and bypass login.
-
-
-
-An attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. Device credentials and customer data cannot be accessed with this vulnerability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108335" data-description="when the password reset functionality is enabled, and email is configured, an attacker could take over any account using a brute-force attack.
-
-
-
-there is no rate limiting on the attempts to enter the reset code, leading to the possibility of a brute force solution to the password reset challenge.
-
-
-
-an attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. device credentials and customer data cannot be accessed with this vulnerability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108335" target="_blank">CVE-2026-108335</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When the password reset functionality is enabled, and email is configured, an attacker could take over any account using a brute-force attack.
-
-
-
-There is no rate limiting on the attempts to enter the reset code, leading to the possibility of a brute force solution to the password reset challenge.
-
-
-
-An attacker could gain administrative access to the application and perform actions like configuring the service or requesting log collection. Device credentials and customer data cannot be accessed with this vulnerability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-102298" data-description="in omada controller msp mode, the user-confirmation endpoint fails to enforce the required permission check. an authenticated user can supply a caller-controlled identifier parameter to validate credentials for another account and receive responses that distinguish nonexistent users, invalid passwords, and successful authentication. 
-
-successful exploitation may allow user enumeration, credential verification, and unauthorized access to msp resources or compromise of targeted accounts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102298" target="_blank">CVE-2026-102298</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 17:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In Omada Controller MSP mode, the user-confirmation endpoint fails to enforce the required permission check. An authenticated user can supply a caller-controlled Identifier parameter to validate credentials for another account and receive responses that distinguish nonexistent users, invalid passwords, and successful authentication. 
-
-Successful exploitation may allow user enumeration, credential verification, and unauthorized access to MSP resources or compromise of targeted accounts.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-96540" data-description="an improper access control vulnerability has been identified in the sonicwall network security manager (nsm) on-prem in export settings, potentially allowing a remote authenticated attacker to obtain sensitive information. this may allow the attacker to escalate privileges to an administrator or to intercept communications of other users of the nsm instance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96540" target="_blank">CVE-2026-96540</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An improper access control vulnerability has been identified in the SonicWall Network Security Manager (NSM) on-prem in export settings, potentially allowing a remote authenticated attacker to obtain sensitive information. This may allow the attacker to escalate privileges to an administrator or to intercept communications of other users of the NSM instance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-77427" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. from 3.9.0 until 3.22.0, pristine manual filerise installations without persistent_tokens_key or metadata/persistent_tokens.key can activate a published legacy compatibility key. if an attacker separately obtains ciphertext-bearing account or configuration files, the known fallback key can enable decryption of totp secrets or credentials. docker installations already generated a unique persistent key, and existing installations are not automatically rotated because doing so could make encrypted state unreadable. this issue is fixed in version 3.22.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77427" target="_blank">CVE-2026-77427</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. From 3.9.0 until 3.22.0, pristine manual FileRise installations without PERSISTENT_TOKENS_KEY or metadata/persistent_tokens.key can activate a published legacy compatibility key. If an attacker separately obtains ciphertext-bearing account or configuration files, the known fallback key can enable decryption of TOTP secrets or credentials. Docker installations already generated a unique persistent key, and existing installations are not automatically rotated because doing so could make encrypted state unreadable. This issue is fixed in version 3.22.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-71854" data-description="openaev is an open source platform allowing organizations to plan, schedule and conduct cyber adversary simulation campaign and tests. prior to version 2.260622.0, on a default installation, the `/api/player/**` lessons endpoints can be called without authentication, and they trust a client-supplied `userid` query parameter without verifying that the caller is that user or a member of the exercise. an unauthenticated client that knows an exercise uuid can read lessons-learned questions and answers (including each answer's author identity) and create or overwrite answers attributed to an arbitrary user. version 2.260622.0 contains a patch.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71854" target="_blank">CVE-2026-71854</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>OpenAEV is an open source platform allowing organizations to plan, schedule and conduct cyber adversary simulation campaign and tests. Prior to version 2.260622.0, on a default installation, the `/api/player/**` lessons endpoints can be called without authentication, and they trust a client-supplied `userId` query parameter without verifying that the caller is that user or a member of the exercise. An unauthenticated client that knows an exercise UUID can read lessons-learned questions and answers (including each answer's author identity) and create or overwrite answers attributed to an arbitrary user. Version 2.260622.0 contains a patch.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-69194" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.21.0, filerise returns the stored branding.footerhtml value through the unauthenticated public site configuration api without server-side sanitization. the filerise frontend already sanitizes this value before rendering it into the page, using an allowlist of simple footer tags and safe link handling. the unauthenticated public config api exposed raw admin-provided footer html to clients, which is still undesirable and could be unsafe for alternate clients or future render paths. an administrator must first store the malicious footer value. this issue is fixed in version 3.21.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-69194" target="_blank">CVE-2026-69194</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.21.0, FileRise returns the stored branding.footerHtml value through the unauthenticated public site configuration API without server-side sanitization. The FileRise frontend already sanitizes this value before rendering it into the page, using an allowlist of simple footer tags and safe link handling. The unauthenticated public config API exposed raw admin-provided footer HTML to clients, which is still undesirable and could be unsafe for alternate clients or future render paths. An administrator must first store the malicious footer value. This issue is fixed in version 3.21.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-69193" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.21.0, filerise tracks failed logins only by the combination of source ip address and username. a remote unauthenticated attacker can rotate usernames to obtain a fresh per-account attempt budget for each name, enabling password spraying from one source beyond the intended limit. per-user limits still apply and can also produce distinguishable throttling behavior for targeted accounts. the affected surface is authmodel::getfailedloginkey(). this issue is fixed in version 3.21.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-69193" target="_blank">CVE-2026-69193</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.21.0, FileRise tracks failed logins only by the combination of source IP address and username. A remote unauthenticated attacker can rotate usernames to obtain a fresh per-account attempt budget for each name, enabling password spraying from one source beyond the intended limit. Per-user limits still apply and can also produce distinguishable throttling behavior for targeted accounts. The affected surface is AuthModel::getFailedLoginKey(). This issue is fixed in version 3.21.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-69191" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.21.0, filerise enforces disableformlogin, disablebasicauth, and disableoidclogin in the client interface but not consistently in the corresponding server-side authentication flows. a user with otherwise valid credentials for a disabled method can call its backend endpoint directly and authenticate despite the administrator's login-method policy. the flaw does not permit credential-free authentication. this issue is fixed in version 3.21.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-69191" target="_blank">CVE-2026-69191</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.21.0, FileRise enforces disableFormLogin, disableBasicAuth, and disableOIDCLogin in the client interface but not consistently in the corresponding server-side authentication flows. A user with otherwise valid credentials for a disabled method can call its backend endpoint directly and authenticate despite the administrator's login-method policy. The flaw does not permit credential-free authentication. This issue is fixed in version 3.21.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64856" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.20.0, filerise /api/file/snippet.php does not apply the standard authenticated-session guard before processing short text preview requests. the endpoint still performs filerise acl checks, so normal installations do not expose an unauthenticated arbitrary file read, but unauthenticated requests can reach acl evaluation instead of receiving an immediate 401 response. only additional unusual proxy-header or acl misconfiguration is documented as allowing requests to proceed into path and file-content handling. this issue is fixed in version 3.20.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64856" target="_blank">CVE-2026-64856</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.20.0, FileRise /api/file/snippet.php does not apply the standard authenticated-session guard before processing short text preview requests. The endpoint still performs FileRise ACL checks, so normal installations do not expose an unauthenticated arbitrary file read, but unauthenticated requests can reach ACL evaluation instead of receiving an immediate 401 response. Only additional unusual proxy-header or ACL misconfiguration is documented as allowing requests to proceed into path and file-content handling. This issue is fixed in version 3.20.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-62664" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.19.0, filerise validates the complete foldername string but does not reject dot-dot path segments before foldermodel::createfolder() constructs and creates the destination. an authenticated low-privileged user with a valid csrf token and create or owner permission on the parent can submit traversal segments to post /api/folder/createfolder.php and create directories outside upload_dir wherever the web-server account can write. this issue is fixed in version 3.19.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62664" target="_blank">CVE-2026-62664</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.19.0, FileRise validates the complete folderName string but does not reject dot-dot path segments before FolderModel::createFolder() constructs and creates the destination. An authenticated low-privileged user with a valid CSRF token and create or owner permission on the parent can submit traversal segments to POST /api/folder/createFolder.php and create directories outside UPLOAD_DIR wherever the web-server account can write. This issue is fixed in version 3.19.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-61844" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.18.0, filerise flattens logical folder paths into metadata filenames by replacing separators and spaces with hyphens, so distinct folders such as team/docs and team-docs can share one metadata file. because uploader metadata is used to authorize read_own and ownership-restricted edits, a low-privileged user who controls one colliding folder, knows the target basename, and already has read_own access to the target folder can alter the metadata used by that folder, make the victim file appear attacker-owned, read it, and modify it when edit-own permission is also available. this issue is fixed in version 3.18.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61844" target="_blank">CVE-2026-61844</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:38 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-110873" data-description="heym from 0.0.55 before 0.0.121 contains a privilege escalation vulnerability that allows shared collaborators to overwrite a workflow's error_workflow_id because the field is missing from owner_only_execution_fields. attackers can point the error workflow to their own workflow with an http node, and when the parent workflow errors the owner's decrypted credentials are injected and exfiltrated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110873" target="_blank">CVE-2026-110873</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:29 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.18.0, FileRise flattens logical folder paths into metadata filenames by replacing separators and spaces with hyphens, so distinct folders such as team/docs and team-docs can share one metadata file. Because uploader metadata is used to authorize read_own and ownership-restricted edits, a low-privileged user who controls one colliding folder, knows the target basename, and already has read_own access to the target folder can alter the metadata used by that folder, make the victim file appear attacker-owned, read it, and modify it when edit-own permission is also available. This issue is fixed in version 3.18.0.</p>
+                    <p>Heym from 0.0.55 before 0.0.121 contains a privilege escalation vulnerability that allows shared collaborators to overwrite a workflow's error_workflow_id because the field is missing from OWNER_ONLY_EXECUTION_FIELDS. Attackers can point the error workflow to their own workflow with an HTTP node, and when the parent workflow errors the owner's decrypted credentials are injected and exfiltrated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61843" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.18.0, filerise upload-enabled shared-folder and upload-only links do not reject a destination filename that already exists. an unauthenticated visitor with a valid share token and any configured share password can upload a file with the same name as an existing file and silently replace its content while the original uploader metadata remains. the same replacement gap affects ordinary authenticated uploads through /api/upload/upload.php and authenticated upload-only users who lack edit authority over the existing file. this issue is fixed in version 3.18.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61843" target="_blank">CVE-2026-61843</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.18.0, FileRise upload-enabled shared-folder and upload-only links do not reject a destination filename that already exists. An unauthenticated visitor with a valid share token and any configured share password can upload a file with the same name as an existing file and silently replace its content while the original uploader metadata remains. The same replacement gap affects ordinary authenticated uploads through /api/upload/upload.php and authenticated upload-only users who lack edit authority over the existing file. This issue is fixed in version 3.18.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-57493" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.16.0, filerise stores the isadmin flag in remember-me tokens and restores that stale value during automatic login instead of resolving the account's current role from users.txt. a user who was issued a token while an administrator can retain administrator access after demotion, and token rotation copies the stale privilege into each replacement token. exploitation requires possession of the pre-demotion remember-me token. this issue is fixed in version 3.16.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57493" target="_blank">CVE-2026-57493</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:37 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-110872" data-description="nodemailer from 3.0.0 before 10.0.10 contains a quadratic complexity denial of service vulnerability in the smtp client reply parser in smtpconnection._ondata and ispartialresponse. a malicious smtp server or on-path attacker can stream continuation lines without a completion line before authentication, blocking the node.js event loop and exhausting memory.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110872" target="_blank">CVE-2026-110872</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:29 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.16.0, FileRise stores the isAdmin flag in remember-me tokens and restores that stale value during automatic login instead of resolving the account's current role from users.txt. A user who was issued a token while an administrator can retain administrator access after demotion, and token rotation copies the stale privilege into each replacement token. Exploitation requires possession of the pre-demotion remember-me token. This issue is fixed in version 3.16.0.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Nodemailer from 3.0.0 before 10.0.10 contains a quadratic complexity denial of service vulnerability in the SMTP client reply parser in SMTPConnection._onData and isPartialResponse. A malicious SMTP server or on-path attacker can stream continuation lines without a completion line before authentication, blocking the Node.js event loop and exhausting memory.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57492" data-description="filerise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. prior to 3.16.0, filerise treats an empty or missing users.txt file as a fresh installation even after setup previously completed. if storage loss, truncation, or another failure empties the user store, an unauthenticated remote caller can detect that setup mode reopened and create the next initial administrator account through the setup flow. the application lacked a durable setup-complete marker independent of the mutable user store. this issue is fixed in version 3.16.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57492" target="_blank">CVE-2026-57492</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-14 16:17:37 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-110871" data-description="nodemailer from 3.0.0 before 10.0.10 contains a denial of service vulnerability in messageparser.parseheaders that allows users to exhaust cpu through quadratic header unfolding. attackers can supply large recipient lists or long headers that fold into tens of thousands of continuation lines, blocking the node.js event loop during dkim signing.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110871" target="_blank">CVE-2026-110871</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Nodemailer from 3.0.0 before 10.0.10 contains a denial of service vulnerability in MessageParser.parseHeaders that allows users to exhaust CPU through quadratic header unfolding. Attackers can supply large recipient lists or long headers that fold into tens of thousands of continuation lines, blocking the Node.js event loop during DKIM signing.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110870" data-description="nodemailer from 3.0.0 before 10.0.13 contains an improper input validation vulnerability in its address parser that fails to strip rfc 5322 comments inside angle-bracket addresses. attackers can supply recipients like a display name with a parenthesized comment in the domain, so illegal characters reach envelope.to and rcpt to, causing rejected delivery or parser interpretation conflicts that bypass domain allow-lists.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110870" target="_blank">CVE-2026-110870</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Nodemailer from 3.0.0 before 10.0.13 contains an improper input validation vulnerability in its address parser that fails to strip RFC 5322 comments inside angle-bracket addresses. Attackers can supply recipients like a display name with a parenthesized comment in the domain, so illegal characters reach envelope.to and RCPT TO, causing rejected delivery or parser interpretation conflicts that bypass domain allow-lists.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110869" data-description="nodemailer 3.0.0 before 10.0.13 has a regular expression denial of service in smtpconnection._actionehlo, whose four auth mechanism detection regexes contain overlapping whitespace sub-patterns that backtrack quadratically. a malicious or man-in-the-middle smtp server can reply to ehlo with 250-auth, a long whitespace run and a non-matching token, blocking the node.js event loop for tens of seconds to hours before authentication.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110869" target="_blank">CVE-2026-110869</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Nodemailer 3.0.0 before 10.0.13 has a regular expression denial of service in SMTPConnection._actionEHLO, whose four AUTH mechanism detection regexes contain overlapping whitespace sub-patterns that backtrack quadratically. A malicious or man-in-the-middle SMTP server can reply to EHLO with 250-AUTH, a long whitespace run and a non-matching token, blocking the Node.js event loop for tens of seconds to hours before authentication.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110868" data-description="renovate before 44.79.0 contains a server-side request forgery vulnerability that allows users to make the shared http client request arbitrary internal urls via extends presets or customdatasources. attackers can point a preset at an instance metadata service endpoint to obtain aws credentials or leak sensitive information through renovate logs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110868" target="_blank">CVE-2026-110868</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.5</p>
+                    <p>Renovate before 44.79.0 contains a server-side request forgery vulnerability that allows users to make the shared HTTP client request arbitrary internal URLs via extends presets or customDatasources. Attackers can point a preset at an instance metadata service endpoint to obtain AWS credentials or leak sensitive information through Renovate logs.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110867" data-description="renovate before 44.60.1 contains an allowlist bypass vulnerability that allows repositories to set restricted environment variables by placing env inside a shared preset. attackers controlling an externally sourced preset can override variables like path, ld_preload, node_options, or git_ssl_cainfo in child processes on self-hosted instances.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110867" target="_blank">CVE-2026-110867</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.5</p>
+                    <p>Renovate before 44.60.1 contains an allowlist bypass vulnerability that allows repositories to set restricted environment variables by placing env inside a shared preset. Attackers controlling an externally sourced preset can override variables like PATH, LD_PRELOAD, NODE_OPTIONS, or GIT_SSL_CAINFO in child processes on self-hosted instances.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110866" data-description="renovate before 44.61.3 contains a protection mechanism bypass vulnerability that allows minimumreleaseage checks to be skipped when a user requests a pr rebase via the rebase/retry checkbox. attackers who publish a malicious dependency version can have it pushed into the pr and run in ci before the required release age elapses.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110866" target="_blank">CVE-2026-110866</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
+                    <p>Renovate before 44.61.3 contains a protection mechanism bypass vulnerability that allows minimumReleaseAge checks to be skipped when a user requests a PR rebase via the rebase/retry checkbox. Attackers who publish a malicious dependency version can have it pushed into the PR and run in CI before the required release age elapses.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110865" data-description="renovate before 44.60.1 contains an allowlist bypass vulnerability that allows repository users to evade the allowedheaders restriction by placing hostrules headers inside shared presets. attackers can supply internal or externally sourced presets with unvalidated hostrules[].headers to inject custom http headers into requests renovate sends to other hosts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110865" target="_blank">CVE-2026-110865</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Renovate before 44.60.1 contains an allowlist bypass vulnerability that allows repository users to evade the allowedHeaders restriction by placing hostRules headers inside shared presets. Attackers can supply internal or externally sourced presets with unvalidated hostRules[].headers to inject custom HTTP headers into requests Renovate sends to other hosts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110864" data-description="better auth from 1.5.0-beta.12 before 1.7.7 contains an authentication bypass vulnerability in the oauth proxy plugin that allows unauthenticated attackers to sign in as other users by forging encrypted profiles. when the proxy shares the global secret and cookie-stored state is used, attackers can obtain encrypted state for a fake profile with a victim's verified email to take over the account via implicit linking.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110864" target="_blank">CVE-2026-110864</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>FileRise is a self-hosted web-based file manager with multi-file upload, editing, and batch operations. Prior to 3.16.0, FileRise treats an empty or missing users.txt file as a fresh installation even after setup previously completed. If storage loss, truncation, or another failure empties the user store, an unauthenticated remote caller can detect that setup mode reopened and create the next initial administrator account through the setup flow. The application lacked a durable setup-complete marker independent of the mutable user store. This issue is fixed in version 3.16.0.</p>
+                    <p>Better Auth from 1.5.0-beta.12 before 1.7.7 contains an authentication bypass vulnerability in the OAuth Proxy plugin that allows unauthenticated attackers to sign in as other users by forging encrypted profiles. When the proxy shares the global secret and cookie-stored state is used, attackers can obtain encrypted state for a fake profile with a victim's verified email to take over the account via implicit linking.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110863" data-description="better auth @better-auth/sso from 1.7.0-rc.2 before 1.7.3 contains an authentication bypass vulnerability that allows authenticated users to sign in as other users by registering a personal sso provider. attackers can copy a legitimate provider's oidc issuer or saml entity id and assert a victim's subject or nameid, because account lookup ignores providerid, creating sessions for victim accounts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110863" target="_blank">CVE-2026-110863</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>Better Auth @better-auth/sso from 1.7.0-rc.2 before 1.7.3 contains an authentication bypass vulnerability that allows authenticated users to sign in as other users by registering a personal SSO provider. Attackers can copy a legitimate provider's OIDC issuer or SAML entity ID and assert a victim's subject or NameID, because account lookup ignores providerId, creating sessions for victim accounts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110862" data-description="better auth from 1.4.0-beta.18 before 1.7.7 contains an authentication bypass vulnerability that allows unauthenticated attackers to sign in as other users by reusing oauth state values as magic link tokens. attackers can start an oauth sign-in with a victim's email and submit the returned state to magic link verification, gaining sessions or creating falsely email-verified accounts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110862" target="_blank">CVE-2026-110862</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>Better Auth from 1.4.0-beta.18 before 1.7.7 contains an authentication bypass vulnerability that allows unauthenticated attackers to sign in as other users by reusing OAuth state values as Magic Link tokens. Attackers can start an OAuth sign-in with a victim's email and submit the returned state to Magic Link verification, gaining sessions or creating falsely email-verified accounts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110861" data-description="better auth @better-auth/drizzle-adapter and better-auth from 1.6.17 before 1.7.7, and @better-auth/kysely-adapter from 1.6.17 before 1.7.0, contain a race condition in database-backed rate limiting on postgresql where the limit check is not atomic with the counter update. remote attackers can send bursts of concurrent requests that pass the check together, exceeding configured limits on password sign-in, two-factor verification, one-time code, password reset, and other rate-limited endpoints.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110861" target="_blank">CVE-2026-110861</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>Better Auth @better-auth/drizzle-adapter and better-auth from 1.6.17 before 1.7.7, and @better-auth/kysely-adapter from 1.6.17 before 1.7.0, contain a race condition in database-backed rate limiting on PostgreSQL where the limit check is not atomic with the counter update. Remote attackers can send bursts of concurrent requests that pass the check together, exceeding configured limits on password sign-in, two-factor verification, one-time code, password reset, and other rate-limited endpoints.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110860" data-description="gitpython from 3.1.62 before 3.2.0 contains a symlink-following flaw in submodule.move(), which checks the destination only lexically and does not reject symbolic links in intermediate path components. an untrusted repository can commit a symlink such as vendor pointing outside the worktree, so an application moving an initialized submodule beneath it relocates the checkout externally and corrupts the index and .gitmodules.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110860" target="_blank">CVE-2026-110860</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>GitPython from 3.1.62 before 3.2.0 contains a symlink-following flaw in Submodule.move(), which checks the destination only lexically and does not reject symbolic links in intermediate path components. An untrusted repository can commit a symlink such as vendor pointing outside the worktree, so an application moving an initialized submodule beneath it relocates the checkout externally and corrupts the index and .gitmodules.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110859" data-description="gitpython before 3.2.0 contains an argument injection vulnerability in head.checkout() that allows remote attackers to read arbitrary files by supplying a branch name parsed as a git option. attackers can host a repository whose default branch is named --pathspec-from-file=<path>, causing cloning applications that check out the active branch to leak file contents through gitcommanderror messages.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110859" target="_blank">CVE-2026-110859</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>GitPython before 3.2.0 contains an argument injection vulnerability in Head.checkout() that allows remote attackers to read arbitrary files by supplying a branch name parsed as a git option. Attackers can host a repository whose default branch is named --pathspec-from-file=<path>, causing cloning applications that check out the active branch to leak file contents through GitCommandError messages.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110858" data-description="gitpython from 3.1.30 before 3.2.0 contains a remote code execution vulnerability in remote.pull() whose unsafe-option guard inspects only keyword arguments, not the positional refspec. attackers controlling the refspec can supply --upload-pack=<command> to execute os commands as the calling process over local-path or ssh transports.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110858" target="_blank">CVE-2026-110858</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>GitPython from 3.1.30 before 3.2.0 contains a remote code execution vulnerability in Remote.pull() whose unsafe-option guard inspects only keyword arguments, not the positional refspec. Attackers controlling the refspec can supply --upload-pack=<command> to execute OS commands as the calling process over local-path or SSH transports.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110857" data-description="gitpython before 3.2.0 contains a remote code execution vulnerability that allows attackers to run commands because git.ls_remote forwards urls without check_unsafe_protocols validation. attackers can supply ext:: remote-helper urls to execute commands when git permits the ext transport, while merge_base and indexfile.move also accept unguarded option injection.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110857" target="_blank">CVE-2026-110857</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>GitPython before 3.2.0 contains a remote code execution vulnerability that allows attackers to run commands because Git.ls_remote forwards URLs without check_unsafe_protocols validation. Attackers can supply ext:: remote-helper URLs to execute commands when git permits the ext transport, while merge_base and IndexFile.move also accept unguarded option injection.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110856" data-description="gitpython before 3.2.0 contains a regular expression denial of service vulnerability in the _re_actor_epoch pattern used by parse_actor_and_date on author, committer, and tagger lines. attackers can serve repositories with commit or tag objects containing long space-filled lines lacking a valid epoch or timezone, causing quadratic backtracking and cpu exhaustion.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110856" target="_blank">CVE-2026-110856</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>GitPython before 3.2.0 contains a regular expression denial of service vulnerability in the _re_actor_epoch pattern used by parse_actor_and_date on author, committer, and tagger lines. Attackers can serve repositories with commit or tag objects containing long space-filled lines lacking a valid epoch or timezone, causing quadratic backtracking and CPU exhaustion.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110855" data-description="gitpython before 3.2.0 contains an information disclosure vulnerability that allows malicious repositories to expand environment variables via separate_git_dir in repo._clone(), which omits expand_vars=false when calling git.polish_url(). attackers can craft a .gitmodules submodule name containing variable syntax so that clone plus submodule_update exposes secrets in .git/modules directory names and debug logs.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110855" target="_blank">CVE-2026-110855</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>GitPython before 3.2.0 contains an information disclosure vulnerability that allows malicious repositories to expand environment variables via separate_git_dir in Repo._clone(), which omits expand_vars=False when calling Git.polish_url(). Attackers can craft a .gitmodules submodule name containing variable syntax so that clone plus submodule_update exposes secrets in .git/modules directory names and DEBUG logs.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110854" data-description="parse server before 8.6.97 and 9.0.0 before 9.10.2-alpha.6 does not handle errors raised while sending verification or password reset emails, causing the server process to exit. a client holding only the public application keys can sign up, request a verification email, or request a password reset while the mail provider rejects, rate limits, or is unavailable, crashing the server.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110854" target="_blank">CVE-2026-110854</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-14 18:17:26 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Parse Server before 8.6.97 and 9.0.0 before 9.10.2-alpha.6 does not handle errors raised while sending verification or password reset emails, causing the server process to exit. A client holding only the public application keys can sign up, request a verification email, or request a password reset while the mail provider rejects, rate limits, or is unavailable, crashing the server.</p>
                 </div>
         
             </div>
