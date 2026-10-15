@@ -34,6 +34,268 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-99999" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ipv4: validate checksum_start before completing checksum
+
+if a packet with bad checksum metadata gets into the ipv4 stack,
+skb_checksum_help can corrupt the network header and cause a bunch of
+mischief.
+
+this was discovered and reported by paulos, and has been reporoduced
+by others independently since.
+
+we really shouldn't allow such packets in, but as a defence
+in depth measure, let's also check before we complete the checksum.
+
+a more complete validation at input is forthcoming, but needs more work.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99999" target="_blank">CVE-2026-99999</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:14 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ipv4: validate checksum_start before completing checksum
+
+If a packet with bad checksum metadata gets into the ipv4 stack,
+skb_checksum_help can corrupt the network header and cause a bunch of
+mischief.
+
+This was discovered and reported by Paulos, and has been reporoduced
+by others independently since.
+
+We really shouldn't allow such packets in, but as a defence
+in depth measure, let's also check before we complete the checksum.
+
+A more complete validation at input is forthcoming, but needs more work.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-98432" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ipv4: free inet_opt and ireq_opt after an rcu grace period
+
+tcp_v4_syn_recv_sock() transfers ownership of ireq->ireq_opt to the
+child socket (newinet->inet_opt) without copying it.
+
+another cpu can concurrently process a retransmitted syn for the same
+request socket, and send a synack from tcp_check_req().
+tcp_v4_send_synack() and inet_csk_route_req() read ireq->ireq_opt
+under rcu_read_lock() only, and ip_build_and_send_pkt() and
+ip_options_build() then read opt->optlen twice.
+
+note that the synack timer itself is not an issue: it holds a
+reference on its request socket, and inet_csk_reqsk_queue_drop()
+calls timer_delete_sync() before the child can be freed.
+
+since commit 079096f103fa ("tcp/dccp: install syn_recv requests
+into ehash table"), request sockets are processed without holding
+the listener lock, so nothing prevents the child socket from being
+freed while the synack is still being built. tcp child sockets do
+not have sock_rcu_free, and inet_sock_destruct() frees inet_opt
+with a plain kfree(), leading to a use-after-free in
+ip_options_build().
+
+a similar issue exists with request socket migration
+(net.ipv4.tcp_migrate_req=1, or a bpf_sk_reuseport_select_or_migrate
+program). reqsk_timer_handler() clones the request socket with
+inet_reqsk_clone(), so that the old request socket and its clone
+share the same ireq_opt, then reqsk_migrate_reset() clears the
+pointer in the old one. another cpu holding a reference on the old
+request socket can still be using these options (sending a synack,
+or creating a child in tcp_v4_syn_recv_sock()) when the clone is
+freed, and tcp_v4_reqsk_destructor() also uses a plain kfree().
+
+readers already use rcu, and other paths replacing inet_opt
+(do_ip_setsockopt(), cipso_v4_sock_setattr()...) already use
+kfree_rcu(). use kfree_rcu() in inet_sock_destruct() and
+tcp_v4_reqsk_destructor() as well.
+
+ipv6 is not affected by the first issue, because tcp_v6_syn_recv_sock()
+duplicates the options. tcp_v6_reqsk_destructor() has the same
+migration issue with ipv6_opt, which is only set by calipso. this
+will be addressed in a separate patch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98432" target="_blank">CVE-2026-98432</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ipv4: free inet_opt and ireq_opt after an RCU grace period
+
+tcp_v4_syn_recv_sock() transfers ownership of ireq->ireq_opt to the
+child socket (newinet->inet_opt) without copying it.
+
+Another cpu can concurrently process a retransmitted SYN for the same
+request socket, and send a SYNACK from tcp_check_req().
+tcp_v4_send_synack() and inet_csk_route_req() read ireq->ireq_opt
+under rcu_read_lock() only, and ip_build_and_send_pkt() and
+ip_options_build() then read opt->optlen twice.
+
+Note that the SYNACK timer itself is not an issue: it holds a
+reference on its request socket, and inet_csk_reqsk_queue_drop()
+calls timer_delete_sync() before the child can be freed.
+
+Since commit 079096f103fa ("tcp/dccp: install syn_recv requests
+into ehash table"), request sockets are processed without holding
+the listener lock, so nothing prevents the child socket from being
+freed while the SYNACK is still being built. TCP child sockets do
+not have SOCK_RCU_FREE, and inet_sock_destruct() frees inet_opt
+with a plain kfree(), leading to a use-after-free in
+ip_options_build().
+
+A similar issue exists with request socket migration
+(net.ipv4.tcp_migrate_req=1, or a BPF_SK_REUSEPORT_SELECT_OR_MIGRATE
+program). reqsk_timer_handler() clones the request socket with
+inet_reqsk_clone(), so that the old request socket and its clone
+share the same ireq_opt, then reqsk_migrate_reset() clears the
+pointer in the old one. Another cpu holding a reference on the old
+request socket can still be using these options (sending a SYNACK,
+or creating a child in tcp_v4_syn_recv_sock()) when the clone is
+freed, and tcp_v4_reqsk_destructor() also uses a plain kfree().
+
+Readers already use RCU, and other paths replacing inet_opt
+(do_ip_setsockopt(), cipso_v4_sock_setattr()...) already use
+kfree_rcu(). Use kfree_rcu() in inet_sock_destruct() and
+tcp_v4_reqsk_destructor() as well.
+
+IPv6 is not affected by the first issue, because tcp_v6_syn_recv_sock()
+duplicates the options. tcp_v6_reqsk_destructor() has the same
+migration issue with ipv6_opt, which is only set by CALIPSO. This
+will be addressed in a separate patch.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-88794" data-description="enterprise architect is vulnerable to xml external entity (xxe) injection in the xslt debugger feature. when a user loads a crafted xml file containing a `doctype` with an external dtd reference, the parser processes external entities, allowing an attacker to read arbitrary files from the victim's filesystem.
+
+because vendor contact attempts were unsuccessful, the vulnerability has only been confirmed in version 17.1 but may also affect other versions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-88794" target="_blank">CVE-2026-88794</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Enterprise Architect is vulnerable to XML External Entity (XXE) injection in the XSLT Debugger feature. When a user loads a crafted XML file containing a `DOCTYPE` with an external DTD reference, the parser processes external entities, allowing an attacker to read arbitrary files from the victim's filesystem.
+
+Because vendor contact attempts were unsuccessful, the vulnerability has only been confirmed in version 17.1 but may also affect other versions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79837" data-description="a vulnerability in hpe nonstop sql/mx udr server may allow a crafted message to cause process termination, service disruption or memory corruption, resulting in undefined behavior.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79837" target="_blank">CVE-2026-79837</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability in HPE NonStop SQL/MX UDR SERVER may allow a crafted message to cause process termination, service disruption or memory corruption, resulting in undefined behavior.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110724" data-description="in `api-gateway` versions till `1.7.3`, the default rate-limit key resolver, `clientipkeyresolver`, derives the per-client bucket key from the leftmost element of the `x-forwarded-for` request header. that element is supplied by the originating http client and is not validated against any trusted-proxy list. a single attacker can therefore obtain an unlimited number of independent rate-limit buckets — one per unique header value — and completely bypass the gateway's request-rate limiting on every route that uses the shipped default configuration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110724" target="_blank">CVE-2026-110724</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In `api-gateway` versions till `1.7.3`, The default rate-limit key resolver, `ClientIpKeyResolver`, derives the per-client bucket key from the leftmost element of the `X-Forwarded-For` request header. That element is supplied by the originating HTTP client and is not validated against any trusted-proxy list. A single attacker can therefore obtain an unlimited number of independent rate-limit buckets — one per unique header value — and completely bypass the gateway's request-rate limiting on every route that uses the shipped default configuration.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110723" data-description="in `api-gateway` versions till `1.7.3`, the default rate-limit key resolver, `clientipkeyresolver`, derives the per-client bucket key from the leftmost element of the `x-forwarded-for` request header. that element is supplied by the originating http client and is not validated against any trusted-proxy list. a single attacker can therefore obtain an unlimited number of independent rate-limit buckets — one per unique header value — and completely bypass the gateway's request-rate limiting on every route that uses the shipped default configuration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110723" target="_blank">CVE-2026-110723</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In `api-gateway` versions till `1.7.3`, The default rate-limit key resolver, `ClientIpKeyResolver`, derives the per-client bucket key from the leftmost element of the `X-Forwarded-For` request header. That element is supplied by the originating HTTP client and is not validated against any trusted-proxy list. A single attacker can therefore obtain an unlimited number of independent rate-limit buckets — one per unique header value — and completely bypass the gateway's request-rate limiting on every route that uses the shipped default configuration.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109892" data-description="incorrect privilege assignment vulnerability in shabti kaplan frontend admin by dynamiapps acf-frontend-form-element allows privilege escalation.this issue affects frontend admin by dynamiapps: from n/a through 3.29.13.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109892" target="_blank">CVE-2026-109892</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>Incorrect Privilege Assignment vulnerability in Shabti Kaplan Frontend Admin by DynamiApps acf-frontend-form-element allows Privilege Escalation.This issue affects Frontend Admin by DynamiApps: from n/a through 3.29.13.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109702" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in maxfoundry social share buttons share-button allows stored xss.this issue affects social share buttons: from n/a through 1.31.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109702" target="_blank">CVE-2026-109702</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in maxfoundry Social Share Buttons share-button allows Stored XSS.This issue affects Social Share Buttons: from n/a through 1.31.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109698" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in kitae park mang board wp mangboard allows sql injection.this issue affects mang board wp: from n/a through 2.4.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109698" target="_blank">CVE-2026-109698</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
+                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in Kitae Park Mang Board WP mangboard allows SQL Injection.This issue affects Mang Board WP: from n/a through 2.4.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109693" data-description="incorrect privilege assignment vulnerability in wp manageninja llc fluent crm fluent-crm allows privilege escalation.this issue affects fluent crm: from n/a through 3.2.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109693" target="_blank">CVE-2026-109693</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Incorrect Privilege Assignment vulnerability in WP ManageNinja LLC Fluent CRM fluent-crm allows Privilege Escalation.This issue affects Fluent CRM: from n/a through 3.2.5.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109692" data-description="missing authorization vulnerability in themegrill user registration user-registration allows exploiting incorrectly configured access control security levels.this issue affects user registration: from n/a through 5.2.8.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109692" target="_blank">CVE-2026-109692</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Missing Authorization vulnerability in ThemeGrill User Registration user-registration allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects User Registration: from n/a through 5.2.8.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109688" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in link whisper inc link whisper free link-whisper allows blind sql injection.this issue affects link whisper free: from n/a through 0.9.7.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109688" target="_blank">CVE-2026-109688</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
+                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in Link Whisper INC Link Whisper Free link-whisper allows Blind SQL Injection.This issue affects Link Whisper Free: from n/a through 0.9.7.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109686" data-description="deserialization of untrusted data vulnerability in link whisper inc link whisper free link-whisper allows object injection.this issue affects link whisper free: from n/a through 0.9.7.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109686" target="_blank">CVE-2026-109686</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>Deserialization of Untrusted Data vulnerability in Link Whisper INC Link Whisper Free link-whisper allows Object Injection.This issue affects Link Whisper Free: from n/a through 0.9.7.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-109685" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in link whisper inc link whisper free link-whisper allows reflected xss.this issue affects link whisper free: from n/a through 0.9.7.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109685" target="_blank">CVE-2026-109685</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Link Whisper INC Link Whisper Free link-whisper allows Reflected XSS.This issue affects Link Whisper Free: from n/a through 0.9.7.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-107416" data-description="authorization bypass through user-controlled key vulnerability in webba plugins webba booking webba-booking-lite allows exploiting incorrectly configured access control security levels.this issue affects webba booking: from n/a through 6.5.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107416" target="_blank">CVE-2026-107416</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Authorization Bypass Through User-Controlled Key vulnerability in Webba Plugins Webba Booking webba-booking-lite allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Webba Booking: from n/a through 6.5.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-105882" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in themegrill user registration user-registration allows stored xss.this issue affects user registration: from n/a through 5.2.8.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105882" target="_blank">CVE-2026-105882</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in ThemeGrill User Registration user-registration allows Stored XSS.This issue affects User Registration: from n/a through 5.2.8.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-104025" data-description="path traversal (cwe-22) in the execute_obj function of the archive object viewer (peach.pas) in peazip 11.2.0 and earlier on windows allows an attacker who convinces a victim to preview an entry of a crafted archive via the "preview with... -> associated application" action (shift+ctrl+o) to execute an arbitrary program already present on the victim's system, with no warning dialog. the function validates only outname (peazip's own temporary directory) with checkfiledirname, while the string actually executed is the concatenation outname+tempstring; tempstring is taken verbatim from the archive entry name (stringgridlist.cells[12,...]) and is never validated. checkfiledirname (list_utils.pas) rejects control and reserved characters in the file name but performs no ".." path-containment check, so an entry named ../../../../windows/system32/calc.exe escapes the extraction directory and is passed to cp_open -> shellexecutew; the extracting backend (7-zip) strips the traversal while the opener does not. in addition, the secextconst dangerous-extension confirmation prompt is implemented only in the double-click handler (grid_obj_open) and not on this preview route, so an executable inside an archive reaches shellexecutew unannounced, and where the prompt does fire it names the entry's display name rather than the resolved path that will run. arbitrary code execution was demonstrated with a proof of concept against official peazip builds, confirmed on two archive formats (.zip and .tar) to show the defect is in peazip's own path handling and not in a single format parser.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-104025" target="_blank">CVE-2026-104025</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Path Traversal (CWE-22) in the execute_obj function of the archive object viewer (peach.pas) in PeaZip 11.2.0 and earlier on Windows allows an attacker who convinces a victim to preview an entry of a crafted archive via the "Preview with... -> Associated application" action (Shift+Ctrl+O) to execute an arbitrary program already present on the victim's system, with no warning dialog. The function validates only outname (PeaZip's own temporary directory) with checkfiledirname, while the string actually executed is the concatenation outname+tempstring; tempstring is taken verbatim from the archive entry name (StringGridList.Cells[12,...]) and is never validated. checkfiledirname (list_utils.pas) rejects control and reserved characters in the file name but performs no ".." path-containment check, so an entry named ../../../../Windows/System32/calc.exe escapes the extraction directory and is passed to cp_open -> ShellExecuteW; the extracting backend (7-Zip) strips the traversal while the opener does not. In addition, the SECEXTCONST dangerous-extension confirmation prompt is implemented only in the double-click handler (grid_obj_open) and not on this preview route, so an executable inside an archive reaches ShellExecuteW unannounced, and where the prompt does fire it names the entry's display name rather than the resolved path that will run. Arbitrary code execution was demonstrated with a proof of concept against official PeaZip builds, confirmed on two archive formats (.zip and .tar) to show the defect is in PeaZip's own path handling and not in a single format parser.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102389" data-description="improper control of generation of code ('code injection') vulnerability in wpmu dev broken link checker broken-link-checker allows code injection.this issue affects broken link checker: from n/a through 2.4.14.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102389" target="_blank">CVE-2026-102389</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-15 08:17:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Control of Generation of Code ('Code Injection') vulnerability in WPMU DEV Broken Link Checker broken-link-checker allows Code Injection.This issue affects Broken Link Checker: from n/a through 2.4.14.1.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-8145" data-description="the wholesalex – b2b & wholesale plugin for woocommerce with wholesale prices plugin for wordpress is vulnerable to limited privilege escalation in all versions up to, and including, 3.0.8 via the 'process_registration' due to missing validation on the 'wholesalex_registration_role' parameter. this makes it possible for unauthenticated attackers to register as any existing wholesalex role. the vulnerability was partially patched in version 2.3.8.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-8145" target="_blank">CVE-2026-8145</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-15 07:16:39 CDT</p>
@@ -48,154 +310,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.4</p>
                     <p>A vulnerability HPE NonStop SQL/MX Run-Time Statistics may allow an attacker to cause memory corruption and null pointer dereference, potentially leading to process crash,  DoS or information disclosure.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79835" data-description="a crafted input message can cause a buffer overflow in hpe nonstop kms server.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79835" target="_blank">CVE-2026-79835</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 07:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.8</p>
-                    <p>A crafted input message can cause a buffer overflow in HPE Nonstop KMS Server.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79834" data-description="a security vulnerability in hpe nonstop sql/mx sqlcat may allow an unauthenticated user to perform unauthorized command execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79834" target="_blank">CVE-2026-79834</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 07:16:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>A security vulnerability in HPE NonStop SQL/MX SQLCAT may allow an unauthenticated user to perform unauthorized command execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110726" data-description="in `api-gateway` versions till `1.7.3`, the default rate-limit key resolver, `clientipkeyresolver`, derives the per-client bucket key from the leftmost element of the `x-forwarded-for` request header. that element is supplied by the originating http client and is not validated against any trusted-proxy list. a single attacker can therefore obtain an unlimited number of independent rate-limit buckets — one per unique header value — and completely bypass the gateway's request-rate limiting on every route that uses the shipped default configuration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110726" target="_blank">CVE-2026-110726</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 07:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In `api-gateway` versions till `1.7.3`, The default rate-limit key resolver, `ClientIpKeyResolver`, derives the per-client bucket key from the leftmost element of the `X-Forwarded-For` request header. That element is supplied by the originating HTTP client and is not validated against any trusted-proxy list. A single attacker can therefore obtain an unlimited number of independent rate-limit buckets — one per unique header value — and completely bypass the gateway's request-rate limiting on every route that uses the shipped default configuration.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79833" data-description="a vulnerability in hpe nonstop ansi sqlutil may allow a remote unauthenticated actor to cause an affected service to terminate unexpectedly, causing a denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79833" target="_blank">CVE-2026-79833</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>A vulnerability in HPE NonStop ANSI SQLUTIL may allow a remote unauthenticated actor to cause an affected service to terminate unexpectedly, causing a denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79832" data-description="a stack buffer overflow vulnerability in hpe nonstop sql/mx executor may potentially result in information disclosure or process crash.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79832" target="_blank">CVE-2026-79832</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
-                    <p>A stack buffer overflow vulnerability in HPE NonStop SQL/MX Executor may potentially result in information disclosure or process crash.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79831" data-description="a heap buffer overflow in hpe nonstop posix user threads may allow arbitrary code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79831" target="_blank">CVE-2026-79831</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.6</p>
-                    <p>A heap buffer overflow in HPE NonStop Posix User Threads may allow arbitrary code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79830" data-description="a vulnerability in hpe nonstop kernel level thread model lib can cause stack buffer overflow which can allow arbitrary code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79830" target="_blank">CVE-2026-79830</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.6</p>
-                    <p>A vulnerability in HPE NonStop Kernel Level Thread Model Lib can cause stack buffer overflow which can allow arbitrary code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-17525" data-description="incomplete cleanup vulnerability in abb my control system.
-
-this issue affects my control system: 26.4 and 26.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17525" target="_blank">CVE-2026-17525</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.2</p>
-                    <p>Incomplete cleanup vulnerability in ABB My Control System.
-
-This issue affects My Control System: 26.4 and 26.5.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-109695" data-description="insertion of sensitive information into sent data vulnerability in wpmanageninja fluentcart fluent-cart allows retrieve embedded sensitive data.this issue affects fluentcart: from n/a through 1.7.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109695" target="_blank">CVE-2026-109695</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Insertion of Sensitive Information Into Sent Data vulnerability in WPManageNinja FluentCart fluent-cart allows Retrieve Embedded Sensitive Data.This issue affects FluentCart: from n/a through 1.7.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-109694" data-description="incorrect privilege assignment vulnerability in wp manageninja llc fluent crm fluent-crm allows privilege escalation.this issue affects fluent crm: from n/a through 3.2.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109694" target="_blank">CVE-2026-109694</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:24 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Incorrect Privilege Assignment vulnerability in WP ManageNinja LLC Fluent CRM fluent-crm allows Privilege Escalation.This issue affects Fluent CRM: from n/a through 3.2.5.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108498" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in bannersky bsk pdf manager bsk-pdf-manager allows stored xss.this issue affects bsk pdf manager: from n/a through 3.8.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108498" target="_blank">CVE-2026-108498</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in bannersky BSK PDF Manager bsk-pdf-manager allows Stored XSS.This issue affects BSK PDF Manager: from n/a through 3.8.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108497" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in tms amelia ameliabooking allows sql injection.this issue affects amelia: from n/a through 2.4.10.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108497" target="_blank">CVE-2026-108497</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
-                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in TMS Amelia ameliabooking allows SQL Injection.This issue affects Amelia: from n/a through 2.4.10.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108491" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in everest forms everest forms everest-forms allows stored xss.this issue affects everest forms: from n/a through 3.6.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108491" target="_blank">CVE-2026-108491</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 06:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Everest Forms Everest Forms everest-forms allows Stored XSS.This issue affects Everest Forms: from n/a through 3.6.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79829" data-description="a security vulnerability in hpe nonstop http webserver can cause memory corruption which may result in a system halt.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79829" target="_blank">CVE-2026-79829</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 05:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>A security vulnerability in HPE NonStop HTTP WEBSERVER can cause memory corruption which may result in a system halt.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79828" data-description="a heap buffer overflow in hpe nonstop debug utilities  could corrupt resume-execution address and may potentially redirect execution flow.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79828" target="_blank">CVE-2026-79828</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 05:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>A heap buffer overflow in HPE NonStop Debug Utilities  could corrupt resume-execution address and may potentially redirect execution flow.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79827" data-description="a heap buffer overflow in hpe nonstop inspect subsystem could corrupt resume-execution address and may potentially redirect execution flow.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79827" target="_blank">CVE-2026-79827</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 05:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>A heap buffer overflow in HPE NonStop Inspect Subsystem could corrupt resume-execution address and may potentially redirect execution flow.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79826" data-description="a heap buffer overflow in hpe nonstop ocax could corrupt address space and may potentially redirect execution flow.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79826" target="_blank">CVE-2026-79826</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 05:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>A heap buffer overflow in HPE NonStop OCAX could corrupt address space and may potentially redirect execution flow.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-79825" data-description="a heap buffer overflow in hpe nonstop ndsrest could corrupt resume-execution address and may potentially redirect execution flow.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79825" target="_blank">CVE-2026-79825</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-15 05:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>A heap buffer overflow in HPE NonStop NDSREST could corrupt resume-execution address and may potentially redirect execution flow.</p>
                 </div>
         
             </div>
