@@ -34,6 +34,126 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-76788" data-description="the osdp control panel reply parser cp_decode_response() in subsys/mgmt/osdp/src/osdp_cp.c decodes replies from a peripheral device into a stack-allocated struct osdp_event. for the reply_keyppad and reply_raw reply types, the payload length is taken from the received frame and the only validation performed is that the declared length is self-consistent with the number of payload bytes present in the frame. because the attacker controls both the length field and the frame length, that check imposes no bound, and the subsequent memcpy() writes into the fixed 64-byte data arrays of struct osdp_event_keypress / struct osdp_event_cardread (osdp_event_max_datalen). the sibling reply_fmt handler in the same switch already carried the missing > osdp_event_max_datalen bound.
+
+the defect is reached from cp_process_reply(), which reads bytes from the osdp rs-485 channel and passes them through osdp_phy_check_packet() and osdp_phy_decode_packet() before dispatching on the reply id. triggering it requires config_osdp with config_osdp_mode_cp and an application event callback registered (the normal control panel integration), plus a frame carrying a correct som, a valid crc-16, and a matching 2-bit sequence number — all of which are computable or observable by anyone on the bus. no check ties the reply id to the outstanding command, so an oversized reply_keyppad or reply_raw is accepted as the answer to a routine cmd_poll. a malicious or compromised card reader, or anyone with access to the rs-485 wiring, can supply such a frame; config_osdp_sc_enabled only helps while a secure channel is active, and a single unauthenticated frame carrying a bad mac causes sc_deactivate(), after which plaintext replies are again accepted.
+
+with the default config_osdp_uart_buffer_length of 256, roughly 180 bytes of fully attacker-chosen data can be written past the end of the stack-allocated event object, over saved registers and the return address on typical cortex-m and risc-v frame layouts (zephyr does not enable stack canaries by default). the impact ranges from a hard crash of the access-control panel to potential control-flow hijack in the context of the osdp receive thread. the fix adds an osdp_event_max_datalen bound to both handlers, capping each memcpy() at the size of its destination.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76788" target="_blank">CVE-2026-76788</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:18:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>The OSDP Control Panel reply parser cp_decode_response() in subsys/mgmt/osdp/src/osdp_cp.c decodes replies from a Peripheral Device into a stack-allocated struct osdp_event. For the REPLY_KEYPPAD and REPLY_RAW reply types, the payload length is taken from the received frame and the only validation performed is that the declared length is self-consistent with the number of payload bytes present in the frame. Because the attacker controls both the length field and the frame length, that check imposes no bound, and the subsequent memcpy() writes into the fixed 64-byte data arrays of struct osdp_event_keypress / struct osdp_event_cardread (OSDP_EVENT_MAX_DATALEN). The sibling REPLY_FMT handler in the same switch already carried the missing > OSDP_EVENT_MAX_DATALEN bound.
+
+The defect is reached from cp_process_reply(), which reads bytes from the OSDP RS-485 channel and passes them through osdp_phy_check_packet() and osdp_phy_decode_packet() before dispatching on the reply ID. Triggering it requires CONFIG_OSDP with CONFIG_OSDP_MODE_CP and an application event callback registered (the normal Control Panel integration), plus a frame carrying a correct SOM, a valid CRC-16, and a matching 2-bit sequence number — all of which are computable or observable by anyone on the bus. No check ties the reply ID to the outstanding command, so an oversized REPLY_KEYPPAD or REPLY_RAW is accepted as the answer to a routine CMD_POLL. A malicious or compromised card reader, or anyone with access to the RS-485 wiring, can supply such a frame; CONFIG_OSDP_SC_ENABLED only helps while a secure channel is active, and a single unauthenticated frame carrying a bad MAC causes sc_deactivate(), after which plaintext replies are again accepted.
+
+With the default CONFIG_OSDP_UART_BUFFER_LENGTH of 256, roughly 180 bytes of fully attacker-chosen data can be written past the end of the stack-allocated event object, over saved registers and the return address on typical Cortex-M and RISC-V frame layouts (Zephyr does not enable stack canaries by default). The impact ranges from a hard crash of the access-control panel to potential control-flow hijack in the context of the OSDP receive thread. The fix adds an OSDP_EVENT_MAX_DATALEN bound to both handlers, capping each memcpy() at the size of its destination.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-76787" data-description="the updatehub firmware-over-the-air client parses the coap probe response with zephyr's json library in z_impl_updatehub_probe() (subsys/mgmt/updatehub/updatehub.c). the decoder treats every descriptor field as optional — json_obj_parse() returns a bitmask of the fields it actually decoded and never fails on a missing one — so a response that omits the "sha256sum" string leaves the corresponding const char * in the zero-initialised struct resp_probe_any_boards / struct resp_probe_some_boards at null. both metadata branches then computed sha256size = strlen(...objects.sha256sum) + 1 before any validation, dereferencing that null pointer; the sha256_hex_digest_size test that follows operates on a value the bad read has already produced and cannot prevent it.
+
+the metadata is supplied entirely by the network peer: probe_cb() accepts the datagram, runs coap_packet_parse() and copies the payload with no token matching and no cryptographic check. with config_updatehub_dtls unset — the default — start_coap_client() uses plain coap over udp on port 5683 with no peer authentication and resolves the server via unauthenticated dns, so an on-path attacker, a dns spoofer, or an off-path attacker who wins the race with a forged source address can deliver the malformed metadata. a probe response as simple as "objects":[[{}],[{}]] suffices, and no user interaction is required because updatehub_autohandler() polls on config_updatehub_poll_interval. when config_updatehub_dtls=y the trigger narrows to a malicious or compromised update server.
+
+the primitive is a read at address zero, not a write, so the impact is availability only. on targets where the low address range is unmapped or protected — mmu-based architectures, builds with config_null_pointer_exception_detection_dwt/_mpu/_pmp, trustzone non-secure images, and socs such as nrf54l whose 0x0–0x400 window is unmapped — the load faults and zephyr's default fatal handler halts the system, giving a remotely re-triggerable denial of service on every poll. on classic cortex-m targets where the vector table is readable at address zero the walk usually terminates immediately and the request is rejected by the length check, so the outcome is configuration- and soc-dependent. there is no memory write, and the copied bytes are only compared against the locally computed image hash, so there is no information-disclosure channel.
+
+the fix adds an explicit sha256sum == null test that returns updatehub_metadata_error ahead of the strlen() in both metadata branches. debug builds (config_updatehub_log_level=4) still format the same pointers with %s in a log_dbg() loop that runs before the new checks, so that variant remains in debug configurations only.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76787" target="_blank">CVE-2026-76787</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:18:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>The UpdateHub firmware-over-the-air client parses the CoAP probe response with Zephyr's JSON library in z_impl_updatehub_probe() (subsys/mgmt/updatehub/updatehub.c). The decoder treats every descriptor field as optional — json_obj_parse() returns a bitmask of the fields it actually decoded and never fails on a missing one — so a response that omits the "sha256sum" string leaves the corresponding const char * in the zero-initialised struct resp_probe_any_boards / struct resp_probe_some_boards at NULL. Both metadata branches then computed sha256size = strlen(...objects.sha256sum) + 1 before any validation, dereferencing that NULL pointer; the SHA256_HEX_DIGEST_SIZE test that follows operates on a value the bad read has already produced and cannot prevent it.
+
+The metadata is supplied entirely by the network peer: probe_cb() accepts the datagram, runs coap_packet_parse() and copies the payload with no token matching and no cryptographic check. With CONFIG_UPDATEHUB_DTLS unset — the default — start_coap_client() uses plain CoAP over UDP on port 5683 with no peer authentication and resolves the server via unauthenticated DNS, so an on-path attacker, a DNS spoofer, or an off-path attacker who wins the race with a forged source address can deliver the malformed metadata. A probe response as simple as "objects":[[{}],[{}]] suffices, and no user interaction is required because updatehub_autohandler() polls on CONFIG_UPDATEHUB_POLL_INTERVAL. When CONFIG_UPDATEHUB_DTLS=y the trigger narrows to a malicious or compromised update server.
+
+The primitive is a read at address zero, not a write, so the impact is availability only. On targets where the low address range is unmapped or protected — MMU-based architectures, builds with CONFIG_NULL_POINTER_EXCEPTION_DETECTION_DWT/_MPU/_PMP, TrustZone non-secure images, and SoCs such as nRF54L whose 0x0–0x400 window is unmapped — the load faults and Zephyr's default fatal handler halts the system, giving a remotely re-triggerable denial of service on every poll. On classic Cortex-M targets where the vector table is readable at address zero the walk usually terminates immediately and the request is rejected by the length check, so the outcome is configuration- and SoC-dependent. There is no memory write, and the copied bytes are only compared against the locally computed image hash, so there is no information-disclosure channel.
+
+The fix adds an explicit sha256sum == NULL test that returns UPDATEHUB_METADATA_ERROR ahead of the strlen() in both metadata branches. Debug builds (CONFIG_UPDATEHUB_LOG_LEVEL=4) still format the same pointers with %s in a LOG_DBG() loop that runs before the new checks, so that variant remains in debug configurations only.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112395" data-description="pillow is a python imaging library. from 8.2.0 until 13.0.0, pillow's tiled-tiff decoder can read past the tile buffer while copying four-byte pixels. in _decodetile, libtiff can return a tile allocation smaller than the required row stride multiplied by the tile length, and pillow's stride-and-copy loop walks beyond that allocation. an attacker can supply a crafted tiled tiff to an application that loads it. this can expose adjacent heap data in pixels or crash the process. this issue is fixed in version 13.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112395" target="_blank">CVE-2026-112395</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Pillow is a Python imaging library. From 8.2.0 until 13.0.0, Pillow's tiled-TIFF decoder can read past the tile buffer while copying four-byte pixels. In _decodeTile, libtiff can return a tile allocation smaller than the required row stride multiplied by the tile length, and Pillow's stride-and-copy loop walks beyond that allocation. An attacker can supply a crafted tiled TIFF to an application that loads it. This can expose adjacent heap data in pixels or crash the process. This issue is fixed in version 13.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112394" data-description="pillow is a python imaging library. prior to 13.0.0, pillow's p;2l and p;4l raw decoders can read past the end of an input buffer. imagingrawdecode calculates a packed-pixel row size, while the unpackers read separately padded bit planes. a caller can supply a buffer and image dimensions whose accepted size is smaller than the unpacker's actual footprint. this can disclose up to three adjacent heap bytes in output pixels or crash the process. this issue is fixed in version 13.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112394" target="_blank">CVE-2026-112394</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Pillow is a Python imaging library. Prior to 13.0.0, Pillow's P;2L and P;4L raw decoders can read past the end of an input buffer. ImagingRawDecode calculates a packed-pixel row size, while the unpackers read separately padded bit planes. A caller can supply a buffer and image dimensions whose accepted size is smaller than the unpacker's actual footprint. This can disclose up to three adjacent heap bytes in output pixels or crash the process. This issue is fixed in version 13.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112393" data-description="pillow is a python imaging library. from 2.0.0 until 13.0.0, pillow has a heap buffer overflow and stale-heap disclosure in _tiffwriteproc when saving compressed tiff data through libtiff to a target without a usable fileno(), such as bytesio. the callback sizes its allocation from the prior buffer size instead of the current write position, allowing an attacker-controlled out-of-line tiff tag or retained icc profile to be copied beyond the allocation after libtiff seeks forward. this overflow can crash the process and may allow code execution. independently, unwritten alignment gaps in compressed tiff output larger than 64 kib can disclose stale heap bytes without a crafted tag. file paths and targets with real file descriptors are unaffected. this issue is fixed in version 13.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112393" target="_blank">CVE-2026-112393</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Pillow is a Python imaging library. From 2.0.0 until 13.0.0, Pillow has a heap buffer overflow and stale-heap disclosure in _tiffWriteProc when saving compressed TIFF data through libtiff to a target without a usable fileno(), such as BytesIO. The callback sizes its allocation from the prior buffer size instead of the current write position, allowing an attacker-controlled out-of-line TIFF tag or retained ICC profile to be copied beyond the allocation after libtiff seeks forward. This overflow can crash the process and may allow code execution. Independently, unwritten alignment gaps in compressed TIFF output larger than 64 KiB can disclose stale heap bytes without a crafted tag. File paths and targets with real file descriptors are unaffected. This issue is fixed in version 13.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112391" data-description="pillow is a python imaging library. from 5.1.0 until 13.0.0, pillow's pdfparser.get_value() can recurse without a limit while reading nested pdf objects. the parser follows attacker-controlled arrays and dictionaries when an existing pdf is opened for append. an attacker can provide a deeply nested pdf to an application that saves an image with pdf append enabled. this can raise an uncaught recursionerror or terminate the worker, causing denial of service. this issue is fixed in version 13.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112391" target="_blank">CVE-2026-112391</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Pillow is a Python imaging library. From 5.1.0 until 13.0.0, Pillow's PdfParser.get_value() can recurse without a limit while reading nested PDF objects. The parser follows attacker-controlled arrays and dictionaries when an existing PDF is opened for append. An attacker can provide a deeply nested PDF to an application that saves an image with PDF append enabled. This can raise an uncaught RecursionError or terminate the worker, causing denial of service. This issue is fixed in version 13.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112390" data-description="pillow is a python imaging library. from 7.2.0 until 13.0.0, pillow can enter an infinite loop while determining the frame count of a mic image. micimagefile inherits tiff frame traversal, but micimagefile.tell reports the ole stream index and its seek() resets tiff frame state, so an embedded tiff with at least three ifds never advances. when an application with olefile installed reads n_frames or saves all frames from a crafted mic file, the non-advancing traversal can hold a worker at full cpu indefinitely. this issue is fixed in version 13.0.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112390" target="_blank">CVE-2026-112390</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Pillow is a Python imaging library. From 7.2.0 until 13.0.0, Pillow can enter an infinite loop while determining the frame count of a MIC image. MicImageFile inherits TIFF frame traversal, but MicImageFile.tell reports the OLE stream index and its seek() resets TIFF frame state, so an embedded TIFF with at least three IFDs never advances. When an application with olefile installed reads n_frames or saves all frames from a crafted MIC file, the non-advancing traversal can hold a worker at full CPU indefinitely. This issue is fixed in version 13.0.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112302" data-description="a weakness has been identified in kiwilan php-archive up to 2.3.02. this affects the function archivezip::extract of the file src/readers/archivezip.php of the component extraction. this manipulation causes path traversal. the attack is possible to be carried out remotely. the exploit has been made available to the public and could be used for attacks. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112302" target="_blank">CVE-2026-112302</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A weakness has been identified in kiwilan php-archive up to 2.3.02. This affects the function ArchiveZip::extract of the file src/Readers/ArchiveZip.php of the component Extraction. This manipulation causes path traversal. The attack is possible to be carried out remotely. The exploit has been made available to the public and could be used for attacks. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112301" data-description="a security flaw has been discovered in orbitale imagemagick-php up to 3.3.5. affected by this issue is the function command::font of the file src/command.php. the manipulation of the argument fontfile results in os command injection. the attack can be executed remotely. the exploit has been released to the public and may be used for attacks. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112301" target="_blank">CVE-2026-112301</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A security flaw has been discovered in orbitale imagemagick-php up to 3.3.5. Affected by this issue is the function Command::font of the file src/Command.php. The manipulation of the argument fontFile results in os command injection. The attack can be executed remotely. The exploit has been released to the public and may be used for attacks. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112300" data-description="a vulnerability was identified in diffsk configobj up to 5.0.9. affected by this vulnerability is the function _sectionmarker of the file configobj/__init__.py. the manipulation leads to inefficient regular expression complexity. remote exploitation of the attack is possible. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112300" target="_blank">CVE-2026-112300</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability was identified in DiffSK configobj up to 5.0.9. Affected by this vulnerability is the function _sectionmarker of the file configobj/__init__.py. The manipulation leads to inefficient regular expression complexity. Remote exploitation of the attack is possible. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112299" data-description="a vulnerability was determined in smrealms smr up to f40380c017bc35cd8db6ffdb9d4e78bf65b9d43d. affected is the function isurlreachable of the file src/pages/account/albumeditprocessor.php of the component album website. executing a manipulation of the argument website can lead to server-side request forgery. the attack may be launched remotely. the exploit has been publicly disclosed and may be utilized. this product operates on a rolling release basis, ensuring continuous delivery. consequently, there are no version details for either affected or updated releases. this patch is called cb402e7f4e70b617b59d8c55dbe926b951ceb4a8. applying a patch is advised to resolve this issue. the vendor was contacted early, responded in a very professional manner and quickly released a fixed version of the affected product.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112299" target="_blank">CVE-2026-112299</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A vulnerability was determined in smrealms smr up to f40380c017bc35cd8db6ffdb9d4e78bf65b9d43d. Affected is the function isUrlReachable of the file src/pages/Account/AlbumEditProcessor.php of the component Album Website. Executing a manipulation of the argument Website can lead to server-side request forgery. The attack may be launched remotely. The exploit has been publicly disclosed and may be utilized. This product operates on a rolling release basis, ensuring continuous delivery. Consequently, there are no version details for either affected or updated releases. This patch is called cb402e7f4e70b617b59d8c55dbe926b951ceb4a8. Applying a patch is advised to resolve this issue. The vendor was contacted early, responded in a very professional manner and quickly released a fixed version of the affected product.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-111946" data-description="plack::middleware::etag versions from 0.04 before 0.06 for perl disclose file inode numbers in the default etag header.
+
+when the response body is a filehandle and the file_etag option is not set, the etag is built from the file's inode number, modification time and size. clients receiving affected responses may use the disclosed inode numbers to aid backend fingerprinting and correlation of files served through different urls.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111946" target="_blank">CVE-2026-111946</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 16:17:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Plack::Middleware::ETag versions from 0.04 before 0.06 for Perl disclose file inode numbers in the default ETag header.
+
+When the response body is a filehandle and the file_etag option is not set, the ETag is built from the file's inode number, modification time and size. Clients receiving affected responses may use the disclosed inode numbers to aid backend fingerprinting and correlation of files served through different URLs.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-82166" data-description="dell application store, versions prior to 26.05.0.7, contain a missing authentication for critical function vulnerability. an unauthenticated attacker with adjacent network access could potentially exploit this vulnerability, leading to arbitrary code execution.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82166" target="_blank">CVE-2026-82166</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-19 15:20:06 CDT</p>
@@ -96,102 +216,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>Traefik before 2.11.46, 3.x before 3.6.17, and 3.7.0 lack namespace validation for Ingress and Service annotations in the Kubernetes Ingress provider, allowing references to Middlewares, ServersTransports, and TLSOptions in other namespaces. Attackers able to create or update Ingress or Service resources in one namespace can set router.middlewares or service.serverstransport annotations to obtain another tenant's injected credentials or reuse its client certificates, bypassing namespace-based tenant isolation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112777" data-description="craft cms 4.x before 4.18.8 and 5.x before 5.11.0 contains a blocklist bypass in the twig create() function because its class-name checks are case-sensitive while php class resolution is not. attackers with template-execution rights, such as control panel administrators, can instantiate splfileobject via a lowercase class name to read .env secrets or write a php file into the webroot for remote code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112777" target="_blank">CVE-2026-112777</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>Craft CMS 4.x before 4.18.8 and 5.x before 5.11.0 contains a blocklist bypass in the Twig create() function because its class-name checks are case-sensitive while PHP class resolution is not. Attackers with template-execution rights, such as Control Panel administrators, can instantiate SplFileObject via a lowercase class name to read .env secrets or write a PHP file into the webroot for remote code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112776" data-description="craft cms from 5.0.0 before 5.11.0 contains an authorization bypass vulnerability that allows site-scoped graphql tokens to mutate other sites' content because requireallowedsite() is not enforced. attackers holding a site-a token can create entries in site b via supplied siteid and delete entries, categories, tags, and assets shared across sites.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112776" target="_blank">CVE-2026-112776</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Craft CMS from 5.0.0 before 5.11.0 contains an authorization bypass vulnerability that allows site-scoped GraphQL tokens to mutate other sites' content because requireAllowedSite() is not enforced. Attackers holding a site-A token can create entries in site B via supplied siteId and delete entries, categories, tags, and assets shared across sites.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112775" data-description="craft cms from 5.0.0 before 5.11.0 contains an authentication bypass vulnerability that allows attackers to reuse verification codes because users/verify-email does not invalidate them for active users. attackers who obtain a victim's emailed code can submit it to users/set-password after the victim verifies an email change, resetting the password and taking over the account.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112775" target="_blank">CVE-2026-112775</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Craft CMS from 5.0.0 before 5.11.0 contains an authentication bypass vulnerability that allows attackers to reuse verification codes because users/verify-email does not invalidate them for active users. Attackers who obtain a victim's emailed code can submit it to users/set-password after the victim verifies an email change, resetting the password and taking over the account.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112774" data-description="craft cms from 5.8.0 before 5.11.0 contains a remote code execution vulnerability that allows authenticated administrators to inject yii behaviors by supplying a json-string field layout to contentblock::setfieldlayout(). attackers with allowadminchanges enabled can include 'as x' or 'on x' keys that bypass cleanseconfig() to execute os commands as the web user and disclose secrets.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112774" target="_blank">CVE-2026-112774</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>Craft CMS from 5.8.0 before 5.11.0 contains a remote code execution vulnerability that allows authenticated administrators to inject Yii behaviors by supplying a JSON-string field layout to ContentBlock::setFieldLayout(). Attackers with allowAdminChanges enabled can include 'as X' or 'on X' keys that bypass cleanseConfig() to execute OS commands as the web user and disclose secrets.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112773" data-description="craft cms from 5.0.0 before 5.11.0 contains a remote code execution vulnerability that allows authenticated control panel users to escape the twig sandbox by passing uncleansed criteria to getnext, getprev, or getowners. attackers can inject yii "as" or "on" config keys to attach malicious event handlers that execute when the element query runs, achieving code execution as the web user.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112773" target="_blank">CVE-2026-112773</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Craft CMS from 5.0.0 before 5.11.0 contains a remote code execution vulnerability that allows authenticated Control Panel users to escape the Twig sandbox by passing uncleansed criteria to getNext, getPrev, or getOwners. Attackers can inject Yii "as" or "on" config keys to attach malicious event handlers that execute when the element query runs, achieving code execution as the web user.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112772" data-description="craft cms from 5.0.0 before 5.11.0 contains a remote code execution vulnerability that allows authenticated control panel users to escape the twig sandbox via asset::getmimetype transforms. attackers can supply 'as' or 'on' keys passed unfiltered to craft::createobject, attaching malicious behaviors or event handlers that execute code as the web user.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112772" target="_blank">CVE-2026-112772</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Craft CMS from 5.0.0 before 5.11.0 contains a remote code execution vulnerability that allows authenticated Control Panel users to escape the Twig sandbox via Asset::getMimeType transforms. Attackers can supply 'as' or 'on' keys passed unfiltered to Craft::createObject, attaching malicious behaviors or event handlers that execute code as the web user.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112771" data-description="craft cms 4.0.0 before 4.18.8 and 5.0.0 before 5.11.0 contains a twig sandbox allowlist bypass because the column, contains, filterbyvalue, index, where, and multisort filters resolve caller-supplied keys via arrayhelper::getvalue() without consulting the sandbox security policy. authenticated control panel users can supply dot-path keys to traverse the craft global and disclose the securitykey, database credentials, and auth tokens.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112771" target="_blank">CVE-2026-112771</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Craft CMS 4.0.0 before 4.18.8 and 5.0.0 before 5.11.0 contains a Twig sandbox allowlist bypass because the column, contains, filterByValue, index, where, and multisort filters resolve caller-supplied keys via ArrayHelper::getValue() without consulting the sandbox security policy. Authenticated Control Panel users can supply dot-path keys to traverse the craft global and disclose the securityKey, database credentials, and auth tokens.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112770" data-description="craft cms 4.x before 4.18.8 and 5.x before 5.11.0 contains a remote code execution vulnerability in the twig group filter, which invokes non-string arrow arguments as callables without the checkarrow guard used by other arrow-accepting filters. authenticated control panel users can pass an array-callable such as filehelper::writetofile via element-select condition rules to write a webshell to the webroot and execute code as the web user.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112770" target="_blank">CVE-2026-112770</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Craft CMS 4.x before 4.18.8 and 5.x before 5.11.0 contains a remote code execution vulnerability in the Twig group filter, which invokes non-string arrow arguments as callables without the checkArrow guard used by other arrow-accepting filters. Authenticated control panel users can pass an array-callable such as FileHelper::writeToFile via element-select condition rules to write a webshell to the webroot and execute code as the web user.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112769" data-description="parse server before 8.6.98 and 9.0.0 before 9.10.3-alpha.1 does not enforce the create and addfield class-level permissions of the _session class when creating sessions. an authenticated user, or anyone holding that user's session token, can send post requests to /sessions or /classes/_session to create additional sessions for that user and add fields to _session; these sessions are not revoked when the original session is logged out.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112769" target="_blank">CVE-2026-112769</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Parse Server before 8.6.98 and 9.0.0 before 9.10.3-alpha.1 does not enforce the create and addField class-level permissions of the _Session class when creating sessions. An authenticated user, or anyone holding that user's session token, can send POST requests to /sessions or /classes/_Session to create additional sessions for that user and add fields to _Session; these sessions are not revoked when the original session is logged out.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112768" data-description="parse server before 8.6.99 and 9.0.0 before 9.10.3-alpha.2 evaluates checks against the target account during a user update before authorizing the caller, and reflects their outcome in the response. an unauthorized caller, with or without a session, can confirm guessed usernames or emails and, when passwordpolicy.maxpasswordhistory or donotallowusername is set, guessed current or previous passwords, bypassing account lockout.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112768" target="_blank">CVE-2026-112768</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Parse Server before 8.6.99 and 9.0.0 before 9.10.3-alpha.2 evaluates checks against the target account during a user update before authorizing the caller, and reflects their outcome in the response. An unauthorized caller, with or without a session, can confirm guessed usernames or emails and, when passwordPolicy.maxPasswordHistory or doNotAllowUsername is set, guessed current or previous passwords, bypassing account lockout.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112297" data-description="a flaw has been found in ptbsare anx-calibre-manager up to 1.13.12. the impacted element is the function llmclient.chat of the file blueprints/api/llm.py of the component llm configuration handler. this manipulation of the argument base_url causes server-side request forgery. the attack can be initiated remotely. the exploit has been published and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112297" target="_blank">CVE-2026-112297</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A flaw has been found in ptbsare anx-calibre-manager up to 1.13.12. The impacted element is the function LLMClient.chat of the file blueprints/api/llm.py of the component LLM Configuration Handler. This manipulation of the argument base_url causes server-side request forgery. The attack can be initiated remotely. The exploit has been published and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112260" data-description="a flaw was found in gimp. opening a crafted xcf with a malformed text-layer parasite can cause a heap out-of-bounds read, disclosing adjacent heap data into layer text and causing denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112260" target="_blank">CVE-2026-112260</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 15:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>A flaw was found in GIMP. Opening a crafted XCF with a malformed text-layer parasite can cause a heap out-of-bounds read, disclosing adjacent heap data into layer text and causing denial of service.</p>
                 </div>
         
             </div>
