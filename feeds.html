@@ -34,6 +34,120 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-75753" data-description="missing authentication for a critical function  in certain asus routers allows an unauthorized nearby user to send specific commands via http requests, causing the router to return device identification information and switch into a specific mode. as a result, when the router encounters abnormal conditions, it may be unable to perform self-recovery.
+refer to the '
+security update for asus router firmware' section on the asus security advisory for more information.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75753" target="_blank">CVE-2026-75753</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 21:17:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing Authentication for a Critical Function  in certain ASUS routers allows an unauthorized nearby user to send specific commands via HTTP requests, causing the router to return device identification information and switch into a specific mode. As a result, when the router encounters abnormal conditions, it may be unable to perform self-recovery.
+Refer to the '
+Security Update for ASUS Router Firmware' section on the ASUS Security Advisory for more information.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-17518" data-description="buffer copy without checking size of input in certain asus router models allows an adjacent authenticated user to corrupt device operations and cause a denial of service via an http request with input exceeding the expected length.
+refer to the ' security update for asus router firmware' section on the asus security advisory for more information.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-17518" target="_blank">CVE-2026-17518</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 21:17:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Buffer Copy without Checking Size of Input in certain ASUS router models allows an adjacent authenticated user to corrupt device operations and cause a denial of service via an HTTP request with input exceeding the expected length.
+Refer to the ' Security Update for ASUS Router Firmware' section on the ASUS Security Advisory for more information.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-105299" data-description="summary
+
+
+
+before version 0.9.0, the http/1 upstream path in pingora-proxy passed the downstream request through upstream_request_filter and wrote it to the upstream without removing the client's connection header, other hop-by-hop headers, or the headers connection nominated, although rfc 9110 section 7.6.1 requires intermediaries to remove them. the http/2 upstream path already removed connection and related http/1-specific headers. a client could therefore nominate a header that the application adds in upstream_request_filter (for example, connection: keep-alive, x-forwarded-for). a downstream http/1 intermediary that honors connection would then strip the pingora-added header before it reached the origin.
+
+
+
+
+impact
+
+
+
+specifically affects chained deployments where an http/1 intermediary between pingora and the origin processes connection nominations (for example, go's net/http/httputil.reverseproxy) and the origin trusts headers added by that intermediary (for example, x-forwarded-for for ip-based authorization). a remote, unauthenticated attacker can have those headers removed, potentially bypassing authorization. the reporter demonstrated access to an ip-restricted endpoint using x-forwarded-for for ip validation on the origin. this is the same class of issue as cve-2022-31813 in apache http server.
+
+
+
+
+note that cloudflare cdn customers were unaffected, as no such chained deployment as described above exists with internal pingora services, and connection headers are sanitized before arriving at pingora gateways.
+
+
+
+mitigation:
+
+  *  
+
+upgrade to pingora 0.9.0 or later. by default, pingora now removes hop-by-hop and connection-nominated headers from upstream requests, and rejects requests whose connection header nominates host, x-forwarded-for, x-forwarded-host, x-forwarded-proto, or a pseudo-header. this is controlled by peeroptions::http_upstream_request_policy (httpupstreamrequestpolicy). fix commits:  https://github.com/cloudflare/pingora/commit/28c18e6b6b04dd0bd937234e5950049e6d74cded ,  https://github.com/cloudflare/pingora/commit/ca23f1668eca8e78be7ba62ef0edbd458b40eeee 
+
+
+  *  
+
+do not use httpupstreamrequestpolicy::preserve() if the origin relies on headers added by pingora; it restores the old passthrough behavior.
+
+
+  *  
+
+if you cannot upgrade: in upstream_request_filter, remove the connection header and every header it nominates before adding trusted headers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105299" target="_blank">CVE-2026-105299</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 21:17:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.7</p>
+                    <p>Summary
+
+
+
+Before version 0.9.0, the HTTP/1 upstream path in pingora-proxy passed the downstream request through upstream_request_filter and wrote it to the upstream without removing the client's Connection header, other hop-by-hop headers, or the headers Connection nominated, although RFC 9110 Section 7.6.1 requires intermediaries to remove them. The HTTP/2 upstream path already removed Connection and related HTTP/1-specific headers. A client could therefore nominate a header that the application adds in upstream_request_filter (for example, Connection: keep-alive, X-Forwarded-For). A downstream HTTP/1 intermediary that honors Connection would then strip the Pingora-added header before it reached the origin.
+
+
+
+
+Impact
+
+
+
+Specifically affects chained deployments where an HTTP/1 intermediary between Pingora and the origin processes Connection nominations (for example, Go's net/http/httputil.ReverseProxy) and the origin trusts headers added by that intermediary (for example, X-Forwarded-For for IP-based authorization). A remote, unauthenticated attacker can have those headers removed, potentially bypassing authorization. The reporter demonstrated access to an IP-restricted endpoint using X-Forwarded-For for IP validation on the origin. This is the same class of issue as CVE-2022-31813 in Apache HTTP Server.
+
+
+
+
+Note that Cloudflare CDN customers were unaffected, as no such chained deployment as described above exists with internal Pingora services, and Connection headers are sanitized before arriving at Pingora gateways.
+
+
+
+Mitigation:
+
+  *  
+
+Upgrade to pingora 0.9.0 or later. By default, Pingora now removes hop-by-hop and Connection-nominated headers from upstream requests, and rejects requests whose Connection header nominates Host, X-Forwarded-For, X-Forwarded-Host, X-Forwarded-Proto, or a pseudo-header. This is controlled by PeerOptions::http_upstream_request_policy (HttpUpstreamRequestPolicy). Fix commits:  https://github.com/cloudflare/pingora/commit/28c18e6b6b04dd0bd937234e5950049e6d74cded ,  https://github.com/cloudflare/pingora/commit/ca23f1668eca8e78be7ba62ef0edbd458b40eeee 
+
+
+  *  
+
+Do not use HttpUpstreamRequestPolicy::preserve() if the origin relies on headers added by Pingora; it restores the old passthrough behavior.
+
+
+  *  
+
+If you cannot upgrade: in upstream_request_filter, remove the Connection header and every header it nominates before adding trusted headers.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102438" data-description="an uncontrolled search path element vulnerability in asus armoury crate allows local users to execute arbitrary code with system privileges via replacement of a dynamic-link library (dll) that is later loaded by a high-privilege process.
+refer to the '
+security update for armoury crate app ' section on the asus security advisory for more information.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102438" target="_blank">CVE-2026-102438</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-19 21:17:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An uncontrolled search path element vulnerability in ASUS Armoury Crate allows local users to execute arbitrary code with SYSTEM privileges via replacement of a dynamic-link library (DLL) that is later loaded by a high-privilege process.
+Refer to the '
+Security Update for Armoury Crate App ' section on the ASUS Security Advisory for more information.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-86981" data-description="an out-of-bounds write issue was addressed with improved bounds checking. this issue is fixed in macos sequoia 15.8, macos tahoe 26.7. an app may be able to cause unexpected system termination.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86981" target="_blank">CVE-2026-86981</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-19 20:17:29 CDT</p>
@@ -160,38 +274,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>This issue was addressed by removing the vulnerable code. This issue is fixed in macOS Golden Gate 27. An app may be able to disclose kernel memory.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86935" data-description="this issue was addressed by removing additional entitlements. this issue is fixed in macos golden gate 27. an app may be able to access user-sensitive data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86935" target="_blank">CVE-2026-86935</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 20:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>This issue was addressed by removing additional entitlements. This issue is fixed in macOS Golden Gate 27. An app may be able to access user-sensitive data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86933" data-description="a permissions issue was addressed with additional sandbox restrictions. this issue is fixed in macos golden gate 27. an app may be able to access information about a user's contacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86933" target="_blank">CVE-2026-86933</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 20:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A permissions issue was addressed with additional sandbox restrictions. This issue is fixed in macOS Golden Gate 27. An app may be able to access information about a user's contacts.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86932" data-description="an authorization issue was addressed with improved state management. this issue is fixed in macos golden gate 27. an app may be able to access sensitive user data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86932" target="_blank">CVE-2026-86932</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 20:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authorization issue was addressed with improved state management. This issue is fixed in macOS Golden Gate 27. An app may be able to access sensitive user data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86928" data-description="a path handling issue was addressed with improved validation. this issue is fixed in macos golden gate 27. an app may be able to access protected user data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86928" target="_blank">CVE-2026-86928</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-19 20:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A path handling issue was addressed with improved validation. This issue is fixed in macOS Golden Gate 27. An app may be able to access protected user data.</p>
                 </div>
         
             </div>
