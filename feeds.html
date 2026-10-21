@@ -34,296 +34,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-98869" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-bpf: infer zext_dst based on static register liveness analysis
-
-as reported in the thread [1], the verifier's 32-bit operations zero
-extension logic is broken. this logic is responsible for correct
-semantics of 32-bit operations on s390 architecture.
-
-according to bpf semantics, operation `w1 += 1` is supposed to zero
-extend the upper half of the register `r1`. on s390 the jit relies on
-the verifier emitting explicit zero extension before such operations.
-
-the verifier attempts to minimize the amount of zero extensions
-inserted by tracking whether upper halves of the 64-bit registers are
-ever used. previously such tracking worked as follows:
-
-- bpf_reg_state->subreg_def field was set by do_check_insn()
-  for each operation defining lower but not the upper halves
-  of the register.
-- whenever an operation reading the whole register was verified,
-  the verifier checked register's subreg_def and set
-  bpf_insn_aux_data->zext_dst flag as true via a call to
-  mark_insn_zext() function.
-- after the verification was complete, a special pass
-  bpf_opt_subreg_zext_lo32_rnd_hi32() extended 32-bit operations
-  with bpf_insn_aux_data->zext_dst set as true by adding
-  explicit zero extension.
-
-note that the logic above relies on bpf_reg_state->subreg_def,
-which is a property of a current verifier state.
-before the commit [2] two additional steps happened:
-
-- the verifier tracked upper and lower register halves' liveness as
-  flags reg_live_read{32,64} in bpf_reg_state->live.
-- the function propagate_liveness() called mark_insn_zext()
-  in order to transfer the knowledge about which registers have
-  their upper halves alive (and thus might require zero extension).
-
-the commit [2] removed the two steps described above,
-hence making possible a situation like below:
-
-- the register's upper half is set and is used on some verification
-  path p1 and the register happens not to be marked as precise.
-- the checkpoint c is created while processing some instruction
-  between register initialization and usage.
-- on some other verification path p2 the register's upper half is not
-  initialized and that path ends hitting the checkpoint c.
-- in such a case the register's initialization on path p2 would lack
-  zext_dst mark, making it possible for the program to inject
-  an arbitrary value in the register's upper half.
-
-this commit replaces subreg_def based logic with computing zext_dst
-statically, as a part of the bpf_compute_live_registers() analysis:
-
-- the analysis now tracks usage of upper and lower halves of the
-  registers separately.
-- if some instruction defines a 32-bit subregister, but not the whole
-  register, *and* the upper half of the register is alive after that
-  instruction, the instruction is marked as zext_dst.
-
-there is one notable drop in precision: whenever a bpf subprogram is
-called, all 64 bits of parameter registers are presumed to be used.
-the assumption is that such a drop in precision would not inflict
-a noticeable performance penalty.
-
-[1] https://lore.kernel.org/bpf/cagkguv=souqqta1ub-5jxfa4fposjfykaqe4b79ck+p1erxqtg@mail.gmail.com/
-[2] commit 107e16979905 ("bpf: disable and remove registers chain based liveness")">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98869" target="_blank">CVE-2026-98869</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-bpf: Infer zext_dst based on static register liveness analysis
-
-As reported in the thread [1], the verifier's 32-bit operations zero
-extension logic is broken. This logic is responsible for correct
-semantics of 32-bit operations on s390 architecture.
-
-According to BPF semantics, operation `w1 += 1` is supposed to zero
-extend the upper half of the register `r1`. On s390 the JIT relies on
-the verifier emitting explicit zero extension before such operations.
-
-The verifier attempts to minimize the amount of zero extensions
-inserted by tracking whether upper halves of the 64-bit registers are
-ever used. Previously such tracking worked as follows:
-
-- bpf_reg_state->subreg_def field was set by do_check_insn()
-  for each operation defining lower but not the upper halves
-  of the register.
-- Whenever an operation reading the whole register was verified,
-  the verifier checked register's subreg_def and set
-  bpf_insn_aux_data->zext_dst flag as true via a call to
-  mark_insn_zext() function.
-- After the verification was complete, a special pass
-  bpf_opt_subreg_zext_lo32_rnd_hi32() extended 32-bit operations
-  with bpf_insn_aux_data->zext_dst set as true by adding
-  explicit zero extension.
-
-Note that the logic above relies on bpf_reg_state->subreg_def,
-which is a property of a current verifier state.
-Before the commit [2] two additional steps happened:
-
-- The verifier tracked upper and lower register halves' liveness as
-  flags REG_LIVE_READ{32,64} in bpf_reg_state->live.
-- The function propagate_liveness() called mark_insn_zext()
-  in order to transfer the knowledge about which registers have
-  their upper halves alive (and thus might require zero extension).
-
-The commit [2] removed the two steps described above,
-hence making possible a situation like below:
-
-- The register's upper half is set and is used on some verification
-  path P1 and the register happens not to be marked as precise.
-- The checkpoint C is created while processing some instruction
-  between register initialization and usage.
-- On some other verification path P2 the register's upper half is not
-  initialized and that path ends hitting the checkpoint C.
-- In such a case the register's initialization on path P2 would lack
-  zext_dst mark, making it possible for the program to inject
-  an arbitrary value in the register's upper half.
-
-This commit replaces subreg_def based logic with computing zext_dst
-statically, as a part of the bpf_compute_live_registers() analysis:
-
-- The analysis now tracks usage of upper and lower halves of the
-  registers separately.
-- If some instruction defines a 32-bit subregister, but not the whole
-  register, *and* the upper half of the register is alive after that
-  instruction, the instruction is marked as zext_dst.
-
-There is one notable drop in precision: whenever a BPF subprogram is
-called, all 64 bits of parameter registers are presumed to be used.
-The assumption is that such a drop in precision would not inflict
-a noticeable performance penalty.
-
-[1] https://lore.kernel.org/bpf/CAGKGUv=sOuqQtA1Ub-5JXfA4FPosJFYKAQE4B79cK+P1erxqtg@mail.gmail.com/
-[2] commit 107e16979905 ("bpf: disable and remove registers chain based liveness")</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-114252" data-description="a vulnerability was found in itsourcecode sales-and-inventory-system up to 0a3c45a78aaff3601b8cf9ce8ba82ff5c345caac. the affected element is an unknown function of the file /pages/cust_searchfrm.php. performing a manipulation of the argument id results in sql injection. the attack may be initiated remotely. the exploit has been made public and could be used. this product uses a rolling release model to deliver continuous updates. as a result, specific version information for affected or updated releases is not available. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114252" target="_blank">CVE-2026-114252</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was found in itsourcecode Sales-and-Inventory-System up to 0a3c45a78aaff3601b8cf9ce8ba82ff5c345caac. The affected element is an unknown function of the file /pages/cust_searchfrm.php. Performing a manipulation of the argument ID results in sql injection. The attack may be initiated remotely. The exploit has been made public and could be used. This product uses a rolling release model to deliver continuous updates. As a result, specific version information for affected or updated releases is not available. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-114251" data-description="a vulnerability has been found in itsourcecode sales-and-inventory-system up to 0a3c45a78aaff3601b8cf9ce8ba82ff5c345caac. impacted is an unknown function of the file /pages/cust_del.php. such manipulation of the argument id leads to sql injection. the attack can be launched remotely. the exploit has been disclosed to the public and may be used. this product does not use versioning. this is why information about affected and unaffected releases are unavailable. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114251" target="_blank">CVE-2026-114251</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability has been found in itsourcecode Sales-and-Inventory-System up to 0a3c45a78aaff3601b8cf9ce8ba82ff5c345caac. Impacted is an unknown function of the file /pages/cust_del.php. Such manipulation of the argument ID leads to sql injection. The attack can be launched remotely. The exploit has been disclosed to the public and may be used. This product does not use versioning. This is why information about affected and unaffected releases are unavailable. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-114250" data-description="a flaw has been found in itsourcecode sales-and-inventory-system up to 0a3c45a78aaff3601b8cf9ce8ba82ff5c345caac. this issue affects some unknown processing of the file /pages/cust_edit.php. this manipulation of the argument id causes sql injection. the attack can be initiated remotely. the exploit has been published and may be used. continious delivery with rolling releases is used by this product. therefore, no version details of affected nor updated releases are available. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114250" target="_blank">CVE-2026-114250</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A flaw has been found in itsourcecode Sales-and-Inventory-System up to 0a3c45a78aaff3601b8cf9ce8ba82ff5c345caac. This issue affects some unknown processing of the file /pages/cust_edit.php. This manipulation of the argument ID causes sql injection. The attack can be initiated remotely. The exploit has been published and may be used. Continious delivery with rolling releases is used by this product. Therefore, no version details of affected nor updated releases are available. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-113786" data-description="pypdf is a free and open-source pure-python pdf library. prior to 6.21.1, an attacker can craft a pdf containing image data labeled with the /dctdecode filter that causes pillow to select and invoke an unintended image parser when the image is loaded. environments without the optional pillow dependency are not affected. this issue is fixed in version 6.21.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-113786" target="_blank">CVE-2026-113786</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>pypdf is a free and open-source pure-python PDF library. Prior to 6.21.1, an attacker can craft a PDF containing image data labeled with the /DCTDecode filter that causes Pillow to select and invoke an unintended image parser when the image is loaded. Environments without the optional Pillow dependency are not affected. This issue is fixed in version 6.21.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-113779" data-description="the pfsense rest api package is an unofficial, open-source rest and graphql api for pfsense ce and pfsense plus firewalls. a privilege escalation vulnerability in pfsense-pkg-restapi prior to version 2.9.0 allows authenticated accounts holding the dedicated settings sync permission to modify rest api configuration secrets. this enables a non-administrative user to elevate their privileges to a full administrator. pfsense-pkg-restapi 2.9.0 patches the issue. access to the ha settings sync endpoint now strictly requires full administrative privileges (`page-all`). the sub-administrative sync privilege has been removed in versions v2.9.0 and later. in addition to correcting the access control boundary, version 2.9.0 includes the following hardening measures: opt-in default and format and validation modernization. as a workaround, one may mitigate exposure by taking either or all of the following steps. revoke scoped permissions: remove the `api-v2-system-restapi-settings-sync-post` privilege from all non-administrative users. apply acls: configure rest api access control lists (acls) and/or firewall rules to restrict access to api endpoints exclusively to trusted administrator and ha peer ip addresses.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-113779" target="_blank">CVE-2026-113779</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:16 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114490" data-description="incorrect authorization in the com administration api of progressive robot hmailserver 6.3.4 through 6.3.6 allows an account assigned the serveradmin role with a list of domains - a credential an administrator may create meaning to confine it to those domains - to act as the whole-server administrator over com. administrator roles are meant to confine such a credential to the domains its list names, and the rest api did not take it for the server administrator, but the com api's server-administrator check read the administer_server permission as the whole server whatever list the grant carried. so the credential signed in through the control panel, or through a script run on the server, as the server administrator of every domain: it could read and change every domain's accounts and mail, rename any domain, map a domain alias onto any, write the server's settings and secrets, and create further server-administrator accounts. the com api's domain-administrator check, asked with no domain, likewise let an account assigned the domainadmin role with a list of domains that leaves out the account's own domain administer that domain's ordinary accounts over com. an account holding serveradmin with no list is the server administrator by design and is unaffected, as are the help desk, auditor and custom roles.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114490" target="_blank">CVE-2026-114490</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:35 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The pfSense REST API package is an unofficial, open-source REST and GraphQL API for pfSense CE and pfSense Plus firewalls. A privilege escalation vulnerability in pfSense-pkg-RESTAPI prior to version 2.9.0 allows authenticated accounts holding the dedicated settings sync permission to modify REST API configuration secrets. This enables a non-administrative user to elevate their privileges to a full administrator. pfSense-pkg-RESTAPI 2.9.0 patches the issue. Access to the HA settings sync endpoint now strictly requires full administrative privileges (`page-all`). The sub-administrative sync privilege has been removed in versions v2.9.0 and later. In addition to correcting the access control boundary, version 2.9.0 includes the following hardening measures: opt-in default and format and validation modernization. As a workaround, one may mitigate exposure by taking either or all of the following steps. Revoke Scoped Permissions: Remove the `api-v2-system-restapi-settings-sync-post` privilege from all non-administrative users. Apply ACLs: Configure REST API Access Control Lists (ACLs) and/or firewall rules to restrict access to API endpoints exclusively to trusted administrator and HA peer IP addresses.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>Incorrect authorization in the COM administration API of Progressive Robot hMailServer 6.3.4 through 6.3.6 allows an account assigned the serveradmin role with a list of domains - a credential an administrator may create meaning to confine it to those domains - to act as the whole-server administrator over COM. Administrator roles are meant to confine such a credential to the domains its list names, and the REST API did not take it for the server administrator, but the COM API's server-administrator check read the administer_server permission as the whole server whatever list the grant carried. So the credential signed in through the Control Panel, or through a script run on the server, as the server administrator of every domain: it could read and change every domain's accounts and mail, rename any domain, map a domain alias onto any, write the server's settings and secrets, and create further server-administrator accounts. The COM API's domain-administrator check, asked with no domain, likewise let an account assigned the domainadmin role with a list of domains that leaves out the account's own domain administer that domain's ordinary accounts over COM. An account holding serveradmin with no list is the server administrator by design and is unaffected, as are the help desk, auditor and custom roles.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-112221" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in brainstorm force surecart surecart allows stored xss.this issue affects surecart: from n/a through 4.9.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112221" target="_blank">CVE-2026-112221</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:16 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114489" data-description="missing authorization in the rest and com administration apis of progressive robot hmailserver 6.0.0 through 6.3.6 allows a remote authenticated user whose credential is confined to named domains to change mail routing and domain configuration beyond those domains on a multi-tenant server. a domain administrator, an account or api key given another role that manages accounts in named domains, or a full-scope api key issued for named domains could create a domain alias for any name (so that other tenants' mail for that name is diverted to an address the attacker controls, or denied), rename a domain to any name the server does not host, set a rule's bind-to-address, send-using-route or script-function action to reach one of the server's own addresses, a configured route's stored credentials or a function of the server's event script, and set the domain's relay host - which delivery then connects to with no address rule - to an address on the server's own network; and over the com api any account could set the three rule actions on its own rules, where the script-function action runs at delivery. the authorization gate did not refuse these routes to a confined credential and the handlers were not given the caller; over com the domain-alias save performed no authorization check at all, the domain rename required only a domain administrator, and a rule save required at most that the caller could change the rule's owner.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114489" target="_blank">CVE-2026-114489</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:35 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Brainstorm Force SureCart surecart allows Stored XSS.This issue affects SureCart: from n/a through 4.9.5.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>Missing authorization in the REST and COM administration APIs of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a remote authenticated user whose credential is confined to named domains to change mail routing and domain configuration beyond those domains on a multi-tenant server. A domain administrator, an account or API key given another role that manages accounts in named domains, or a full-scope API key issued for named domains could create a domain alias for any name (so that other tenants' mail for that name is diverted to an address the attacker controls, or denied), rename a domain to any name the server does not host, set a rule's bind-to-address, send-using-route or script-function action to reach one of the server's own addresses, a configured route's stored credentials or a function of the server's event script, and set the domain's relay host - which delivery then connects to with no address rule - to an address on the server's own network; and over the COM API any account could set the three rule actions on its own rules, where the script-function action runs at delivery. The authorization gate did not refuse these routes to a confined credential and the handlers were not given the caller; over COM the domain-alias save performed no authorization check at all, the domain rename required only a domain administrator, and a rule save required at most that the caller could change the rule's owner.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111852" data-description="improper neutralization of special elements used in an sql command ('sql injection') vulnerability in wpdreams ajax search lite ajax-search-lite allows blind sql injection.this issue affects ajax search lite: from n/a through 4.14.6.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111852" target="_blank">CVE-2026-111852</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.3</p>
-                    <p>Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection') vulnerability in WPdreams Ajax Search Lite ajax-search-lite allows Blind SQL Injection.This issue affects Ajax Search Lite: from n/a through 4.14.6.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-111848" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in dylan kuhn  geo mashup geo-mashup allows reflected xss.this issue affects  geo mashup: from n/a through 1.13.22.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111848" target="_blank">CVE-2026-111848</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Dylan Kuhn  Geo Mashup geo-mashup allows Reflected XSS.This issue affects  Geo Mashup: from n/a through 1.13.22.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-111840" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in videowhisper.com paid videochat turnkey site ppv-live-webcams allows reflected xss.this issue affects paid videochat turnkey site: from n/a through 7.5.14.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111840" target="_blank">CVE-2026-111840</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in VideoWhisper.com Paid Videochat Turnkey Site ppv-live-webcams allows Reflected XSS.This issue affects Paid Videochat Turnkey Site: from n/a through 7.5.14.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-111838" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in themehunk themehunk customizer themehunk-customizer allows reflected xss.this issue affects themehunk customizer: from n/a through 2.8.7.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111838" target="_blank">CVE-2026-111838</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in ThemeHunk ThemeHunk Customizer themehunk-customizer allows Reflected XSS.This issue affects ThemeHunk Customizer: from n/a through 2.8.7.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-111837" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in wasiliy strecker contest gallery contest-gallery allows stored xss.this issue affects contest gallery: from n/a through 34.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111837" target="_blank">CVE-2026-111837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114479" data-description="not failing securely in the anti-virus attachment-stripping action of progressive robot hmailserver 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to have a message that the server's virus scanner found infected delivered to the recipient's mailbox unchanged. with virus scanning enabled and its action set to remove attachments and deliver the text (the default action deletes the message), the server keeps one text part of an infected message and replaces every attachment with a note. a message whose single part is not text - a program or an archive sent as the whole message, a message carried whole, a file declared an attachment, or an s/mime message signed as one part, whose content the recipient's mail client opens - had no part the action could pick out, and was delivered as it arrived, with the content the scanner had found and nothing but a line in the application log to show it. any sender can write such a message.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114479" target="_blank">CVE-2026-114479</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:35 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Wasiliy Strecker Contest Gallery contest-gallery allows Stored XSS.This issue affects Contest Gallery: from n/a through 34.0.1.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.8</p>
+                    <p>Not failing securely in the anti-virus attachment-stripping action of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to have a message that the server's virus scanner found infected delivered to the recipient's mailbox unchanged. With virus scanning enabled and its action set to remove attachments and deliver the text (the default action deletes the message), the server keeps one text part of an infected message and replaces every attachment with a note. A message whose single part is not text - a program or an archive sent as the whole message, a message carried whole, a file declared an attachment, or an S/MIME message signed as one part, whose content the recipient's mail client opens - had no part the action could pick out, and was delivered as it arrived, with the content the scanner had found and nothing but a line in the application log to show it. Any sender can write such a message.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111835" data-description="missing authorization vulnerability in bjorntech bjorntech swish for woocommerce woo-swish-e-commerce allows exploiting incorrectly configured access control security levels.this issue affects bjorntech swish for woocommerce: from n/a through 3.7.8.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111835" target="_blank">CVE-2026-111835</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114478" data-description="insufficient preservation of the original sender in the forwarding of progressive robot hmailserver 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to have mail they write, naming in its from an address at a domain the server hosts, delivered to other receivers as passing that domain's dmarc policy. when the server sent on a copy of mail that came from outside - an account's forward, a mail rule's forward, a sieve redirect, a list's copy, or an alias or list expanding to an outside address - it could give the copy an smtp identity in the organisation of the domain the copy's from names, whatever the message's origin: with the sender rewriting scheme or the rewrite of the envelope sender on forwarding enabled (both off by default), an address at the forwarding domain; for a list, its bounce address; for a message with an empty envelope sender, none, under the server's own host name; and an envelope sender the message came with at a subdomain of a hosted domain was kept. where that identity's spf record authorises the server, other receivers' spf check of the copy passed for a domain aligned with the from, and dmarc passed with it, although the message had not passed dmarc when the server received it. exploitation needs a forward, redirect, alias or list that carries the hosted domain's mail to an outside address, and one of: srs or the envelope rewrite enabled; a list whose bounce address is in the domain's organisation; an envelope sender at a subdomain whose spf record authorises the server; or, for an empty envelope sender, an spf record that authorises the server under its host name. the dkim route to the same result is cve-2026-107567.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114478" target="_blank">CVE-2026-114478</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:35 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Missing Authorization vulnerability in bjorntech BjornTech Swish for WooCommerce woo-swish-e-commerce allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects BjornTech Swish for WooCommerce: from n/a through 3.7.8.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Insufficient preservation of the original sender in the forwarding of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to have mail they write, naming in its From an address at a domain the server hosts, delivered to other receivers as passing that domain's DMARC policy. When the server sent on a copy of mail that came from outside - an account's forward, a mail rule's forward, a Sieve redirect, a list's copy, or an alias or list expanding to an outside address - it could give the copy an SMTP identity in the organisation of the domain the copy's From names, whatever the message's origin: with the Sender Rewriting Scheme or the rewrite of the envelope sender on forwarding enabled (both off by default), an address at the forwarding domain; for a list, its bounce address; for a message with an empty envelope sender, none, under the server's own host name; and an envelope sender the message came with at a subdomain of a hosted domain was kept. Where that identity's SPF record authorises the server, other receivers' SPF check of the copy passed for a domain aligned with the From, and DMARC passed with it, although the message had not passed DMARC when the server received it. Exploitation needs a forward, redirect, alias or list that carries the hosted domain's mail to an outside address, and one of: SRS or the envelope rewrite enabled; a list whose bounce address is in the domain's organisation; an envelope sender at a subdomain whose SPF record authorises the server; or, for an empty envelope sender, an SPF record that authorises the server under its host name. The DKIM route to the same result is CVE-2026-107567.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111834" data-description="unrestricted upload of file with dangerous type vulnerability in kitae park mang board wp mangboard allows upload a web shell to a web server.this issue affects mang board wp: from n/a through 2.4.4.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111834" target="_blank">CVE-2026-111834</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
-                    <p>Unrestricted Upload of File with Dangerous Type vulnerability in Kitae Park Mang Board WP mangboard allows Upload a Web Shell to a Web Server.This issue affects Mang Board WP: from n/a through 2.4.4.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114477" data-description="missing authorization in the rest metrics route of progressive robot hmailserver 6.2.25 through 6.3.6 allows a remote authenticated user whose credential is confined to named domains to read the server-wide traffic history. get /api/v1/metrics/history returns the server's traffic counters over the last 30 days; those counters are server-wide and carry no domain, which is why the report routes already refuse the same counters to a credential confined to named domains. the metrics route was not among the routes the server's authorization gate refuses a confined credential and its handler was not given the caller, so a domain administrator, an account given another role that holds view_configuration in named domains (the auditor role given a domain list among them), or an api key issued for named domains could read the whole server's traffic totals rather than its own domains'. the disclosure is of aggregate operational counters, not of any message or account.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114477" target="_blank">CVE-2026-114477</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Missing authorization in the REST metrics route of Progressive Robot hMailServer 6.2.25 through 6.3.6 allows a remote authenticated user whose credential is confined to named domains to read the server-wide traffic history. GET /api/v1/metrics/history returns the server's traffic counters over the last 30 days; those counters are server-wide and carry no domain, which is why the report routes already refuse the same counters to a credential confined to named domains. The metrics route was not among the routes the server's authorization gate refuses a confined credential and its handler was not given the caller, so a domain administrator, an account given another role that holds view_configuration in named domains (the auditor role given a domain list among them), or an API key issued for named domains could read the whole server's traffic totals rather than its own domains'. The disclosure is of aggregate operational counters, not of any message or account.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111833" data-description="improper limitation of a pathname to a restricted directory ('path traversal') vulnerability in bold grid weforms weforms allows path traversal.this issue affects weforms: from n/a through 1.6.28.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111833" target="_blank">CVE-2026-111833</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114476" data-description="incorrect authorization in the rest administration api of progressive robot hmailserver 6.3.4 through 6.3.6 allows a remote authenticated user whose credential holds the manage_roles permission in named domains - a full-scope api key issued for those domains, or an account assigned the serveradmin role with a list of domains - to obtain the server administrator's authority. an account's admin level gives it authority, and a role assigned to it replaces that authority, which is how an administrator narrows an account whose admin level is the server administrator's. the route that takes a role away (delete /api/v1/role-assignments/{address}) checked only that the credential takes in what the account held at the time, not what it would hold afterwards, so such a credential could take a narrowing role away from an account in its domains whose admin level is the server administrator's, returning it to the server administrator's authority, and, having set that account's password while it held the narrower role, sign in as the server administrator.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114476" target="_blank">CVE-2026-114476</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal') vulnerability in Bold Grid weForms weforms allows Path Traversal.This issue affects weForms: from n/a through 1.6.28.</p>
+                    <p>Incorrect authorization in the REST administration API of Progressive Robot hMailServer 6.3.4 through 6.3.6 allows a remote authenticated user whose credential holds the manage_roles permission in named domains - a full-scope API key issued for those domains, or an account assigned the serveradmin role with a list of domains - to obtain the server administrator's authority. An account's admin level gives it authority, and a role assigned to it replaces that authority, which is how an administrator narrows an account whose admin level is the server administrator's. The route that takes a role away (DELETE /api/v1/role-assignments/{address}) checked only that the credential takes in what the account held at the time, not what it would hold afterwards, so such a credential could take a narrowing role away from an account in its domains whose admin level is the server administrator's, returning it to the server administrator's authority, and, having set that account's password while it held the narrower role, sign in as the server administrator.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111832" data-description="unrestricted upload of file with dangerous type vulnerability in wp mailster wp mailster wp-mailster allows upload a web shell to a web server.this issue affects wp mailster: from n/a through 1.9.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111832" target="_blank">CVE-2026-111832</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>Unrestricted Upload of File with Dangerous Type vulnerability in WP Mailster WP Mailster wp-mailster allows Upload a Web Shell to a Web Server.This issue affects WP Mailster: from n/a through 1.9.1.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114475" data-description="missing authorization in the rest role-management routes of progressive robot hmailserver 6.3.4 through 6.3.6 allows a remote authenticated user whose credential is confined to named domains to modify a custom role that accounts in other domains hold, and to create custom roles and delete any that no account holds. the routes that create, update and delete a custom role require the manage_roles permission, which only the serveradmin role holds; but a full-scope api key issued for named domains, and serveradmin assigned with a domain list, are serveradmin confined to those domains and hold manage_roles. the server's authorization gate did not refuse the three role routes to a confined credential and the route named no domain, so a credential issued to one tenant could raise or lower the permissions of a custom role assigned across other tenants - granting another domain's role every permission over its mailboxes and settings, or removing what it needs. a custom role may not hold administer_server, administer_domain or manage_roles, so the confined credential cannot make itself or another a server administrator by creating or rewriting a custom role.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114475" target="_blank">CVE-2026-114475</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Missing authorization in the REST role-management routes of Progressive Robot hMailServer 6.3.4 through 6.3.6 allows a remote authenticated user whose credential is confined to named domains to modify a custom role that accounts in other domains hold, and to create custom roles and delete any that no account holds. The routes that create, update and delete a custom role require the manage_roles permission, which only the serveradmin role holds; but a full-scope API key issued for named domains, and serveradmin assigned with a domain list, are serveradmin confined to those domains and hold manage_roles. The server's authorization gate did not refuse the three role routes to a confined credential and the route named no domain, so a credential issued to one tenant could raise or lower the permissions of a custom role assigned across other tenants - granting another domain's role every permission over its mailboxes and settings, or removing what it needs. A custom role may not hold administer_server, administer_domain or manage_roles, so the confined credential cannot make itself or another a server administrator by creating or rewriting a custom role.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-60497" data-description="a segmentation violation in the getesd function (/isomedia/track.c) of gpac project/mp4box before 2.5 allows attackers to cause a denial of service (dos) via supplying a crafted mp4 file.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-60497" target="_blank">CVE-2025-60497</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:14 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114474" data-description="use of a less trusted source for the envelope sender in the external-account download of progressive robot hmailserver 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to have mail they write in the name of a domain the server hosts sent on by the server with an envelope sender at that domain, so that it passes the domain's spf and dmarc at other receivers. a message the server downloads from an external pop3 or imap account has no smtp envelope of its own, and the server took the address in its from header as its envelope sender, whatever that address was. a forward or redirect of the downloaded message to an outside address then left with that address as its envelope sender, which the sender rewriting scheme leaves alone for a hosted domain, so that the receiver's spf check passed for the forged domain, aligned even under strict alignment, with no non-default setting, host name record or dmarc policy needed. an attacker needs to know a mailbox elsewhere that an account here collects and forwards to an outside address; an account holder who adds an external account of their own can collect from a server of their own, which matters where smtpauthenticatedsendercheck holds signed-in senders to their own addresses.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114474" target="_blank">CVE-2026-114474</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Use of a less trusted source for the envelope sender in the external-account download of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to have mail they write in the name of a domain the server hosts sent on by the server with an envelope sender at that domain, so that it passes the domain's SPF and DMARC at other receivers. A message the server downloads from an external POP3 or IMAP account has no SMTP envelope of its own, and the server took the address in its From header as its envelope sender, whatever that address was. A forward or redirect of the downloaded message to an outside address then left with that address as its envelope sender, which the Sender Rewriting Scheme leaves alone for a hosted domain, so that the receiver's SPF check passed for the forged domain, aligned even under strict alignment, with no non-default setting, host name record or DMARC policy needed. An attacker needs to know a mailbox elsewhere that an account here collects and forwards to an outside address; an account holder who adds an external account of their own can collect from a server of their own, which matters where SmtpAuthenticatedSenderCheck holds signed-in senders to their own addresses.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114473" data-description="incorrect authorization in the sender rewriting scheme (srs) of progressive robot hmailserver 6.2.1 through 6.3.6 allows a remote attacker to relay mail through the server to outside addresses. with srs enabled, the server rewrites the envelope sender of mail it forwards to a signed srs address at the forwarding domain, and passes a bounce to that address back to the original sender; but it took every message to a valid srs address, whatever its sender, as delivery to a local recipient, so the relay rules and the smtp authentication they require were not applied, and the message was delivered to the outside address the srs address encodes. anyone holding a valid srs address of the server, such as the recipient of a forwarded message, could have the server relay mail to the address it encodes for 21 days, and an account holder whose account forwards to an outside mailbox could obtain one for any address. srs is off by default.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114473" target="_blank">CVE-2026-114473</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
+                    <p>Incorrect authorization in the Sender Rewriting Scheme (SRS) of Progressive Robot hMailServer 6.2.1 through 6.3.6 allows a remote attacker to relay mail through the server to outside addresses. With SRS enabled, the server rewrites the envelope sender of mail it forwards to a signed SRS address at the forwarding domain, and passes a bounce to that address back to the original sender; but it took every message to a valid SRS address, whatever its sender, as delivery to a local recipient, so the relay rules and the SMTP authentication they require were not applied, and the message was delivered to the outside address the SRS address encodes. Anyone holding a valid SRS address of the server, such as the recipient of a forwarded message, could have the server relay mail to the address it encodes for 21 days, and an account holder whose account forwards to an outside mailbox could obtain one for any address. SRS is off by default.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114472" data-description="insufficient resource pool in the acme http-01 challenge responder of progressive robot hmailserver 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to cause a certificate issuance or renewal to fail. when the server obtains or renews a tls certificate over acme it runs an http-01 challenge responder on port 80 for the certificate authority to read the challenge token; the responder served one connection at a time, accepting a socket, waiting up to five seconds to receive a request, answering it, and only then accepting the next. a client that connected and sent nothing held the single worker for the whole timeout, so enough idle connections during a validation keep the certificate authority's own request from being answered in time and the validation fails. sustained across a certificate's renewals this leads to the certificate expiring, after which clients refuse the server's tls; the mail service itself continues on its current certificate until then. no authentication is required to connect to the responder. version 6.3.7 serves up to 64 connections at once and closes a connection past that, so that where a handful of idle connections, one after another, sufficed before, a client must keep 64 idle connections open at once throughout a validation to have the certificate authority's connection closed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114472" target="_blank">CVE-2026-114472</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>Insufficient resource pool in the ACME HTTP-01 challenge responder of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a remote unauthenticated attacker to cause a certificate issuance or renewal to fail. When the server obtains or renews a TLS certificate over ACME it runs an HTTP-01 challenge responder on port 80 for the certificate authority to read the challenge token; the responder served one connection at a time, accepting a socket, waiting up to five seconds to receive a request, answering it, and only then accepting the next. A client that connected and sent nothing held the single worker for the whole timeout, so enough idle connections during a validation keep the certificate authority's own request from being answered in time and the validation fails. Sustained across a certificate's renewals this leads to the certificate expiring, after which clients refuse the server's TLS; the mail service itself continues on its current certificate until then. No authentication is required to connect to the responder. Version 6.3.7 serves up to 64 connections at once and closes a connection past that, so that where a handful of idle connections, one after another, sufficed before, a client must keep 64 idle connections open at once throughout a validation to have the certificate authority's connection closed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114471" data-description="insertion of sensitive information into a log file in the smtp server of progressive robot hmailserver 6.0.0 through 6.3.6 allows a local user who can read the server's log, or anyone given a copy of it, to obtain credentials. with smtp logging enabled, the server hid the credential of an auth plain command only when it was sent after ehlo in one exact form, and wrote the rest of the sasl exchange as the client sent it: a plain password sent before ehlo or with extra spacing, the oauth 2.0 bearer token of auth xoauth2 and auth oauthbearer (from 6.2.0), the scram-sha-256 client proof (from 6.2.0), which with the logged salt and iteration count allows offline password guessing, and the gssapi authenticator (from 6.3.2). smtp logging is off by default; on windows before 6.3.6 the log folder was readable by every local user.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114471" target="_blank">CVE-2026-114471</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
+                    <p>Insertion of sensitive information into a log file in the SMTP server of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a local user who can read the server's log, or anyone given a copy of it, to obtain credentials. With SMTP logging enabled, the server hid the credential of an AUTH PLAIN command only when it was sent after EHLO in one exact form, and wrote the rest of the SASL exchange as the client sent it: a PLAIN password sent before EHLO or with extra spacing, the OAuth 2.0 bearer token of AUTH XOAUTH2 and AUTH OAUTHBEARER (from 6.2.0), the SCRAM-SHA-256 client proof (from 6.2.0), which with the logged salt and iteration count allows offline password guessing, and the GSSAPI authenticator (from 6.3.2). SMTP logging is off by default; on Windows before 6.3.6 the log folder was readable by every local user.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114470" data-description="cross-site request forgery in the rest api of progressive robot hmailserver 6.0.0 through 6.3.6 allows a remote attacker to make an authenticated user's browser perform a state-changing request. the rest api accepts http basic authentication and answers a browser with a basic sign-in box; a browser caches the credential once the box is answered and sends it with later requests to that origin, including a top-level form post from another site, and the server reads a request body whatever its declared content type. the cross-site protection covered only the cookie session (a header a cross-site form cannot set, and a samesite=strict cookie); http basic was not held to it. a page under an attacker's control, visited by a user whose browser holds a cached basic credential for the rest api - typically an administrator who signed in through the box - could therefore cause a state-changing request such as creating a domain, an account or an api key, or changing a setting, with the victim's credential. the attacker cannot read the cross-origin response, so the forgery is blind.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114470" target="_blank">CVE-2026-114470</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Cross-site request forgery in the REST API of Progressive Robot hMailServer 6.0.0 through 6.3.6 allows a remote attacker to make an authenticated user's browser perform a state-changing request. The REST API accepts HTTP Basic authentication and answers a browser with a Basic sign-in box; a browser caches the credential once the box is answered and sends it with later requests to that origin, including a top-level form post from another site, and the server reads a request body whatever its declared content type. The cross-site protection covered only the cookie session (a header a cross-site form cannot set, and a SameSite=Strict cookie); HTTP Basic was not held to it. A page under an attacker's control, visited by a user whose browser holds a cached Basic credential for the REST API - typically an administrator who signed in through the box - could therefore cause a state-changing request such as creating a domain, an account or an API key, or changing a setting, with the victim's credential. The attacker cannot read the cross-origin response, so the forgery is blind.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114463" data-description="the webhook platform gateway in nous research hermes agent versions builds the session chat_id as webhook:{route_name}:{delivery_id} and re-derives the authorizing route by splitting that string, so a route name containing a ":" resolves toolset authorization to a different, higher-privileged prefix route than the one authenticated, which allows a remote attacker with the target hmac to gain that higher-privileged route's toolsets.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114463" target="_blank">CVE-2026-114463</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:34 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A segmentation violation in the GetESD function (/isomedia/track.c) of GPAC Project/MP4Box before 2.5 allows attackers to cause a Denial of Service (DoS) via supplying a crafted MP4 file.</p>
+                    <p>The webhook platform gateway in Nous Research Hermes Agent versions builds the session chat_id as webhook:{route_name}:{delivery_id} and re-derives the authorizing route by splitting that string, so a route name containing a ":" resolves toolset authorization to a different, higher-privileged prefix route than the one authenticated, which allows a remote attacker with the target HMAC to gain that higher-privileged route's toolsets.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-60493" data-description="a segmentation violation in the check_media_profile function (/mp4box/mp4box.c) of gpac project/mp4box before 2.5 allows attackers to cause a denial of service (dos) via supplying a crafted mp4 file.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-60493" target="_blank">CVE-2025-60493</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:14 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114462" data-description="improper link resolution before file access ('link following') vulnerability in velneo vserver. this issue affects vserver: from 32.3 before 36.6 and from 37.1 before 37.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114462" target="_blank">CVE-2026-114462</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A segmentation violation in the check_media_profile function (/mp4box/mp4box.c) of GPAC Project/MP4Box before 2.5 allows attackers to cause a Denial of Service (DoS) via supplying a crafted MP4 file.</p>
+                    <p>Improper link resolution before file access ('link following') vulnerability in Velneo vServer. This issue affects vServer: from 32.3 before 36.6 and from 37.1 before 37.2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-60492" data-description="a stack overflow in the gf_bifs_dec_node function (/bifs/field_decode.c) of gpac project/mp4box before 2.5 allows attackers to cause a denial of service (dos) via supplying a crafted mp4 file.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-60492" target="_blank">CVE-2025-60492</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stack overflow in the gf_bifs_dec_node function (/bifs/field_decode.c) of GPAC Project/MP4Box before 2.5 allows attackers to cause a Denial of Service (DoS) via supplying a crafted MP4 file.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114370" data-description="a flaw was found in the pathresourcemanager component of the undertow web server. this component is responsible for serving static files from the file system. the issue occurs because the mechanism used to verify if a symbolic link points to a safe location only checks if the target path starts with a specific string, without ensuring it matches a full directory name. this could allow an attacker to access files in a sibling directory if that directorys name starts with the same characters as an authorized safe directory.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114370" target="_blank">CVE-2026-114370</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>A flaw was found in the PathResourceManager component of the Undertow web server. This component is responsible for serving static files from the file system. The issue occurs because the mechanism used to verify if a symbolic link points to a safe location only checks if the target path starts with a specific string, without ensuring it matches a full directory name. This could allow an attacker to access files in a sibling directory if that directorys name starts with the same characters as an authorized safe directory.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2025-60491" data-description="a heap use-after-free in the dasher_flush_segment function (/filters/dasher.c) of gpac project/mp4box before 2.5 allows attackers to cause a denial of service (dos) via supplying a crafted mp4 file.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-60491" target="_blank">CVE-2025-60491</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 10:17:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A heap use-after-free in the dasher_flush_segment function (/filters/dasher.c) of GPAC Project/MP4Box before 2.5 allows attackers to cause a Denial of Service (DoS) via supplying a crafted MP4 file.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-114257" data-description="a security vulnerability has been detected in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. affected by this vulnerability is the function readfile of the file download.php of the component file download. such manipulation of the argument id leads to sql injection. the attack may be performed from remote. the exploit has been disclosed publicly and may be used. this product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114257" target="_blank">CVE-2026-114257</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A security vulnerability has been detected in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. Affected by this vulnerability is the function readfile of the file download.php of the component File Download. Such manipulation of the argument ID leads to sql injection. The attack may be performed from remote. The exploit has been disclosed publicly and may be used. This product utilizes a rolling release system for continuous delivery, and as such, version information for affected or updated releases is not disclosed. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114256" data-description="a weakness has been identified in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. affected is the function save_folder/delete_folder/delete_file/file_rename/save_files of the file admin_class.php of the component folder management. this manipulation of the argument name/parent_id/id/type/folder_id/description causes sql injection. the attack is possible to be carried out remotely. the exploit has been made available to the public and could be used for attacks. this product adopts a rolling release strategy to maintain continuous delivery. therefore, version details for affected or updated releases cannot be specified. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114256" target="_blank">CVE-2026-114256</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A weakness has been identified in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. Affected is the function save_folder/delete_folder/delete_file/file_rename/save_files of the file admin_class.php of the component Folder Management. This manipulation of the argument name/parent_id/id/type/folder_id/description causes sql injection. The attack is possible to be carried out remotely. The exploit has been made available to the public and could be used for attacks. This product adopts a rolling release strategy to maintain continuous delivery. Therefore, version details for affected or updated releases cannot be specified. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114255" data-description="a security flaw has been discovered in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. this impacts the function save_user of the file admin_class.php of the component user account management. the manipulation of the argument name/username/password/type/id results in sql injection. the attack can be executed remotely. the exploit has been released to the public and may be used for attacks. this product implements a rolling release for ongoing delivery, which means version information for affected or updated releases is unavailable. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114255" target="_blank">CVE-2026-114255</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A security flaw has been discovered in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. This impacts the function save_user of the file admin_class.php of the component User Account Management. The manipulation of the argument name/username/password/type/id results in sql injection. The attack can be executed remotely. The exploit has been released to the public and may be used for attacks. This product implements a rolling release for ongoing delivery, which means version information for affected or updated releases is unavailable. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114254" data-description="a vulnerability was identified in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. this affects the function login of the file admin_class.php. the manipulation of the argument username/password leads to sql injection. remote exploitation of the attack is possible. the exploit is publicly available and might be used. this product follows a rolling release approach for continuous delivery, so version details for affected or updated releases are not provided. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114254" target="_blank">CVE-2026-114254</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A vulnerability was identified in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. This affects the function Login of the file admin_class.php. The manipulation of the argument username/password leads to sql injection. Remote exploitation of the attack is possible. The exploit is publicly available and might be used. This product follows a rolling release approach for continuous delivery, so version details for affected or updated releases are not provided. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114253" data-description="a vulnerability was determined in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. the impacted element is the function include of the file index.php. executing a manipulation of the argument page can lead to file inclusion. the attack may be launched remotely. the exploit has been publicly disclosed and may be utilized. this product operates on a rolling release basis, ensuring continuous delivery. consequently, there are no version details for either affected or updated releases. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114253" target="_blank">CVE-2026-114253</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 11:17:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A vulnerability was determined in oretnom23 file-management-system-php up to 2e3c1ebe60f121e8df4fb3f544f0e9591d9a01e4. The impacted element is the function include of the file index.php. Executing a manipulation of the argument page can lead to file inclusion. The attack may be launched remotely. The exploit has been publicly disclosed and may be utilized. This product operates on a rolling release basis, ensuring continuous delivery. Consequently, there are no version details for either affected or updated releases. The project was informed of the problem early through an issue report but has not responded yet.</p>
                 </div>
         
             </div>
