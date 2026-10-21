@@ -34,23 +34,457 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-87096" data-description="sensitive information disclosure and manipulation due to improper authorization checks. the following products are affected: acronis cyber infrastructure (aci) before build 6.0.1-112, acronis cyber infrastructure (aci) before build 6.1.1-64, acronis cyber infrastructure (aci) before build 6.2.1-71.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87096" target="_blank">CVE-2026-87096</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 06:17:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>Sensitive information disclosure and manipulation due to improper authorization checks. The following products are affected: Acronis Cyber Infrastructure (ACI) before build 6.0.1-112, Acronis Cyber Infrastructure (ACI) before build 6.1.1-64, Acronis Cyber Infrastructure (ACI) before build 6.2.1-71.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81755" data-description="uncontrolled resource consumption in the streaming rpc component of apache brpc (version < 1.18.0) allows a remote attacker to exhaust server memory and cause denial of service by sending a single rpc request that declares an excessive number of streams.
+
+root cause:
+in the streaming rpc feature, a client can declare multiple streams in one rpc request by putting extra stream identifiers into the repeated field `stream_settings.extra_stream_ids` of the rpc meta. on the server side, `streamaccept` creates one response stream for every stream identifier declared by the request, without limiting the number of streams accepted in a single rpc. the request body size is only bounded by `max_body_size` (default 64mb), which is enough to carry millions of stream identifiers. each accepted stream allocates its own bthread execution queue and associated resources, so a single crafted request can make the server create a huge number of streams and exhaust memory, leading to denial of service.
+
+affected scenarios:
+use a brpc server that serves streaming rpc and calls `streamaccept` to accept streams from untrusted clients.
+
+how to fix: 
+(choose one of the following options) 
+1. upgrade brpc to the 1.18.0 version.
+2. apply this patch:  https://github.com/apache/brpc/pull/3493 
+
+
+note:
+the fix adds a new gflag `stream_max_streams_per_request` with a default value of 64. requests declaring more streams than the limit are rejected before any response stream is created. applications that legitimately need to accept more than 64 streams in one rpc must raise this flag; otherwise such requests will fail after applying the fix.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81755" target="_blank">CVE-2026-81755</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled resource consumption in the streaming RPC component of Apache bRPC (version < 1.18.0) allows a remote attacker to exhaust server memory and cause denial of service by sending a single RPC request that declares an excessive number of streams.
+
+Root Cause:
+In the streaming RPC feature, a client can declare multiple streams in one RPC request by putting extra stream identifiers into the repeated field `stream_settings.extra_stream_ids` of the RPC meta. On the server side, `StreamAccept` creates one response stream for every stream identifier declared by the request, without limiting the number of streams accepted in a single RPC. The request body size is only bounded by `max_body_size` (default 64MB), which is enough to carry millions of stream identifiers. Each accepted stream allocates its own bthread execution queue and associated resources, so a single crafted request can make the server create a huge number of streams and exhaust memory, leading to denial of service.
+
+Affected Scenarios:
+Use a bRPC server that serves streaming RPC and calls `StreamAccept` to accept streams from untrusted clients.
+
+How to Fix: 
+(Choose one of the following options) 
+1. Upgrade bRPC to the 1.18.0 version.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3493 
+
+
+Note:
+The fix adds a new gflag `stream_max_streams_per_request` with a default value of 64. Requests declaring more streams than the limit are rejected before any response stream is created. Applications that legitimately need to accept more than 64 streams in one RPC must raise this flag; otherwise such requests will fail after applying the fix.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-87095" data-description="sensitive information disclosure and manipulation due to improper authorization checks. the following products are affected: acronis cyber infrastructure (aci) before build 6.0.1-112, acronis cyber infrastructure (aci) before build 6.1.1-64, acronis cyber infrastructure (aci) before build 6.2.1-71.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87095" target="_blank">CVE-2026-87095</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 06:17:09 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
-                    <p>Sensitive information disclosure and manipulation due to improper authorization checks. The following products are affected: Acronis Cyber Infrastructure (ACI) before build 6.0.1-112, Acronis Cyber Infrastructure (ACI) before build 6.1.1-64, Acronis Cyber Infrastructure (ACI) before build 6.2.1-71.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-80463" data-description="unbounded memory accumulation in the stream message reassembly path of apache brpc (version < 1.18.0) on all platforms allows remote attackers to exhaust the memory of a server (denial of service) by sending an endless sequence of continuation data frames.
+
+root cause:
+the streaming rpc protocol bounds every single data frame by max_body_size, but a fragmented stream message accumulates continuation frames into one buffer (_pending_buf) without any limit on the accumulated size. a malicious peer that can open a stream can therefore keep sending continuation frames to make the receiver accumulate an arbitrarily large in-memory message. since the default flow-control settings (socket_max_streams_unconsumed_bytes=0) do not throttle the sending rate, the receiver's memory grows until the process runs out of memory and crashes or becomes unavailable.
+
+affected scenarios:
+services that accept streams from untrusted clients (for example using brpc::streamaccept or brpc::streamcreate with the built-in streaming protocol) are affected.
+
+
+how to fix:
+(choose one of the following options)
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3489 
+
+
+note:
+the fix limits the accumulated payload of a fragmented stream message to max_body_size (default 64mb). when the accumulated payload exceeds the limit, the pending fragments are released and the stream is closed with error emsgsize. after applying the fix, legitimate fragmented stream messages larger than max_body_size will be rejected; you can adjust the gflag max_body_size to change the limit.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-80463" target="_blank">CVE-2026-80463</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Unbounded memory accumulation in the stream message reassembly path of Apache bRPC (version < 1.18.0) on all platforms allows remote attackers to exhaust the memory of a server (denial of service) by sending an endless sequence of continuation data frames.
+
+Root Cause:
+The streaming RPC protocol bounds every single data frame by max_body_size, but a fragmented stream message accumulates continuation frames into one buffer (_pending_buf) without any limit on the accumulated size. A malicious peer that can open a stream can therefore keep sending continuation frames to make the receiver accumulate an arbitrarily large in-memory message. Since the default flow-control settings (socket_max_streams_unconsumed_bytes=0) do not throttle the sending rate, the receiver's memory grows until the process runs out of memory and crashes or becomes unavailable.
+
+Affected Scenarios:
+Services that accept streams from untrusted clients (for example using brpc::StreamAccept or brpc::StreamCreate with the built-in streaming protocol) are affected.
+
+
+How to Fix:
+(Choose one of the following options)
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3489 
+
+
+Note:
+The fix limits the accumulated payload of a fragmented stream message to max_body_size (default 64MB). When the accumulated payload exceeds the limit, the pending fragments are released and the stream is closed with error EMSGSIZE. After applying the fix, legitimate fragmented stream messages larger than max_body_size will be rejected; you can adjust the gflag max_body_size to change the limit.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-58663" data-description="an authentication bypass vulnerability exists in apache iotdb's thrift rpc service
+                <div class="cve-entry" data-cve-id="CVE-2026-79704" data-description="an out-of-bounds read vulnerability exists in the streaming rpc client of apache brpc (versions 1.11.0 through  1.17.0) on all platforms. a client that creates multiple streams in a single rpc expects the server response to carry exactly one extra_stream_id for every additional stream. the response handling path indexed the returned identifiers using the locally created stream count without first validating the size of the returned list, so a malicious or compromised server (or an on-path attacker) can trigger an out-of-bounds read in the client by returning a malformed streamsettings response with fewer extra_stream_ids than expected. this may crash the client process (denial of service) or leak unintended memory contents into subsequent stream handling; surplus identifiers have no valid client-stream mapping and are processed inconsistently.
+
+root cause:
+since brpc 1.11.0, a client can create multiple streams in one rpc via batch streamcreate. the expected behavior is that the server response must return exactly (n-1) extra_stream_ids, where n is the number of locally created streams. in controller::handlestreamconnection, the response path reads extra_stream_ids[i-1] for each additional local stream without first comparing the returned list size with (n-1). if the server returns fewer identifiers, the read runs past the end of the returned list (out-of-bounds read); if it returns more, the surplus identifiers have no corresponding client-side stream.
+
+affected scenarios:
+a brpc client using multi-stream rpc (creating more than one stream in a single rpc) that connects to an untrusted, malicious, or compromised server or to a server reached through an untrusted network path. the server sends a malformed streamsettings response to trigger the issue.
+
+
+how to fix: 
+(choose one of the following options) 
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3485 
+
+
+note:
+the fix makes the client reject responses whose extra_stream_ids count does not exactly match the number of additional client streams. such mismatched responses now fail the rpc with eresponse and go through the existing stream cleanup path, instead of being partially processed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79704" target="_blank">CVE-2026-79704</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An out-of-bounds read vulnerability exists in the streaming RPC client of Apache bRPC (versions 1.11.0 through  1.17.0) on all platforms. A client that creates multiple streams in a single RPC expects the server response to carry exactly one extra_stream_id for every additional stream. The response handling path indexed the returned identifiers using the locally created stream count without first validating the size of the returned list, so a malicious or compromised server (or an on-path attacker) can trigger an out-of-bounds read in the client by returning a malformed StreamSettings response with fewer extra_stream_ids than expected. This may crash the client process (denial of service) or leak unintended memory contents into subsequent stream handling; surplus identifiers have no valid client-stream mapping and are processed inconsistently.
+
+Root Cause:
+Since bRPC 1.11.0, a client can create multiple streams in one RPC via batch StreamCreate. The expected behavior is that the server response must return exactly (N-1) extra_stream_ids, where N is the number of locally created streams. In Controller::HandleStreamConnection, the response path reads extra_stream_ids[i-1] for each additional local stream without first comparing the returned list size with (N-1). If the server returns fewer identifiers, the read runs past the end of the returned list (out-of-bounds read); if it returns more, the surplus identifiers have no corresponding client-side stream.
+
+Affected Scenarios:
+A bRPC client using multi-stream RPC (creating more than one stream in a single RPC) that connects to an untrusted, malicious, or compromised server or to a server reached through an untrusted network path. The server sends a malformed StreamSettings response to trigger the issue.
+
+
+How to Fix: 
+(Choose one of the following options) 
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3485 
+
+
+Note:
+The fix makes the client reject responses whose extra_stream_ids count does not exactly match the number of additional client streams. Such mismatched responses now fail the RPC with ERESPONSE and go through the existing stream cleanup path, instead of being partially processed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-78334" data-description="missing authentication in the streaming rpc path of apache brpc (version < 1.18.0) on all platforms allows a remote attacker to bypass server authentication and inject or deliver streaming frames, when a server is configured with an authenticator.
+
+root cause:
+when authentication is configured, streaming rpc frames are consumed directly by the streaming parser (parsestreamingmessage) and never pass through inputmessenger's authentication hook, so an unauthenticated peer can exchange frames without being authenticated. in addition, a server-accepted stream is bound lazily to the first frame that happens to carry its id, so a stream could accept a frame carrying its id from a socket other than the socket that created the stream.
+
+affected scenarios:
+a brpc server configured with authentication that serves streaming rpc from an untrusted network, or a deployment where a foreign connection can impersonate a stream by id, can be made to accept unauthorized streaming frames.
+
+how to fix:
+upgrade brpc to 1.18.0, which fixes this issue, or apply the patch in pr https://github.com/apache/brpc/pull/3481. 
+
+note:
+the fix rejects streaming frames on server sockets when configured authentication has not completed, and keeps server-accepted streams bound to the socket of their creating rpc and rejects frames arriving from another socket. authenticated streaming rpc behavior and the wire format are unchanged; only unauthenticated or foreign-socket frames are now rejected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78334" target="_blank">CVE-2026-78334</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing authentication in the streaming RPC path of Apache bRPC (version < 1.18.0) on all platforms allows a remote attacker to bypass server authentication and inject or deliver streaming frames, when a server is configured with an Authenticator.
+
+Root Cause:
+When authentication is configured, streaming RPC frames are consumed directly by the streaming parser (ParseStreamingMessage) and never pass through InputMessenger's authentication hook, so an unauthenticated peer can exchange frames without being authenticated. In addition, a server-accepted stream is bound lazily to the first frame that happens to carry its id, so a stream could accept a frame carrying its id from a socket other than the socket that created the stream.
+
+Affected Scenarios:
+A bRPC server configured with authentication that serves streaming RPC from an untrusted network, or a deployment where a foreign connection can impersonate a stream by id, can be made to accept unauthorized streaming frames.
+
+How to Fix:
+Upgrade bRPC to 1.18.0, which fixes this issue, or apply the patch in PR https://github.com/apache/brpc/pull/3481. 
+
+Note:
+The fix rejects streaming frames on server sockets when configured authentication has not completed, and keeps server-accepted streams bound to the socket of their creating RPC and rejects frames arriving from another socket. Authenticated streaming RPC behavior and the wire format are unchanged; only unauthenticated or foreign-socket frames are now rejected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-78066" data-description="resource exhaustion in apache brpc (version < 1.18.0) on all platforms: multiple parsers that accept wire-controlled input bound no limit on the sizes declared by the client or on decompressed output, which attackers can use to drive disproportionate memory use and crash the process.
+
+root cause:
+1) the gzip/zlib/snappy decompressors enforce no output limit: -max_body_size is checked against the compressed bytes only, so a cap-compliant body (e.g. 64 mib) can decompress to tens of gib.
+2) the amf string readers allocate the declared length before the bytes are actually available.
+3) rtmp chunk headers may re-declare a message length mid-stream; the declared length was never bounded and the partial reassembly buffer kept growing.
+4) the sofa-pbrpc parser does not bound meta_size.
+5) mcpack2pb trusts wire-declared item counts for reserve() and a string value_size of 0 underflows the buffer size, aborting the process.
+
+affected scenarios:
+any brpc service accepting gzip/zlib/snappy-compressed bodies or rtmp, sofa-pbrpc, or mcpack2pb messages from untrusted clients.
+
+how to fix:(choose one of the following options) 1. upgrade brpc to version 1.18.0, which fixes this issue.
+
+2. apply this patch: https://github.com/apache/brpc/pull/3476
+
+note:
+after the fix, requests whose decompressed size, rtmp message length, or mcpack declared count exceed the new limits are rejected. operators who legitimately need larger values can raise the corresponding flag (-max_decompressed_body_size, max_body_size).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78066" target="_blank">CVE-2026-78066</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Resource exhaustion in Apache bRPC (version < 1.18.0) on all platforms: multiple parsers that accept wire-controlled input bound no limit on the sizes declared by the client or on decompressed output, which attackers can use to drive disproportionate memory use and crash the process.
+
+Root Cause:
+1) The gzip/zlib/snappy decompressors enforce no output limit: -max_body_size is checked against the compressed bytes only, so a cap-compliant body (e.g. 64 MiB) can decompress to tens of GiB.
+2) The AMF string readers allocate the declared length before the bytes are actually available.
+3) RTMP chunk headers may re-declare a message length mid-stream; the declared length was never bounded and the partial reassembly buffer kept growing.
+4) The sofa-pbrpc parser does not bound meta_size.
+5) mcpack2pb trusts wire-declared item counts for Reserve() and a string value_size of 0 underflows the buffer size, aborting the process.
+
+Affected Scenarios:
+Any bRPC service accepting gzip/zlib/snappy-compressed bodies or rtmp, sofa-pbrpc, or mcpack2pb messages from untrusted clients.
+
+How to Fix:(Choose one of the following options) 1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+
+2. Apply this patch: https://github.com/apache/brpc/pull/3476
+
+Note:
+After the fix, requests whose decompressed size, RTMP message length, or mcpack declared count exceed the new limits are rejected. Operators who legitimately need larger values can raise the corresponding flag (-max_decompressed_body_size, max_body_size).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-78058" data-description="uncontrolled resource consumption in the http/2 (h2) receive path of apache brpc (version < 1.18.0) on all platforms allows a remote unauthenticated attacker to crash the server or grow its memory without bound by sending crafted http/2 frames.
+
+root cause:
+the h2 parser, enabled by default on every brpc server port and used by h2/grpc clients, trusts the peer to respect receive-side limits that brpc advertises but never enforces:
+1. settings_max_concurrent_streams defaulted to unlimited and was never checked on the server, letting a peer pin an unbounded number of pending streams per connection (~100x memory amplification).
+2. settings_max_header_list_size defaulted to unlimited and was never enforced; 1-byte hpack indexed references amplify a small headers frame ~4000x into an unbounded decoded header list ("hpack bomb"), and a never-completed headers/continuation block accumulates memory without limit.
+3. control-frame acks (ping/settings acks, rst_stream, goaway, window_update) unconditionally bypassed the -socket_max_unwritten_bytes write cap, so a ping flood combined with withheld tcp reads grew the connection buffer without the documented bound.
+4. the hpack dynamic table size update was validated against the protocol default (4096) instead of the advertised settings_header_table_size, which together with the dynamic-table queue/accounting issue can desynchronize the decoder and dereference null (crash).
+
+affected scenarios:
+any brpc server serving http/h2/grpc to an untrusted network, and any brpc h2/grpc client connecting to an untrusted backend. the h2 parser runs before any authenticator check on the shared port.
+
+how to fix: 
+upgrade brpc, or apply the patch in https://github.com/apache/brpc/pull/3474.
+
+note:
+after applying the fix the following limits are enforced by default:
+- max_concurrent_streams: 1024 per connection (4294967295 restores unlimited).
+- max_header_list_size: 1 mib decoded size per stream (4294967295 restores unlimited; -h2_client_max_header_list_size for clients).
+- h2 control-frame acks respect -socket_max_unwritten_bytes (-h2_ack_ignore_eovercrowded restores the old behavior).
+requests exceeding these limits are rejected (rst_stream(refused_stream) or a connection error).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78058" target="_blank">CVE-2026-78058</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled resource consumption in the HTTP/2 (h2) receive path of Apache bRPC (version < 1.18.0) on all platforms allows a remote unauthenticated attacker to crash the server or grow its memory without bound by sending crafted HTTP/2 frames.
+
+Root Cause:
+The h2 parser, enabled by default on every bRPC server port and used by h2/gRPC clients, trusts the peer to respect receive-side limits that bRPC advertises but never enforces:
+1. SETTINGS_MAX_CONCURRENT_STREAMS defaulted to unlimited and was never checked on the server, letting a peer pin an unbounded number of pending streams per connection (~100x memory amplification).
+2. SETTINGS_MAX_HEADER_LIST_SIZE defaulted to unlimited and was never enforced; 1-byte HPACK indexed references amplify a small HEADERS frame ~4000x into an unbounded decoded header list ("HPACK bomb"), and a never-completed HEADERS/CONTINUATION block accumulates memory without limit.
+3. Control-frame acks (PING/SETTINGS acks, RST_STREAM, GOAWAY, WINDOW_UPDATE) unconditionally bypassed the -socket_max_unwritten_bytes write cap, so a PING flood combined with withheld TCP reads grew the connection buffer without the documented bound.
+4. The HPACK dynamic table size update was validated against the protocol default (4096) instead of the advertised SETTINGS_HEADER_TABLE_SIZE, which together with the dynamic-table queue/accounting issue can desynchronize the decoder and dereference NULL (crash).
+
+Affected scenarios:
+Any bRPC server serving HTTP/h2/gRPC to an untrusted network, and any bRPC h2/gRPC client connecting to an untrusted backend. The h2 parser runs before any Authenticator check on the shared port.
+
+How to fix: 
+Upgrade bRPC, or apply the patch in https://github.com/apache/brpc/pull/3474.
+
+Note:
+After applying the fix the following limits are enforced by default:
+- max_concurrent_streams: 1024 per connection (4294967295 restores unlimited).
+- max_header_list_size: 1 MiB decoded size per stream (4294967295 restores unlimited; -h2_client_max_header_list_size for clients).
+- h2 control-frame acks respect -socket_max_unwritten_bytes (-h2_ack_ignore_eovercrowded restores the old behavior).
+Requests exceeding these limits are rejected (RST_STREAM(REFUSED_STREAM) or a connection error).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-78048" data-description="a reachable-assertion flaw in the hpack header-compression decoder of the http/2 (h2/grpc) stack in apache brpc (version < 1.18.0) on all platforms allows a remote attacker to crash the server process by sending a crafted sequence of hpack headers, resulting in a denial of service.
+
+root cause:
+in src/brpc/details/hpack.cpp, indextable::init sizes the dynamic-table ring buffer as num_headers = max_size / (32 + 2), i.e. it assumes a minimum table entry of 34 bytes (name >= 1 byte + value >= 1 byte + 32 bytes of overhead). however, rfc 7541 section 4.1 specifies that the minimum entry size is 33 bytes, because the value may be empty (name >= 1 byte + value == 0 + 32 bytes). for the default 4096-byte table this allocates only 120 slots (4096/34). eviction in addheader is driven by byte usage (_max_size), not by slot count, so a peer can add 121 minimal 33-byte entries (121*33 = 3993 <= 4096) without triggering eviction. the 121st addheader then hits check(!_header_queue.full()), which aborts the process.
+
+affected scenarios:
+use a brpc server that serves http/2 or grpc requests (e.g. via the h2 protocol) from an untrusted network. the malicious header block is processed during hpack decoding of incoming requests without authentication.
+
+how to fix: 
+(choose one of the following options) 
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch: https://github.com/apache/brpc/pull/3462
+
+note:
+the fix sizes the dynamic table for the 33-byte minimum entry (max_size / (32 + 1)) and ensures at least one ring-buffer slot is kept when max_size is smaller than the minimum entry, so that initialization cannot fail on malloc(0).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78048" target="_blank">CVE-2026-78048</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A reachable-assertion flaw in the HPACK header-compression decoder of the HTTP/2 (h2/gRPC) stack in Apache bRPC (version < 1.18.0) on all platforms allows a remote attacker to crash the server process by sending a crafted sequence of HPACK headers, resulting in a denial of service.
+
+Root Cause:
+In src/brpc/details/hpack.cpp, IndexTable::Init sizes the dynamic-table ring buffer as num_headers = max_size / (32 + 2), i.e. it assumes a minimum table entry of 34 bytes (name >= 1 byte + value >= 1 byte + 32 bytes of overhead). However, RFC 7541 section 4.1 specifies that the minimum entry size is 33 bytes, because the value may be empty (name >= 1 byte + value == 0 + 32 bytes). For the default 4096-byte table this allocates only 120 slots (4096/34). Eviction in AddHeader is driven by byte usage (_max_size), not by slot count, so a peer can add 121 minimal 33-byte entries (121*33 = 3993 <= 4096) without triggering eviction. The 121st AddHeader then hits CHECK(!_header_queue.full()), which aborts the process.
+
+Affected Scenarios:
+Use a bRPC server that serves HTTP/2 or gRPC requests (e.g. via the h2 protocol) from an untrusted network. The malicious header block is processed during HPACK decoding of incoming requests without authentication.
+
+How to Fix: 
+(Choose one of the following options) 
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch: https://github.com/apache/brpc/pull/3462
+
+Note:
+The fix sizes the dynamic table for the 33-byte minimum entry (max_size / (32 + 1)) and ensures at least one ring-buffer slot is kept when max_size is smaller than the minimum entry, so that initialization cannot fail on malloc(0).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74758" data-description="a heap use-after-free in the rtmp protocol component of apache brpc (versions < 1.18.0) allows a remote attacker to crash a brpc rtmp server by sending a crafted abort control message. no authentication or application-level request is required.
+
+root cause:
+when an rtmp abort control message names the chunk stream that is currently being parsed (the chunk stream carrying the message itself), rtmpchunkstream::onabortmessage calls rtmpcontext::clearchunkstream, which deletes the rtmpchunkstream while its feed() is still running. after the message handler returns, feed() continues to access members of the deleted object, resulting in a heap-use-after-free.
+
+affected scenarios:
+brpc servers that enable rtmp support (serveroptions.rtmp_service set) and accept connections from untrusted networks.
+
+how to fix:
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3452 
+
+the fix skips clearing the chunk stream when the abort message targets the chunk stream that is currently being parsed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74758" target="_blank">CVE-2026-74758</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A heap use-after-free in the RTMP protocol component of Apache bRPC (versions < 1.18.0) allows a remote attacker to crash a bRPC RTMP server by sending a crafted Abort control message. No authentication or application-level request is required.
+
+Root Cause:
+When an RTMP Abort control message names the chunk stream that is currently being parsed (the chunk stream carrying the message itself), RtmpChunkStream::OnAbortMessage calls RtmpContext::ClearChunkStream, which deletes the RtmpChunkStream while its Feed() is still running. After the message handler returns, Feed() continues to access members of the deleted object, resulting in a heap-use-after-free.
+
+Affected Scenarios:
+bRPC servers that enable RTMP support (ServerOptions.rtmp_service set) and accept connections from untrusted networks.
+
+How to Fix:
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3452 
+
+The fix skips clearing the chunk stream when the Abort message targets the chunk stream that is currently being parsed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74757" data-description="uncontrolled resource allocation in the mcpack2pb component in apache brpc (version < 1.18.0) on all platforms allows remote attackers to make the server allocate a large amount of memory via sending a crafted mcpack request with a huge array item count.
+
+root cause:
+the brpc mcpack2pb parser trusts the item count stored in the mcpack array header without validating it against the actual payload size. the code generated by the mcpack2pb protoc plugin uses this count to preallocate memory for repeated protobuf fields via reserve(). a malformed request declaring item_count = 0x7fffffff can force the server to preallocate about 16gb of virtual memory, which may abort the process (sigabrt) on memory-constrained hosts.
+
+affected scenarios:
+use a brpc server that wires a nsheadservice to ubrpcmcpack2adaptor (the baidu ubrpc deployment pattern) and parses requests with code generated by the mcpack2pb protoc plugin. the request body is parsed before authentication.
+
+how to fix:
+(choose one of the following options)
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3451 
+
+note:
+no matter which option you choose, you should know that the fix caps the array item count to the remaining bytes of the array payload.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74757" target="_blank">CVE-2026-74757</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled resource allocation in the mcpack2pb component in Apache bRPC (version < 1.18.0) on all platforms allows remote attackers to make the server allocate a large amount of memory via sending a crafted mcpack request with a huge array item count.
+
+Root Cause:
+The bRPC mcpack2pb parser trusts the item count stored in the mcpack array header without validating it against the actual payload size. The code generated by the mcpack2pb protoc plugin uses this count to preallocate memory for repeated protobuf fields via Reserve(). A malformed request declaring item_count = 0x7fffffff can force the server to preallocate about 16GB of virtual memory, which may abort the process (SIGABRT) on memory-constrained hosts.
+
+Affected Scenarios:
+Use a bRPC server that wires a NsheadService to UbrpcMcpack2Adaptor (the Baidu ubrpc deployment pattern) and parses requests with code generated by the mcpack2pb protoc plugin. The request body is parsed before authentication.
+
+How to Fix:
+(Choose one of the following options)
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3451 
+
+Note:
+No matter which option you choose, you should know that the fix caps the array item count to the remaining bytes of the array payload.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-74755" data-description="an integer underflow in the mcpack2pb component of apache brpc (version < 1.18.0) on all platforms allows remote attackers to crash a brpc server by sending a request containing a string field with a zero value_size. the unparsedvalue::as_string() function computes `_size - 1` without validating `_size`; when value_size is 0 the expression underflows to size_max, resize() throws std::length_error, and because the exception is not caught on the request parsing path the process aborts (sigabrt).
+
+root cause:
+in src/mcpack2pb/parser.cpp, unparsedvalue::as_string() resizes the output string to `_size - 1`, where `_size` is the value_size of a string field taken directly from the network data. a value_size of 0 underflows the unsigned size_t, and the subsequent resize() throws an exception that is not caught.
+
+affected scenarios:
+brpc servers that accept nshead frames wired to the ubrpc mcpack2 adaptor (for example the nsheadservice + ubrpcmcpack2adaptor deployment pattern) can be crashed by a single unauthenticated request. stock open-source brpc registers the ubrpc/nshead_mcpack protocols as client-only, so default server configurations are not affected.
+
+how to fix:
+1. upgrade brpc to a version that includes this fix.
+2. apply the patch in pr  https://github.com/apache/brpc/pull/3450">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-74755" target="_blank">CVE-2026-74755</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An integer underflow in the mcpack2pb component of Apache bRPC (version < 1.18.0) on all platforms allows remote attackers to crash a bRPC server by sending a request containing a string field with a zero value_size. The UnparsedValue::as_string() function computes `_size - 1` without validating `_size`; when value_size is 0 the expression underflows to SIZE_MAX, resize() throws std::length_error, and because the exception is not caught on the request parsing path the process aborts (SIGABRT).
+
+Root Cause:
+In src/mcpack2pb/parser.cpp, UnparsedValue::as_string() resizes the output string to `_size - 1`, where `_size` is the value_size of a string field taken directly from the network data. A value_size of 0 underflows the unsigned size_t, and the subsequent resize() throws an exception that is not caught.
+
+Affected Scenarios:
+bRPC servers that accept nshead frames wired to the ubrpc mcpack2 adaptor (for example the NsheadService + UbrpcMcpack2Adaptor deployment pattern) can be crashed by a single unauthenticated request. Stock open-source bRPC registers the ubrpc/nshead_mcpack protocols as client-only, so default server configurations are not affected.
+
+How to Fix:
+1. Upgrade bRPC to a version that includes this fix.
+2. Apply the patch in PR  https://github.com/apache/brpc/pull/3450</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66392" data-description="apache brpc versions before 1.18.0 validate the server certificate chain when client tls peer verification is enabled, but do not bind the certificate to an expected dns name or ip address. a network attacker who can redirect or intercept a connection and who possesses a certificate issued by a ca trusted by the client for another name may impersonate the requested tls endpoint.
+
+
+affected scenarios:
+applications use a brpc client channel to connect to an untrusted network with certificate verification enabled and trust a ca that can issue certificates for identities other than the intended endpoint.
+
+
+how to fix:
+upgrade to apache brpc 1.18.0 and enable verify_peer with a positive verify_depth. https channels automatically verify the certificate against the host in the channel url. callers may set verifyoptions::expected_peer_name explicitly when the certificate identity differs from the url host. alternatively, apply the patch from  https://github.com/apache/brpc/pull/3408 .
+
+note:
+the new option performs dns san or ip san verification during the tls handshake. configurations that set expected_peer_name while peer verification is disabled are rejected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66392" target="_blank">CVE-2026-66392</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache bRPC versions before 1.18.0 validate the server certificate chain when client TLS peer verification is enabled, but do not bind the certificate to an expected DNS name or IP address. A network attacker who can redirect or intercept a connection and who possesses a certificate issued by a CA trusted by the client for another name may impersonate the requested TLS endpoint.
+
+
+Affected Scenarios:
+Applications use a bRPC client Channel to connect to an untrusted network with certificate verification enabled and trust a CA that can issue certificates for identities other than the intended endpoint.
+
+
+How to Fix:
+Upgrade to Apache bRPC 1.18.0 and enable VERIFY_PEER with a positive verify_depth. HTTPS Channels automatically verify the certificate against the host in the Channel URL. Callers may set VerifyOptions::expected_peer_name explicitly when the certificate identity differs from the URL host. Alternatively, apply the patch from  https://github.com/apache/brpc/pull/3408 .
+
+Note:
+The new option performs DNS SAN or IP SAN verification during the TLS handshake. Configurations that set expected_peer_name while peer verification is disabled are rejected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61916" data-description="out-of-bounds reads in url parsing and case-insensitive header lookup in apache brpc before version 1.18.0 on platforms where plain char is unsigned, such as arm64, allow remote attackers to cause a process crash and denial of service by sending crafted input containing bytes with the high bit set.
+
+root cause:
+two 256-entry lookup tables are accessed through pointers biased by 128 so that valid indices are in the range -128 to 127. input bytes are promoted from plain char to int without first normalizing them to the signed-char range. on affected platforms, bytes in the range 0x80 to 0xff therefore become indices 128 to 255 and read up to 127 bytes beyond the end of the underlying tables.
+
+affected scenarios:
+a remotely accessible brpc http server on an affected platform can reach the vulnerable url lookup through an unauthenticated request uri containing a high-bit byte. the case-insensitive lookup is also reachable when untrusted header names are processed through apis such as the http/2 hpack path. http/1 header names containing high-bit bytes are rejected by the http/1 parser before reaching the vulnerable lookup. builds where plain char is signed, which commonly include x86_64 builds, are not affected by this issue.
+
+how to fix:
+choose one of the following options:
+1. upgrade apache brpc to version 1.18.0 or later.
+2. apply the patch from  https://github.com/apache/brpc/pull/3376 .
+
+the fix normalizes lookup-table indices to the signed-char range before accessing the biased tables.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61916" target="_blank">CVE-2026-61916</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Out-of-bounds reads in URL parsing and case-insensitive header lookup in Apache bRPC before version 1.18.0 on platforms where plain char is unsigned, such as ARM64, allow remote attackers to cause a process crash and denial of service by sending crafted input containing bytes with the high bit set.
+
+Root Cause:
+Two 256-entry lookup tables are accessed through pointers biased by 128 so that valid indices are in the range -128 to 127. Input bytes are promoted from plain char to int without first normalizing them to the signed-char range. On affected platforms, bytes in the range 0x80 to 0xFF therefore become indices 128 to 255 and read up to 127 bytes beyond the end of the underlying tables.
+
+Affected Scenarios:
+A remotely accessible bRPC HTTP server on an affected platform can reach the vulnerable URL lookup through an unauthenticated request URI containing a high-bit byte. The case-insensitive lookup is also reachable when untrusted header names are processed through APIs such as the HTTP/2 HPACK path. HTTP/1 header names containing high-bit bytes are rejected by the HTTP/1 parser before reaching the vulnerable lookup. Builds where plain char is signed, which commonly include x86_64 builds, are not affected by this issue.
+
+How to Fix:
+Choose one of the following options:
+1. Upgrade Apache bRPC to version 1.18.0 or later.
+2. Apply the patch from  https://github.com/apache/brpc/pull/3376 .
+
+The fix normalizes lookup-table indices to the signed-char range before accessing the biased tables.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61902" data-description="apache brpc versions before 1.18.0 do not consistently enforce the configured max_body_size limit in non-progressive http/1 and http/2 parsing and in memcache and couchbase response parsing.
+
+a remote unauthenticated peer can cause an affected process to buffer message data beyond the configured limit, which may lead to memory exhaustion and denial of service. 
+users should upgrade to 1.18.0 or apply the patch from pr  https://github.com/apache/brpc/pull/3382 . the fix rejects oversized buffered http bodies, returns http 413 for http/1 requests, resets oversized http/2 streams, and rejects oversized memcache and couchbase responses from their declared lengths. progressive http reading remains supported because it uses bounded buffering.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61902" target="_blank">CVE-2026-61902</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Apache bRPC versions before 1.18.0 do not consistently enforce the configured max_body_size limit in non-progressive HTTP/1 and HTTP/2 parsing and in memcache and couchbase response parsing.
+
+A remote unauthenticated peer can cause an affected process to buffer message data beyond the configured limit, which may lead to memory exhaustion and denial of service. 
+Users should upgrade to 1.18.0 or apply the patch from PR  https://github.com/apache/brpc/pull/3382 . The fix rejects oversized buffered HTTP bodies, returns HTTP 413 for HTTP/1 requests, resets oversized HTTP/2 streams, and rejects oversized memcache and couchbase responses from their declared lengths. Progressive HTTP reading remains supported because it uses bounded buffering.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59562" data-description="missing authentication for critical function vulnerability in apache iotdb.
 
 
 
@@ -59,11 +493,11 @@ this issue affects apache iotdb: from 2.0.0 before 2.0.11.
 
 
 users are recommended to upgrade to version 2.0.11, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58663" target="_blank">CVE-2026-58663</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 06:17:07 CDT</p>
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59562" target="_blank">CVE-2026-59562</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An authentication bypass vulnerability exists in Apache IoTDB's Thrift RPC service
+                    <p>Missing authentication for critical function vulnerability in Apache IoTDB.
 
 
 
@@ -74,178 +508,216 @@ This issue affects Apache IoTDB: from 2.0.0 before 2.0.11.
 Users are recommended to upgrade to version 2.0.11, which fixes the issue.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-41114" data-description="uncontrolled resource consumption vulnerability in apache iotdb jdbc driver.
+                <div class="cve-entry" data-cve-id="CVE-2026-59229" data-description="the legacy pipe receiver protocol (handshake / sendpipedata) uses a
+hardcoded super_user (root) identity when executing data loading and
+deletion operations. a user with only system-level privileges (such as
+use_pipe or maintain) who does not have write_data or delete_data
+permissions on target databases can send specially crafted pipedata
+messages through the legacy pipe api, resulting in data loading/deletion
+operations executed as root — effectively bypassing iotdb's permission
+model entirely.
 
 
 
-this issue affects apache iotdb jdbc driver: from 1.3.3 before 2.0.11.
+this issue affects apache iotdb: from 2.0.0 before 2.0.11.
 
 
 
 users are recommended to upgrade to version 2.0.11, which fixes the issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-41114" target="_blank">CVE-2026-41114</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 06:17:07 CDT</p>
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59229" target="_blank">CVE-2026-59229</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Uncontrolled Resource Consumption vulnerability in Apache IoTDB JDBC driver.
+                    <p>The Legacy Pipe receiver protocol (handshake / sendPipeData) uses a
+hardcoded SUPER_USER (root) identity when executing data loading and
+deletion operations. A user with only SYSTEM-level privileges (such as
+USE_PIPE or MAINTAIN) who does NOT have WRITE_DATA or DELETE_DATA
+permissions on target databases can send specially crafted PipeData
+messages through the Legacy Pipe API, resulting in data loading/deletion
+operations executed as root — effectively bypassing IoTDB's permission
+model entirely.
 
 
 
-This issue affects Apache IoTDB JDBC driver: from 1.3.3 before 2.0.11.
+This issue affects Apache IoTDB: from 2.0.0 before 2.0.11.
 
 
 
 Users are recommended to upgrade to version 2.0.11, which fixes the issue.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-110884" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in geekontheroad live summary for gravity forms live-summary-for-gravity-forms allows reflected xss.this issue affects live summary for gravity forms: from n/a through 1.2.10.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110884" target="_blank">CVE-2026-110884</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 05:16:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in geekontheroad Live Summary for Gravity Forms live-summary-for-gravity-forms allows Reflected XSS.This issue affects Live Summary for Gravity Forms: from n/a through 1.2.10.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110370" data-description="deserialization of untrusted data vulnerability in gs plugins gs pins for pinterest gs-pinterest-portfolio allows object injection.this issue affects gs pins for pinterest: from n/a through 1.9.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110370" target="_blank">CVE-2026-110370</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 05:16:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Deserialization of Untrusted Data vulnerability in GS Plugins GS Pins for Pinterest gs-pinterest-portfolio allows Object Injection.This issue affects GS Pins for Pinterest: from n/a through 1.9.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110369" data-description="deserialization of untrusted data vulnerability in gs plugins wordpress team members – gs plugins gs-team-members allows object injection.this issue affects wordpress team members – gs plugins: from n/a through 2.8.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110369" target="_blank">CVE-2026-110369</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 05:16:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Deserialization of Untrusted Data vulnerability in GS Plugins WordPress Team Members – GS Plugins gs-team-members allows Object Injection.This issue affects WordPress Team Members – GS Plugins: from n/a through 2.8.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-105923" data-description="a malicious svg can trigger an integer overflow which in turn triggers a null-pointer dereference in vectorimage qml type.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105923" target="_blank">CVE-2026-105923</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 05:16:54 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-58064" data-description="the redis protocol implementation in apache brpc allowed inline command parsing to allocate and copy the full connection buffer before a complete crlf-terminated command was available. a remote attacker with access to a redis-protocol brpc service could send long inline inputs without a terminating crlf to increase memory usage and cpu copy overhead, potentially causing denial of service.
+
+
+root cause:
+the redis inline command parser allocated memory based on the current input buffer size and copied the entire buffer before determining the current inline command boundary. the existing redis_max_allocation_size limit was applied to resp bulk strings and arrays, but not effectively to the inline command path before allocation.
+
+
+affected scenarios:
+use apache brpc server with redis protocol enabled and reachable by untrusted clients.
+
+
+how to fix:
+1. upgrade apache brpc to version 1.18.0, which fixes this issue.
+2. apply the patch from pr  https://github.com/apache/brpc/pull/3363 .
+
+
+note:
+the fix applies redis_max_allocation_size to redis inline command lines and scans for crlf before allocating parser arena memory. inline command lines exceeding this limit are rejected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58064" target="_blank">CVE-2026-58064</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A malicious SVG can trigger an integer overflow which in turn triggers a null-pointer dereference in VectorImage QML Type.</p>
+                    <p>The Redis protocol implementation in Apache bRPC allowed inline command parsing to allocate and copy the full connection buffer before a complete CRLF-terminated command was available. A remote attacker with access to a Redis-protocol bRPC service could send long inline inputs without a terminating CRLF to increase memory usage and CPU copy overhead, potentially causing denial of service.
+
+
+Root Cause:
+The Redis inline command parser allocated memory based on the current input buffer size and copied the entire buffer before determining the current inline command boundary. The existing redis_max_allocation_size limit was applied to RESP bulk strings and arrays, but not effectively to the inline command path before allocation.
+
+
+Affected Scenarios:
+Use Apache bRPC server with Redis protocol enabled and reachable by untrusted clients.
+
+
+How to Fix:
+1. Upgrade Apache bRPC to version 1.18.0, which fixes this issue.
+2. Apply the patch from PR  https://github.com/apache/brpc/pull/3363 .
+
+
+Note:
+The fix applies redis_max_allocation_size to Redis inline command lines and scans for CRLF before allocating parser arena memory. Inline command lines exceeding this limit are rejected.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-97206" data-description="nlnet labs unbound, 1.22.0 up to and including version 1.26.1, contains a dns-over-quic (doq) lifetime bug reachable by a remote doq client under multi-threaded operation. a client-triggered quic path migration can enter stream/connection cleanup while a mesh reply still retains a pointer to the doq stream. cleanup frees the doq stream and when the pending mesh reply later completes it dereferences a stale pointer leading to a crash.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97206" target="_blank">CVE-2026-97206</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>NLnet Labs Unbound, 1.22.0 up to and including version 1.26.1, contains a DNS-over-QUIC (DoQ) lifetime bug reachable by a remote DoQ client under multi-threaded operation. A client-triggered QUIC path migration can enter stream/connection cleanup while a mesh reply still retains a pointer to the DoQ stream. Cleanup frees the DoQ stream and when the pending mesh reply later completes it dereferences a stale pointer leading to a crash.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-96405" data-description="nlnet labs unbound up to and including version 1.26.1 limits compression-pointer traversal for each individual domain-name operation but has no aggregate inbound decompression-work budget. many chained compression pointers in a message results in a lot of cpu usage following them. a malicious actor with recursive-query access and control of an ordinarily delegated authority that serves specially crafted replies can exploit the vulnerability and degrade unbound's general performance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96405" target="_blank">CVE-2026-96405</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>NLnet Labs Unbound up to and including version 1.26.1 limits compression-pointer traversal for each individual domain-name operation but has no aggregate inbound decompression-work budget. Many chained compression pointers in a message results in a lot of CPU usage following them. A malicious actor with recursive-query access and control of an ordinarily delegated authority that serves specially crafted replies can exploit the vulnerability and degrade Unbound's general performance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85683" data-description="the jane menu wordpress plugin before 1.5.1 does not have any capability or nonce checks on one of its form handlers, which is reachable by unauthenticated users, allowing them to bind any published page to a remote document of their choosing. the plugin then fetches that document and outputs its head and body into the page without escaping, so an unauthenticated attacker can run arbitrary javascript in the browser of any visitor to that page, including an administrator.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85683" target="_blank">CVE-2026-85683</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The Jane Menu WordPress plugin before 1.5.1 does not have any capability or nonce checks on one of its form handlers, which is reachable by unauthenticated users, allowing them to bind any published page to a remote document of their choosing. The plugin then fetches that document and outputs its head and body into the page without escaping, so an unauthenticated attacker can run arbitrary JavaScript in the browser of any visitor to that page, including an administrator.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-70387" data-description="exposed dangerous method or function and incorrect authorization vulnerability in oneplus oxygenos on android. the olc2 logging hal exposes a binder method that fork()'s and calls execl("/vendor/bin/sh", "sh", "-c", cmd, null) with a caller-supplied command string. the only authorization check is getcallinguid() == 0. because selinux policy grants binder access to this hal to a wide client attribute, any uid-0 process in any of those domains (including dumpstate, which is reachable from an unprivileged app via vulnerability 1) obtains arbitrary command execution. the spawned shell lands in u:r:vendor_qti_init_shell:s0 selinux context via a policy type_transition, a domain holding all linux capabilities. this issue affects oxygenos: from 16.1.0 before 16.1.10.500, from 16.0.0 before 16.0.5.1200, and from 15.0.0 before 15.0.0.2000.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-70387" target="_blank">CVE-2026-70387</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:07 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56388" data-description="the redis server command parser in apache brpc accepts an empty resp array as a command header. a remote unauthenticated attacker who can reach a brpc server with redis service enabled can send an empty array header followed by a bulk string, causing an out-of-bounds write in the parser and crashing the process.
+
+root cause:
+rediscommandparser::consumeimpl rejected negative resp array counts but accepted zero. it resized the command argument vector to zero elements and continued parsing. when a following bulk string was parsed, the only index guard was a check. in configurations where fatal logs do not abort immediately, execution could continue and write to _args[0] even though the vector was empty.
+
+affected scenarios:
+deployments that enable serveroptions.redis_service and accept redis protocol traffic from untrusted clients. the issue is reached during parsing before command handling or authentication.
+
+how to fix:
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3354 
+
+note:
+the fix rejects empty resp arrays as invalid redis commands and replaces the internal index check with an explicit parse error so malformed command streams cannot fall through to an indexed vector write.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56388" target="_blank">CVE-2026-56388</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Exposed dangerous method or function and Incorrect Authorization vulnerability in OnePlus OxygenOS on Android. The olc2 logging HAL exposes a binder method that fork()'s and calls execl("/vendor/bin/sh", "sh", "-c", cmd, NULL) with a caller-supplied command string. The only authorization check is getCallingUid() == 0. Because SELinux policy grants binder access to this HAL to a wide client attribute, any uid-0 process in any of those domains (including dumpstate, which is reachable from an unprivileged app via Vulnerability 1) obtains arbitrary command execution. The spawned shell lands in u:r:vendor_qti_init_shell:s0 SELinux context via a policy type_transition, a domain holding all Linux capabilities. This issue affects OxygenOS: from 16.1.0 before 16.1.10.500, from 16.0.0 before 16.0.5.1200, and from 15.0.0 before 15.0.0.2000.</p>
+                    <p>The Redis server command parser in Apache bRPC accepts an empty RESP array as a command header. A remote unauthenticated attacker who can reach a bRPC server with Redis service enabled can send an empty array header followed by a bulk string, causing an out-of-bounds write in the parser and crashing the process.
+
+Root Cause:
+RedisCommandParser::ConsumeImpl rejected negative RESP array counts but accepted zero. It resized the command argument vector to zero elements and continued parsing. When a following bulk string was parsed, the only index guard was a CHECK. In configurations where fatal logs do not abort immediately, execution could continue and write to _args[0] even though the vector was empty.
+
+Affected Scenarios:
+Deployments that enable ServerOptions.redis_service and accept Redis protocol traffic from untrusted clients. The issue is reached during parsing before command handling or authentication.
+
+How to Fix:
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3354 
+
+Note:
+The fix rejects empty RESP arrays as invalid Redis commands and replaces the internal index CHECK with an explicit parse error so malformed command streams cannot fall through to an indexed vector write.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-70386" data-description="improper neutralization of special elements used in an os command ('os command injection') and missing authorization vulnerability in oneplus oxygenos on android. any locally installed android application, with no permissions declared 
-and no user interaction beyond launching it, can execute arbitrary shell
- commands as uid 0 in the u:r:dumpstate:s0 selinux domain. two defects 
-combine: (a) oneplus's atlasservice binder interface accepts 
-setevent(string8 name, string8 value) from any caller without 
-authorization, and (b) one event handler 
-(oplusatlaslogwriter::handleevent, matching event name 
-atlas_event_multimedia_audio_dumpsys) copies the caller-supplied value 
-into the system property oplus.audio.dumpinfo.type and starts the root 
-init service audiodumpinfo, which passes that property value unsanitized
- to system(). this issue affects oxygenos: from 16.1.0 before 16.1.10.500, from 16.0.0 before 16.0.5.1200, and from 15.0.0 before 15.0.0.2000.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-70386" target="_blank">CVE-2026-70386</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:07 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56387" data-description="the rtmp amf parser in apache brpc accepts amf string lengths and array counts directly from untrusted input. a remote unauthenticated attacker who can reach a brpc server with rtmp enabled can send a small amf payload with an excessive declared long string length or array count, causing excessive memory allocation or resource consumption before the parser rejects the incomplete payload.
+
+root cause:
+the amf long string parser resized the destination string to the declared 32-bit length before validating that the stream contained that many bytes. ecma array and strict array parsers also accepted 32-bit element counts without a configurable upper bound.
+
+affected scenarios:
+deployments that enable the brpc rtmp server component and accept rtmp traffic from untrusted clients. direct uses of the amf parser on untrusted data are also affected.
+
+how to fix:
+1. upgrade brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3353 
+
+note:
+the fix introduces configurable amf parsing limits. the default maximum string size is 64 mib and the default maximum array element count is 1,048,576. payloads above these limits are rejected. the limits can be adjusted with amf_max_string_size and amf_max_array_size.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56387" target="_blank">CVE-2026-56387</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper neutralization of special elements used in an OS command ('OS command injection') and Missing Authorization vulnerability in OnePlus OxygenOS on Android. Any locally installed Android application, with no permissions declared 
-and no user interaction beyond launching it, can execute arbitrary shell
- commands as uid 0 in the u:r:dumpstate:s0 SELinux domain. Two defects 
-combine: (a) OnePlus's atlasservice binder interface accepts 
-setEvent(String8 name, String8 value) from any caller without 
-authorization, and (b) one event handler 
-(OplusAtlasLogWriter::handleEvent, matching event name 
-atlas_event_multimedia_audio_dumpsys) copies the caller-supplied value 
-into the system property oplus.audio.dumpinfo.type and starts the root 
-init service audiodumpinfo, which passes that property value unsanitized
- to system(). This issue affects OxygenOS: from 16.1.0 before 16.1.10.500, from 16.0.0 before 16.0.5.1200, and from 15.0.0 before 15.0.0.2000.</p>
+                    <p>The RTMP AMF parser in Apache bRPC accepts AMF string lengths and array counts directly from untrusted input. A remote unauthenticated attacker who can reach a bRPC server with RTMP enabled can send a small AMF payload with an excessive declared long string length or array count, causing excessive memory allocation or resource consumption before the parser rejects the incomplete payload.
+
+Root Cause:
+The AMF long string parser resized the destination string to the declared 32-bit length before validating that the stream contained that many bytes. ECMA array and strict array parsers also accepted 32-bit element counts without a configurable upper bound.
+
+Affected Scenarios:
+Deployments that enable the bRPC RTMP server component and accept RTMP traffic from untrusted clients. Direct uses of the AMF parser on untrusted data are also affected.
+
+How to Fix:
+1. Upgrade bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3353 
+
+Note:
+The fix introduces configurable AMF parsing limits. The default maximum string size is 64 MiB and the default maximum array element count is 1,048,576. Payloads above these limits are rejected. The limits can be adjusted with amf_max_string_size and amf_max_array_size.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-50106" data-description="when nlnet labs unbound up to and including version 1.26.1 is configured with both a root trust anchor and an additional 'trust-anchor:' for an island-of-security zone whose parent is provably insecure under the root chain, a malicious actor who can deliver one forged nxdomain response for a name inside the island, with the nsec/soa rrsig 'signername' set to the insecure parent, tricks unbound's validator to use the root trust anchor instead, and consecutively the insecure parent, thus causing that record to be treated as insecure and denying existence for records in the trust island.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50106" target="_blank">CVE-2026-50106</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>When NLnet Labs Unbound up to and including version 1.26.1 is configured with both a root trust anchor and an additional 'trust-anchor:' for an island-of-security zone whose parent is provably insecure under the root chain, a malicious actor who can deliver one forged NXDOMAIN response for a name inside the island, with the NSEC/SOA RRSIG 'SignerName' set to the insecure parent, tricks Unbound's validator to use the root trust anchor instead, and consecutively the insecure parent, thus causing that record to be treated as insecure and denying existence for records in the trust island.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-35501" data-description="when nlnet labs unbound 1.0.1 up to and including version 1.26.1 is configured with both a root trust anchor and an additional 'trust-anchor:' for an island-of-security zone whose parent is provably insecure under the root chain, a malicious actor with a forged nsec reply with the soa bit cleared can trick unbound to treat the configured trust island as insecure. this happens because the dnssec validator in unbound accepts and caches the nsec insecure response bypassing the rrsig validation that the validator was supposed to do. the acceptance of the nsec record at the trust anchor apex was allowed due to and old fix for type ds and nsec queries from clients when trust anchor for that name existed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-35501" target="_blank">CVE-2026-35501</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>When NLnet Labs Unbound 1.0.1 up to and including version 1.26.1 is configured with both a root trust anchor and an additional 'trust-anchor:' for an island-of-security zone whose parent is provably insecure under the root chain, a malicious actor with a forged NSEC reply with the SOA bit cleared can trick Unbound to treat the configured trust island as insecure. This happens because the DNSSEC validator in Unbound accepts and caches the NSEC insecure response bypassing the RRSIG validation that the validator was supposed to do. The acceptance of the NSEC record at the trust anchor apex was allowed due to and old fix for type DS and NSEC queries from clients when trust anchor for that name existed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-14556" data-description="the happyforms wordpress plugin before 1.26.15 does not sanitise or escape a user-controlled referral value before embedding it in the form notification email, allowing unauthenticated attackers to inject arbitrary html into the emails site administrators receive.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-14556" target="_blank">CVE-2026-14556</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>The HappyForms WordPress plugin before 1.26.15 does not sanitise or escape a user-controlled referral value before embedding it in the form notification email, allowing unauthenticated attackers to inject arbitrary HTML into the emails site administrators receive.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-114236" data-description="storage/pkg/archive.applylayer and applyuncompressedlayer may, when processing corrupt or malicious inputs, leak a file descriptor; unbounded repeated calls can exhaust the process’ file descriptor
-limit">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114236" target="_blank">CVE-2026-114236</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>storage/pkg/archive.ApplyLayer and ApplyUncompressedLayer may, when processing corrupt or malicious inputs, leak a file descriptor; unbounded repeated calls can exhaust the process’ file descriptor
-limit</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110938" data-description="in eclipse openj9 versions up to 0.63.0, the jitserver component is vulnerable to denial of service due to improper boundary checks during protocol message and reply handling. an unauthenticated remote attacker or malicious jitserver can transmit malformed network payloads that cause out-of-bounds heap reads, immediately crashing the jitserver daemon or client jvm process via a segmentation fault (sigsegv).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110938" target="_blank">CVE-2026-110938</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:06 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-56386" data-description="integer underflow and out-of-bounds read in the http/2 server data frame parser in apache brpc allows an unauthenticated remote attacker to cause denial of service by sending a malformed data frame with the padded flag set and a zero-length payload.
+
+root cause:
+the http/2 data frame handler computed the fragment size from the attacker-controlled payload length and, when the padded flag was present, decremented the fragment size before ensuring that the frame contained the mandatory pad length byte. a zero-length padded data frame could therefore underflow the unsigned fragment size and read the pad length byte past the end of the frame buffer.
+
+affected scenarios:
+apache brpc servers that accept http/2 traffic are affected when a remote client can send crafted http/2 frames to the server. http/2 may be reached through cleartext h2c detection on an http port or through tls alpn negotiation.
+
+how to fix:
+(choose one of the following options)
+1. upgrade apache brpc to version 1.18.0, which fixes this issue.
+2. apply this patch:  https://github.com/apache/brpc/pull/3325 
+
+note:
+the fix validates that a padded data frame has enough payload bytes for the pad length field before decrementing the fragment size or reading the pad length byte. malformed zero-length padded data frames are rejected with http/2 frame_size_error.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56386" target="_blank">CVE-2026-56386</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:21 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In Eclipse OpenJ9 versions up to 0.63.0, the JITServer component is vulnerable to denial of service due to improper boundary checks during protocol message and reply handling. An unauthenticated remote attacker or malicious JITServer can transmit malformed network payloads that cause out-of-bounds heap reads, immediately crashing the JITServer daemon or client JVM process via a segmentation fault (SIGSEGV).</p>
+                    <p>Integer underflow and out-of-bounds read in the HTTP/2 server DATA frame parser in Apache bRPC allows an unauthenticated remote attacker to cause denial of service by sending a malformed DATA frame with the PADDED flag set and a zero-length payload.
+
+Root Cause:
+The HTTP/2 DATA frame handler computed the fragment size from the attacker-controlled payload length and, when the PADDED flag was present, decremented the fragment size before ensuring that the frame contained the mandatory pad length byte. A zero-length padded DATA frame could therefore underflow the unsigned fragment size and read the pad length byte past the end of the frame buffer.
+
+Affected Scenarios:
+Apache bRPC servers that accept HTTP/2 traffic are affected when a remote client can send crafted HTTP/2 frames to the server. HTTP/2 may be reached through cleartext h2c detection on an HTTP port or through TLS ALPN negotiation.
+
+How to Fix:
+(Choose one of the following options)
+1. Upgrade Apache bRPC to version 1.18.0, which fixes this issue.
+2. Apply this patch:  https://github.com/apache/brpc/pull/3325 
+
+Note:
+The fix validates that a padded DATA frame has enough payload bytes for the pad length field before decrementing the fragment size or reading the pad length byte. Malformed zero-length padded DATA frames are rejected with HTTP/2 FRAME_SIZE_ERROR.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-109125" data-description="in nlnet labs unbound up to and including version 1.26.1, an observable  cache-level side-channel can be exposed with 'unwanted-reply-threshold > 0' configurations (not a default configuration). if a response-like udp datagram reaches the upstream source port currently used by a recursive query, but its txid does not match any pending query, unbound counts the packet as an unwanted reply. when the accumulated count reaches the configured threshold, unbound clears the worker's rrset cache and message cache. this cache clear action does not destroy the current upstream udp pending query. therefore, an external observer can distinguish whether a candidate port matches the current upstream source port by checking whether an existing cached item has been cleared. this is a cache side-channel vulnerability that can be used to probe the upstream source port. although the attack is not feasible on default configurations and the suggested value (10 million) makes it an ureliable attack on a public resolver, in scenarios where the attacker can keep a concurrent query window alive, the attacker can first filter the source port and then perform birthday-style guessing against the txid, making cache poisoning a feasible attack path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109125" target="_blank">CVE-2026-109125</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>In NLnet Labs Unbound up to and including version 1.26.1, an observable  cache-level side-channel can be exposed with 'unwanted-reply-threshold > 0' configurations (not a default configuration). If a response-like UDP datagram reaches the upstream source port currently used by a recursive query, but its TXID does not match any pending query, Unbound counts the packet as an unwanted reply. When the accumulated count reaches the configured threshold, Unbound clears the worker's RRset cache and message cache. This cache clear action does not destroy the current upstream UDP pending query. Therefore, an external observer can distinguish whether a candidate port matches the current upstream source port by checking whether an existing cached item has been cleared. This is a cache side-channel vulnerability that can be used to probe the upstream source port. Although the attack is not feasible on default configurations and the suggested value (10 million) makes it an ureliable attack on a public resolver, in scenarios where the attacker can keep a concurrent query window alive, the attacker can first filter the source port and then perform birthday-style guessing against the TXID, making cache poisoning a feasible attack path.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-107447" data-description="the contest gallery wordpress plugin before 34.0.1 does not reliably validate the visitor identity used to enforce its one-vote-per-entry restriction, trusting a client-supplied request header and an unbound client-generated token, which allows unauthenticated users to bypass the restriction and cast multiple votes for the same contest entry, inflating its vote total.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107447" target="_blank">CVE-2026-107447</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-21 04:17:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>The Contest Gallery WordPress plugin before 34.0.1 does not reliably validate the visitor identity used to enforce its one-vote-per-entry restriction, trusting a client-supplied request header and an unbound client-generated token, which allows unauthenticated users to bypass the restriction and cast multiple votes for the same contest entry, inflating its vote total.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-54427" data-description="uncontrolled recursion in the amf parser in apache brpc < 1.18.0 allows a remote rtmp peer to crash a brpc process by sending deeply nested amf objects or arrays. the parser recursively processed nested amf containers without enforcing a depth limit, which could exhaust the native stack.
+
+affected scenarios:
+applications using brpc rtmp support and parsing amf data from an untrusted rtmp peer. this includes rtmp servers parsing client command messages, rtmp clients parsing server responses or status messages, and either side parsing inbound amf script data such as metadata or cue points. direct callers of readamfobject or readamfarray on untrusted input are also affected.
+
+how to fix:
+1. upgrade apache brpc to 1.18.0.
+2. apply the patch from pr  https://github.com/apache/brpc/pull/3344 .
+
+note:
+the fix introduces a configurable amf nesting depth limit with default value 128. amf objects or arrays deeper than amf_max_depth are rejected after applying the fix.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-54427" target="_blank">CVE-2026-54427</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-21 07:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Uncontrolled recursion in the AMF parser in Apache bRPC < 1.18.0 allows a remote RTMP peer to crash a bRPC process by sending deeply nested AMF objects or arrays. The parser recursively processed nested AMF containers without enforcing a depth limit, which could exhaust the native stack.
+
+Affected Scenarios:
+Applications using bRPC RTMP support and parsing AMF data from an untrusted RTMP peer. This includes RTMP servers parsing client command messages, RTMP clients parsing server responses or status messages, and either side parsing inbound AMF script data such as metadata or cue points. Direct callers of ReadAMFObject or ReadAMFArray on untrusted input are also affected.
+
+How to Fix:
+1. Upgrade Apache bRPC to 1.18.0.
+2. Apply the patch from PR  https://github.com/apache/brpc/pull/3344 .
+
+Note:
+The fix introduces a configurable AMF nesting depth limit with default value 128. AMF objects or arrays deeper than amf_max_depth are rejected after applying the fix.</p>
                 </div>
         
             </div>
