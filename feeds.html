@@ -34,6 +34,186 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-79982" data-description="the bluetooth hci usb transport class of the new usb device stack, subsys/usb/device_next/class/bt_hci.c, copies every controller-to-host hci packet into a usb transfer buffer before enqueuing it on an endpoint. bt_hci_tx_sync_in() allocated that buffer from bt_hci_ep_pool, a fixed pool whose slots are only usbd_max_bulk_mps bytes (64 on full-speed-only builds), and then performed net_buf_add_mem(buf, bt_buf->data, bt_buf->len) with no length check. hci event and acl buffers are sized by config_bt_buf_evt_rx_size and config_bt_buf_acl_rx_size and can be far larger, so the copy runs past the end of the 64-byte slot into the adjacent slots and into whatever follows the statically allocated pool.
+
+the device runs the local bluetooth controller in raw hci mode (config_bt_hci_raw), so the oversized packets originate over the air. with the hci buffer sizes recommended for full-featured controllers, an unauthenticated attacker within bluetooth range can supply the overflowing bytes: a connected peer that negotiates data length extension can send acl fragments up to config_bt_ctlr_data_length_max bytes, and an attacker that merely broadcasts extended advertising data reaches the same path through le extended advertising report events, which the controller fragments only to config_bt_buf_evt_rx_size. in the stock configuration the overflow is already reached without any radio traffic: the mandatory read supported commands command-complete event is 70 bytes and overruns the 64-byte slot by six bytes on every host initialization.
+
+because net_buf_add_mem() validates tailroom only through an assertion unless config_net_buf_hardening is enabled, builds with config_assert=n — the usual production setting — silently corrupt memory adjacent to the usb buffer pool with attacker-chosen contents, which on a target without memory protection between subsystems can lead to arbitrary code execution. builds with assertions enabled fail the assertion instead and panic, giving a remotely triggerable denial of service. the fix introduces a separate bt_hci_tx_pool sized to max(bt_buf_acl_rx_size, bt_buf_evt_rx_size) for the controller-to-host direction while leaving the host-to-device pool at the endpoint packet size, which is already bounds-checked during reassembly.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79982" target="_blank">CVE-2026-79982</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>The Bluetooth HCI USB transport class of the new USB device stack, subsys/usb/device_next/class/bt_hci.c, copies every controller-to-host HCI packet into a USB transfer buffer before enqueuing it on an endpoint. bt_hci_tx_sync_in() allocated that buffer from bt_hci_ep_pool, a fixed pool whose slots are only USBD_MAX_BULK_MPS bytes (64 on full-speed-only builds), and then performed net_buf_add_mem(buf, bt_buf->data, bt_buf->len) with no length check. HCI event and ACL buffers are sized by CONFIG_BT_BUF_EVT_RX_SIZE and CONFIG_BT_BUF_ACL_RX_SIZE and can be far larger, so the copy runs past the end of the 64-byte slot into the adjacent slots and into whatever follows the statically allocated pool.
+
+The device runs the local Bluetooth controller in raw HCI mode (CONFIG_BT_HCI_RAW), so the oversized packets originate over the air. With the HCI buffer sizes recommended for full-featured controllers, an unauthenticated attacker within Bluetooth range can supply the overflowing bytes: a connected peer that negotiates Data Length Extension can send ACL fragments up to CONFIG_BT_CTLR_DATA_LENGTH_MAX bytes, and an attacker that merely broadcasts extended advertising data reaches the same path through LE Extended Advertising Report events, which the controller fragments only to CONFIG_BT_BUF_EVT_RX_SIZE. In the stock configuration the overflow is already reached without any radio traffic: the mandatory Read Supported Commands command-complete event is 70 bytes and overruns the 64-byte slot by six bytes on every host initialization.
+
+Because net_buf_add_mem() validates tailroom only through an assertion unless CONFIG_NET_BUF_HARDENING is enabled, builds with CONFIG_ASSERT=n — the usual production setting — silently corrupt memory adjacent to the USB buffer pool with attacker-chosen contents, which on a target without memory protection between subsystems can lead to arbitrary code execution. Builds with assertions enabled fail the assertion instead and panic, giving a remotely triggerable denial of service. The fix introduces a separate bt_hci_tx_pool sized to MAX(BT_BUF_ACL_RX_SIZE, BT_BUF_EVT_RX_SIZE) for the controller-to-host direction while leaving the host-to-device pool at the endpoint packet size, which is already bounds-checked during reassembly.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79981" data-description="the dns stub resolver in subsys/net/lib/dns/resolve.c binds one udp socket per configured server when the resolver context is initialised (dns_resolve_init_locked() -> register_dispatcher() -> dns_dispatcher_register()), with the local port left at 0 so the stack picks an ephemeral port exactly once. dns_write() then sends every subsequent query from that same socket without re-binding, so the source port is constant for the lifetime of the resolver context while only the 16-bit transaction identifier (ctx->queries[i].id, drawn with sys_rand16_get()) varies per query. rfc 5452 section 9.2 requires both to vary; with a fixed port, an off-path attacker has to guess only the identifier.
+
+the stable port is cheap to learn. any single observed query reveals it permanently, and it can also be found by probing the ephemeral udp range: subsys/net/ip/connection.c answers unmatched unicast udp with an icmp port-unreachable, so the resolver's socket is the one port in that range that stays silent. acceptance of a reply is decided solely by get_slot_by_id() matching the transaction identifier and a crc-16 of the queried name — the reply's source address is never checked (dispatcher_cb() does arg_unused(addr)), so forged answers need not even be spoofed to appear to come from the configured server; they only need to reach the resolver's port.
+
+an attacker with udp reachability to the device (same lan, wi-fi or mesh segment, or a globally routable device address) can therefore flood answers for a predictable query name across the 16-bit identifier space during a query window and race the legitimate server. a win makes the application resolve an attacker-chosen address, and with config_dns_resolver_cache enabled the forged record is retained for its attacker-chosen ttl. the attack still requires winning that race, and applications that validate tls certificates for the resolved endpoint are largely protected.
+
+the fix draws a fresh local port before each query to a server that has nothing outstanding: dns_randomize_source_port() unregisters the dispatcher, closes and reopens the socket, and re-registers it bound to port 0 so the system selects a new port, raising the per-query guessing space from roughly 16 to roughly 31 bits. multicast dns and llmnr are excluded because their ports are protocol-fixed. the behaviour is controlled by config_dns_resolver_randomize_source_port (default y).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79981" target="_blank">CVE-2026-79981</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The DNS stub resolver in subsys/net/lib/dns/resolve.c binds one UDP socket per configured server when the resolver context is initialised (dns_resolve_init_locked() -> register_dispatcher() -> dns_dispatcher_register()), with the local port left at 0 so the stack picks an ephemeral port exactly once. dns_write() then sends every subsequent query from that same socket without re-binding, so the source port is constant for the lifetime of the resolver context while only the 16-bit transaction identifier (ctx->queries[i].id, drawn with sys_rand16_get()) varies per query. RFC 5452 section 9.2 requires both to vary; with a fixed port, an off-path attacker has to guess only the identifier.
+
+The stable port is cheap to learn. Any single observed query reveals it permanently, and it can also be found by probing the ephemeral UDP range: subsys/net/ip/connection.c answers unmatched unicast UDP with an ICMP port-unreachable, so the resolver's socket is the one port in that range that stays silent. Acceptance of a reply is decided solely by get_slot_by_id() matching the transaction identifier and a CRC-16 of the queried name — the reply's source address is never checked (dispatcher_cb() does ARG_UNUSED(addr)), so forged answers need not even be spoofed to appear to come from the configured server; they only need to reach the resolver's port.
+
+An attacker with UDP reachability to the device (same LAN, Wi-Fi or mesh segment, or a globally routable device address) can therefore flood answers for a predictable query name across the 16-bit identifier space during a query window and race the legitimate server. A win makes the application resolve an attacker-chosen address, and with CONFIG_DNS_RESOLVER_CACHE enabled the forged record is retained for its attacker-chosen TTL. The attack still requires winning that race, and applications that validate TLS certificates for the resolved endpoint are largely protected.
+
+The fix draws a fresh local port before each query to a server that has nothing outstanding: dns_randomize_source_port() unregisters the dispatcher, closes and reopens the socket, and re-registers it bound to port 0 so the system selects a new port, raising the per-query guessing space from roughly 16 to roughly 31 bits. Multicast DNS and LLMNR are excluded because their ports are protocol-fixed. The behaviour is controlled by CONFIG_DNS_RESOLVER_RANDOMIZE_SOURCE_PORT (default y).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79980" data-description="the dhcpv4 client in subsys/net/lib/dhcpv4/dhcpv4.c maintained its transaction identifier (iface->config.dhcpv4.xid) as a counter rather than as a per-transaction random value. it was seeded once with sys_rand32_get() in dhcpv4_start_internal(), incremented by one in dhcpv4_send_discover() and dhcpv4_send_decline(), and never changed by dhcpv4_send_request() — so every renewing and rebinding exchange reused, unchanged, the identifier that had already appeared on the wire in the broadcast dhcpdiscover at boot, and where the identifier did move it moved predictably by one. rfc 2131 4.1 requires a single identifier per transaction, chosen so that clients are unlikely to collide.
+
+this identifier is the client's only unpredictable reply-validation token. net_dhcpv4_input() accepts a bootp reply on op, a matching xid, and a matching chaddr (the interface mac, which is public); the udp callback is registered with a wildcard remote address and port, and no server-identifier or source-address check is applied. an attacker who learns one identifier — for example any host on the same segment that sees the broadcast dhcpdiscover, or a dhcp server or relay on a network the device previously joined — therefore retains a valid token for the device's whole uptime, and can predict the identifiers of later exchanges, without having to observe the unicast renew traffic or race the legitimate server.
+
+a forged reply that passes those checks has effect regardless of client state, because dhcpv4_parse_options() applies its side effects before the state machine gate in dhcpv4_handle_reply(): the router option calls net_if_ipv4_set_gw() and the dns option calls dns_resolve_reconfigure(). a single accepted datagram can thus repoint the device's default gateway and resolvers at attacker-controlled addresses, redirecting its traffic; during renewing or rebinding a forged dhcpack re-binds the lease with attacker-chosen parameters and a forged dhcpnak removes the address and restarts configuration.
+
+the fix draws a fresh sys_rand32_get() value at each point where a transaction begins — entering selecting, renewing and rebinding, and at the init/init-reboot entry taken when an interface with a lease goes down — while requesting and decline keep the identifier of the exchange they belong to, as rfc 2131 requires. as a side effect the client also no longer discards a slow server's offer after retransmitting a discover, and the initial-discover backoff now draws its own randomness instead of deriving it from the identifier.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79980" target="_blank">CVE-2026-79980</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.6</p>
+                    <p>The DHCPv4 client in subsys/net/lib/dhcpv4/dhcpv4.c maintained its transaction identifier (iface->config.dhcpv4.xid) as a counter rather than as a per-transaction random value. It was seeded once with sys_rand32_get() in dhcpv4_start_internal(), incremented by one in dhcpv4_send_discover() and dhcpv4_send_decline(), and never changed by dhcpv4_send_request() — so every RENEWING and REBINDING exchange reused, unchanged, the identifier that had already appeared on the wire in the broadcast DHCPDISCOVER at boot, and where the identifier did move it moved predictably by one. RFC 2131 4.1 requires a single identifier per transaction, chosen so that clients are unlikely to collide.
+
+This identifier is the client's only unpredictable reply-validation token. net_dhcpv4_input() accepts a BOOTP reply on op, a matching xid, and a matching chaddr (the interface MAC, which is public); the UDP callback is registered with a wildcard remote address and port, and no server-identifier or source-address check is applied. An attacker who learns one identifier — for example any host on the same segment that sees the broadcast DHCPDISCOVER, or a DHCP server or relay on a network the device previously joined — therefore retains a valid token for the device's whole uptime, and can predict the identifiers of later exchanges, without having to observe the unicast renew traffic or race the legitimate server.
+
+A forged reply that passes those checks has effect regardless of client state, because dhcpv4_parse_options() applies its side effects before the state machine gate in dhcpv4_handle_reply(): the router option calls net_if_ipv4_set_gw() and the DNS option calls dns_resolve_reconfigure(). A single accepted datagram can thus repoint the device's default gateway and resolvers at attacker-controlled addresses, redirecting its traffic; during RENEWING or REBINDING a forged DHCPACK re-binds the lease with attacker-chosen parameters and a forged DHCPNAK removes the address and restarts configuration.
+
+The fix draws a fresh sys_rand32_get() value at each point where a transaction begins — entering SELECTING, RENEWING and REBINDING, and at the INIT/INIT-REBOOT entry taken when an interface with a lease goes down — while REQUESTING and DECLINE keep the identifier of the exchange they belong to, as RFC 2131 requires. As a side effect the client also no longer discards a slow server's offer after retransmitting a discover, and the initial-discover backoff now draws its own randomness instead of deriving it from the identifier.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79979" data-description="the arm64 mmu backend invalidates a single virtual address from the tlb with invalidate_tlb_page() in arch/arm64/core/mmu.c, which issued tlbi vae1{is} with an operand of virt >> 12. that operand encodes the asid in bits [63:48], so the invalidation only ever matched asid 0 (the kernel page tables) and global entries. memory domains, however, are allocated asids starting at 1 in arch_mem_domain_init(), and every domain-private leaf created by private_map() is mapped with mt_ng, i.e. non-global. a domain's cached translation therefore survived the invalidation.
+
+all callers of invalidate_tlb_page() are demand-paging paths. when the eviction algorithm reclaims a frame, page_frame_prepare_locked() in kernel/mmu.c calls arch_mem_page_out(), which marks the kernel leaf invalid, propagates the invalid descriptor into every domain via sync_domains(), and then flushes only asid 0. do_page_fault() immediately reuses the very same page frame for the incoming mapping through arch_mem_page_in(). a user thread that had already touched the evicted page — a k_mem_partition added with arch_mem_domain_partition_add(), or its own stack mapped by map_thread_stack() — retains a valid el0 read/write translation to that physical frame under its own asid.
+
+unprivileged code running in a user thread can drive memory pressure to force eviction and then keep accessing the stale address, obtaining read and write access to whatever the kernel subsequently placed in that frame: supervisor data, another memory domain's partition, or another thread's stack. this defeats the isolation that config_userspace is meant to enforce, allowing information disclosure and memory corruption up to full compromise of the system.
+
+the fix switches the implementation to tlbi vaae1{is}, which matches every asid and both global and non-global entries, so no domain-tagged translation survives a page out, dirty-bit update or access-flag clear. exploitation requires an arm64 build with both config_userspace and config_demand_paging enabled, an active backing store, and at least one demand-paged page that is also privately mapped into a user memory domain. the same commit additionally stops globalize_table() from stripping el0 permission and non-global attributes off domain-private leaves during paging synchronization, which previously caused user threads to lose access to their own partitions and stacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79979" target="_blank">CVE-2026-79979</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>The arm64 MMU backend invalidates a single virtual address from the TLB with invalidate_tlb_page() in arch/arm64/core/mmu.c, which issued TLBI VAE1{IS} with an operand of virt >> 12. That operand encodes the ASID in bits [63:48], so the invalidation only ever matched ASID 0 (the kernel page tables) and global entries. Memory domains, however, are allocated ASIDs starting at 1 in arch_mem_domain_init(), and every domain-private leaf created by private_map() is mapped with MT_NG, i.e. non-global. A domain's cached translation therefore survived the invalidation.
+
+All callers of invalidate_tlb_page() are demand-paging paths. When the eviction algorithm reclaims a frame, page_frame_prepare_locked() in kernel/mmu.c calls arch_mem_page_out(), which marks the kernel leaf invalid, propagates the invalid descriptor into every domain via sync_domains(), and then flushes only ASID 0. do_page_fault() immediately reuses the very same page frame for the incoming mapping through arch_mem_page_in(). A user thread that had already touched the evicted page — a k_mem_partition added with arch_mem_domain_partition_add(), or its own stack mapped by map_thread_stack() — retains a valid EL0 read/write translation to that physical frame under its own ASID.
+
+Unprivileged code running in a user thread can drive memory pressure to force eviction and then keep accessing the stale address, obtaining read and write access to whatever the kernel subsequently placed in that frame: supervisor data, another memory domain's partition, or another thread's stack. This defeats the isolation that CONFIG_USERSPACE is meant to enforce, allowing information disclosure and memory corruption up to full compromise of the system.
+
+The fix switches the implementation to TLBI VAAE1{IS}, which matches every ASID and both global and non-global entries, so no domain-tagged translation survives a page out, dirty-bit update or access-flag clear. Exploitation requires an arm64 build with both CONFIG_USERSPACE and CONFIG_DEMAND_PAGING enabled, an active backing store, and at least one demand-paged page that is also privately mapped into a user memory domain. The same commit additionally stops globalize_table() from stripping EL0 permission and non-global attributes off domain-private leaves during paging synchronization, which previously caused user threads to lose access to their own partitions and stacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79978" data-description="the rtio streaming completion callback adxl345_process_fifo_samples_cb() in drivers/sensor/adi/adxl345/adxl345_stream.c clamps the amount of fifo data it will report (read_len = min(fifo_bytes, buf_avail)) to the space actually returned by rtio_sqe_rx_buf(), but then queues one 6-byte bus read per hardware fifo entry at consecutive offsets from read_buf, bounded by the device-reported entry count rather than by the clamp. when the allocated buffer is smaller than a full batch, the driver writes up to 186 bytes past the end of the allocation; a companion defect left data->fifo_total_bytes un-reset at batch start, so an aborted or errored chain could leave a stale write offset that pushes the next batch's writes out of bounds as well.
+
+a short buffer is an expected, first-class outcome of the rtio allocator: rtio_block_pool_alloc() walks the requested size down one block at a time until a contiguous run is available, and the driver only demands sizeof(struct adxl345_fifo_data) + 6 bytes as its minimum. any streaming configuration whose mempool block granularity is smaller than a full fifo batch (204 bytes) — for example the sensor shell's rtio_define_with_mempool(sensor_read_rtio, 8, 8, 32, 64, 4) used by sensor stream <dev> on fifo_wm incl, or the 16-byte-block streaming example in the documentation — takes this path whenever the pool is fragmented or the consuming thread falls behind.
+
+the out-of-bounds writes are performed by the i2c/spi rtio backend (dma on many socs) into the shared rtio block pool, corrupting neighbouring live buffers or, for a pool smaller than one batch, memory beyond the pool itself. the written bytes are accelerometer samples and the destination follows the allocation, so there is no controllable corruption primitive: the realistic impact is silent corruption of other rtio consumers' data or a crash. reaching it requires a board with an interrupt-wired adxl345 built with config_adxl345_stream, plus buffer-pool starvation, which a co-resident local workload can induce but which also occurs spontaneously under load; there is no network, usb or radio path to this code.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79978" target="_blank">CVE-2026-79978</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.6</p>
+                    <p>The RTIO streaming completion callback adxl345_process_fifo_samples_cb() in drivers/sensor/adi/adxl345/adxl345_stream.c clamps the amount of FIFO data it will report (read_len = MIN(fifo_bytes, buf_avail)) to the space actually returned by rtio_sqe_rx_buf(), but then queues one 6-byte bus read per hardware FIFO entry at consecutive offsets from read_buf, bounded by the device-reported entry count rather than by the clamp. When the allocated buffer is smaller than a full batch, the driver writes up to 186 bytes past the end of the allocation; a companion defect left data->fifo_total_bytes un-reset at batch start, so an aborted or errored chain could leave a stale write offset that pushes the next batch's writes out of bounds as well.
+
+A short buffer is an expected, first-class outcome of the RTIO allocator: rtio_block_pool_alloc() walks the requested size down one block at a time until a contiguous run is available, and the driver only demands sizeof(struct adxl345_fifo_data) + 6 bytes as its minimum. Any streaming configuration whose mempool block granularity is smaller than a full FIFO batch (204 bytes) — for example the sensor shell's RTIO_DEFINE_WITH_MEMPOOL(sensor_read_rtio, 8, 8, 32, 64, 4) used by sensor stream <dev> on fifo_wm incl, or the 16-byte-block streaming example in the documentation — takes this path whenever the pool is fragmented or the consuming thread falls behind.
+
+The out-of-bounds writes are performed by the I2C/SPI RTIO backend (DMA on many SoCs) into the shared RTIO block pool, corrupting neighbouring live buffers or, for a pool smaller than one batch, memory beyond the pool itself. The written bytes are accelerometer samples and the destination follows the allocation, so there is no controllable corruption primitive: the realistic impact is silent corruption of other RTIO consumers' data or a crash. Reaching it requires a board with an interrupt-wired ADXL345 built with CONFIG_ADXL345_STREAM, plus buffer-pool starvation, which a co-resident local workload can induce but which also occurs spontaneously under load; there is no network, USB or radio path to this code.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79977" data-description="the wireguard vpn service in subsys/net/lib/wireguard/wg.c updated the peer endpoint from a message it could not authenticate. in handle_transport_data(), when the 32-bit receiver index of an incoming transport-data message matched no session, the code both scheduled a new handshake and copied the datagram's source address into peer->endpoint with memcpy(&peer->endpoint, peer_addr, sizeof(peer->endpoint)). because the receiver index is unknown, there is no key with which such a message could be verified, so the address written into peer->endpoint is entirely attacker-supplied. every other endpoint update in the implementation happens only after authentication — after the noise handshake in handle_handshake_init(), or after aead decryption plus the anti-replay check in wg_process_data_message().
+
+the wireguard listener is registered with net_udp_register() using no remote address or port filter and defaults to udp port 51820 (config_wireguard_port), and wg_ctrl_recv() resolves the peer by interface rather than by any cryptographic identity. any host able to send a udp datagram to that port can therefore reach the defect off-path, with no need to observe legitimate traffic: a 16-byte datagram carrying the transport-data type, zeroed reserved bytes and an arbitrary receiver index is sufficient. the vulnerable branch runs whenever the peer has neither a valid handshake nor a current keypair — the state at boot and after a session expires.
+
+a single spoofed datagram redirects peer->endpoint to an address of the attacker's choosing, and all subsequent handshake initiations, keepalives and encrypted data packets are sent there. the legitimate peer never receives the initiations and so never re-authenticates, and nothing resets the endpoint afterwards, leaving the tunnel persistently unusable on devices whose peer does not initiate handshakes itself. the attacker can also relay the redirected initiations to the real peer to place itself in the path of the tunnel, observing ciphertext and traffic metadata and selectively dropping packets. wireguard's end-to-end cryptography still prevents decryption or forgery of tunnel content, so the impact is loss of availability plus limited confidentiality, not key compromise.
+
+the fix removes the endpoint learning from this path entirely: the stale-session recovery is kept, but the handshake is sent only to an endpoint learnt from an authenticated message, falling back to the configured cfg_endpoint, and the message is dropped when neither is known. config_wireguard is marked experimental and is not enabled by default.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79977" target="_blank">CVE-2026-79977</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
+                    <p>The WireGuard VPN service in subsys/net/lib/wireguard/wg.c updated the peer endpoint from a message it could not authenticate. In handle_transport_data(), when the 32-bit receiver index of an incoming transport-data message matched no session, the code both scheduled a new handshake and copied the datagram's source address into peer->endpoint with memcpy(&peer->endpoint, peer_addr, sizeof(peer->endpoint)). Because the receiver index is unknown, there is no key with which such a message could be verified, so the address written into peer->endpoint is entirely attacker-supplied. Every other endpoint update in the implementation happens only after authentication — after the Noise handshake in handle_handshake_init(), or after AEAD decryption plus the anti-replay check in wg_process_data_message().
+
+The WireGuard listener is registered with net_udp_register() using no remote address or port filter and defaults to UDP port 51820 (CONFIG_WIREGUARD_PORT), and wg_ctrl_recv() resolves the peer by interface rather than by any cryptographic identity. Any host able to send a UDP datagram to that port can therefore reach the defect off-path, with no need to observe legitimate traffic: a 16-byte datagram carrying the transport-data type, zeroed reserved bytes and an arbitrary receiver index is sufficient. The vulnerable branch runs whenever the peer has neither a valid handshake nor a current keypair — the state at boot and after a session expires.
+
+A single spoofed datagram redirects peer->endpoint to an address of the attacker's choosing, and all subsequent handshake initiations, keepalives and encrypted data packets are sent there. The legitimate peer never receives the initiations and so never re-authenticates, and nothing resets the endpoint afterwards, leaving the tunnel persistently unusable on devices whose peer does not initiate handshakes itself. The attacker can also relay the redirected initiations to the real peer to place itself in the path of the tunnel, observing ciphertext and traffic metadata and selectively dropping packets. WireGuard's end-to-end cryptography still prevents decryption or forgery of tunnel content, so the impact is loss of availability plus limited confidentiality, not key compromise.
+
+The fix removes the endpoint learning from this path entirely: the stale-session recovery is kept, but the handshake is sent only to an endpoint learnt from an authenticated message, falling back to the configured cfg_endpoint, and the message is dropped when neither is known. CONFIG_WIREGUARD is marked experimental and is not enabled by default.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19741" data-description="zephyr's openthread integration defined config_openthread_joiner_pskd with default "j01nme" in modules/openthread/kconfig.thread (previously subsys/net/l2/openthread/kconfig, then subsys/net/l2/openthread/kconfig.thread). j01nme is the example joining device credential used throughout the public openthread and thread commissioning documentation, including zephyr's own samples/net/sockets/echo_client/readme.rst, so it is not a secret. a firmware image built with config_openthread_joiner_autostart=y that never overrode the pskd therefore shipped with a publicly known joining credential compiled in, with no build-time or run-time warning.
+
+the pskd is the only value that authenticates thread commissioning: joiner and commissioner run a dtls-psk handshake keyed on it, after which the commissioner supplies the full operational dataset. in ot_configure_instance() (modules/openthread/openthread.c), a device with no stored dataset calls otjoinerstart() with the configured pskd, and ot_joiner_start_handler() calls otthreadsetenabled() on success. an unauthenticated attacker within 802.15.4 radio range of an uncommissioned device (factory-fresh, after a factory reset, or after a settings erase) can run any stock thread commissioner registered with j01nme, complete the handshake, and hand the device an attacker-controlled operational dataset.
+
+the device then joins and enables thread on the attacker's mesh. the attacker becomes its router, seeing, dropping, injecting and spoofing all of the device's ipv6 traffic and impersonating the peers the application expects, while the device is cut off from the network it was meant to join and stays mis-provisioned until it is reset. only application-layer security with independently provisioned credentials survives. exposure is limited to builds that enable joiner autostart and leave the pskd unset; the option is not enabled by default and no in-tree sample uses the vulnerable combination.
+
+the fix removes the default from config_openthread_joiner_pskd and adds a build_assert() in modules/openthread/openthread.c, active only under config_openthread_joiner_autostart, that fails the build unless a 6-to-32-character pskd is configured. products should provision a per-device pskd from factory data and call otjoinerstart() from the application rather than relying on a credential compiled identically into every unit.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19741" target="_blank">CVE-2026-19741</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Zephyr's OpenThread integration defined CONFIG_OPENTHREAD_JOINER_PSKD with default "J01NME" in modules/openthread/Kconfig.thread (previously subsys/net/l2/openthread/Kconfig, then subsys/net/l2/openthread/Kconfig.thread). J01NME is the example Joining Device Credential used throughout the public OpenThread and Thread commissioning documentation, including Zephyr's own samples/net/sockets/echo_client/README.rst, so it is not a secret. A firmware image built with CONFIG_OPENTHREAD_JOINER_AUTOSTART=y that never overrode the PSKd therefore shipped with a publicly known joining credential compiled in, with no build-time or run-time warning.
+
+The PSKd is the only value that authenticates Thread commissioning: joiner and commissioner run a DTLS-PSK handshake keyed on it, after which the commissioner supplies the full operational dataset. In ot_configure_instance() (modules/openthread/openthread.c), a device with no stored dataset calls otJoinerStart() with the configured PSKd, and ot_joiner_start_handler() calls otThreadSetEnabled() on success. An unauthenticated attacker within 802.15.4 radio range of an uncommissioned device (factory-fresh, after a factory reset, or after a settings erase) can run any stock Thread commissioner registered with J01NME, complete the handshake, and hand the device an attacker-controlled operational dataset.
+
+The device then joins and enables Thread on the attacker's mesh. The attacker becomes its router, seeing, dropping, injecting and spoofing all of the device's IPv6 traffic and impersonating the peers the application expects, while the device is cut off from the network it was meant to join and stays mis-provisioned until it is reset. Only application-layer security with independently provisioned credentials survives. Exposure is limited to builds that enable joiner autostart and leave the PSKd unset; the option is not enabled by default and no in-tree sample uses the vulnerable combination.
+
+The fix removes the default from CONFIG_OPENTHREAD_JOINER_PSKD and adds a BUILD_ASSERT() in modules/openthread/openthread.c, active only under CONFIG_OPENTHREAD_JOINER_AUTOSTART, that fails the build unless a 6-to-32-character PSKd is configured. Products should provision a per-device PSKd from factory data and call otJoinerStart() from the application rather than relying on a credential compiled identically into every unit.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-115797" data-description="a weakness has been identified in tenda f6 12.02.01.73. affected is an unknown function of the component web management interface. executing a manipulation of the argument ecos_pw can lead to cleartext transmission of sensitive information. the attack may be launched remotely. this attack is characterized by high complexity. the exploitability is told to be difficult. the exploit has been made available to the public and could be used for attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115797" target="_blank">CVE-2026-115797</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>A weakness has been identified in Tenda F6 12.02.01.73. Affected is an unknown function of the component Web Management Interface. Executing a manipulation of the argument ecos_pw can lead to cleartext transmission of sensitive information. The attack may be launched remotely. This attack is characterized by high complexity. The exploitability is told to be difficult. The exploit has been made available to the public and could be used for attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-115796" data-description="a security flaw has been discovered in tenda f6 12.02.01.73. this impacts an unknown function of the component web management interface. performing a manipulation results in cross-site request forgery. the attack may be initiated remotely. the exploit has been released to the public and may be used for attacks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115796" target="_blank">CVE-2026-115796</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A security flaw has been discovered in Tenda F6 12.02.01.73. This impacts an unknown function of the component Web Management Interface. Performing a manipulation results in cross-site request forgery. The attack may be initiated remotely. The exploit has been released to the public and may be used for attacks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-115586" data-description="virtualenv is a tool for creating isolated virtual python environments. from 21.14.9 until 21.14.13, the bash bin/activate script can copy an attacker-controlled --prompt value into ps1 without escaping dollar signs or backticks when both promptvars and posix mode are disabled during activation. re-enabling promptvars, running set -o posix, or starting an interactive child bash that inherits the exported ps1 can then expand command substitution in the stored virtual_env_prompt value and execute commands as the user who activates the environment. this issue is fixed in version 21.14.13.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115586" target="_blank">CVE-2026-115586</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>virtualenv is a tool for creating isolated virtual python environments. From 21.14.9 until 21.14.13, the bash bin/activate script can copy an attacker-controlled --prompt value into PS1 without escaping dollar signs or backticks when both promptvars and POSIX mode are disabled during activation. Re-enabling promptvars, running set -o posix, or starting an interactive child bash that inherits the exported PS1 can then expand command substitution in the stored VIRTUAL_ENV_PROMPT value and execute commands as the user who activates the environment. This issue is fixed in version 21.14.13.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-115585" data-description="pypdf is a free and open-source pure-python pdf library. prior to 6.21.2, an incomplete remediation for repeated malformed cross-reference entries in ghsa-55h5-xmcq-c37v could still trigger a complete pdf stream reload during each recovery attempt even when a recovery cache was present, causing crafted cross-reference streams to produce long runtimes. this issue is fixed in version 6.21.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115585" target="_blank">CVE-2026-115585</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>pypdf is a free and open-source pure-python PDF library. Prior to 6.21.2, an incomplete remediation for repeated malformed cross-reference entries in GHSA-55h5-xmcq-c37v could still trigger a complete PDF stream reload during each recovery attempt even when a recovery cache was present, causing crafted cross-reference streams to produce long runtimes. This issue is fixed in version 6.21.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-115580" data-description="pypdf is a free and open-source pure-python pdf library. prior to 6.21.2, an attacker can craft a pdf with a standard cross-reference table whose declared entry count exceeds what the file can contain, causing excessive processing and long runtimes when the file is opened. this issue is fixed in version 6.21.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115580" target="_blank">CVE-2026-115580</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>pypdf is a free and open-source pure-python PDF library. Prior to 6.21.2, an attacker can craft a PDF with a standard cross-reference table whose declared entry count exceeds what the file can contain, causing excessive processing and long runtimes when the file is opened. This issue is fixed in version 6.21.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-115572" data-description="pypdf is a free and open-source pure-python pdf library. prior to 6.21.2, an attacker can craft a pdf that repeatedly references the same nonexistent indirect object, causing relevant file parts such as pages to trigger repeated full-file recovery loads and long runtimes when accessed. this issue is fixed in version 6.21.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115572" target="_blank">CVE-2026-115572</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 15:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>pypdf is a free and open-source pure-python PDF library. Prior to 6.21.2, an attacker can craft a PDF that repeatedly references the same nonexistent indirect object, causing relevant file parts such as pages to trigger repeated full-file recovery loads and long runtimes when accessed. This issue is fixed in version 6.21.2.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-91093" data-description="a potential security vulnerability has been identified in hp one agent for certain hp pc products, which might allow for escalation
                of privilege and/or arbitrary code execution. hp is releasing software updates to mitigate the potential vulnerability.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91093" target="_blank">CVE-2026-91093</a></h2>
@@ -106,182 +286,6 @@ multi model server is end of life and no fixed version is available. users shoul
 
 
 Multi Model Server is end of life and no fixed version is available. Users should discontinue use of Multi Model Server and migrate to a supported model serving solution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-115812" data-description="relative path traversal during model archive extraction in amazon web services multi model server 1.1.11 and earlier might allow remote actors to execute arbitrary code via a crafted model archive.
-
-
-
-multi model server is end of life and no fixed version is available. users should discontinue use of multi model server and migrate to a supported model serving solution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115812" target="_blank">CVE-2026-115812</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 13:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Relative path traversal during model archive extraction in Amazon Web Services Multi Model Server 1.1.11 and earlier might allow remote actors to execute arbitrary code via a crafted model archive.
-
-
-
-Multi Model Server is end of life and no fixed version is available. Users should discontinue use of Multi Model Server and migrate to a supported model serving solution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-115567" data-description="tokio is a runtime for writing applications with rust. in 1.54.0, a race condition between tokio::time::interval::poll_tick (including .tick().await) and the multi-threaded runtime's time driver could drop an internal timer entry without synchronizing with the driver thread that was firing it. the race caused a use-after-free on the timer's waker and task state in safe rust, which could produce assertion panics, task reference-count corruption, or heap memory corruption. this issue is fixed in 1.54.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115567" target="_blank">CVE-2026-115567</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 13:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Tokio is a runtime for writing applications with Rust. In 1.54.0, a race condition between tokio::time::Interval::poll_tick (including .tick().await) and the multi-threaded runtime's time driver could drop an internal timer entry without synchronizing with the driver thread that was firing it. The race caused a use-after-free on the timer's waker and task state in safe Rust, which could produce assertion panics, task reference-count corruption, or heap memory corruption. This issue is fixed in 1.54.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-110975" data-description="a flaw was found in kruize autotune. its rest api ships without an authentication layer, and the endpoints that return datasource configuration — the list-datasources endpoint (get /datasources) and the datasource-metadata endpoint — serialized datasource objects using a default gson configuration with no field-exclusion strategy. as a result, the authentication secrets stored for each configured monitoring datasource (basic-auth passwords, bearer tokens, api keys, and oauth2 client secrets) were returned in cleartext to any client able to reach the service. an attacker with network access to autotune could harvest these credentials and reuse them to authenticate to the backing monitoring stack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110975" target="_blank">CVE-2026-110975</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 13:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>A flaw was found in Kruize Autotune. Its REST API ships without an authentication layer, and the endpoints that return datasource configuration — the list-datasources endpoint (GET /datasources) and the datasource-metadata endpoint — serialized datasource objects using a default Gson configuration with no field-exclusion strategy. As a result, the authentication secrets stored for each configured monitoring datasource (basic-auth passwords, bearer tokens, API keys, and OAuth2 client secrets) were returned in cleartext to any client able to reach the service. An attacker with network access to Autotune could harvest these credentials and reuse them to authenticate to the backing monitoring stack.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-87901" data-description="improper sanitization in the registration module allows reflected cross-site scripting.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87901" target="_blank">CVE-2026-87901</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
-                    <p>Improper sanitization in the registration module allows reflected Cross-Site Scripting.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-115810" data-description="tandoor recipes before 2.7.0 contains a server-side request forgery vulnerability in the pestle importer that allows authenticated low-privileged users to force the server to issue get requests to arbitrary internal or external hosts by crafting a malicious image url in a pestle json import file. attackers can exploit the raw requests.get call in cookbook/integration/pestle.py, which bypasses the application's centralized requests-hardened ssrf filter, to reach internal-only endpoints, perform port/service discovery, and exfiltrate internal responses via the stored recipe image.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115810" target="_blank">CVE-2026-115810</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>Tandoor Recipes before 2.7.0 contains a server-side request forgery vulnerability in the Pestle importer that allows authenticated low-privileged users to force the server to issue GET requests to arbitrary internal or external hosts by crafting a malicious image URL in a Pestle JSON import file. Attackers can exploit the raw requests.get call in cookbook/integration/pestle.py, which bypasses the application's centralized requests-hardened SSRF filter, to reach internal-only endpoints, perform port/service discovery, and exfiltrate internal responses via the stored recipe image.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-106074" data-description="a flaw in node.js `crypto` causes the internal entropy caches used by `crypto.randomuuid()`, `crypto.randomuuidv7()`, and `crypto.randomint()` to be saved into user-land startup snapshots (`--build-snapshot`) and single executable applications built with `usesnapshot`.
-
-if any of these functions, or an api that relies on them such as `url.createobjecturl()`, is called while the snapshot is built, every process started from that snapshot returns the same values until the cache is refilled: up to 127 uuids and about 1,000 `randomint()` values. identifiers expected to be unique can collide across processes, and values issued by one process can be predicted by observing another.
-
-this vulnerability affects node.js **26.x**, **24.x**, and **22.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106074" target="_blank">CVE-2026-106074</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>A flaw in Node.js `crypto` causes the internal entropy caches used by `crypto.randomUUID()`, `crypto.randomUUIDv7()`, and `crypto.randomInt()` to be saved into user-land startup snapshots (`--build-snapshot`) and single executable applications built with `useSnapshot`.
-
-If any of these functions, or an API that relies on them such as `URL.createObjectURL()`, is called while the snapshot is built, every process started from that snapshot returns the same values until the cache is refilled: up to 127 UUIDs and about 1,000 `randomInt()` values. Identifiers expected to be unique can collide across processes, and values issued by one process can be predicted by observing another.
-
-This vulnerability affects Node.js **26.x**, **24.x**, and **22.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-106073" data-description="a flaw in node.js permission model filesystem enforcement leaves `fs.realpathsync()` without the required read permission checks. this is an incomplete fix of cve-2026-21715, which only covered `fs.realpathsync.native()`.
-
-as a result, code running under `--permission` with restricted `--allow-fs-read` can still use `fs.realpathsync()` to check file existence, resolve symlink targets, and enumerate filesystem paths outside of permitted directories.
-
-this vulnerability affects node.js **26.x**, **24.x**, and **22.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106073" target="_blank">CVE-2026-106073</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>A flaw in Node.js Permission Model filesystem enforcement leaves `fs.realpathSync()` without the required read permission checks. This is an incomplete fix of CVE-2026-21715, which only covered `fs.realpathSync.native()`.
-
-As a result, code running under `--permission` with restricted `--allow-fs-read` can still use `fs.realpathSync()` to check file existence, resolve symlink targets, and enumerate filesystem paths outside of permitted directories.
-
-This vulnerability affects Node.js **26.x**, **24.x**, and **22.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-106072" data-description="a flaw in node.js tls hostname verification allows a certificate with only a dns san to authenticate an ip endpoint when the client connects using a non-canonical ipv4 spelling, such as `0177.0.0.1`, `0x7f.0.0.1`, `2130706433` or `127.1`.
-
-`tls.checkserveridentity()` did not classify these hosts as ip addresses, but normalized them to their canonical form and matched the result against the certificate dns names. a certificate containing `dns:127.0.0.1` and no `ip address:127.0.0.1` san was therefore accepted, while the same certificate is correctly rejected for `127.0.0.1`. exploitation requires a certificate with a numeric dns san issued by a ca trusted by the client, and a platform resolver that accepts these spellings, such as glibc.
-
-this vulnerability affects node.js **26.x**, **24.x**, and **22.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106072" target="_blank">CVE-2026-106072</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
-                    <p>A flaw in Node.js TLS hostname verification allows a certificate with only a DNS SAN to authenticate an IP endpoint when the client connects using a non-canonical IPv4 spelling, such as `0177.0.0.1`, `0x7f.0.0.1`, `2130706433` or `127.1`.
-
-`tls.checkServerIdentity()` did not classify these hosts as IP addresses, but normalized them to their canonical form and matched the result against the certificate DNS names. A certificate containing `DNS:127.0.0.1` and no `IP Address:127.0.0.1` SAN was therefore accepted, while the same certificate is correctly rejected for `127.0.0.1`. Exploitation requires a certificate with a numeric DNS SAN issued by a CA trusted by the client, and a platform resolver that accepts these spellings, such as glibc.
-
-This vulnerability affects Node.js **26.x**, **24.x**, and **22.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-106071" data-description="a flaw in node.js permission model filesystem enforcement can grant access to paths that do not match a wildcard `--allow-fs-read` or `--allow-fs-write` rule.
-
-when the requested path is shorter than the prefix of a wildcard grant, the radix tree lookup stops comparing early and treats the path as a match. for example, `--allow-fs-read=/etc/passwd.*` also allows reading `/etc/passwd`. this requires the wildcard grant to sit directly under the root of the permission tree, for example when it is the only grant for that scope. this is a different root cause from cve-2026-58043.
-
-this vulnerability affects node.js **26.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106071" target="_blank">CVE-2026-106071</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.6</p>
-                    <p>A flaw in Node.js Permission Model filesystem enforcement can grant access to paths that do not match a wildcard `--allow-fs-read` or `--allow-fs-write` rule.
-
-When the requested path is shorter than the prefix of a wildcard grant, the radix tree lookup stops comparing early and treats the path as a match. For example, `--allow-fs-read=/etc/passwd.*` also allows reading `/etc/passwd`. This requires the wildcard grant to sit directly under the root of the permission tree, for example when it is the only grant for that scope. This is a different root cause from CVE-2026-58043.
-
-This vulnerability affects Node.js **26.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-106070" data-description="a flaw in the node.js `zlib.zipfile` api can cause it to return bytes that do not belong to the requested entry after the local and central header validation fails.
-
-when `zipentry.modified` is read on an archive whose local header does not match its central directory, either directly or while compacting the archive, the validation error is caught but the parsed local header is left cached without a content offset. a later content read then returns attacker-controlled bytes from the start of the file instead of rejecting the archive, and crc-32 verification still passes because the attacker controls the central directory crc. a node.js-based scanner can therefore approve different content from what another zip implementation extracts from the same archive.
-
-this vulnerability affects node.js **26.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106070" target="_blank">CVE-2026-106070</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>A flaw in the Node.js `zlib.ZipFile` API can cause it to return bytes that do not belong to the requested entry after the local and central header validation fails.
-
-When `zipEntry.modified` is read on an archive whose local header does not match its central directory, either directly or while compacting the archive, the validation error is caught but the parsed local header is left cached without a content offset. A later content read then returns attacker-controlled bytes from the start of the file instead of rejecting the archive, and CRC-32 verification still passes because the attacker controls the central directory CRC. A Node.js-based scanner can therefore approve different content from what another ZIP implementation extracts from the same archive.
-
-This vulnerability affects Node.js **26.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-106069" data-description="a flaw in node.js tls hostname verification can cause a server certificate to be validated against a different ip address than the one the client connected to, when the host is a non-canonical ipv4 literal with a leading zero, such as `0127.0.0.1`.
-
-`tls.checkserveridentity()` normalizes the host following the whatwg url rules, which read a leading-zero octet as octal (`0127.0.0.1` becomes `87.0.0.1`), while the connection is made through the operating system resolver, which on some platforms such as macos reads it as decimal (`127.0.0.1`). a server at the connected address can then be authenticated with a certificate issued for another ip address.
-
-this vulnerability affects node.js **26.x**, **24.x**, and **22.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106069" target="_blank">CVE-2026-106069</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>A flaw in Node.js TLS hostname verification can cause a server certificate to be validated against a different IP address than the one the client connected to, when the host is a non-canonical IPv4 literal with a leading zero, such as `0127.0.0.1`.
-
-`tls.checkServerIdentity()` normalizes the host following the WHATWG URL rules, which read a leading-zero octet as octal (`0127.0.0.1` becomes `87.0.0.1`), while the connection is made through the operating system resolver, which on some platforms such as macOS reads it as decimal (`127.0.0.1`). A server at the connected address can then be authenticated with a certificate issued for another IP address.
-
-This vulnerability affects Node.js **26.x**, **24.x**, and **22.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-105483" data-description="a flaw in node.js tls hostname verification allows a certificate without a matching ip address san to authenticate a connection to an ipv4 address when the host is written with non-ascii characters, such as fullwidth digits (`１２７.0.0.1`).
-
-`tls.checkserveridentity()` did not recognize such hosts as ip addresses, even though they normalize and resolve to a regular ipv4 address, and matched them against the certificate dns names and common name instead. a certificate containing `dns:127.0.0.1` or `dns:*.0.0.1` could therefore be accepted for an ip endpoint it was not issued for. this is a regression introduced after the fix for cve-2026-48618.
-
-this vulnerability affects node.js **26.x** and **24.x**.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105483" target="_blank">CVE-2026-105483</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>A flaw in Node.js TLS hostname verification allows a certificate without a matching IP address SAN to authenticate a connection to an IPv4 address when the host is written with non-ASCII characters, such as fullwidth digits (`１２７.0.0.1`).
-
-`tls.checkServerIdentity()` did not recognize such hosts as IP addresses, even though they normalize and resolve to a regular IPv4 address, and matched them against the certificate DNS names and Common Name instead. A certificate containing `DNS:127.0.0.1` or `DNS:*.0.0.1` could therefore be accepted for an IP endpoint it was not issued for. This is a regression introduced after the fix for CVE-2026-48618.
-
-This vulnerability affects Node.js **26.x** and **24.x**.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-105482" data-description="a flaw in node.js dns resolution allows hostnames containing a nul byte to be silently truncated by the dns.resolve*() functions and dns.reverse(). this is an incomplete fix of cve-2026-48930, which only covered dns.lookup() and the net/tls host options.
-
-because the name is passed to c-ares as a c string, resolving attacker.example\0.trusted.example queries attacker.example and returns its records without any error. applications that validate a hostname, for example against a domain allowlist, and then resolve it with dns.resolve*() can act on records for a different name than the one they validated.
-
-this vulnerability affects node.js 26.x, 24.x, and 22.x.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105482" target="_blank">CVE-2026-105482</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 12:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>A flaw in Node.js DNS resolution allows hostnames containing a NUL byte to be silently truncated by the dns.resolve*() functions and dns.reverse(). This is an incomplete fix of CVE-2026-48930, which only covered dns.lookup() and the net/tls host options.
-
-Because the name is passed to c-ares as a C string, resolving attacker.example\0.trusted.example queries attacker.example and returns its records without any error. Applications that validate a hostname, for example against a domain allowlist, and then resolve it with dns.resolve*() can act on records for a different name than the one they validated.
-
-This vulnerability affects Node.js 26.x, 24.x, and 22.x.</p>
                 </div>
         
             </div>
