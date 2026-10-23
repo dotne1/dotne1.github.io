@@ -34,670 +34,1136 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-98916" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99087" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-wifi: nl80211: check link is beaconing for color change
+dm-integrity: fix null pointer dereference when the 'r' flag is used
 
-when trying to do a color change, validate that the link is
-beaconing first, to avoid calling the driver with an invalid
-link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98916" target="_blank">CVE-2026-98916</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+if the dm-integrity device has the sb_flag_dirty_bitmap flag set and the
+user activates the device in the 'r' mode, a crash in dm_integrity_resume
+happens because the function attempts to read the journal containing the
+bitmap.
+
+this patch makes dm-integrity skip any writes to the device in
+dm_integrity_resume if the device is activated in the 'r' mode.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99087" target="_blank">CVE-2026-99087</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-wifi: nl80211: check link is beaconing for color change
+dm-integrity: fix NULL pointer dereference when the 'R' flag is used
 
-When trying to do a color change, validate that the link is
-beaconing first, to avoid calling the driver with an invalid
-link.</p>
+If the dm-integrity device has the SB_FLAG_DIRTY_BITMAP flag set and the
+user activates the device in the 'R' mode, a crash in dm_integrity_resume
+happens because the function attempts to read the journal containing the
+bitmap.
+
+This patch makes dm-integrity skip any writes to the device in
+dm_integrity_resume if the device is activated in the 'R' mode.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98915" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99086" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-media: video-i2c: use vb2_video_unregister_device on driver removal
+dm-integrity: validate the superblock on resume
 
-the driver uses vb2_fop_release() as its file release operation, so
-vb2_video_unregister_device() should be used instead of
-video_unregister_device() during driver removal.
+dm_integrity_resume() re-reads the superblock from the device so that it
+picks up the flags and the recalculate position. it performs no
+validation on the result, while the constructor validates the superblock
+it reads and sizes all the in-memory structures according to it. the user
+may modify the superblock on the underlying device while the dm-integrity
+device is suspended, so that the two no longer agree.
 
-this ensures that the vb2 queue is properly disconnected before the
-video device is unregistered.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98915" target="_blank">CVE-2026-98915</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+in particular, access_journal_data() shifts the journal entry index by
+ic->sb->log2_sectors_per_block, while ic->journal_section_sectors and the
+journal page list were computed with the value that was present at
+constructor time. increasing log2_sectors_per_block makes the index run
+past the end of the journal, and dm-integrity then writes 512 bytes
+through lowmem_page_address(null).
+
+snapshot the validated superblock in the constructor and refuse to resume
+if any of the fields that describe the on-disk geometry changed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99086" target="_blank">CVE-2026-99086</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-media: video-i2c: use vb2_video_unregister_device on driver removal
+dm-integrity: validate the superblock on resume
 
-The driver uses vb2_fop_release() as its file release operation, so
-vb2_video_unregister_device() should be used instead of
-video_unregister_device() during driver removal.
+dm_integrity_resume() re-reads the superblock from the device so that it
+picks up the flags and the recalculate position. It performs no
+validation on the result, while the constructor validates the superblock
+it reads and sizes all the in-memory structures according to it. The user
+may modify the superblock on the underlying device while the dm-integrity
+device is suspended, so that the two no longer agree.
 
-This ensures that the vb2 queue is properly disconnected before the
-video device is unregistered.</p>
+In particular, access_journal_data() shifts the journal entry index by
+ic->sb->log2_sectors_per_block, while ic->journal_section_sectors and the
+journal page list were computed with the value that was present at
+constructor time. Increasing log2_sectors_per_block makes the index run
+past the end of the journal, and dm-integrity then writes 512 bytes
+through lowmem_page_address(NULL).
+
+Snapshot the validated superblock in the constructor and refuse to resume
+if any of the fields that describe the on-disk geometry changed.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98914" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99085" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/amdgpu: cap atom command table nesting depth
+sched_ext: fix cpu hotplug hang when a dying cpu's tasks sit in the bpf scheduler
 
-cap nesting at 32 levels with execute_depth and
-return -eloop when exceeded.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98914" target="_blank">CVE-2026-98914</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+a cpu going down has to empty its own rq. its hotplug thread waits in
+sched_cpu_wait_empty() until nothing else is left, and the only thing that
+wakes it is balance_push(), which runs from __schedule() on the dying cpu
+and pushes off the migratable tasks the cpu picks.
+
+sched_ext breaks this. a task sitting on a user dsq or held by the bpf
+scheduler is still counted on its rq, but an inactive cpu no longer calls
+ops.dispatch() and can't pull the task back. the dying cpu goes idle with
+the task still counted, and one of two things happens:
+
+- another cpu consumes the task. the rq empties without a __schedule() on
+  the dying cpu, so the hotplug thread is never woken and cpu_down() hangs
+  holding cpu_hotplug_lock.
+- the task is affine only to the dying cpu. nothing can move it, and the
+  offline stalls until the watchdog ejects the bpf scheduler.
+
+when the rq goes offline, re-enqueue every task on it that isn't already on
+the local dsq. an enqueue on an offline rq lands on the local dsq, so the
+dying cpu itself picks the tasks and balance_push() pushes them off, the
+same as for the other sched classes. from then on no sched_ext path on
+another cpu can pull a task off the rq.
+
+ops.dispatch() currently stops as soon as the cpu goes inactive, and cpu
+hotplug then waits for an rcu grace period before taking the rq offline. a
+bpf-held task affine only to the dying cpu and preempted inside an rcu
+read-side critical section would block that grace period, and the rq would
+never go offline. test scx_rq_online directly so that ops.dispatch() keeps
+running until the rq goes offline. only the dying cpu's own hotplug thread
+clears the flag during teardown, and task_can_run_on_remote_rq() still keeps
+other rqs' tasks off the cpu.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99085" target="_blank">CVE-2026-99085</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/amdgpu: cap ATOM command table nesting depth
+sched_ext: Fix CPU hotplug hang when a dying CPU's tasks sit in the BPF scheduler
 
-Cap nesting at 32 levels with execute_depth and
-return -ELOOP when exceeded.</p>
+A CPU going down has to empty its own rq. Its hotplug thread waits in
+sched_cpu_wait_empty() until nothing else is left, and the only thing that
+wakes it is balance_push(), which runs from __schedule() on the dying CPU
+and pushes off the migratable tasks the CPU picks.
+
+sched_ext breaks this. A task sitting on a user DSQ or held by the BPF
+scheduler is still counted on its rq, but an inactive CPU no longer calls
+ops.dispatch() and can't pull the task back. The dying CPU goes idle with
+the task still counted, and one of two things happens:
+
+- Another CPU consumes the task. The rq empties without a __schedule() on
+  the dying CPU, so the hotplug thread is never woken and cpu_down() hangs
+  holding cpu_hotplug_lock.
+- The task is affine only to the dying CPU. Nothing can move it, and the
+  offline stalls until the watchdog ejects the BPF scheduler.
+
+When the rq goes offline, re-enqueue every task on it that isn't already on
+the local DSQ. An enqueue on an offline rq lands on the local DSQ, so the
+dying CPU itself picks the tasks and balance_push() pushes them off, the
+same as for the other sched classes. From then on no sched_ext path on
+another CPU can pull a task off the rq.
+
+ops.dispatch() currently stops as soon as the CPU goes inactive, and CPU
+hotplug then waits for an RCU grace period before taking the rq offline. A
+BPF-held task affine only to the dying CPU and preempted inside an RCU
+read-side critical section would block that grace period, and the rq would
+never go offline. Test SCX_RQ_ONLINE directly so that ops.dispatch() keeps
+running until the rq goes offline. Only the dying CPU's own hotplug thread
+clears the flag during teardown, and task_can_run_on_remote_rq() still keeps
+other rqs' tasks off the CPU.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98913" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99084" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: thunderx: fix ptp device ref leak in nicvf_probe()
+readdir: take no inode lock on an immutable directory
 
-cavium_ptp_get() acquires a reference to the ptp pci device
-through pci_get_device(). if any initialization step fails
-after cavium_ptp_get(), the ptp pci device reference is leaked.
-add a common error path to release the ptp reference before
-returning from probe failures.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98913" target="_blank">CVE-2026-98913</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+iterate_dir() takes the directory's i_rwsem shared and holds it across
+->iterate_shared(). for a directory that never has an entry and is
+never removed the lock keeps nothing still, it only orders every reader
+and every writer of that inode behind each other.
+
+for the directory of a nullfs instance that matters. the instance of
+the initial mount namespace is the root of every empty mount namespace
+and the private instance is the root of every kernel thread, so one
+inode is shared across users who have nothing else in common. and a
+reader can hold the lock for as long as it likes: back the getdents()
+buffer with a mapping of a file on a fuse mount of your own, let the
+copy of "." and ".." fault and let the server wait. queue an exclusive
+taker behind it, a mkdir() in that directory goes through start_dirop()
+before the read-only mount is reported, and from then on every lookup
+that misses the dcache in that directory, every create and every mount
+on it waits until the server answers. one user of an empty mount
+namespace stalls all the others.
+
+add fop_immutable for the file operations of a directory that never
+changes and is never removed and let iterate_dir() skip the lock for
+it. the flag never changes for a file, ->f_pos is protected by
+f_pos_lock since directories are fmode_atomic_pos, is_deaddir can't be
+set on such a directory and neither touch_atime() nor fsnotify take
+i_rwsem. set it on the nullfs directory. the placeholder directories of
+libfs never have an entry either but their owners remove them, so they
+keep the lock.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99084" target="_blank">CVE-2026-99084</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: thunderx: fix PTP device ref leak in nicvf_probe()
+readdir: take no inode lock on an immutable directory
 
-cavium_ptp_get() acquires a reference to the PTP PCI device
-through pci_get_device(). If any initialization step fails
-after cavium_ptp_get(), the PTP PCI device reference is leaked.
-Add a common error path to release the PTP reference before
-returning from probe failures.</p>
+iterate_dir() takes the directory's i_rwsem shared and holds it across
+->iterate_shared(). For a directory that never has an entry and is
+never removed the lock keeps nothing still, it only orders every reader
+and every writer of that inode behind each other.
+
+For the directory of a nullfs instance that matters. The instance of
+the initial mount namespace is the root of every empty mount namespace
+and the private instance is the root of every kernel thread, so one
+inode is shared across users who have nothing else in common. And a
+reader can hold the lock for as long as it likes: back the getdents()
+buffer with a mapping of a file on a FUSE mount of your own, let the
+copy of "." and ".." fault and let the server wait. Queue an exclusive
+taker behind it, a mkdir() in that directory goes through start_dirop()
+before the read-only mount is reported, and from then on every lookup
+that misses the dcache in that directory, every create and every mount
+on it waits until the server answers. One user of an empty mount
+namespace stalls all the others.
+
+Add FOP_IMMUTABLE for the file operations of a directory that never
+changes and is never removed and let iterate_dir() skip the lock for
+it. The flag never changes for a file, ->f_pos is protected by
+f_pos_lock since directories are FMODE_ATOMIC_POS, IS_DEADDIR can't be
+set on such a directory and neither touch_atime() nor fsnotify take
+i_rwsem. Set it on the nullfs directory. The placeholder directories of
+libfs never have an entry either but their owners remove them, so they
+keep the lock.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98912" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99083" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-alsa: seq: oss: reject reads that cannot fit the next event
+ksmbd: fix heap out-of-bounds write in krb5_authenticate()
 
-snd_seq_oss_read() checks whether the next queued oss sequencer event
-fits in the remaining userspace buffer before removing it from the read
-queue.
+in krb5_authenticate(), out_len is calculated to determine available
+headroom in response_buf for the incoming kerberos ap-rep token. however,
+when smb2_session_setup is processed as a non-first element of a compounded
+smb2 request, the calculation omits work->next_smb2_rsp_hdr_off.
 
-the check is inverted. it currently stops when the event is smaller than
-the remaining buffer, so a normal 4-byte event is not copied for an
-8-byte read buffer. conversely, an 8-byte event can be copied for a
-smaller read count.
+this causes out_len to overstate remaining buffer headroom by
+the cumulative size of prior responses in the compound chain. consequently,
+the length check in ksmbd_krb5_authenticate()
+(*out_len <= resp->spnego_blob_len) passes erroneously, allowing memcpy()
+to write the ap-rep blob past the end of response_buf into adjacent kernel
+heap memory.
 
-break only when the remaining userspace buffer is smaller than the next
-event, and report -einval if no complete event has been copied. this
-prevents an undersized read from looking like end-of-file while leaving
-the event queued for a later read with a large enough buffer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98912" target="_blank">CVE-2026-98912</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+fix this by subtracting work->next_smb2_rsp_hdr_off when computing out_len,
+ensuring it accurately reflects physical remaining buffer space.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99083" target="_blank">CVE-2026-99083</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ALSA: seq: oss: Reject reads that cannot fit the next event
+ksmbd: fix heap out-of-bounds write in krb5_authenticate()
 
-snd_seq_oss_read() checks whether the next queued OSS sequencer event
-fits in the remaining userspace buffer before removing it from the read
-queue.
+In krb5_authenticate(), out_len is calculated to determine available
+headroom in response_buf for the incoming Kerberos AP-REP token. However,
+when SMB2_SESSION_SETUP is processed as a non-first element of a compounded
+SMB2 request, the calculation omits work->next_smb2_rsp_hdr_off.
 
-The check is inverted. It currently stops when the event is smaller than
-the remaining buffer, so a normal 4-byte event is not copied for an
-8-byte read buffer. Conversely, an 8-byte event can be copied for a
-smaller read count.
+This causes out_len to overstate remaining buffer headroom by
+the cumulative size of prior responses in the compound chain. Consequently,
+the length check in ksmbd_krb5_authenticate()
+(*out_len <= resp->spnego_blob_len) passes erroneously, allowing memcpy()
+to write the AP-REP blob past the end of response_buf into adjacent kernel
+heap memory.
 
-Break only when the remaining userspace buffer is smaller than the next
-event, and report -EINVAL if no complete event has been copied. This
-prevents an undersized read from looking like end-of-file while leaving
-the event queued for a later read with a large enough buffer.</p>
+Fix this by subtracting work->next_smb2_rsp_hdr_off when computing out_len,
+ensuring it accurately reflects physical remaining buffer space.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98911" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99082" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-dpaa2-switch: fix the error path in dpaa2_switch_rx()
+kvm: x86: use active memslots for the per-vcpu mmio cache
 
-in case of an error in dpaa2_switch_rx(), the dpaa2_switch_free_fd()
-function is called in order to free the fd. this is incorrect since the
-dpaa2_switch_free_fd() is intended to be used on tx frame descriptors,
-meaning that it expects in the software annotation area of the fd data
-to find a valid skb pointer on which to call dev_kfree_skb().
+kvm tags the per-vcpu mmio cache with a memslot generation so that a
+memslot update invalidates cached mmio information.  both the fill and
+validation paths use kvm_memslots(), which unconditionally selects address
+space 0, even when the vcpu is running in smm and using address space 1.
 
-fix this by extracting the dma_unmap_page() from
-dpaa2_switch_build_linear_skb() directly into the dpaa2_switch_rx()
-function. this allows us to directly use free_pages() in case of an
-error before an skb was created and kfree_skb() afterwards.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98911" target="_blank">CVE-2026-98911</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+commit 56f17dd3fbc4 ("kvm: x86: fix stale mmio cache bug") added the
+memslot generation to the cache key so that a memslot update could not
+leave a stale entry valid.  when commit 699023e23965 ("kvm: x86: add smm
+to the mmu role, support smram address space") added the smm address space,
+these helpers were not converted to use the active memslots.
+
+consequently, an update to the smm memslots can leave an entry from the old
+smm address space apparently valid after the vcpu returns to the normal
+address space.  a guest can then cause an access to valid ram at the same
+gfn to be returned to userspace as kvm_exit_mmio.
+
+completing that exit through the vmm's ram address space writes the backing
+page without going through kvm's write-tracking path.  if the page backs a
+nested ept table, kvm can continue using shadow translations derived from
+the old contents.  the warn_on_once() in kvm_mmu_write_protect_fault()
+catches this invalid cache and memslot combination.
+
+use the vcpu's active memslots when caching and validating the entry.
+memslot generations are unique across address spaces, so the generation
+also distinguishes the normal and smm views.  this matches the mmio spte
+cache, which already uses kvm_vcpu_memslots().
+
+on an unpatched current-mainline kernel, a regression test that fills the
+cache in smm and updates only the smm memslots fails the intended ram write
+and triggers the kvm_mmu_write_protect_fault() warning.  with this change,
+the same test completes the ram write without a warning.  the x86/smm_test,
+set_memory_region_test, and memslot_modification_stress_test selftests also
+pass.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99082" target="_blank">CVE-2026-99082</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-dpaa2-switch: fix the error path in dpaa2_switch_rx()
+KVM: x86: Use active memslots for the per-vCPU MMIO cache
 
-In case of an error in dpaa2_switch_rx(), the dpaa2_switch_free_fd()
-function is called in order to free the FD. This is incorrect since the
-dpaa2_switch_free_fd() is intended to be used on Tx frame descriptors,
-meaning that it expects in the software annotation area of the FD data
-to find a valid skb pointer on which to call dev_kfree_skb().
+KVM tags the per-vCPU MMIO cache with a memslot generation so that a
+memslot update invalidates cached MMIO information.  Both the fill and
+validation paths use kvm_memslots(), which unconditionally selects address
+space 0, even when the vCPU is running in SMM and using address space 1.
 
-Fix this by extracting the dma_unmap_page() from
-dpaa2_switch_build_linear_skb() directly into the dpaa2_switch_rx()
-function. This allows us to directly use free_pages() in case of an
-error before an SKB was created and kfree_skb() afterwards.</p>
+Commit 56f17dd3fbc4 ("kvm: x86: fix stale mmio cache bug") added the
+memslot generation to the cache key so that a memslot update could not
+leave a stale entry valid.  When commit 699023e23965 ("KVM: x86: add SMM
+to the MMU role, support SMRAM address space") added the SMM address space,
+these helpers were not converted to use the active memslots.
+
+Consequently, an update to the SMM memslots can leave an entry from the old
+SMM address space apparently valid after the vCPU returns to the normal
+address space.  A guest can then cause an access to valid RAM at the same
+GFN to be returned to userspace as KVM_EXIT_MMIO.
+
+Completing that exit through the VMM's RAM address space writes the backing
+page without going through KVM's write-tracking path.  If the page backs a
+nested EPT table, KVM can continue using shadow translations derived from
+the old contents.  The WARN_ON_ONCE() in kvm_mmu_write_protect_fault()
+catches this invalid cache and memslot combination.
+
+Use the vCPU's active memslots when caching and validating the entry.
+Memslot generations are unique across address spaces, so the generation
+also distinguishes the normal and SMM views.  This matches the MMIO SPTE
+cache, which already uses kvm_vcpu_memslots().
+
+On an unpatched current-mainline kernel, a regression test that fills the
+cache in SMM and updates only the SMM memslots fails the intended RAM write
+and triggers the kvm_mmu_write_protect_fault() warning.  With this change,
+the same test completes the RAM write without a warning.  The x86/smm_test,
+set_memory_region_test, and memslot_modification_stress_test selftests also
+pass.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98910" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99081" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/amdkfd: unwind debug trap enable on copy_to_user failure
+bnxt_en: fix dma mapping length for padded small packets
 
-if kfd_dbg_trap_enable() fails while copying runtime_info to userspace,
-it had already activated the trap, set debug_trap_enabled, taken an extra
-process reference, and opened the debug event file. return -efault without
-unwinding that state, leaving inconsistent trap state and a refcount
-imbalance that could break later disable/enable.
+stefan fleischmann reported intel iommu dma read faults on bcm57412
+netxtreme-e nics when transmitting packets on vlan/macvlan interfaces:
 
-on copy_to_user failure, deactivate the trap and undo the rest of the
-enable setup before returning.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98910" target="_blank">CVE-2026-98910</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+  dmar: [dma read no_pasid] request device [18:00.0] fault addr 0xfc499000
+        [fault reason 0x06] pte read access is not set
+  bnxt_en 0000:18:00.0 eno1np0: abandoning msg {0xb4 0x41a} len: 0 due to firmware status: 0x2000001
+  ...
+  netdev watchdog: eno1np0 (bnxt_en): transmit queue 0 timed out
+
+the fault address (0xfc499000) is on an exact 4kb page boundary,
+pointing to a dma read buffer overrun.
+
+in bnxt_start_xmit(), packets smaller than bnxt_min_pkt_size (52 bytes),
+such as 42-byte untagged arp frames, are padded:
+
+    if (length < bnxt_min_pkt_size) {
+        pad = bnxt_min_pkt_size - length;
+        if (skb_pad(skb, pad))
+            goto tx_kick_pending;
+        length = bnxt_min_pkt_size;
+    }
+
+    mapping = dma_map_single(&pdev->dev, skb->data, len, dma_to_device);
+    ...
+    dma_unmap_len_set(tx_buf, len, len);
+
+however, 'len' was initialized earlier to skb_headlen(skb) (e.g. 42 bytes)
+and is left unadjusted after padding. consequently, dma_map_single() and
+dma_unmap_len_set() map and track only 42 bytes.
+
+later, the hardware tx buffer descriptor is programmed with the padded length:
+
+    txbd->tx_bd_len_flags_type =
+        cpu_to_le32(((len + pad) << tx_bd_len_shift) | flags |
+                    tx_bd_flags_packet_end);
+
+the nic dma engine is thus instructed to read 52 bytes from a region where
+only 42 bytes were dma-mapped. if skb->data ends near the boundary of a 4kb
+page (within 'pad' bytes of the next page), the hardware dma read overruns
+into the unmapped adjacent page, triggering an iommu fault.
+
+this issue was exposed after commit 447cbe95ebb9 ("vlan: fix skb_under_panic
+and races when toggling hw vlan offload") because reserving extra vlan
+headroom rounded ll_reserved_space from 48 up to 64 bytes, shifting skb->data
+offsets and potentially causing small frames to land right against page
+boundaries.
+
+fix this by using skb_put_padto(skb, bnxt_min_pkt_size) in
+bnxt_start_xmit(), before skb_shinfo(skb)->nr_frags is sampled,
+because padding might linearize the skb.
+this ensures skb->len and skb_headlen(skb) reflect the padded size so
+that dma_map_single() maps the full buffer and the descriptor length is
+consistent. this also removes the temporary 'pad' variable and masking logic.
+
+the padding is done after the sw uso branch, otherwise
+bnxt_sw_udp_gso_xmit() would account the padding as udp payload
+and send it in extra segments.
+
+note that sw uso segments are still not padded: with ipv4, a segment
+carrying less than 10 bytes of udp payload (small gso_size, or a short
+last segment) is sent as a frame shorter than bnxt_min_pkt_size.
+this is a separate issue, left for a followup patch.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99081" target="_blank">CVE-2026-99081</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/amdkfd: Unwind debug trap enable on copy_to_user failure
+bnxt_en: fix DMA mapping length for padded small packets
 
-If kfd_dbg_trap_enable() fails while copying runtime_info to userspace,
-it had already activated the trap, set debug_trap_enabled, taken an extra
-process reference, and opened the debug event file. Return -EFAULT without
-unwinding that state, leaving inconsistent trap state and a refcount
-imbalance that could break later DISABLE/ENABLE.
+Stefan Fleischmann reported Intel IOMMU DMA Read faults on BCM57412
+NetXtreme-E NICs when transmitting packets on VLAN/macvlan interfaces:
 
-On copy_to_user failure, deactivate the trap and undo the rest of the
-enable setup before returning.</p>
+  DMAR: [DMA Read NO_PASID] Request device [18:00.0] fault addr 0xfc499000
+        [fault reason 0x06] PTE Read access is not set
+  bnxt_en 0000:18:00.0 eno1np0: Abandoning msg {0xb4 0x41a} len: 0 due to firmware status: 0x2000001
+  ...
+  NETDEV WATCHDOG: eno1np0 (bnxt_en): transmit queue 0 timed out
+
+The fault address (0xfc499000) is on an exact 4KB page boundary,
+pointing to a DMA read buffer overrun.
+
+In bnxt_start_xmit(), packets smaller than BNXT_MIN_PKT_SIZE (52 bytes),
+such as 42-byte untagged ARP frames, are padded:
+
+    if (length < BNXT_MIN_PKT_SIZE) {
+        pad = BNXT_MIN_PKT_SIZE - length;
+        if (skb_pad(skb, pad))
+            goto tx_kick_pending;
+        length = BNXT_MIN_PKT_SIZE;
+    }
+
+    mapping = dma_map_single(&pdev->dev, skb->data, len, DMA_TO_DEVICE);
+    ...
+    dma_unmap_len_set(tx_buf, len, len);
+
+However, 'len' was initialized earlier to skb_headlen(skb) (e.g. 42 bytes)
+and is left unadjusted after padding. Consequently, dma_map_single() and
+dma_unmap_len_set() map and track only 42 bytes.
+
+Later, the hardware TX buffer descriptor is programmed with the padded length:
+
+    txbd->tx_bd_len_flags_type =
+        cpu_to_le32(((len + pad) << TX_BD_LEN_SHIFT) | flags |
+                    TX_BD_FLAGS_PACKET_END);
+
+The NIC DMA engine is thus instructed to read 52 bytes from a region where
+only 42 bytes were DMA-mapped. If skb->data ends near the boundary of a 4KB
+page (within 'pad' bytes of the next page), the hardware DMA read overruns
+into the unmapped adjacent page, triggering an IOMMU fault.
+
+This issue was exposed after commit 447cbe95ebb9 ("vlan: fix skb_under_panic
+and races when toggling HW VLAN offload") because reserving extra VLAN
+headroom rounded LL_RESERVED_SPACE from 48 up to 64 bytes, shifting skb->data
+offsets and potentially causing small frames to land right against page
+boundaries.
+
+Fix this by using skb_put_padto(skb, BNXT_MIN_PKT_SIZE) in
+bnxt_start_xmit(), before skb_shinfo(skb)->nr_frags is sampled,
+because padding might linearize the skb.
+This ensures skb->len and skb_headlen(skb) reflect the padded size so
+that dma_map_single() maps the full buffer and the descriptor length is
+consistent. This also removes the temporary 'pad' variable and masking logic.
+
+The padding is done after the SW USO branch, otherwise
+bnxt_sw_udp_gso_xmit() would account the padding as UDP payload
+and send it in extra segments.
+
+Note that SW USO segments are still not padded: with IPv4, a segment
+carrying less than 10 bytes of UDP payload (small gso_size, or a short
+last segment) is sent as a frame shorter than BNXT_MIN_PKT_SIZE.
+This is a separate issue, left for a followup patch.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98909" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99080" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: cpsw_new: unregister devlink on port registration failure
+fs: free any excess xarray nodes in clear_inode()
 
-cpsw_probe() registers devlink before registering the cpsw ports.
-
-if cpsw_register_ports() fails, the error path only unregisters the
-notifiers and then releases the lower level resources. it does not undo
-the successful cpsw_register_devlink() call, leaving the devlink instance
-and its parameters registered after probe has failed.
-
-add a devlink cleanup label for the path where devlink registration has
-already succeeded, and use it when port registration fails.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98909" target="_blank">CVE-2026-98909</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:25 CDT</p>
+for many years we've had a hard to hit leak of xarray nodes.  hugh
+documented it well in commit 786b31121a2c.  recently people and
+syzbot have found ways to force it to happen with madvise.  rather
+than fix the leaks where they happen, just call xa_destroy() which
+has the side-effect of cycling the i_pages lock.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99080" target="_blank">CVE-2026-99080</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: cpsw_new: unregister devlink on port registration failure
+fs: Free any excess xarray nodes in clear_inode()
 
-cpsw_probe() registers devlink before registering the CPSW ports.
-
-If cpsw_register_ports() fails, the error path only unregisters the
-notifiers and then releases the lower level resources. It does not undo
-the successful cpsw_register_devlink() call, leaving the devlink instance
-and its parameters registered after probe has failed.
-
-Add a devlink cleanup label for the path where devlink registration has
-already succeeded, and use it when port registration fails.</p>
+For many years we've had a hard to hit leak of xarray nodes.  Hugh
+documented it well in commit 786b31121a2c.  Recently people and
+syzbot have found ways to force it to happen with madvise.  Rather
+than fix the leaks where they happen, just call xa_destroy() which
+has the side-effect of cycling the i_pages lock.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98908" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99079" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: microchip: sparx5: clean up psfp resources on flower setup failure
+net/mlx5e: prevent stale xsk buffer release on refill retry
 
-sparx5_tc_flower_psfp_setup() allocates psfp stream gate, flow meter and
-stream filter resources before adding vcap actions. if a later step
-fails, the resources allocated earlier in the function are not unwound.
+when an xdp redirect to an af_xdp socket fails because its rx ring is
+full, the xsk core frees the buffer. during the subsequent batched refill
+of a legacy cyclic rq, mlx5e also releases the wqe's xsk buffer before
+allocating a replacement. if that refill succeeds only partially, a wqe
+left without a replacement retains its old buffer pointer.
 
-add error paths to release the stream filter, flow meter and stream gate
-when setup fails after they have been acquired.
+the buffer can meanwhile be allocated to another wqe. a later refill
+retry can then free the live buffer through the stale pointer and publish
+the same umem frame twice.
 
-also make sparx5_psfp_fm_add() return the acquired flow-meter id before
-the existing-flow-meter early return. when an existing flow meter is
-reused, sparx5_psfp_fm_get() increments its pool reference count, but the
-caller previously kept psfp_fmid as 0. if a later setup step failed, the
-error path could try to delete flow-meter id 0 instead of the reused flow
-meter, leaving the incremented reference behind.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98908" target="_blank">CVE-2026-98908</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+mark the wqe as released immediately after the driver-side free. the flag
+is already cleared when a replacement buffer is assigned, so refill
+retries no longer release stale pointers.
+
+the failure is silent and produces no kernel warning or splat. a
+standalone legacy cyclic-rq zero-copy libxsk reproducer, using 64-byte udp
+traffic offered at 12 mpps, detected it: stock stopped after 2,854,914
+packets in 4.094 seconds, with 4,542 xdp_rx_ring_full events and 64
+ownership/double-publication errors. with this change it processed
+356,904,225 packets in 30 seconds despite 571,405 xdp_rx_ring_full events,
+with no ownership or data errors.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99079" target="_blank">CVE-2026-99079</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: microchip: sparx5: clean up PSFP resources on flower setup failure
+net/mlx5e: Prevent stale XSK buffer release on refill retry
 
-sparx5_tc_flower_psfp_setup() allocates PSFP stream gate, flow meter and
-stream filter resources before adding VCAP actions. If a later step
-fails, the resources allocated earlier in the function are not unwound.
+When an XDP redirect to an AF_XDP socket fails because its RX ring is
+full, the XSK core frees the buffer. During the subsequent batched refill
+of a legacy cyclic RQ, mlx5e also releases the WQE's XSK buffer before
+allocating a replacement. If that refill succeeds only partially, a WQE
+left without a replacement retains its old buffer pointer.
 
-Add error paths to release the stream filter, flow meter and stream gate
-when setup fails after they have been acquired.
+The buffer can meanwhile be allocated to another WQE. A later refill
+retry can then free the live buffer through the stale pointer and publish
+the same UMEM frame twice.
 
-Also make sparx5_psfp_fm_add() return the acquired flow-meter id before
-the existing-flow-meter early return. When an existing flow meter is
-reused, sparx5_psfp_fm_get() increments its pool reference count, but the
-caller previously kept psfp_fmid as 0. If a later setup step failed, the
-error path could try to delete flow-meter id 0 instead of the reused flow
-meter, leaving the incremented reference behind.</p>
+Mark the WQE as released immediately after the driver-side free. The flag
+is already cleared when a replacement buffer is assigned, so refill
+retries no longer release stale pointers.
+
+The failure is silent and produces no kernel warning or splat. A
+standalone legacy cyclic-RQ zero-copy libxsk reproducer, using 64-byte UDP
+traffic offered at 12 Mpps, detected it: stock stopped after 2,854,914
+packets in 4.094 seconds, with 4,542 xdp_rx_ring_full events and 64
+ownership/double-publication errors. With this change it processed
+356,904,225 packets in 30 seconds despite 571,405 xdp_rx_ring_full events,
+with no ownership or data errors.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98907" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99078" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-btrfs: protect sb_write_pointer() with invalidate lock
+net/mlx5e: prevent stale xsk buffer release on mpwqe refill retry
 
-sb_write_pointer() reads the super block from the block device page cache
-using read_cache_page_gfp(). this has the same race with blkbszset as the
-one fixed by commit 3f29d661e568 ("btrfs: sync read disk super and set
-block size").
+with af_xdp on a striding rq, mlx5e defers releasing xsk buffers until
+an mpwqe is refilled. if xsk allocation then returns -enomem,
+actual_wq_head is not advanced and a later napi poll retries the same
+wqe.
 
-take the mapping invalidate lock around read_cache_page_gfp() to
-serialize the read against block size changes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98907" target="_blank">CVE-2026-98907</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+mlx5e_free_rx_mpwqe() leaves each released slot marked as releasable. on
+retry it can therefore call xsk_buff_free() again through stale pointers
+after the frames have returned to the xsk pool and been reallocated.
+
+set all skip_release_bitmap bits in the common error path of
+mlx5e_xsk_alloc_rx_mpwqe(). this matches mlx5e_alloc_rx_mpwqe(). a
+successful allocation already clears the bitmap after replacing every
+buffer, so retries become idempotent without changing the success path.
+
+fault injection forced three consecutive failures for one selected mpwqe.
+both an early allocation failure and a partial 8-of-16-buffer unwind
+released the original 16 xsk buffers only once. each error left a full
+bitmap, the following napi retry skipped the release, and a later
+successful allocation cleared it. a 20-second af_xdp zero-copy pressure
+run exercised 1,575,262 buffer allocation failures without invalid
+descriptors, wqe errors, or kernel warnings.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99078" target="_blank">CVE-2026-99078</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-btrfs: protect sb_write_pointer() with invalidate lock
+net/mlx5e: Prevent stale XSK buffer release on MPWQE refill retry
 
-sb_write_pointer() reads the super block from the block device page cache
-using read_cache_page_gfp(). This has the same race with BLKBSZSET as the
-one fixed by commit 3f29d661e568 ("btrfs: sync read disk super and set
-block size").
+With AF_XDP on a striding RQ, mlx5e defers releasing XSK buffers until
+an MPWQE is refilled. If XSK allocation then returns -ENOMEM,
+actual_wq_head is not advanced and a later NAPI poll retries the same
+WQE.
 
-Take the mapping invalidate lock around read_cache_page_gfp() to
-serialize the read against block size changes.</p>
+mlx5e_free_rx_mpwqe() leaves each released slot marked as releasable. On
+retry it can therefore call xsk_buff_free() again through stale pointers
+after the frames have returned to the XSK pool and been reallocated.
+
+Set all skip_release_bitmap bits in the common error path of
+mlx5e_xsk_alloc_rx_mpwqe(). This matches mlx5e_alloc_rx_mpwqe(). A
+successful allocation already clears the bitmap after replacing every
+buffer, so retries become idempotent without changing the success path.
+
+Fault injection forced three consecutive failures for one selected MPWQE.
+Both an early allocation failure and a partial 8-of-16-buffer unwind
+released the original 16 XSK buffers only once. Each error left a full
+bitmap, the following NAPI retry skipped the release, and a later
+successful allocation cleared it. A 20-second AF_XDP zero-copy pressure
+run exercised 1,575,262 buffer allocation failures without invalid
+descriptors, WQE errors, or kernel warnings.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98906" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99077" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-net: lan966x: restore rx state on reload failure
+ipv4: udp: create exceptions before socket matching
 
-lan966x_fdma_reload() backs up rx->page_pool and rx->fdma before
-reallocating the rx resources for the new mtu. if the allocation fails,
-the restore path puts these fields back before restarting rx.
+currently, when icmp fragmentation needed and redirect message packets
+are locally delivered and quote a udp packet, a fib nexthop exception
+(fnhe) is only created if the kernel can match the udp packet to an
+existing socket.
 
-however, the reload path also updates rx->page_order and rx->max_mtu
-before calling lan966x_fdma_rx_alloc(). these fields are not restored on
-failure, so rx can be restarted with the old pages, old fdma state and
-old page pool, but with the page geometry from the failed new mtu.
+this behavior allows off-path attackers to conduct a side-channel attack
+on the fnhe cache in order to discover the ephemeral port used by a
+connected udp socket.
 
-this can make the xdp path advertise a frame size derived from the new
-page_order while the actual rx pages still come from the old allocation.
-for example, after a failed reload to a jumbo mtu, xdp_init_buff() may be
-called with a frame size larger than the restored rx pages.
+commit 6457378fe796 ("ipv4: use siphash instead of jenkins in
+fnhe_hashfun()") and commit 67d6d681e15b ("ipv4: make exception cache
+less predictible") tried to mitigate such attacks by making it harder
+for attackers to discover hash collisions in the fnhe cache and by
+randomizing the number of exceptions a hash bucket can hold,
+respectively. unfortunately, both of the mitigations can be bypassed.
 
-lan966x_fdma_rx_alloc_page_pool() also registers the newly allocated page
-pool with each port's xdp rxq before fdma_alloc_coherent() is called. if
-fdma_alloc_coherent() fails, the new page pool is destroyed, but the
-rollback path does not restore the per-port xdp rxq mem model
-registration either.
+instead, mitigate such attacks by always creating a fnhe, even before
+trying to find a matching socket. do that by calling ipv4_update_pmtu()
+and ipv4_redirect(), the helpers used when the quoted packet did not
+originate from a socket.
 
-save and restore rx->page_order and rx->max_mtu, and restore the old page
-pool registration for each port's xdp rxq before rx is started again.
-this keeps the restored rx state consistent after a failed reload.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98906" target="_blank">CVE-2026-98906</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+this means that guesses (right or wrong) from an off-path attacker will
+always result in a fnhe being created or updated in the cache that the
+attacker can observe.
+
+pass an oif of 0, in a similar fashion to icmp_err(). this is also the
+oif used by the socket path for sockets that are not bound to a device.
+
+note that this does not allow attackers to create fnhes that they could
+not create before, as both helpers can already be reached with little to
+no validation. for example, by sending an icmp error that quotes an icmp
+echo reply or one that quotes a udp source port that matches a wildcard
+socket.
+
+also note that in the good case (matched socket) the above scheme comes
+at the cost of an extra route lookup, as the no socket helpers perform
+their own lookup before the one performed by ipv4_sk_update_pmtu() /
+ipv4_sk_redirect(). when the two resolve to different nexthops, it also
+results in two exceptions being created for the same destination ip. one
+in the fnhe cache of the nexthop resolved by the no socket helpers and
+another in the fnhe cache of the nexthop used by the socket.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99077" target="_blank">CVE-2026-99077</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-net: lan966x: restore RX state on reload failure
+ipv4: udp: Create exceptions before socket matching
 
-lan966x_fdma_reload() backs up rx->page_pool and rx->fdma before
-reallocating the RX resources for the new MTU. If the allocation fails,
-the restore path puts these fields back before restarting RX.
+Currently, when ICMP Fragmentation Needed and Redirect Message packets
+are locally delivered and quote a UDP packet, a FIB nexthop exception
+(FNHE) is only created if the kernel can match the UDP packet to an
+existing socket.
 
-However, the reload path also updates rx->page_order and rx->max_mtu
-before calling lan966x_fdma_rx_alloc(). These fields are not restored on
-failure, so RX can be restarted with the old pages, old FDMA state and
-old page pool, but with the page geometry from the failed new MTU.
+This behavior allows off-path attackers to conduct a side-channel attack
+on the FNHE cache in order to discover the ephemeral port used by a
+connected UDP socket.
 
-This can make the XDP path advertise a frame size derived from the new
-page_order while the actual RX pages still come from the old allocation.
-For example, after a failed reload to a jumbo MTU, xdp_init_buff() may be
-called with a frame size larger than the restored RX pages.
+Commit 6457378fe796 ("ipv4: use siphash instead of Jenkins in
+fnhe_hashfun()") and commit 67d6d681e15b ("ipv4: make exception cache
+less predictible") tried to mitigate such attacks by making it harder
+for attackers to discover hash collisions in the FNHE cache and by
+randomizing the number of exceptions a hash bucket can hold,
+respectively. Unfortunately, both of the mitigations can be bypassed.
 
-lan966x_fdma_rx_alloc_page_pool() also registers the newly allocated page
-pool with each port's XDP RXQ before fdma_alloc_coherent() is called. If
-fdma_alloc_coherent() fails, the new page pool is destroyed, but the
-rollback path does not restore the per-port XDP RXQ mem model
-registration either.
+Instead, mitigate such attacks by always creating a FNHE, even before
+trying to find a matching socket. Do that by calling ipv4_update_pmtu()
+and ipv4_redirect(), the helpers used when the quoted packet did not
+originate from a socket.
 
-Save and restore rx->page_order and rx->max_mtu, and restore the old page
-pool registration for each port's XDP RXQ before RX is started again.
-This keeps the restored RX state consistent after a failed reload.</p>
+This means that guesses (right or wrong) from an off-path attacker will
+always result in a FNHE being created or updated in the cache that the
+attacker can observe.
+
+Pass an oif of 0, in a similar fashion to icmp_err(). This is also the
+oif used by the socket path for sockets that are not bound to a device.
+
+Note that this does not allow attackers to create FNHEs that they could
+not create before, as both helpers can already be reached with little to
+no validation. For example, by sending an ICMP error that quotes an ICMP
+Echo Reply or one that quotes a UDP source port that matches a wildcard
+socket.
+
+Also note that in the good case (matched socket) the above scheme comes
+at the cost of an extra route lookup, as the no socket helpers perform
+their own lookup before the one performed by ipv4_sk_update_pmtu() /
+ipv4_sk_redirect(). When the two resolve to different nexthops, it also
+results in two exceptions being created for the same destination IP. One
+in the FNHE cache of the nexthop resolved by the no socket helpers and
+another in the FNHE cache of the nexthop used by the socket.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98905" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99076" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/amdkfd: properly acquire queue buffers in criu restore
+ipv6: udp: create exceptions before socket matching
 
-when kfd_queue_acquire_buffers() was split off from
-set_queue_properties_from_user(), set_queue_properties_from_criu()
-was missed. thus, set_queue_properties_from_criu() is not
-filling out the buffer fields of queue_properties, which
-can come up when subsequent code expects them to be non-null.
+currently, when icmpv6 packet too big and redirect message packets are
+locally delivered and quote a udp packet, an exception is only created
+in the ipv6 exception cache if the kernel can match the udp packet to an
+existing socket.
 
-add the proper call to kfd_queue_acquire_buffers(), and also
-use the right cast types in set_queue_properties_from_criu()
-(which were missed at the same time)
+this behavior allows off-path attackers to conduct a side-channel attack
+on the exception cache in order to discover the ephemeral port used by a
+connected udp socket.
 
-(cherry picked from commit 88ed96abbbe27b70193544fbc1ee06448c274714)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98905" target="_blank">CVE-2026-98905</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+commit 4785305c05b2 ("ipv6: use siphash in rt6_exception_hash()") and
+commit a00df2caffed ("ipv6: make exception cache less predictible") tried
+to mitigate such attacks by making it harder for attackers to discover
+hash collisions in the exception cache and by randomizing the number of
+exceptions a hash bucket can hold, respectively. unfortunately, both of
+the mitigations can be bypassed.
+
+instead, mitigate such attacks by always creating an exception, even
+before trying to find a matching socket. do that by calling
+ip6_update_pmtu() and ip6_redirect(), the helpers used when the quoted
+packet did not originate from a socket.
+
+this means that guesses (right or wrong) from an off-path attacker will
+always result in an exception being created or updated in the cache that
+the attacker can observe.
+
+pass the ifindex of the ingress device and the default uid, in a similar
+fashion to icmpv6_err(). unlike ipv4, an oif of 0 would not match any
+nexthop in ip6_redirect_nh_match() and no exception would be created in
+response to a redirect message.
+
+note that this does not allow attackers to create exceptions that they
+could not create before, as both helpers can already be reached with
+little to no validation. for example, by sending an icmpv6 error that
+quotes an icmpv6 echo reply or one that quotes a udp source port that
+matches a wildcard socket.
+
+also note that in the good case (matched socket) the above scheme comes
+at the cost of an extra route lookup, as the no socket helpers perform
+their own lookup before the one performed by ip6_sk_update_pmtu() /
+ip6_sk_redirect(). when the two resolve to different nexthops, it also
+results in two exceptions being created for the same destination ip. one
+in the exception cache of the nexthop resolved by the no socket helpers
+and another in the exception cache of the nexthop used by the socket.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99076" target="_blank">CVE-2026-99076</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/amdkfd: Properly acquire queue buffers in CRIU restore
+ipv6: udp: Create exceptions before socket matching
 
-When kfd_queue_acquire_buffers() was split off from
-set_queue_properties_from_user(), set_queue_properties_from_criu()
-was missed. Thus, set_queue_properties_from_criu() is not
-filling out the buffer fields of queue_properties, which
-can come up when subsequent code expects them to be non-null.
+Currently, when ICMPv6 Packet Too Big and Redirect Message packets are
+locally delivered and quote a UDP packet, an exception is only created
+in the IPv6 exception cache if the kernel can match the UDP packet to an
+existing socket.
 
-Add the proper call to kfd_queue_acquire_buffers(), and also
-use the right cast types in set_queue_properties_from_criu()
-(which were missed at the same time)
+This behavior allows off-path attackers to conduct a side-channel attack
+on the exception cache in order to discover the ephemeral port used by a
+connected UDP socket.
 
-(cherry picked from commit 88ed96abbbe27b70193544fbc1ee06448c274714)</p>
+Commit 4785305c05b2 ("ipv6: use siphash in rt6_exception_hash()") and
+commit a00df2caffed ("ipv6: make exception cache less predictible") tried
+to mitigate such attacks by making it harder for attackers to discover
+hash collisions in the exception cache and by randomizing the number of
+exceptions a hash bucket can hold, respectively. Unfortunately, both of
+the mitigations can be bypassed.
+
+Instead, mitigate such attacks by always creating an exception, even
+before trying to find a matching socket. Do that by calling
+ip6_update_pmtu() and ip6_redirect(), the helpers used when the quoted
+packet did not originate from a socket.
+
+This means that guesses (right or wrong) from an off-path attacker will
+always result in an exception being created or updated in the cache that
+the attacker can observe.
+
+Pass the ifindex of the ingress device and the default uid, in a similar
+fashion to icmpv6_err(). Unlike IPv4, an oif of 0 would not match any
+nexthop in ip6_redirect_nh_match() and no exception would be created in
+response to a Redirect Message.
+
+Note that this does not allow attackers to create exceptions that they
+could not create before, as both helpers can already be reached with
+little to no validation. For example, by sending an ICMPv6 error that
+quotes an ICMPv6 Echo Reply or one that quotes a UDP source port that
+matches a wildcard socket.
+
+Also note that in the good case (matched socket) the above scheme comes
+at the cost of an extra route lookup, as the no socket helpers perform
+their own lookup before the one performed by ip6_sk_update_pmtu() /
+ip6_sk_redirect(). When the two resolve to different nexthops, it also
+results in two exceptions being created for the same destination IP. One
+in the exception cache of the nexthop resolved by the no socket helpers
+and another in the exception cache of the nexthop used by the socket.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98904" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99075" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-mailbox: imx: use devm_pm_runtime_enable()
+rust_binder: reschedule node refcount update on thread exit
 
-sashiko complained about early usage of the device while probe isn't
-completed. this can be mitigated by delaying the pm_runtime_enable()
-into the removal path instead doing it early. this ensures that in an
-error case the device is removed (and imx_mu_shutdown()) before
-pm_runtime_disable() so we don't have to do this manually.
+when a thread exits via binder_thread_exit, its pending work items are
+cancelled. if a thread exits while holding a pending node refcount
+increment (e.g. pushed as deferred work to that thread), the refcount
+increment was previously dropped because node::cancel() and
+nodewrapper::cancel() were no-ops.
 
-for the order to work, lets move devm_mbox_controller_register() until
-after the pm-runtime part. so the reverse order will be mbox-controller
-removal followed by disabling pm runtime.
+dropping the refcount update leaves the node's delivery state and count
+state desynchronized, and userspace will not receive the notification,
+which can cause the node to never be freed from the process's nodes tree
+when all external references are dropped.
 
-use devm_pm_runtime_enable(), remove manual pm_runtime_disable()
-invocations and move the pm_runtime handling in probe before
-devm_mbox_controller_register().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98904" target="_blank">CVE-2026-98904</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+fix this by implementing delivertoread::cancel() for node and nodewrapper
+to move the pending refcount update to the process's work queue on thread
+exit so another thread can deliver it to userspace.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99075" target="_blank">CVE-2026-99075</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-mailbox: imx: Use devm_pm_runtime_enable()
+rust_binder: reschedule node refcount update on thread exit
 
-sashiko complained about early usage of the device while probe isn't
-completed. This can be mitigated by delaying the pm_runtime_enable()
-into the removal path instead doing it early. This ensures that in an
-error case the device is removed (and imx_mu_shutdown()) before
-pm_runtime_disable() so we don't have to do this manually.
+When a thread exits via BINDER_THREAD_EXIT, its pending work items are
+cancelled. If a thread exits while holding a pending node refcount
+increment (e.g. pushed as deferred work to that thread), the refcount
+increment was previously dropped because Node::cancel() and
+NodeWrapper::cancel() were no-ops.
 
-For the order to work, lets move devm_mbox_controller_register() until
-after the pm-runtime part. So the reverse order will be mbox-controller
-removal followed by disabling pm runtime.
+Dropping the refcount update leaves the node's delivery state and count
+state desynchronized, and userspace will not receive the notification,
+which can cause the node to never be freed from the process's nodes tree
+when all external references are dropped.
 
-Use devm_pm_runtime_enable(), remove manual pm_runtime_disable()
-invocations and move the pm_runtime handling in probe before
-devm_mbox_controller_register().</p>
+Fix this by implementing DeliverToRead::cancel() for Node and NodeWrapper
+to move the pending refcount update to the process's work queue on thread
+exit so another thread can deliver it to userspace.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98903" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99074" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-mailbox: imx: add a channel shutdown field
+ipv4: stop pmtu walk when nexthop group shrinks
 
-sashiko complained about possible teardown problem. the scenario
+commit 7d3f3b4367f3 ("net: ipv4: cache pmtu for all packet paths if
+multipath enabled") made __ip_rt_update_pmtu() update every path.
 
- cpu 0                              cpu 1
-  imx_mu_isr()                   imx_mu_shutdown()
-                                   imx_mu_xcr_rmw(priv, imx_mu_rcr, 0, imx_mu_xcr_rien(priv->dcfg->type, cp->idx));
-    imx_mu_specific_rx()
-      imx_mu_xcr_rmw(priv, imx_mu_rcr, imx_mu_xcr_rien(priv->dcfg->type, 0), 0);
-                                   free_irq()
+for nexthop objects, fib_info_num_path() and fib_info_nhc()
+independently load nh->nh_grp.  rcu protects each group's lifetime but
+does not make the loads observe the same group.  if replacement shrinks
+the group after the loop accepts an index, fib_info_nhc() returns null
+and update_or_create_fnhe() dereferences it.
 
-the rx event remains enabled because in this short window the rx event
-was disabled in ->shutdown() while the interrupt was active and then
-enabled again by the isr while ->shutdown waited in free_irq().
+a deterministic probe only widened the existing window between the real
+operations.  on v7.2, an rtm_newnexthop replacement published a
+one-member group after the pmtu reader accepted index 1 from a two-member
+group, producing:
 
-this race requires timing and if happens can be problematic on shared
-handlers if the "removed" channel triggers an interrupt. in this case
-the irq-core will shutdown the interrupt with the "nobody cared"
-message.
+  kasan: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+  rip: update_or_create_fnhe+0x45/0x15b0
 
-introduce imx_mu_con_priv::shutdown to signal that the channel is
-shutting down. this flag is set with the lock held (by
-imx_mu_xcr_clr_shut()). the unmask side uses imx_mu_xcr_set_act() which
-only enables the event if the channel has not been shutdown and
-serialises on the same lock.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98903" target="_blank">CVE-2026-98903</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+stop when the indexed path is absent.  groups are dense, so no later
+index exists in that snapshot.  the same real-writer window completed
+114,423 pmtu iterations without an oops with this check.  a reproducer
+is available on request.
+
+replacement requires cap_net_admin in the network namespace.  where
+unprivileged user namespaces are permitted, a local user can obtain it
+in a new user and network namespace.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99074" target="_blank">CVE-2026-99074</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-mailbox: imx: Add a channel shutdown field
+ipv4: stop PMTU walk when nexthop group shrinks
 
-sashiko complained about possible teardown problem. The scenario
+Commit 7d3f3b4367f3 ("net: ipv4: Cache pmtu for all packet paths if
+multipath enabled") made __ip_rt_update_pmtu() update every path.
 
- CPU 0                              CPU 1
-  imx_mu_isr()                   imx_mu_shutdown()
-                                   imx_mu_xcr_rmw(priv, IMX_MU_RCR, 0, IMX_MU_xCR_RIEn(priv->dcfg->type, cp->idx));
-    imx_mu_specific_rx()
-      imx_mu_xcr_rmw(priv, IMX_MU_RCR, IMX_MU_xCR_RIEn(priv->dcfg->type, 0), 0);
-                                   free_irq()
+For nexthop objects, fib_info_num_path() and fib_info_nhc()
+independently load nh->nh_grp.  RCU protects each group's lifetime but
+does not make the loads observe the same group.  If replacement shrinks
+the group after the loop accepts an index, fib_info_nhc() returns NULL
+and update_or_create_fnhe() dereferences it.
 
-The RX event remains enabled because in this short window the RX event
-was disabled in ->shutdown() while the interrupt was active and then
-enabled again by the ISR while ->shutdown waited in free_irq().
+A deterministic probe only widened the existing window between the real
+operations.  On v7.2, an RTM_NEWNEXTHOP replacement published a
+one-member group after the PMTU reader accepted index 1 from a two-member
+group, producing:
 
-This race requires timing and if happens can be problematic on shared
-handlers if the "removed" channel triggers an interrupt. In this case
-the irq-core will shutdown the interrupt with the "nobody cared"
-message.
+  KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+  RIP: update_or_create_fnhe+0x45/0x15b0
 
-Introduce imx_mu_con_priv::shutdown to signal that the channel is
-shutting down. This flag is set with the lock held (by
-imx_mu_xcr_clr_shut()). The unmask side uses imx_mu_xcr_set_act() which
-only enables the event if the channel has not been shutdown and
-serialises on the same lock.</p>
+Stop when the indexed path is absent.  Groups are dense, so no later
+index exists in that snapshot.  The same real-writer window completed
+114,423 PMTU iterations without an oops with this check.  A reproducer
+is available on request.
+
+Replacement requires CAP_NET_ADMIN in the network namespace.  Where
+unprivileged user namespaces are permitted, a local user can obtain it
+in a new user and network namespace.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98902" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99073" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-md/raid5: let stripe batch bm_seq comparison wrap-safe
+ipv4: stop exception dump when nexthop group shrinks
 
-once the 32-bit seq wraps, a newer bm_seq can look smaller
-than old, so .. covert to wrap-safe calculate way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98902" target="_blank">CVE-2026-98902</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+commit 4ce5dc9316de ("inet: switch inet_dump_fib() to rcu
+protection") allowed ipv4 fib dumps to run concurrently with nexthop
+replacement.
+
+fib_dump_info_fnhe() uses fib_info_num_path() as the loop bound,
+then fib_info_nhc() independently reloads nh->nh_grp. if
+rtm_newnexthop replaces a group with fewer paths between those loads,
+fib_info_nhc() returns null and the dump dereferences it through
+nhc_flags.
+
+stop the walk when the indexed path is absent. nexthop groups are
+dense, so the current snapshot has no later path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99073" target="_blank">CVE-2026-99073</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-md/raid5: let stripe batch bm_seq comparison wrap-safe
+ipv4: stop exception dump when nexthop group shrinks
 
-Once the 32-bit seq wraps, a newer bm_seq can look smaller
-than old, so .. covert to wrap-safe calculate way.</p>
+Commit 4ce5dc9316de ("inet: switch inet_dump_fib() to RCU
+protection") allowed IPv4 FIB dumps to run concurrently with nexthop
+replacement.
+
+fib_dump_info_fnhe() uses fib_info_num_path() as the loop bound,
+then fib_info_nhc() independently reloads nh->nh_grp. If
+RTM_NEWNEXTHOP replaces a group with fewer paths between those loads,
+fib_info_nhc() returns NULL and the dump dereferences it through
+nhc_flags.
+
+Stop the walk when the indexed path is absent. Nexthop groups are
+dense, so the current snapshot has no later path.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98901" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99072" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-ksmbd: fix lease break and ack state handling
+ipv4: stop route notification sizing when nexthop group shrinks
 
-do not skip valid lease states containing write_caching when breaking
-level-ii/read leases for writes and truncates.
+commit 680aea08e78c ("net: ipv4: emit notification when fib
+hardware flags are changed") added an rcu-only fib_nlmsg_size() call
+for asynchronous hardware flag notifications.
 
-handle lease break acknowledgments according to the smb2 rule that the
-acknowledged state must be a subset of the server's break target. apply
-the acknowledged state directly and keep the break pending on failed acks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98901" target="_blank">CVE-2026-98901</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+fib_nlmsg_size() checks fib_info_num_path() before each iteration,
+then fib_info_nhc() independently reloads nh->nh_grp. if
+rtm_newnexthop replaces a group with fewer paths between those loads,
+fib_info_nhc() returns null and fib_nexthop_nlmsg_size() dereferences
+it.
+
+stop sizing when the indexed path is absent. nexthop groups are
+dense, so the current snapshot has no later path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99072" target="_blank">CVE-2026-99072</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ksmbd: fix lease break and ack state handling
+ipv4: stop route notification sizing when nexthop group shrinks
 
-Do not skip valid lease states containing WRITE_CACHING when breaking
-level-II/read leases for writes and truncates.
+Commit 680aea08e78c ("net: ipv4: Emit notification when fib
+hardware flags are changed") added an RCU-only fib_nlmsg_size() call
+for asynchronous hardware flag notifications.
 
-Handle lease break acknowledgments according to the SMB2 rule that the
-acknowledged state must be a subset of the server's break target. Apply
-the acknowledged state directly and keep the break pending on failed ACKs.</p>
+fib_nlmsg_size() checks fib_info_num_path() before each iteration,
+then fib_info_nhc() independently reloads nh->nh_grp. If
+RTM_NEWNEXTHOP replaces a group with fewer paths between those loads,
+fib_info_nhc() returns NULL and fib_nexthop_nlmsg_size() dereferences
+it.
+
+Stop sizing when the indexed path is absent. Nexthop groups are
+dense, so the current snapshot has no later path.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98900" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99071" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-xen/gntalloc: validate grant count before allocation
+ipv4: do not warn on route notification size race
 
-gntalloc_ioctl_alloc() allocates the grant-id array before checking
-whether the requested count fits within the global grant limit. counts
-above that limit cannot succeed, so reject them before the
-user-controlled allocation reaches kcalloc().
+commit 680aea08e78c ("net: ipv4: emit notification when fib hardware
+flags are changed") added asynchronous route notifications for hardware
+flag changes.
 
-use a subtraction-based check while holding gref_mutex so adding the
-requested count cannot wrap. also cast the count before advancing the
-per-file index so the page-size multiplication is performed in 64-bit
-arithmetic.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98900" target="_blank">CVE-2026-98900</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:24 CDT</p>
+fib_alias_hw_flags_set() sizes the skb with fib_nlmsg_size() and later
+fills it with fib_dump_info() while holding only rcu.  with nexthop
+compatibility mode enabled, a concurrent replacement can grow the group
+between these independent snapshots.  fib_dump_info() can then
+legitimately return -emsgsize, so the warning does not prove a sizing bug.
+
+remove the warning.  the existing error path still frees the skb and
+reports the error to listeners.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99071" target="_blank">CVE-2026-99071</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:31 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-xen/gntalloc: validate grant count before allocation
+ipv4: do not warn on route notification size race
 
-gntalloc_ioctl_alloc() allocates the grant-id array before checking
-whether the requested count fits within the global grant limit. Counts
-above that limit cannot succeed, so reject them before the
-user-controlled allocation reaches kcalloc().
+Commit 680aea08e78c ("net: ipv4: Emit notification when fib hardware
+flags are changed") added asynchronous route notifications for hardware
+flag changes.
 
-Use a subtraction-based check while holding gref_mutex so adding the
-requested count cannot wrap. Also cast the count before advancing the
-per-file index so the page-size multiplication is performed in 64-bit
-arithmetic.</p>
+fib_alias_hw_flags_set() sizes the skb with fib_nlmsg_size() and later
+fills it with fib_dump_info() while holding only RCU.  With nexthop
+compatibility mode enabled, a concurrent replacement can grow the group
+between these independent snapshots.  fib_dump_info() can then
+legitimately return -EMSGSIZE, so the warning does not prove a sizing bug.
+
+Remove the warning.  The existing error path still frees the skb and
+reports the error to listeners.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98899" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99070" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-netfilter: ipset: mark the rcu locked areas properly
+ipv6: do not warn on route notification size race
 
-when we bump the uref counter, there's no need to keep
-the rcu lock because the referred hash table can't
-disappear. also, from the same reason in mtype_gc we
-need the rcu lock and not a spinlock.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98899" target="_blank">CVE-2026-98899</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:23 CDT</p>
+fib6_info_hw_flags_set() sizes the skb with rt6_nlmsg_size() and later
+fills it with rt6_fill_node().  with nexthop compatibility mode enabled,
+a concurrent replacement can grow the group between these independent
+snapshots.  rt6_fill_node() can then legitimately return -emsgsize, so
+the warning does not prove a sizing bug.
+
+remove the warning.  the existing error path still frees the skb and
+reports the error to listeners.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99070" target="_blank">CVE-2026-99070</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-netfilter: ipset: mark the rcu locked areas properly
+ipv6: do not warn on route notification size race
 
-When we bump the uref counter, there's no need to keep
-the rcu lock because the referred hash table can't
-disappear. Also, from the same reason in mtype_gc we
-need the rcu lock and not a spinlock.</p>
+fib6_info_hw_flags_set() sizes the skb with rt6_nlmsg_size() and later
+fills it with rt6_fill_node().  With nexthop compatibility mode enabled,
+a concurrent replacement can grow the group between these independent
+snapshots.  rt6_fill_node() can then legitimately return -EMSGSIZE, so
+the warning does not prove a sizing bug.
+
+Remove the warning.  The existing error path still frees the skb and
+reports the error to listeners.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98898" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99069" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-drm/amd/pm/si: don't schedule thermal work when queue isn't initialized
+input: ati_remote2 - fix type confusion in device attribute handlers
 
-when dpm is turned off with the amdgpu.dpm=0 module parameter,
-the thermal work queue isn't initialized so we shouldn't
-schedule any work on it.
+previously, the channel_mask and mode_mask attributes were registered on
+the parent usb_device via sysfs_create_group(). when commit b20d6bf8014b
+("input: ati-remote2 - use driver core to instantiate device
+attributes") converted the driver to let the driver core manage them via
+dev_groups in struct usb_driver, the attributes moved to the bound
+usb_interface devices, but the show and store callbacks were not updated
+accordingly.
 
-(cherry picked from commit bd018d36171a695952c6d391471c279c9e05c8b2)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98898" target="_blank">CVE-2026-98898</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:23 CDT</p>
+as a result, the callbacks still invoked to_usb_device() on a device
+pointer belonging to a struct usb_interface, producing an invalid
+usb_device pointer.
+
+use to_usb_interface() directly in the attribute handlers to obtain the
+interface and its driver data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99069" target="_blank">CVE-2026-99069</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-drm/amd/pm/si: Don't schedule thermal work when queue isn't initialized
+Input: ati_remote2 - fix type confusion in device attribute handlers
 
-When DPM is turned off with the amdgpu.dpm=0 module parameter,
-the thermal work queue isn't initialized so we shouldn't
-schedule any work on it.
+Previously, the channel_mask and mode_mask attributes were registered on
+the parent usb_device via sysfs_create_group(). When commit b20d6bf8014b
+("Input: ati-remote2 - use driver core to instantiate device
+attributes") converted the driver to let the driver core manage them via
+dev_groups in struct usb_driver, the attributes moved to the bound
+usb_interface devices, but the show and store callbacks were not updated
+accordingly.
 
-(cherry picked from commit bd018d36171a695952c6d391471c279c9e05c8b2)</p>
+As a result, the callbacks still invoked to_usb_device() on a device
+pointer belonging to a struct usb_interface, producing an invalid
+usb_device pointer.
+
+Use to_usb_interface() directly in the attribute handlers to obtain the
+interface and its driver data.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-98897" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99068" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-ksmbd: don't hold ci->m_lock while waiting for a lease break ack
+alsa: ctxfi: fix memory leakage when clearing dao input mappers
 
-when a cifs.ko client caches a read-handle (rh) lease via deferred close
-and a conflicting open arrives, ksmbd breaks the lease and waits for the
-acknowledgment in wait_for_break_ack() for up to oplock_wait_time (35s).
-__smb_break_all_levii_oplock() runs that wait while holding ci->m_lock
-for read.
+commit e576e7843c0d ("alsa: ctxfi: simplify dao_clear_{left,right}_input() functions")
+centralized the dao input mapper clearing logic in
+dao_clear_input(), but omitted the kfree() calls.
 
-cifs.ko reacts to a handle-lease break by closing the deferred handle
-rather than sending a lease break acknowledgment. that close path
-(close_id_del_oplock() -> opinfo_del()) takes ci->m_lock for write and
-is exactly what would wake the waiter, but it blocks on the read lock
-held by the waiting thread. the break is then resolved only by the 35s
-timeout, so xfstests generic/001 takes ~78s with leases enabled versus
-~4s with oplocks only.
+it removes the mapper entries from the list and sets their pointers
+to null without freeing the allocated array. this leaks memory each
+time dao_clear_input() is called.
 
-collect the target opinfos (each pinned with a reference) while holding
-ci->m_lock, then break them after releasing it, matching how
-smb_grant_oplock() already breaks a conflicting lease using only a
-reference.  the reference keeps the opinfo (and its conn and lease)
-alive across the unlocked window, and a close racing the break is
-handled by the existing oplock_closing state check. apply the same fix
-to the parent lease break paths.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-98897" target="_blank">CVE-2026-98897</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-23 07:18:23 CDT</p>
+store the base pointer of the allocation before clearing the mapper
+entries and free the array after removing entries from the list.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99068" target="_blank">CVE-2026-99068</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-23 08:17:30 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-ksmbd: don't hold ci->m_lock while waiting for a lease break ack
+ALSA: ctxfi: Fix memory leakage when clearing DAO input mappers
 
-When a cifs.ko client caches a read-handle (RH) lease via deferred close
-and a conflicting open arrives, ksmbd breaks the lease and waits for the
-acknowledgment in wait_for_break_ack() for up to OPLOCK_WAIT_TIME (35s).
-__smb_break_all_levII_oplock() runs that wait while holding ci->m_lock
-for read.
+Commit e576e7843c0d ("ALSA: ctxfi: Simplify dao_clear_{left,right}_input() functions")
+centralized the DAO input mapper clearing logic in
+dao_clear_input(), but omitted the kfree() calls.
 
-cifs.ko reacts to a handle-lease break by closing the deferred handle
-rather than sending a lease break acknowledgment. That close path
-(close_id_del_oplock() -> opinfo_del()) takes ci->m_lock for write and
-is exactly what would wake the waiter, but it blocks on the read lock
-held by the waiting thread. The break is then resolved only by the 35s
-timeout, so xfstests generic/001 takes ~78s with leases enabled versus
-~4s with oplocks only.
+It removes the mapper entries from the list and sets their pointers
+to NULL without freeing the allocated array. This leaks memory each
+time dao_clear_input() is called.
 
-Collect the target opinfos (each pinned with a reference) while holding
-ci->m_lock, then break them after releasing it, matching how
-smb_grant_oplock() already breaks a conflicting lease using only a
-reference.  The reference keeps the opinfo (and its conn and lease)
-alive across the unlocked window, and a close racing the break is
-handled by the existing OPLOCK_CLOSING state check. Apply the same fix
-to the parent lease break paths.</p>
+Store the base pointer of the allocation before clearing the mapper
+entries and free the array after removing entries from the list.</p>
                 </div>
         
             </div>
