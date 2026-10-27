@@ -34,6 +34,214 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-75891" data-description="the kirki plugin for wordpress is vulnerable to privilege escalation via php object injection in all versions up to, and including, 6.2.5 via deserialization of untrusted input through the 'get-single-symbol' branch of the kirki_post_apis() ajax dispatcher due to a missing capability check. this makes it possible for authenticated attackers, with subscriber-level access and above, to inject a php object. the additional presence of a pop chain allows attackers to overwrite an administrator's password and gain administrative access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75891" target="_blank">CVE-2026-75891</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 02:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>The Kirki plugin for WordPress is vulnerable to Privilege Escalation via PHP Object Injection in all versions up to, and including, 6.2.5 via deserialization of untrusted input through the 'get-single-symbol' branch of the kirki_post_apis() AJAX dispatcher due to a missing capability check. This makes it possible for authenticated attackers, with Subscriber-level access and above, to inject a PHP Object. The additional presence of a POP chain allows attackers to overwrite an administrator's password and gain administrative access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110910" data-description="### summary
+
+
+
+`qs.stringify` with `allowemptyarrays: true` writes the key of an empty array without encoding it, even though keys are encoded by default. a key that contains `&` (or the configured `delimiter`), `=`, or `#` ∴ becomes query string syntax instead of data, so a caller-supplied key name can add parameters to the serialized query string, or cut it short.
+
+
+
+### details
+
+
+
+in `lib/stringify.js`, the `allowemptyarrays` branch returns `adjustedprefix + '[]'` early, before the code that passes every other key through `encoder` and `formatter`. so `{ "x&k=v": ["1"] }` serializes as `x%26k%3dv%5b0%5d=1`, but `{ "x&k=v": [] }` serializes as `x&k=v[]`. the early return applies at any depth (`{ "a": { "b&k=v": [] } }` gives `a[b&k=v][]`), under every `arrayformat`, with `allowdots`, and with a custom `encoder`, which is never called for that key. with `encode: false` or `encodevaluesonly: true`, keys are intentionally left unencoded on every path; those configurations are not affected.
+
+
+
+#### poc
+
+
+
+```js
+
+
+
+var qs = require("qs");
+
+
+
+var query = qs.stringify({ q: "hi", "x&apikey=evil&y": [] }, { allowemptyarrays: true });
+
+
+
+// "q=hi&x&apikey=evil&y[]"
+
+
+
+qs.parse(query);
+
+
+
+// { q: "hi", x: "", apikey: "evil", y: [""] }
+
+
+
+qs.stringify({ "x#": [], z: "1" }, { allowemptyarrays: true });
+
+
+
+// "x#[]&z=1": in a url, everything after "#" becomes the fragment
+
+
+
+```
+
+
+
+#### fix
+
+
+
+applied in 234d505 on `main` and released as v6.17.0: the key of an empty array goes through `encoder` and `formatter` exactly as the key of any other value does, so `{ "x&apikey=evil&y": [] }` now serializes as `x%26apikey%3devil%26y[]`. keys that need no encoding serialize as before, with two exceptions that match every other path: the brackets of a nested key are now encoded (`a[b][]` becomes `a%5bb%5d[]`, which `qs.parse` reads identically), and with `encodedotinkeys`, a dot in the key becomes `%252e` instead of `%2e` (which `decodedotinkeys` previously misread as nesting).
+
+
+
+### affected versions
+
+
+
+`>=6.12.0 <6.17.0`, fixed in v6.17.0.
+
+
+
+`allowemptyarrays` was introduced in f22b2bc and first shipped in v6.12.0, with this early return. every release from v6.12.0 through v6.16.1 is affected. earlier versions have no `allowemptyarrays` option and are not affected.
+
+
+
+### impact
+
+
+
+an application that passes an object whose key names come from untrusted input to `qs.stringify` with `allowemptyarrays: true` (for example, to forward a parsed json body or user-selected fields to an upstream service) can have parameters injected into the resulting query string. the injected parameters are not keys of the object, so deleting or overwriting a key on the object (such as setting a trusted `apikey` after copying the user's fields) does not remove them; whether the attacker's value or the application's wins depends on how the receiving side handles a duplicate parameter. a `#` in such a key ends the query string early when the result is placed in a url. `allowemptyarrays` is off by default, and only keys whose value (after any `filter`) is an empty array are affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110910" target="_blank">CVE-2026-110910</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 02:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>### Summary
+
+
+
+`qs.stringify` with `allowEmptyArrays: true` writes the key of an empty array without encoding it, even though keys are encoded by default. A key that contains `&` (or the configured `delimiter`), `=`, or `#` ∴ becomes query string syntax instead of data, so a caller-supplied key name can add parameters to the serialized query string, or cut it short.
+
+
+
+### Details
+
+
+
+In `lib/stringify.js`, the `allowEmptyArrays` branch returns `adjustedPrefix + '[]'` early, before the code that passes every other key through `encoder` and `formatter`. So `{ "x&k=v": ["1"] }` serializes as `x%26k%3Dv%5B0%5D=1`, but `{ "x&k=v": [] }` serializes as `x&k=v[]`. The early return applies at any depth (`{ "a": { "b&k=v": [] } }` gives `a[b&k=v][]`), under every `arrayFormat`, with `allowDots`, and with a custom `encoder`, which is never called for that key. With `encode: false` or `encodeValuesOnly: true`, keys are intentionally left unencoded on every path; those configurations are not affected.
+
+
+
+#### PoC
+
+
+
+```js
+
+
+
+var qs = require("qs");
+
+
+
+var query = qs.stringify({ q: "hi", "x&apiKey=evil&y": [] }, { allowEmptyArrays: true });
+
+
+
+// "q=hi&x&apiKey=evil&y[]"
+
+
+
+qs.parse(query);
+
+
+
+// { q: "hi", x: "", apiKey: "evil", y: [""] }
+
+
+
+qs.stringify({ "x#": [], z: "1" }, { allowEmptyArrays: true });
+
+
+
+// "x#[]&z=1": in a URL, everything after "#" becomes the fragment
+
+
+
+```
+
+
+
+#### Fix
+
+
+
+Applied in 234d505 on `main` and released as v6.17.0: the key of an empty array goes through `encoder` and `formatter` exactly as the key of any other value does, so `{ "x&apiKey=evil&y": [] }` now serializes as `x%26apiKey%3Devil%26y[]`. Keys that need no encoding serialize as before, with two exceptions that match every other path: the brackets of a nested key are now encoded (`a[b][]` becomes `a%5Bb%5D[]`, which `qs.parse` reads identically), and with `encodeDotInKeys`, a dot in the key becomes `%252E` instead of `%2E` (which `decodeDotInKeys` previously misread as nesting).
+
+
+
+### Affected versions
+
+
+
+`>=6.12.0 <6.17.0`, fixed in v6.17.0.
+
+
+
+`allowEmptyArrays` was introduced in f22b2bc and first shipped in v6.12.0, with this early return. Every release from v6.12.0 through v6.16.1 is affected. Earlier versions have no `allowEmptyArrays` option and are not affected.
+
+
+
+### Impact
+
+
+
+An application that passes an object whose key names come from untrusted input to `qs.stringify` with `allowEmptyArrays: true` (for example, to forward a parsed JSON body or user-selected fields to an upstream service) can have parameters injected into the resulting query string. The injected parameters are not keys of the object, so deleting or overwriting a key on the object (such as setting a trusted `apiKey` after copying the user's fields) does not remove them; whether the attacker's value or the application's wins depends on how the receiving side handles a duplicate parameter. A `#` in such a key ends the query string early when the result is placed in a URL. `allowEmptyArrays` is off by default, and only keys whose value (after any `filter`) is an empty array are affected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-106174" data-description="a improper locking vulnerability in fortinet fortios 8.0.0, fortios 7.6.4 through 7.6.6 may allow an unauthenticated attacker with network access to the device to cause a denial of service of the https management interface via crafted http requests.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-106174" target="_blank">CVE-2026-106174</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 02:16:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A improper locking vulnerability in Fortinet FortiOS 8.0.0, FortiOS 7.6.4 through 7.6.6 may allow an unauthenticated attacker with network access to the device to cause a denial of service of the HTTPS management interface via crafted HTTP requests.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-105946" data-description="out-of-bounds read in the qauthenticator ntlm authentication handling in the qt network module in qt group qt allows remote attackers to obtain sensitive information (heap memory contents) or cause a denial of service (application crash) via a crafted ntlm challenge sent by a malicious server or proxy, when an application using qnetworkaccessmanager or qtcpsocket authenticates with ntlm.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105946" target="_blank">CVE-2026-105946</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 02:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Out-of-bounds read in the QAuthenticator NTLM authentication handling in the Qt Network module in Qt Group Qt allows remote attackers to obtain sensitive information (heap memory contents) or cause a denial of service (application crash) via a crafted NTLM challenge sent by a malicious server or proxy, when an application using QNetworkAccessManager or QTcpSocket authenticates with NTLM.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-103359" data-description="the paydunya woocommerce payment gateway wordpress plugin through 1.1.6 does not verify the authenticity of incoming payment notifications and, until the gateway is configured, authenticates them with a value derived from an empty secret that anyone can compute, allowing unauthenticated attackers to mark arbitrary woocommerce orders as paid and completed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-103359" target="_blank">CVE-2026-103359</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 02:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>The PayDunya WooCommerce Payment Gateway WordPress plugin through 1.1.6 does not verify the authenticity of incoming payment notifications and, until the gateway is configured, authenticates them with a value derived from an empty secret that anyone can compute, allowing unauthenticated attackers to mark arbitrary WooCommerce orders as paid and completed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-103325" data-description="the tiendacrypto para woocommerce wordpress plugin through 1.2.1 does not correctly verify the authenticity of its payment webhook, validating the request signature against a key that is always empty, which allows unauthenticated attackers to forge webhook notifications and mark arbitrary woocommerce orders as paid on web servers that preserve request header case.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-103325" target="_blank">CVE-2026-103325</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 02:16:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>The TiendaCrypto para WooCommerce WordPress plugin through 1.2.1 does not correctly verify the authenticity of its payment webhook, validating the request signature against a key that is always empty, which allows unauthenticated attackers to forge webhook notifications and mark arbitrary WooCommerce orders as paid on web servers that preserve request header case.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-117472" data-description="psono server ce && ee versions 4.0.33 through 7.2.3 compared the request path for the bulk-secret-read endpoint with a hard-coded unprefixed path. in deployments configured with url_prefix, the comparison failed and the post request was authorized using write scope instead of read scope. an authenticated remote attacker with an unusual read-disabled, write-enabled api key could therefore retrieve encrypted secret data and nonces through the prefixed bulk-secret-read endpoint despite lacking read permission. the default configuration without url_prefix was not affected.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-117472" target="_blank">CVE-2026-117472</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-27 01:17:25 CDT</p>
@@ -146,54 +354,6 @@ Refer to the 'Security Update for Multiple ASUS Motherboards' section on the ASU
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
                     <p>Mistral Vibe before 3.0.3 contains a remote code execution vulnerability that allows attackers to run commands by defining git filter drivers in an untrusted repository's .git/config. When started with --worktree, git worktree add applies .gitattributes and runs filter smudge, clean, or process commands before the trusted-folder check, executing attacker commands with user privileges.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116842" data-description="devilutionx 1.4.0 through 1.5.5 contains a heap buffer overflow vulnerability in the bundled libmpq libmpq__archive_dup routine when opening crafted mpq archives. attackers can supply an mpq archive whose block table count exceeds its hash table count, causing memcpy to overflow the heap during startup and crash the game.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116842" target="_blank">CVE-2026-116842</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-26 20:19:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>DevilutionX 1.4.0 through 1.5.5 contains a heap buffer overflow vulnerability in the bundled libmpq libmpq__archive_dup routine when opening crafted MPQ archives. Attackers can supply an MPQ archive whose block table count exceeds its hash table count, causing memcpy to overflow the heap during startup and crash the game.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116841" data-description="devilutionx 1.4.0 through 1.5.5 contains an out-of-bounds read vulnerability in the bundled libmpq libmpq__file_number_from_hash function that allows attackers to read heap memory via unchecked block_table_index values. attackers can place a crafted .mpq archive in the game's data path, such as a mod, to trigger reads past mpq_map and crash the game.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116841" target="_blank">CVE-2026-116841</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-26 20:19:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>DevilutionX 1.4.0 through 1.5.5 contains an out-of-bounds read vulnerability in the bundled libmpq libmpq__file_number_from_hash function that allows attackers to read heap memory via unchecked block_table_index values. Attackers can place a crafted .mpq archive in the game's data path, such as a mod, to trigger reads past mpq_map and crash the game.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116840" data-description="llama.cpp b5854 before b11275 contains an integer overflow vulnerability in gguf_init_from_reader that bypasses the cve-2025-53630 size check when padding near-size_max tensor sizes. attackers can supply a crafted gguf file whose tensor size pads to zero, causing an undersized data blob and out-of-bounds reads by consumers.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116840" target="_blank">CVE-2026-116840</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-26 20:19:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>llama.cpp b5854 before b11275 contains an integer overflow vulnerability in gguf_init_from_reader that bypasses the CVE-2025-53630 size check when padding near-SIZE_MAX tensor sizes. Attackers can supply a crafted GGUF file whose tensor size pads to zero, causing an undersized data blob and out-of-bounds reads by consumers.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116839" data-description="a malicious actor who lures an authenticated user to a malicious page could exploit a cross-site request forgery (csrf) vulnerability found in airmax m devices to make unauthorized changes and execute a denial of service (dos) attack on the device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116839" target="_blank">CVE-2026-116839</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-26 20:19:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>A malicious actor who lures an authenticated user to a malicious page could exploit a Cross-Site Request Forgery (CSRF) vulnerability found in airMAX M devices to make unauthorized changes and execute a Denial of Service (DoS) attack on the device.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116838" data-description="a malicious actor who lures an authenticated user to a malicious page could exploit a cross-site request forgery (csrf) vulnerability found in airmax m devices to execute a command injection on the device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116838" target="_blank">CVE-2026-116838</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-26 20:19:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A malicious actor who lures an authenticated user to a malicious page could exploit a Cross-Site Request Forgery (CSRF) vulnerability found in airMAX M devices to execute a Command Injection on the device.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116837" data-description="a malicious actor with access to the adjacent network could exploit a heap-based buffer overflow vulnerability found in airmax m, ltu, solarpoint, and solarswitch devices to execute arbitrary code on the device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116837" target="_blank">CVE-2026-116837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-26 20:19:06 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>A malicious actor with access to the adjacent network could exploit a Heap-based Buffer Overflow vulnerability found in airMAX M, LTU, SolarPoint, and SolarSwitch devices to execute arbitrary code on the device.</p>
                 </div>
         
             </div>
