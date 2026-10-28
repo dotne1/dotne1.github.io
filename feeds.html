@@ -34,6 +34,62 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-110879" data-description="jackson-databind validates the outer class of a class-name type id but accepts attacker-selected classes inside its generic arguments, even when those classes violate the declared type or would be rejected as direct type ids. this bypasses the generic-argument validation added for cve-2026-54512 (ghsa-j3rv-43j4-c7qm), of which this is an incomplete fix.
+
+
+
+databindcontext._resolveandvalidategeneric() checks the outer class against the declared base type and then passes each argument from the type id to _validatetypeparameter(), which validates the argument against the outer base type rather than enforcing its corresponding declared generic binding. it also invokes validators with arguments that have not passed the subtype check those validators expect. under the default defaultbasetypelimitingvalidator this accepts an unrelated class inside a generic subtype even when the same class is rejected as a direct type id. where an allowifbasetype(...) rule approves the outer type, jackson substitutes laissezfairesubtypevalidator, so the configured validator no longer restricts the embedded arguments. the element type of a plain array type id such as [lpkg.gadget; is likewise left unvalidated once the array's base type is approved.
+
+
+
+affected paths include annotation-based class-name polymorphism with a default jackson 3.x jsonmapper, configured default typing in both jackson 2.x and 3.x, and integrations that expose that default typing. the default-validator case requires no application-authored validator: with @jsontypeinfo(use = id.class), a direct gadget type id is rejected as "not a subtype", while a type id naming a generic wrapper around the same gadget is accepted and deserialized, including attacker-supplied bean properties. where class-name default typing permits map, a property declared as map<string,string> accepts hashmap<filesystemxmlapplicationcontext,string>; map-key discovery then passes the attacker-controlled json property name to the selected class's one-string constructor. with spring on the classpath and attacker-controlled xml the application can load, that constructor loads the xml and invokes processbuilder.start() under the application account, giving arbitrary command execution.
+
+
+
+this issue affects com.fasterxml.jackson.core:jackson-databind from 2.10.0 and tools.jackson.core:jackson-databind from 3.0.0. releases before 2.10.0 are not affected, because polymorphictypevalidator was introduced in jackson-databind 2.10.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110879" target="_blank">CVE-2026-110879</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 20:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>jackson-databind validates the outer class of a class-name type ID but accepts attacker-selected classes inside its generic arguments, even when those classes violate the declared type or would be rejected as direct type IDs. This bypasses the generic-argument validation added for CVE-2026-54512 (GHSA-j3rv-43j4-c7qm), of which this is an incomplete fix.
+
+
+
+DatabindContext._resolveAndValidateGeneric() checks the outer class against the declared base type and then passes each argument from the type ID to _validateTypeParameter(), which validates the argument against the outer base type rather than enforcing its corresponding declared generic binding. It also invokes validators with arguments that have not passed the subtype check those validators expect. Under the default DefaultBaseTypeLimitingValidator this accepts an unrelated class inside a generic subtype even when the same class is rejected as a direct type ID. Where an allowIfBaseType(...) rule approves the outer type, Jackson substitutes LaissezFaireSubTypeValidator, so the configured validator no longer restricts the embedded arguments. The element type of a plain array type ID such as [Lpkg.Gadget; is likewise left unvalidated once the array's base type is approved.
+
+
+
+Affected paths include annotation-based class-name polymorphism with a default Jackson 3.x JsonMapper, configured default typing in both Jackson 2.x and 3.x, and integrations that expose that default typing. The default-validator case requires no application-authored validator: with @JsonTypeInfo(use = Id.CLASS), a direct gadget type ID is rejected as "Not a subtype", while a type ID naming a generic wrapper around the same gadget is accepted and deserialized, including attacker-supplied bean properties. Where class-name default typing permits Map, a property declared as Map<String,String> accepts HashMap<FileSystemXmlApplicationContext,String>; map-key discovery then passes the attacker-controlled JSON property name to the selected class's one-string constructor. With Spring on the classpath and attacker-controlled XML the application can load, that constructor loads the XML and invokes ProcessBuilder.start() under the application account, giving arbitrary command execution.
+
+
+
+This issue affects com.fasterxml.jackson.core:jackson-databind from 2.10.0 and tools.jackson.core:jackson-databind from 3.0.0. Releases before 2.10.0 are not affected, because PolymorphicTypeValidator was introduced in jackson-databind 2.10.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-110747" data-description="protobufparser._readstringkey() reads the length prefix of a protobuf map entry's string key into an attacker-controlled int and then checks (_inputptr + len) <= _inputend using signed arithmetic. for values near integer.max_value the addition overflows to a negative value and the check passes even when the input contains no key data. the parser then calls _finishshorttext(len), which expands the text buffer to the declared length via textbuffer.expandcurrentsegment and arrays.copyof, throwing outofmemoryerror: requested array size exceeds vm limit.
+
+
+
+an 8-byte malformed message containing a map entry with a declared key length of 0x7fffffff is sufficient. configured streamreadconstraints, including maxstringlength, maxnamelength, maxdocumentlength and maxnestingdepth, do not prevent the failure. applications running with -xx:+exitonoutofmemoryerror terminate the jvm.
+
+
+
+this is the same integer-overflow pattern addressed for other call sites in the remediation associated with cve-2026-104016 and cve-2026-104017; the map-key call site was corrected on the 3.x branches only, leaving the corresponding 2.x branches unguarded. release lines 2.18, 2.19 and 2.20 do not contain _readstringkey() and are not affected by this vector. no privileges or user interaction beyond the ability to submit data for parsing are required. the 3.0 release line and 3.1.0-3.1.5 / 3.2.0-3.2.1 do not contain _readstringkey() and are therefore not affected; the method first appears in 3.1.6 and 3.2.2, mirroring its introduction at 2.21.6 on the 2.x side.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-110747" target="_blank">CVE-2026-110747</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-10-27 20:16:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>ProtobufParser._readStringKey() reads the length prefix of a protobuf map entry's string key into an attacker-controlled int and then checks (_inputPtr + len) <= _inputEnd using signed arithmetic. For values near Integer.MAX_VALUE the addition overflows to a negative value and the check passes even when the input contains no key data. The parser then calls _finishShortText(len), which expands the text buffer to the declared length via TextBuffer.expandCurrentSegment and Arrays.copyOf, throwing OutOfMemoryError: Requested array size exceeds VM limit.
+
+
+
+An 8-byte malformed message containing a map entry with a declared key length of 0x7FFFFFFF is sufficient. Configured StreamReadConstraints, including maxStringLength, maxNameLength, maxDocumentLength and maxNestingDepth, do not prevent the failure. Applications running with -XX:+ExitOnOutOfMemoryError terminate the JVM.
+
+
+
+This is the same integer-overflow pattern addressed for other call sites in the remediation associated with CVE-2026-104016 and CVE-2026-104017; the map-key call site was corrected on the 3.x branches only, leaving the corresponding 2.x branches unguarded. Release lines 2.18, 2.19 and 2.20 do not contain _readStringKey() and are not affected by this vector. No privileges or user interaction beyond the ability to submit data for parsing are required. The 3.0 release line and 3.1.0-3.1.5 / 3.2.0-3.2.1 do not contain _readStringKey() and are therefore not affected; the method first appears in 3.1.6 and 3.2.2, mirroring its introduction at 2.21.6 on the 2.x side.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-118129" data-description="a vulnerability was found in jeremyckahn chitchatter up to f82538633813c854a81a8b2112a2f6ba17b39cbc. the affected element is the function isconfigmessageevent of the file src/bootstrap.tsx of the component postmessage handler. performing a manipulation of the argument parentdomain results in improper authentication. remote exploitation of the attack is possible. the exploit has been made public and could be used. this product follows a rolling release approach for continuous delivery, so version details for affected or updated releases are not provided. the patch is named e3babb5cd83bfe3b99f1d82358ac5c1ea8e8a688. it is recommended to apply a patch to fix this issue. the vendor was contacted early, responded in a very professional manner and quickly released a fixed version of the affected product.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118129" target="_blank">CVE-2026-118129</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-10-27 19:17:11 CDT</p>
@@ -208,22 +264,6 @@ A February 2026 hardening commit added the equivalent overflow guard to the pack
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>Improper input validation in Skia in Google Chrome prior to 156.0.8078.73 allowed a remote attacker to potentially execute arbitrary code inside the sandbox via a crafted HTML page. (Chromium security severity: High)</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-118353" data-description="use after free in paint in google chrome prior to 156.0.8078.73 allowed a remote attacker to execute arbitrary code inside the sandbox via a crafted html page. (chromium security severity: high)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118353" target="_blank">CVE-2026-118353</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-27 18:17:04 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Use after free in Paint in Google Chrome prior to 156.0.8078.73 allowed a remote attacker to execute arbitrary code inside the sandbox via a crafted HTML page. (Chromium security severity: High)</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-118352" data-description="memory corruption in cache in google chrome prior to 156.0.8078.73 allowed a remote attacker to potentially execute arbitrary code inside the sandbox via a crafted html page. (chromium security severity: high)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118352" target="_blank">CVE-2026-118352</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-10-27 18:17:04 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Memory corruption in Cache in Google Chrome prior to 156.0.8078.73 allowed a remote attacker to potentially execute arbitrary code inside the sandbox via a crafted HTML page. (Chromium security severity: High)</p>
                 </div>
         
             </div>
