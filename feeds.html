@@ -34,164 +34,262 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-82976" data-description="a flaw was found in the image-customization-controller used in openshift's bare metal provisioning stack. the controller registers an http file server on port 8084 with no authentication. the custom imagefilesystem implementation exposes a browsable html directory listing of all registered images at the root path. the only access control on per-host images is the random uuid filename; the directory listing discloses those uuids to any caller on the provisioning network. each served image embeds an ignition config containing the base64-encoded cluster pull secret, optional ironic_ramdisk_ssh_key, proxy settings, and per-host networkmanager keyfiles. an adjacent network attacker can enumerate all image uuids via directory listing, download any image, extract the embedded ignition config, and recover the cluster pull secret and ssh key.
+
+### evidence
+**pkg/imagehandler/imagefilesystem.go — root directory is browsable and enumerates all uuid image names**
+```go
+func (f *imagefilesystem) readdir(n int) ([]fs.fileinfo, error) {
+    f.mu.lock()
+    defer f.mu.unlock()
+    result := []fs.fileinfo{}
+    for _, im := range f.images {
+        result = append(result, im)
+    }
+    return result, nil
+}
+
+func (f *imagefilesystem) open(name string) (http.file, error) {
+    f.log.info("open", "path", name)
+    if name == "/" {
+        return f, nil
+    }
+    ...
+```
+
+**cmd/controller/main.go — file server bound on all interfaces without auth or tls**
+```go
+http.handle("/", http.fileserver(imageserver.filesystem()))
+
+go func() {
+    server := &http.server{
+        addr:              imagesbindaddr,   // default ":8084"
+        readheadertimeout: 5 * time.second,
+    }
+    err := server.listenandserve()
+```
+
+**pkg/ignition/service_config.go:94-100 — pull secret is embedded in every served image**
+```go
+func (b *ignitionbuilder) authfile() ignition_config_types_32.file {
+    source := "data:;base64," + strings.trimspace(b.ironicagentpullsecret)
+    return ignition_config_types_32.file{
+        node: ignition_config_types_32.node{path: "/etc/authfile.json"},
+        ...
+```
+
+### attack pattern
+adjacent provisioning-network client → get / lists uuid image names → download iso/initramfs → extract embedded ignition → recover cluster pull secret and ssh key.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82976" target="_blank">CVE-2026-82976</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>A flaw was found in the image-customization-controller used in OpenShift's bare metal provisioning stack. The controller registers an HTTP file server on port 8084 with no authentication. The custom imageFileSystem implementation exposes a browsable HTML directory listing of all registered images at the root path. The only access control on per-host images is the random UUID filename; the directory listing discloses those UUIDs to any caller on the provisioning network. Each served image embeds an Ignition config containing the base64-encoded cluster pull secret, optional IRONIC_RAMDISK_SSH_KEY, proxy settings, and per-host NetworkManager keyfiles. An adjacent network attacker can enumerate all image UUIDs via directory listing, download any image, extract the embedded Ignition config, and recover the cluster pull secret and SSH key.
+
+### Evidence
+**pkg/imagehandler/imagefilesystem.go — root directory is browsable and enumerates all UUID image names**
+```go
+func (f *imageFileSystem) Readdir(n int) ([]fs.FileInfo, error) {
+    f.mu.Lock()
+    defer f.mu.Unlock()
+    result := []fs.FileInfo{}
+    for _, im := range f.images {
+        result = append(result, im)
+    }
+    return result, nil
+}
+
+func (f *imageFileSystem) Open(name string) (http.File, error) {
+    f.log.Info("Open", "path", name)
+    if name == "/" {
+        return f, nil
+    }
+    ...
+```
+
+**cmd/controller/main.go — file server bound on all interfaces without auth or TLS**
+```go
+http.Handle("/", http.FileServer(imageServer.FileSystem()))
+
+go func() {
+    server := &http.Server{
+        Addr:              imagesBindAddr,   // default ":8084"
+        ReadHeaderTimeout: 5 * time.Second,
+    }
+    err := server.ListenAndServe()
+```
+
+**pkg/ignition/service_config.go:94-100 — pull secret is embedded in every served image**
+```go
+func (b *ignitionBuilder) authFile() ignition_config_types_32.File {
+    source := "data:;base64," + strings.TrimSpace(b.ironicAgentPullSecret)
+    return ignition_config_types_32.File{
+        Node: ignition_config_types_32.Node{Path: "/etc/authfile.json"},
+        ...
+```
+
+### Attack Pattern
+Adjacent provisioning-network client → GET / lists UUID image names → download ISO/initramfs → extract embedded Ignition → recover cluster pull secret and SSH key.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-63417" data-description="logging redactor is a python library designed to redact sensitive data in logs based on regex patterns and / or dictionary keys. prior to 0.0.7, personally identifiable information returned by custom object __str__ or __repr__ methods is not redacted when such non-primitive objects are logged, causing sensitive values to appear in logs that are expected to mask them. this issue is fixed in version 0.0.7.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63417" target="_blank">CVE-2026-63417</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Logging Redactor is a Python library designed to redact sensitive data in logs based on regex patterns and / or dictionary keys. Prior to 0.0.7, personally identifiable information returned by custom object __str__ or __repr__ methods is not redacted when such non-primitive objects are logged, causing sensitive values to appear in logs that are expected to mask them. This issue is fixed in version 0.0.7.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-63198" data-description="traq is a messenger application built for digital creators club trap. prior to 3.28.3, oauth2 silent authorization requests using prompt=none with an empty or omitted scope parameter check prior consent against the empty requested scope set even though all scopes registered for the client become eligible for issuance. an attacker who controls an oauth client capable of receiving authorization codes can target a user who previously consented to only some client scopes and obtain an access token containing broader registered scopes without additional consent. a user who has never consented to the client still receives consent_required. this issue is fixed in version 3.28.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63198" target="_blank">CVE-2026-63198</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>traQ is a messenger application built for Digital Creators Club traP. Prior to 3.28.3, OAuth2 silent authorization requests using prompt=none with an empty or omitted scope parameter check prior consent against the empty requested scope set even though all scopes registered for the client become eligible for issuance. An attacker who controls an OAuth client capable of receiving authorization codes can target a user who previously consented to only some client scopes and obtain an access token containing broader registered scopes without additional consent. A user who has never consented to the client still receives consent_required. This issue is fixed in version 3.28.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-63197" data-description="traq is a messenger application built for digital creators club trap. prior to 3.28.3, instances configured with traq_storage_type=local can return user-uploaded svg or html content from the /files/{fileid} retrieval endpoint for direct browser rendering. an attacker with file-upload capability can provide crafted active content and induce another user to open its file url, causing attacker-controlled javascript to execute in the victim's browser. this issue is fixed in version 3.28.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63197" target="_blank">CVE-2026-63197</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>traQ is a messenger application built for Digital Creators Club traP. Prior to 3.28.3, instances configured with TRAQ_STORAGE_TYPE=local can return user-uploaded SVG or HTML content from the /files/{fileId} retrieval endpoint for direct browser rendering. An attacker with file-upload capability can provide crafted active content and induce another user to open its file URL, causing attacker-controlled JavaScript to execute in the victim's browser. This issue is fixed in version 3.28.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-57154" data-description="opnsense is a freebsd based firewall and routing platform. prior to 26.1.11 and 26.4.1p1, authenticated web ui or api users with delegated access to affected settings can submit cr or lf characters in fields expected to contain one line, causing generated privileged service configuration files to contain additional attacker-controlled directives or policy lines. the confirmed dnsmasq path includes dhcp_boot.filename, dhcp_boot.servername, dhcp_boot.address, and dhcp_options.value, which are rendered into /usr/local/etc/dnsmasq.conf; access through page-services-dnsforwarder covers api/dnsmasq/*. related affected fields span openvpn, dhcpv6, unbound, ipsec, ntp, ppp or mpd, monit, firewall, sudo, webgui, and system general configuration. applying or restarting the affected service can alter behavior beyond the delegated setting, create service-side files, cross rbac boundaries, or cause denial of service. line injection through monit mail password and adjacent monit text fields into /usr/local/etc/monitrc demonstrated root command execution. arbitrary shell command execution was not confirmed for the dnsmasq path. this issue is fixed in versions 26.1.11 and 26.4.1p1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57154" target="_blank">CVE-2026-57154</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>OPNsense is a FreeBSD based firewall and routing platform. Prior to 26.1.11 and 26.4.1p1, authenticated Web UI or API users with delegated access to affected settings can submit CR or LF characters in fields expected to contain one line, causing generated privileged service configuration files to contain additional attacker-controlled directives or policy lines. The confirmed Dnsmasq path includes dhcp_boot.filename, dhcp_boot.servername, dhcp_boot.address, and dhcp_options.value, which are rendered into /usr/local/etc/dnsmasq.conf; access through page-services-dnsforwarder covers api/dnsmasq/*. Related affected fields span OpenVPN, DHCPv6, Unbound, IPsec, NTP, PPP or MPD, Monit, firewall, sudo, WebGUI, and System General configuration. Applying or restarting the affected service can alter behavior beyond the delegated setting, create service-side files, cross RBAC boundaries, or cause denial of service. Line injection through Monit mail password and adjacent Monit text fields into /usr/local/etc/monitrc demonstrated root command execution. Arbitrary shell command execution was not confirmed for the Dnsmasq path. This issue is fixed in versions 26.1.11 and 26.4.1p1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-46487" data-description="geonetwork is a catalog application to manage spatially referenced resources. from 4.0.0-alpha.1 until 4.2.16 and 4.4.11, the elasticsearch-backed search proxy can skip geonetwork's access-control filter injection when a client request has an omitted query field. the request is then forwarded to elasticsearch without group visibility, draft exclusion, record ownership, or portal-specific filtering. an unauthenticated remote attacker can use the affected public search api to retrieve the full indexed contents of metadata records that should not be publicly visible. this issue is fixed in versions 4.2.16 and 4.4.11.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-46487" target="_blank">CVE-2026-46487</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>GeoNetwork is a catalog application to manage spatially referenced resources. From 4.0.0-alpha.1 until 4.2.16 and 4.4.11, the Elasticsearch-backed search proxy can skip GeoNetwork's access-control filter injection when a client request has an omitted query field. The request is then forwarded to Elasticsearch without group visibility, draft exclusion, record ownership, or portal-specific filtering. An unauthenticated remote attacker can use the affected public search API to retrieve the full indexed contents of metadata records that should not be publicly visible. This issue is fixed in versions 4.2.16 and 4.4.11.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-39379" data-description="geonetwork is a catalog application to manage spatially referenced resources. from 3.0.0 until 4.2.15 and 4.4.10, requesting a nonexistent or unauthorized service url can cause an error page to reflect attacker-controlled request content inside an angularjs application without adequately neutralizing it for template evaluation. a remote attacker can induce a victim, including an administrator, to open a crafted link so the reflected value is evaluated as an angularjs template expression. combined with known angularjs sandbox-escape techniques, this can execute arbitrary javascript in the victim's authenticated browser session, disclose information, or perform actions as the victim. this issue is fixed in versions 4.2.15 and 4.4.10.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-39379" target="_blank">CVE-2026-39379</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>GeoNetwork is a catalog application to manage spatially referenced resources. From 3.0.0 until 4.2.15 and 4.4.10, requesting a nonexistent or unauthorized service URL can cause an error page to reflect attacker-controlled request content inside an AngularJS application without adequately neutralizing it for template evaluation. A remote attacker can induce a victim, including an administrator, to open a crafted link so the reflected value is evaluated as an AngularJS template expression. Combined with known AngularJS sandbox-escape techniques, this can execute arbitrary JavaScript in the victim's authenticated browser session, disclose information, or perform actions as the victim. This issue is fixed in versions 4.2.15 and 4.4.10.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121652" data-description="cross-site scripting (xss) issue in aws amplify maplibre-gl-js-amplify before 4.0.3 might allow remote authenticated users to inject arbitrary web script or html via the (1) title, (2) address, or (3) place_name property in geojson feature data rendered by popuprender, or the (4) geofenceid value rendered in amplifygeofencecontrol.
+
+
+
+to remediate this issue, users should upgrade to 4.0.3 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121652" target="_blank">CVE-2026-121652</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>Cross-site scripting (XSS) issue in AWS Amplify maplibre-gl-js-amplify before 4.0.3 might allow remote authenticated users to inject arbitrary web script or HTML via the (1) title, (2) address, or (3) place_name property in GeoJSON feature data rendered by popupRender, or the (4) geofenceId value rendered in AmplifyGeofenceControl.
+
+
+
+To remediate this issue, users should upgrade to 4.0.3 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121501" data-description="a vulnerability was determined in mathurvishal cloudclassroom-php-project. the affected element is the function session_regenerate_id of the file loginlinkadmin.php. executing a manipulation of the argument phpsessid can lead to session fixiation. the attack can be launched remotely. the exploit has been publicly disclosed and may be utilized. this product does not use versioning. this is why information about affected and unaffected releases are unavailable. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121501" target="_blank">CVE-2026-121501</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A vulnerability was determined in mathurvishal CloudClassroom-PHP-Project. The affected element is the function session_regenerate_id of the file loginlinkadmin.php. Executing a manipulation of the argument PHPSESSID can lead to session fixiation. The attack can be launched remotely. The exploit has been publicly disclosed and may be utilized. This product does not use versioning. This is why information about affected and unaffected releases are unavailable. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121382" data-description="a vulnerability was determined in netcore nbr100v2 1.3.240614.030928. affected by this issue is the function msg_aes_dec of the file /usr/bin/auto_ac. this manipulation causes integer overflow. remote exploitation of the attack is possible. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121382" target="_blank">CVE-2026-121382</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A vulnerability was determined in Netcore NBR100V2 1.3.240614.030928. Affected by this issue is the function msg_aes_dec of the file /usr/bin/auto_ac. This manipulation causes integer overflow. Remote exploitation of the attack is possible. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120956" data-description="the mongodb c driver does not validate the type or format of a namespace field returned by the server in a query response. a mongodb endpoint that a client application connects to, without needing any credentials, can return a malformed value in that field. this causes the client application process to terminate, and can also cause the driver to read memory outside an allocated buffer and to send a small amount of the application's own uninitialized heap memory back to the endpoint in a follow-up command. the impact is limited to the process that embeds the driver.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120956" target="_blank">CVE-2026-120956</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>The MongoDB C Driver does not validate the type or format of a namespace field returned by the server in a query response. A MongoDB endpoint that a client application connects to, without needing any credentials, can return a malformed value in that field. This causes the client application process to terminate, and can also cause the driver to read memory outside an allocated buffer and to send a small amount of the application's own uninitialized heap memory back to the endpoint in a follow-up command. The impact is limited to the process that embeds the driver.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120955" data-description="the gridfs file download api in the mongodb c driver does not check the result of an internal operation under certain error conditions during file retrieval. this can cause the process to terminate when stream operations continue. a user who can influence file download parameters can trigger this condition, which may result in service unavailability for applications using the affected api.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120955" target="_blank">CVE-2026-120955</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>The GridFS file download API in the MongoDB C Driver does not check the result of an internal operation under certain error conditions during file retrieval. This can cause the process to terminate when stream operations continue. A user who can influence file download parameters can trigger this condition, which may result in service unavailability for applications using the affected API.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120954" data-description="a weakness in the bson library's handling of a specialized binary vector data type allows an arithmetic wraparound when computing the number of elements described by an oversized attacker-supplied value. on builds where the platform word size is 32 bits, an application that parses untrusted bson data can be made to process only a small fraction of the supplied elements while the operation reports success, producing results that disagree with byte-oriented accessors and with 64-bit builds of the same library. no authentication or user interaction is required beyond getting the application to parse the data. the impact is limited to data integrity; memory safety is not affected and no information is disclosed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120954" target="_blank">CVE-2026-120954</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>A weakness in the BSON library's handling of a specialized binary vector data type allows an arithmetic wraparound when computing the number of elements described by an oversized attacker-supplied value. On builds where the platform word size is 32 bits, an application that parses untrusted BSON data can be made to process only a small fraction of the supplied elements while the operation reports success, producing results that disagree with byte-oriented accessors and with 64-bit builds of the same library. No authentication or user interaction is required beyond getting the application to parse the data. The impact is limited to data integrity; memory safety is not affected and no information is disclosed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120953" data-description="a uri redirection weakness exists in the authentication component of the atlas sql jdbc driver. during an interactive sign-in flow the driver accepts endpoint addresses supplied by the remote endpoint it is pointed at without validating their scheme, and passes the resulting address to the local default protocol handler. an unauthenticated remote party that controls the endpoint a user elects to connect to may cause an address of its choosing to be opened on the user's system; user interaction is required.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120953" target="_blank">CVE-2026-120953</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A URI redirection weakness exists in the authentication component of the Atlas SQL JDBC Driver. During an interactive sign-in flow the driver accepts endpoint addresses supplied by the remote endpoint it is pointed at without validating their scheme, and passes the resulting address to the local default protocol handler. An unauthenticated remote party that controls the endpoint a user elects to connect to may cause an address of its choosing to be opened on the user's system; user interaction is required.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120684" data-description="a memory-initialization flaw in the legacy gridfs file handling of the mongodb c driver can cause uninitialized process memory to be treated as valid file content and stored on the server. a database user holding ordinary write access to a shared storage area can arrange conditions under which an application later appends to such a file and writes that memory into records the same user is permitted to read, which may result in unintended disclosure of sensitive information from the application's process, including credentials.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120684" target="_blank">CVE-2026-120684</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>A memory-initialization flaw in the legacy GridFS file handling of the MongoDB C Driver can cause uninitialized process memory to be treated as valid file content and stored on the server. A database user holding ordinary write access to a shared storage area can arrange conditions under which an application later appends to such a file and writes that memory into records the same user is permitted to read, which may result in unintended disclosure of sensitive information from the application's process, including credentials.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120678" data-description="a memory management flaw in the mongodb c driver's handling of compressed responses may cause the client library to hold on to memory that is never released. an unauthenticated party that controls the database endpoint a client application connects to may cause repeated, unbounded memory growth in that application, which may result in the application becoming unavailable. no credentials, transport security settings, or user interaction are required.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120678" target="_blank">CVE-2026-120678</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:17:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A memory management flaw in the MongoDB C Driver's handling of compressed responses may cause the client library to hold on to memory that is never released. An unauthenticated party that controls the database endpoint a client application connects to may cause repeated, unbounded memory growth in that application, which may result in the application becoming unavailable. No credentials, transport security settings, or user interaction are required.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120673" data-description="a component of the mongodb rust driver that records diagnostic tracing data can capture command content before automatic client-side field level encryption is applied. in deployments that turn on the optional tracing capability together with automatic in-use encryption, a party with read access to the application's exported trace data may obtain field values that the application designated for encryption, without access to the encryption keys. this may result in unintended disclosure of data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120673" target="_blank">CVE-2026-120673</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:17:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>A component of the MongoDB Rust Driver that records diagnostic tracing data can capture command content before automatic client-side field level encryption is applied. In deployments that turn on the optional tracing capability together with automatic in-use encryption, a party with read access to the application's exported trace data may obtain field values that the application designated for encryption, without access to the encryption keys. This may result in unintended disclosure of data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-119922" data-description="improper access control in the babelfish for postgresql extension versions 1.2-1.5, 2.1-2.15, 3.1-3.12, 4.0-4.8, 5.1-5.4 may allow remote authenticated users to elevate their privileges. to remediate this issue, we recommend you upgrade to babelfish for postgresql extension versions 4.10, 5.6, 6.1 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119922" target="_blank">CVE-2026-119922</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:17:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>Improper access control in the Babelfish for PostgreSQL extension versions 1.2-1.5, 2.1-2.15, 3.1-3.12, 4.0-4.8, 5.1-5.4 may allow remote authenticated users to elevate their privileges. To remediate this issue, we recommend you upgrade to Babelfish for PostgreSQL extension versions 4.10, 5.6, 6.1 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-112917" data-description="in docker desktop for windows with the wsl2 backend, an unprivileged linux container can use 32-bit socketcall to bypass the default seccomp restriction on af_vsock. this can expose host-facing services and windows files accessible to the logged-in user. the issue affects x86-64 wsl2; linuxkit-based backends are unaffected. the issue is fully fixed only with docker desktop 4.98.0 or later and wsl 3.0.3 or later. docker desktop 4.98.0 or later running on an older wsl remains affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112917" target="_blank">CVE-2026-112917</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 13:17:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In Docker Desktop for Windows with the WSL2 backend, an unprivileged Linux container can use 32-bit socketcall to bypass the default seccomp restriction on AF_VSOCK. This can expose host-facing services and Windows files accessible to the logged-in user. The issue affects x86-64 WSL2; LinuxKit-based backends are unaffected. The issue is fully fixed only with Docker Desktop 4.98.0 or later and WSL 3.0.3 or later. Docker Desktop 4.98.0 or later running on an older WSL remains affected.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-63499" data-description="zt-zip is a java library that provides convenience methods for zip archive manipulation. prior to 1.18.1, ziputil.unpack(...) can apply stored zip-entry permissions to the extraction output directory when an entry name such as / or ./ resolves to that directory itself. because the path traversal checks permit self-referencing entries that do not escape the destination, the unpacker's permission-handling path can replace restrictive output-directory permissions with attacker-supplied permissions. this affects applications that unpack untrusted zip files, and posix systems demonstrate the issue directly, while ztfilepermissionsutil.fetchdefaultstrategy provides fallback permission handling on other supported systems. this issue is fixed in version 1.18.1.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63499" target="_blank">CVE-2026-63499</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-03 12:18:04 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>zt-zip is a Java library that provides convenience methods for ZIP archive manipulation. Prior to 1.18.1, ZipUtil.unpack(...) can apply stored ZIP-entry permissions to the extraction output directory when an entry name such as / or ./ resolves to that directory itself. Because the path traversal checks permit self-referencing entries that do not escape the destination, the unpacker's permission-handling path can replace restrictive output-directory permissions with attacker-supplied permissions. This affects applications that unpack untrusted ZIP files, and POSIX systems demonstrate the issue directly, while ZTFilePermissionsUtil.fetchDefaultStrategy provides fallback permission handling on other supported systems. This issue is fixed in version 1.18.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-63494" data-description="rejected reason: this cve is a duplicate of another cve.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63494" target="_blank">CVE-2026-63494</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:04 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: This CVE is a duplicate of another CVE.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-63492" data-description="rejected reason: this cve is a duplicate of another cve.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63492" target="_blank">CVE-2026-63492</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Rejected reason: This CVE is a duplicate of another CVE.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-63436" data-description="zt-zip is a java library that provides convenience methods for zip archive manipulation. prior to 1.18.0, the zips.get(zip).unpack().destination(outputdir).process() fluent api in src/main/java/org/zeroturnaround/zip/zips.java constructs output files directly from zip entry names without applying the destination-boundary validation used by ziputil.unpack(...). a crafted entry containing parent-directory traversal can therefore write outside outputdir through both the normal copy branch and the zipentrytransformer branch. applications that extract untrusted archives only through ziputil.unpack(...) are unaffected because that api already calls checkdestinationfilefortraversal. this issue is fixed in version 1.18.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63436" target="_blank">CVE-2026-63436</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>zt-zip is a Java library that provides convenience methods for ZIP archive manipulation. Prior to 1.18.0, the Zips.get(zip).unpack().destination(outputDir).process() fluent API in src/main/java/org/zeroturnaround/zip/Zips.java constructs output files directly from ZIP entry names without applying the destination-boundary validation used by ZipUtil.unpack(...). A crafted entry containing parent-directory traversal can therefore write outside outputDir through both the normal copy branch and the ZipEntryTransformer branch. Applications that extract untrusted archives only through ZipUtil.unpack(...) are unaffected because that API already calls checkDestinationFileForTraversal. This issue is fixed in version 1.18.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-63418" data-description="monitoring plugins is a suite of plugins for monitoring applications. from 3.0.0-rc1 until 3.0.1, check_icmp stores the number of hosts supplied through -h or --host on the command line, or through --extra-opts files containing host= entries, in an unsigned short. more than 65,535 hosts wrap the counter, causing process_arguments() to allocate an undersized hosts array and then write subsequent entries out of bounds before main() calls setuid(getuid()). on installations where check_icmp is setuid root, a local low-privileged attacker can corrupt heap memory while the process still has root privileges; reliable privilege escalation has not been demonstrated. installations that use cap_net_raw file capabilities instead of setuid are not exposed to the privilege-escalation consequence. this issue is fixed in version 3.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63418" target="_blank">CVE-2026-63418</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>Monitoring Plugins is a suite of plugins for monitoring applications. From 3.0.0-rc1 until 3.0.1, check_icmp stores the number of hosts supplied through -H or --Host on the command line, or through --extra-opts files containing Host= entries, in an unsigned short. More than 65,535 hosts wrap the counter, causing process_arguments() to allocate an undersized hosts array and then write subsequent entries out of bounds before main() calls setuid(getuid()). On installations where check_icmp is setuid root, a local low-privileged attacker can corrupt heap memory while the process still has root privileges; reliable privilege escalation has not been demonstrated. Installations that use cap_net_raw file capabilities instead of setuid are not exposed to the privilege-escalation consequence. This issue is fixed in version 3.0.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-44267" data-description="elo is a purely functional expression language for no-code tools. prior to 1.0.1, plain elo strings supplied to defaultformats.elo.parse(), bin/elo, or elo-lang.org/try can use .constructor.constructor to reach javascript function because the member_access handler in src/transform.ts does not reject meta-properties, src/compilers/javascript.ts emits the surviving property directly, and src/parser.ts accepts constructor as an ordinary identifier. the resulting generated javascript executes attacker-selected code in the host runtime. this permits browser script execution and session compromise on the auto-running playground and arbitrary node.js code execution on library, ci, or devops hosts. this plain-string path is distinct from the programmatic ast-object injection issue. this issue is fixed in version 1.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-44267" target="_blank">CVE-2026-44267</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Elo is a purely functional expression language for no-code tools. Prior to 1.0.1, plain Elo strings supplied to defaultFormats.elo.parse(), bin/elo, or elo-lang.org/try can use .constructor.constructor to reach JavaScript Function because the member_access handler in src/transform.ts does not reject meta-properties, src/compilers/javascript.ts emits the surviving property directly, and src/parser.ts accepts constructor as an ordinary identifier. The resulting generated JavaScript executes attacker-selected code in the host runtime. This permits browser script execution and session compromise on the auto-running playground and arbitrary Node.js code execution on library, CI, or DevOps hosts. This plain-string path is distinct from the programmatic AST-object injection issue. This issue is fixed in version 1.0.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-44266" data-description="elo is a purely functional expression language for no-code tools. prior to 1.0.1, the ruby backend in src/compilers/ruby.ts embeds attacker-controlled text in ruby double-quoted strings without escaping #, so ruby interpolation forms in the string-literal emitter or the labelled subtype-constraint branch become executable ruby. the affected entry points include the /try playground with the ruby target, bin/eloc -t ruby -x, and defaultformats.elo.parse() followed by ruby emission. a failing labelled subtype constraint evaluates its message, while an ordinary string literal is evaluated when the compiled ruby runs, allowing ruby code and shell command execution through backticks. javascript, python, and sql emission are not affected by this ruby-specific path. this issue is fixed in version 1.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-44266" target="_blank">CVE-2026-44266</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Elo is a purely functional expression language for no-code tools. Prior to 1.0.1, the Ruby backend in src/compilers/ruby.ts embeds attacker-controlled text in Ruby double-quoted strings without escaping #, so Ruby interpolation forms in the string-literal emitter or the labelled subtype-constraint branch become executable Ruby. The affected entry points include the /try playground with the Ruby target, bin/eloc -t ruby -x, and defaultFormats.elo.parse() followed by Ruby emission. A failing labelled subtype constraint evaluates its message, while an ordinary string literal is evaluated when the compiled Ruby runs, allowing Ruby code and shell command execution through backticks. JavaScript, Python, and SQL emission are not affected by this Ruby-specific path. This issue is fixed in version 1.0.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-44265" data-description="elo is a purely functional expression language for no-code tools. prior to 1.0.1, elo's programmatic ast api accepts arbitrary values from json-deserialized input, plugin output, or other untyped sources and interpolates them into generated javascript, ruby, python, or sql without runtime syntax validation. the affected fields are int_literal / float_literal .value, variable.name, member_access.property, object_literal keys, datapath segments, lambda.params[].name, and the sql let binding name. crafted values become executable expressions or identifiers, allowing arbitrary code execution in javascript, ruby, and python targets and sql injection in the sql target. this programmatic ast-object path is distinct from the plain-string constructor-chain sandbox escape. this issue is fixed in version 1.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-44265" target="_blank">CVE-2026-44265</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:18:02 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>Elo is a purely functional expression language for no-code tools. Prior to 1.0.1, Elo's programmatic AST API accepts arbitrary values from JSON-deserialized input, plugin output, or other untyped sources and interpolates them into generated JavaScript, Ruby, Python, or SQL without runtime syntax validation. The affected fields are int_literal / float_literal .value, variable.name, member_access.property, object_literal keys, datapath segments, lambda.params[].name, and the SQL let binding name. Crafted values become executable expressions or identifiers, allowing arbitrary code execution in JavaScript, Ruby, and Python targets and SQL injection in the SQL target. This programmatic AST-object path is distinct from the plain-string constructor-chain sandbox escape. This issue is fixed in version 1.0.1.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121628" data-description="bagisto before 2.3.16 and 2.4.x before 2.4.1 contains a race condition vulnerability in managecartrule() that allows attackers to redeem single-use coupons multiple times. attackers can submit concurrent order requests to the onepage orders checkout endpoint, bypassing unlocked times_used checks to apply discounts repeatedly.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121628" target="_blank">CVE-2026-121628</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>Bagisto before 2.3.16 and 2.4.x before 2.4.1 contains a race condition vulnerability in manageCartRule() that allows attackers to redeem single-use coupons multiple times. Attackers can submit concurrent order requests to the onepage orders checkout endpoint, bypassing unlocked times_used checks to apply discounts repeatedly.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121627" data-description="buku 5.0 through 5.1.1 contains a stored cross-site scripting vulnerability in the bukuserver bookmark list that allows attackers to execute script via an unescaped bookmark url in bookmarkmodelview._list_entry(). attackers can submit a url containing a double quote and event handler through the unauthenticated /api/bookmarks endpoint to issue same-origin api requests with viewers' credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121627" target="_blank">CVE-2026-121627</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>buku 5.0 through 5.1.1 contains a stored cross-site scripting vulnerability in the bukuserver bookmark list that allows attackers to execute script via an unescaped bookmark URL in BookmarkModelView._list_entry(). Attackers can submit a URL containing a double quote and event handler through the unauthenticated /api/bookmarks endpoint to issue same-origin API requests with viewers' credentials.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121626" data-description="gnu gatekeeper (gnugk) before 5.16 contains an out-of-bounds read vulnerability in h46024socket::receivedprobepacket() that allows remote attackers to cause a heap over-read by sending short probe packets. attackers can send a short application-defined rtcp packet to the media port during h.460.24 probing to read past the heap allocation and possibly crash the gatekeeper.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121626" target="_blank">CVE-2026-121626</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>GNU Gatekeeper (gnugk) before 5.16 contains an out-of-bounds read vulnerability in H46024Socket::ReceivedProbePacket() that allows remote attackers to cause a heap over-read by sending short probe packets. Attackers can send a short application-defined RTCP packet to the media port during H.460.24 probing to read past the heap allocation and possibly crash the gatekeeper.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121625" data-description="gnu gatekeeper (gnugk) before 5.16 contains an out-of-bounds read vulnerability in parsertcp() in proxychannel.cxx that allows remote rtp peers to read heap memory past received packets. attackers can send rtcp sdes items lacking a nul byte to the media proxy port during proxied h.323 calls with enablertcpstats enabled, crashing the gatekeeper.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121625" target="_blank">CVE-2026-121625</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
-                    <p>GNU Gatekeeper (gnugk) before 5.16 contains an out-of-bounds read vulnerability in ParseRTCP() in ProxyChannel.cxx that allows remote RTP peers to read heap memory past received packets. Attackers can send RTCP SDES items lacking a NUL byte to the media proxy port during proxied H.323 calls with EnableRTCPStats enabled, crashing the gatekeeper.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121624" data-description="nanosystems supremo for windows and macos before 5.0.2.3874 contains an improper certificate validation vulnerability that allows adjacent attackers to intercept tls connections by presenting untrusted certificates. attackers on the same network can terminate and relay the client's tls session using self-signed certificates to read usernames, sha-256 password hashes, and license codes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121624" target="_blank">CVE-2026-121624</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:58 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>Nanosystems Supremo for Windows and macOS before 5.0.2.3874 contains an improper certificate validation vulnerability that allows adjacent attackers to intercept TLS connections by presenting untrusted certificates. Attackers on the same network can terminate and relay the client's TLS session using self-signed certificates to read usernames, SHA-256 password hashes, and license codes.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121263" data-description="a vulnerability was determined in phpmyadmin motranslator up to 6.0.1. the impacted element is the function loader::gettranslator of the file motranslator-master/src/loader.php. executing a manipulation of the argument locale can lead to path traversal. the attack may be performed from remote. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121263" target="_blank">CVE-2026-121263</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:57 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was determined in phpMyAdmin MoTranslator up to 6.0.1. The impacted element is the function Loader::getTranslator of the file motranslator-master/src/Loader.php. Executing a manipulation of the argument locale can lead to path traversal. The attack may be performed from remote. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116845" data-description="netbox from 2.9.0 before 4.7.4 contains a broken access control vulnerability in bulkcomponentcreateview that allows authenticated users to bypass view permissions on parent devices and virtual machines. attackers with add-component permission can submit arbitrary device or vm ids, or _all with filters, to view out-of-scope device details and create components on them.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116845" target="_blank">CVE-2026-116845</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 12:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>NetBox from 2.9.0 before 4.7.4 contains a broken access control vulnerability in BulkComponentCreateView that allows authenticated users to bypass view permissions on parent devices and virtual machines. Attackers with add-component permission can submit arbitrary device or VM IDs, or _all with filters, to view out-of-scope device details and create components on them.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-97072" data-description="missing authorization vulnerability in mycred mycred mycred allows exploiting incorrectly configured access control security levels.this issue affects mycred: from n/a through 4.0.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97072" target="_blank">CVE-2026-97072</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 11:18:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in myCred myCred mycred allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects myCred: from n/a through 4.0.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-39777" data-description="missing authorization vulnerability in wc lovers wcfm membership wc-multivendor-membership allows exploiting incorrectly configured access control security levels.this issue affects wcfm membership: from n/a through 2.12.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-39777" target="_blank">CVE-2026-39777</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 11:18:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in WC Lovers WCFM Membership wc-multivendor-membership allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects WCFM Membership: from n/a through 2.12.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-39743" data-description="missing authorization vulnerability in wc lovers wcfm membership wc-multivendor-membership allows exploiting incorrectly configured access control security levels.this issue affects wcfm membership: from n/a through 2.12.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-39743" target="_blank">CVE-2026-39743</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 11:18:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in WC Lovers WCFM Membership wc-multivendor-membership allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects WCFM Membership: from n/a through 2.12.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-38601" data-description="a hardcoded session secret key in codeskyblue gohttpserver through v1.3.0 allows attackers to impersonate any user, bypass openid connect authentication and access all controls via forged session cookies.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-38601" target="_blank">CVE-2026-38601</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 11:18:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A hardcoded session secret key in codeskyblue gohttpserver through v1.3.0 allows attackers to impersonate any user, bypass OpenID Connect authentication and access all controls via forged session cookies.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-38600" data-description="a zip slip vulnerability in the /upload endpoint of codeskyblue gohttpserver through v1.3.0 allows attackers to write arbitrary files via uploading a crafted zip archive.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-38600" target="_blank">CVE-2026-38600</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 11:18:13 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A Zip Slip vulnerability in the /upload endpoint of codeskyblue gohttpserver through v1.3.0 allows attackers to write arbitrary files via uploading a crafted Zip archive.</p>
                 </div>
         
             </div>
