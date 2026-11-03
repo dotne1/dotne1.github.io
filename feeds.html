@@ -34,6 +34,118 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-89295" data-description="in eclipse mnestix aas generator versions 0.1.0 up until but excluding 1.5.0, a practical upper bound on the client-supplied count parameter of the get /api/v1/idgenerator/submodelids/{count} and get /api/v2/idgenerator/submodelids/{count} endpoints is not enforced. the service generates and retains identifiers in memory before returning a response. a remote unauthenticated attacker can submit a large count to cause excessive memory consumption, potentially resulting in denial of service. exploitation requires network access to the endpoint and successful retrieval of the id-generation configuration from the configured backend repository.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89295" target="_blank">CVE-2026-89295</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In Eclipse Mnestix AAS Generator versions 0.1.0 up until but excluding 1.5.0, a practical upper bound on the client-supplied count parameter of the GET /api/v1/IdGenerator/submodelIds/{count} and GET /api/v2/IdGenerator/submodelIds/{count} endpoints is not enforced. The service generates and retains identifiers in memory before returning a response. A remote unauthenticated attacker can submit a large count to cause excessive memory consumption, potentially resulting in denial of service. Exploitation requires network access to the endpoint and successful retrieval of the ID-generation configuration from the configured backend repository.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-85035" data-description="the can_add_rx_filter_msgq() system call installs a can rx filter whose callback (can_msgq_put() in drivers/can/can_common.c) is handed the caller's struct k_msgq * as user_data. the controller driver stores that raw pointer in its filter table and dereferences it from the rx path every time a matching frame arrives. the system call verifier z_vrfy_can_add_rx_filter_msgq() in drivers/can/can_handlers.c validated the queue only with k_syscall_obj(), which is a point-in-time check of type, initialization and caller permission and says nothing about the object's lifetime.
+
+on a build with config_userspace=y and config_dynamic_objects=y, an unprivileged user-mode thread that has been granted access to a can device can obtain a message queue whose lifetime it fully controls: k_object_alloc(k_obj_msgq) followed by k_msgq_alloc_init(). the lifetime of such an object is driven solely by its permission bitmask, and a pointer retained by the kernel is not represented there. after registering the filter, the thread calls k_object_release() — or simply terminates — and unref_check() frees the struct k_msgq storage while the can driver still holds the pointer.
+
+the next matching can frame causes k_msgq_put() to run in supervisor context against freed memory that the attacker can have groomed with another kernel allocation: the frame payload is memcpy()d through the reused block's write_ptr, and the queue's wait_q (and poll_events under config_poll) list nodes are manipulated. this yields kernel-heap corruption reachable from a user-mode thread, defeating the isolation config_userspace is intended to provide; the same dangling pointer also arises benignly when an application thread exits without calling can_remove_rx_filter().
+
+the fix validates the queue with k_syscall_obj_static(), which additionally rejects objects carrying k_obj_flag_alloc, so only statically defined queues (can_msgq_define()) may be registered from user mode. supervisor-mode callers bypass the verifier and must themselves keep the queue valid until the filter is removed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85035" target="_blank">CVE-2026-85035</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>The can_add_rx_filter_msgq() system call installs a CAN RX filter whose callback (can_msgq_put() in drivers/can/can_common.c) is handed the caller's struct k_msgq * as user_data. The controller driver stores that raw pointer in its filter table and dereferences it from the RX path every time a matching frame arrives. The system call verifier z_vrfy_can_add_rx_filter_msgq() in drivers/can/can_handlers.c validated the queue only with K_SYSCALL_OBJ(), which is a point-in-time check of type, initialization and caller permission and says nothing about the object's lifetime.
+
+On a build with CONFIG_USERSPACE=y and CONFIG_DYNAMIC_OBJECTS=y, an unprivileged user-mode thread that has been granted access to a CAN device can obtain a message queue whose lifetime it fully controls: k_object_alloc(K_OBJ_MSGQ) followed by k_msgq_alloc_init(). The lifetime of such an object is driven solely by its permission bitmask, and a pointer retained by the kernel is not represented there. After registering the filter, the thread calls k_object_release() — or simply terminates — and unref_check() frees the struct k_msgq storage while the CAN driver still holds the pointer.
+
+The next matching CAN frame causes k_msgq_put() to run in supervisor context against freed memory that the attacker can have groomed with another kernel allocation: the frame payload is memcpy()d through the reused block's write_ptr, and the queue's wait_q (and poll_events under CONFIG_POLL) list nodes are manipulated. This yields kernel-heap corruption reachable from a user-mode thread, defeating the isolation CONFIG_USERSPACE is intended to provide; the same dangling pointer also arises benignly when an application thread exits without calling can_remove_rx_filter().
+
+The fix validates the queue with K_SYSCALL_OBJ_STATIC(), which additionally rejects objects carrying K_OBJ_FLAG_ALLOC, so only statically defined queues (CAN_MSGQ_DEFINE()) may be registered from user mode. Supervisor-mode callers bypass the verifier and must themselves keep the queue valid until the filter is removed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-85034" data-description="the bluetooth host's gatt client passed the value of a received handle value notification, handle value indication or multiple handle value notification to bt_gatt_subscribe_params::notify callbacks using only the length derived from the received att pdu. bt_att_recv() in subsys/bluetooth/host/att.c validates only a minimum pdu length and does not enforce the negotiated att mtu, and the fixed att l2cap channel in subsys/bluetooth/host/l2cap.c applies no rx.mtu check either, so the only ceiling was the acl reassembly buffer config_bt_buf_acl_rx_size. values longer than the 512-octet maximum attribute length defined by the bluetooth core specification (vol 3, part f, section 3.2.9) could therefore be handed to subscribers that size their buffers to that documented limit.
+
+a remote peer that a device has connected and subscribed to — a malicious, spoofed or compromised gatt server within radio range — triggers the flaw by sending a notification or indication whose value exceeds 512 octets on a subscribed handle. in the le audio unicast client this reaches a concrete out-of-bounds write: unicast_client_ep_notify() in subsys/bluetooth/audio/bap_unicast_client.c copies the notification into the 512-byte att_buf of struct unicast_client with net_buf_simple_add_mem() and no tailroom check whenever length equals bt_audio_get_max_ntf_size(), i.e. the negotiated att mtu minus three. notify_handler() in subsys/bluetooth/audio/bap_broadcast_assistant.c has the same shape. reaching the overflow requires a build whose att mtu exceeds 515 octets (config_bt_l2cap_tx_mtu and config_bt_buf_acl_rx_size set for full-length attribute support); the shipped defaults are far smaller.
+
+the overflow writes peer-controlled bytes past att_buf directly over the adjacent struct net_buf_simple net_buf — its data, __buf, len and size fields — which the subsequent long-read accumulation then uses as its destination, turning a small linear overflow into a controlled write. net_buf_simple_add() only asserts on insufficient tailroom unless config_net_buf_hardening is enabled, and that option is disabled by default, so ordinary production builds perform the copy. beyond the in-tree le audio clients, any application subscriber that sized its receive buffer to the specification's 512-octet limit was exposed to the same overflow.
+
+the fix rejects notification, indication and multiple-notification values longer than bt_att_max_attribute_len in call_notify_cb_and_maybe_unsubscribe() in subsys/bluetooth/host/gatt.c before any subscriber callback is invoked, so no subscriber can be handed more than the specified maximum. remaining tuples of a multiple handle value notification are still delivered and oversized indications are still confirmed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85034" target="_blank">CVE-2026-85034</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
+                    <p>The Bluetooth host's GATT client passed the value of a received Handle Value Notification, Handle Value Indication or Multiple Handle Value Notification to bt_gatt_subscribe_params::notify callbacks using only the length derived from the received ATT PDU. bt_att_recv() in subsys/bluetooth/host/att.c validates only a minimum PDU length and does not enforce the negotiated ATT MTU, and the fixed ATT L2CAP channel in subsys/bluetooth/host/l2cap.c applies no rx.mtu check either, so the only ceiling was the ACL reassembly buffer CONFIG_BT_BUF_ACL_RX_SIZE. Values longer than the 512-octet maximum attribute length defined by the Bluetooth Core Specification (Vol 3, Part F, Section 3.2.9) could therefore be handed to subscribers that size their buffers to that documented limit.
+
+A remote peer that a device has connected and subscribed to — a malicious, spoofed or compromised GATT server within radio range — triggers the flaw by sending a notification or indication whose value exceeds 512 octets on a subscribed handle. In the LE Audio unicast client this reaches a concrete out-of-bounds write: unicast_client_ep_notify() in subsys/bluetooth/audio/bap_unicast_client.c copies the notification into the 512-byte att_buf of struct unicast_client with net_buf_simple_add_mem() and no tailroom check whenever length equals bt_audio_get_max_ntf_size(), i.e. the negotiated ATT MTU minus three. notify_handler() in subsys/bluetooth/audio/bap_broadcast_assistant.c has the same shape. Reaching the overflow requires a build whose ATT MTU exceeds 515 octets (CONFIG_BT_L2CAP_TX_MTU and CONFIG_BT_BUF_ACL_RX_SIZE set for full-length attribute support); the shipped defaults are far smaller.
+
+The overflow writes peer-controlled bytes past att_buf directly over the adjacent struct net_buf_simple net_buf — its data, __buf, len and size fields — which the subsequent long-read accumulation then uses as its destination, turning a small linear overflow into a controlled write. net_buf_simple_add() only asserts on insufficient tailroom unless CONFIG_NET_BUF_HARDENING is enabled, and that option is disabled by default, so ordinary production builds perform the copy. Beyond the in-tree LE Audio clients, any application subscriber that sized its receive buffer to the specification's 512-octet limit was exposed to the same overflow.
+
+The fix rejects notification, indication and multiple-notification values longer than BT_ATT_MAX_ATTRIBUTE_LEN in call_notify_cb_and_maybe_unsubscribe() in subsys/bluetooth/host/gatt.c before any subscriber callback is invoked, so no subscriber can be handed more than the specified maximum. Remaining tuples of a multiple handle value notification are still delivered and oversized indications are still confirmed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-85033" data-description="the avrcp target role in subsys/bluetooth/host/classic/avrcp.c keeps its vendor-dependent response transmit state in a per-connection object selected by connection index (get_avrcp_tg()), with the per-transfer context (tid, sent_len, and the bt_avrcp_tg_flag_tx_ongoing flag) stored in the user_data of the queued response net_buf. the avctp teardown handler avrcp_disconnected() did not cancel tg->vd_rsp_tx_work and did not release the buffers still queued on tg->vd_rsp_tx_pending, so a link drop in the middle of a fragmented response left the buffer on the list with tx_ongoing still set.
+
+a remote avrcp controller can trigger this deterministically: it issues a vendor-dependent command whose response exceeds one avrcp fragment (for example getelementattributes or getcapabilities), lets bt_avrcp_tg_vendor_tx_work() emit the start fragment, and then drops the acl link instead of sending request_continuing_response. the avctp control channel requires an encrypted br/edr link (bt_security_l2), so the attacker must be a paired peer within radio range; no user interaction is needed.
+
+because the target objects are static and reused, the next connection landing on the same connection index finds the stale buffer at the head of vd_rsp_tx_pending. every run of the tx work sees tx_ongoing and returns immediately, so all further vendor-dependent responses queue behind the stale head and are never sent — a persistent loss of avrcp target function that no timeout clears and only a reboot recovers. each cycle also leaks one response buffer from a shallow application pool, and a new peer that sends request_continuing_response clears the stale tx_ongoing via bt_avrcp_tg_process_continuing_cmd(), causing the un-sent remainder of the previous peer's response to be transmitted to it.
+
+the fix cancels tg->vd_rsp_tx_work and unrefs every buffer on tg->vd_rsp_tx_pending in avrcp_disconnected(); since the tx context lives in the buffer user_data, releasing the buffers also resets the tx state machine. there is no memory corruption: the pre-fix buffer is leaked with a live reference, so no use-after-free arises.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85033" target="_blank">CVE-2026-85033</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
+                    <p>The AVRCP Target role in subsys/bluetooth/host/classic/avrcp.c keeps its vendor-dependent response transmit state in a per-connection object selected by connection index (get_avrcp_tg()), with the per-transfer context (tid, sent_len, and the BT_AVRCP_TG_FLAG_TX_ONGOING flag) stored in the user_data of the queued response net_buf. The AVCTP teardown handler avrcp_disconnected() did not cancel tg->vd_rsp_tx_work and did not release the buffers still queued on tg->vd_rsp_tx_pending, so a link drop in the middle of a fragmented response left the buffer on the list with TX_ONGOING still set.
+
+A remote AVRCP Controller can trigger this deterministically: it issues a vendor-dependent command whose response exceeds one AVRCP fragment (for example GetElementAttributes or GetCapabilities), lets bt_avrcp_tg_vendor_tx_work() emit the START fragment, and then drops the ACL link instead of sending REQUEST_CONTINUING_RESPONSE. The AVCTP control channel requires an encrypted BR/EDR link (BT_SECURITY_L2), so the attacker must be a paired peer within radio range; no user interaction is needed.
+
+Because the Target objects are static and reused, the next connection landing on the same connection index finds the stale buffer at the head of vd_rsp_tx_pending. Every run of the TX work sees TX_ONGOING and returns immediately, so all further vendor-dependent responses queue behind the stale head and are never sent — a persistent loss of AVRCP Target function that no timeout clears and only a reboot recovers. Each cycle also leaks one response buffer from a shallow application pool, and a new peer that sends REQUEST_CONTINUING_RESPONSE clears the stale TX_ONGOING via bt_avrcp_tg_process_continuing_cmd(), causing the un-sent remainder of the previous peer's response to be transmitted to it.
+
+The fix cancels tg->vd_rsp_tx_work and unrefs every buffer on tg->vd_rsp_tx_pending in avrcp_disconnected(); since the TX context lives in the buffer user_data, releasing the buffers also resets the TX state machine. There is no memory corruption: the pre-fix buffer is leaked with a live reference, so no use-after-free arises.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-85032" data-description="the mctp over usb device class in subsys/pmci/mctp/mctp_usb.c splits rx handling across two threads: the system workqueue runs mctp_usb_class_out_work(), which parses host out data byte by byte and fills a packet buffer at usb->rx_pkt, while the usb device stack thread runs mctp_usb_class_disable(). the disable handler used k_work_cancel(), which removes a queued work item but returns immediately without waiting for a handler that is already running, and then called mctp_usb_reset_rx_state() to mctp_pktbuf_free() the packet buffer the worker may still be using.
+
+both entry points into mctp_usb_class_disable() are driven by the attached usb host: a set_configuration request and a usb bus reset both reach it via usbd_config_reset() in subsys/usb/device_next/usbd_config.c. a host that streams partial mctp frames on the bulk out endpoint and repeatedly forces a configuration change or bus reset therefore controls both the data being parsed and the moment the teardown runs, and can retry the race indefinitely without credentials or user interaction.
+
+if the free lands while the worker holds the pointer, the worker writes host-supplied bytes into freed memory of the dedicated mctp heap (config_mctp_heap_size in subsys/pmci/mctp/mctp_memory.c), corrupting recycled buffers or sys_heap free-block metadata; this window requires genuine parallelism, i.e. config_smp or a preemptible config_system_workqueue_priority. with the default cooperative workqueue the worker can still yield inside mctp_bus_rx() (application callback or a control-message reply blocking in mctp_usb_tx()), after which it resumes and calls mctp_pktbuf_free(usb->rx_pkt) on a pointer the teardown has nulled, dereferencing null and faulting on targets with null-pointer detection.
+
+the fix replaces the cancel with k_work_cancel_sync() plus a new struct k_work_sync out_work_sync, so disable waits for the rx worker to finish before draining the fifo and freeing the packet buffer. the affected code is the mctp subsystem, which is marked experimental, built only with config_mctp_usb.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85032" target="_blank">CVE-2026-85032</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
+                    <p>The MCTP over USB device class in subsys/pmci/mctp/mctp_usb.c splits RX handling across two threads: the system workqueue runs mctp_usb_class_out_work(), which parses host OUT data byte by byte and fills a packet buffer at usb->rx_pkt, while the USB device stack thread runs mctp_usb_class_disable(). The disable handler used k_work_cancel(), which removes a queued work item but returns immediately without waiting for a handler that is already running, and then called mctp_usb_reset_rx_state() to mctp_pktbuf_free() the packet buffer the worker may still be using.
+
+Both entry points into mctp_usb_class_disable() are driven by the attached USB host: a SET_CONFIGURATION request and a USB bus reset both reach it via usbd_config_reset() in subsys/usb/device_next/usbd_config.c. A host that streams partial MCTP frames on the bulk OUT endpoint and repeatedly forces a configuration change or bus reset therefore controls both the data being parsed and the moment the teardown runs, and can retry the race indefinitely without credentials or user interaction.
+
+If the free lands while the worker holds the pointer, the worker writes host-supplied bytes into freed memory of the dedicated MCTP heap (CONFIG_MCTP_HEAP_SIZE in subsys/pmci/mctp/mctp_memory.c), corrupting recycled buffers or sys_heap free-block metadata; this window requires genuine parallelism, i.e. CONFIG_SMP or a preemptible CONFIG_SYSTEM_WORKQUEUE_PRIORITY. With the default cooperative workqueue the worker can still yield inside mctp_bus_rx() (application callback or a control-message reply blocking in mctp_usb_tx()), after which it resumes and calls mctp_pktbuf_free(usb->rx_pkt) on a pointer the teardown has NULLed, dereferencing NULL and faulting on targets with null-pointer detection.
+
+The fix replaces the cancel with k_work_cancel_sync() plus a new struct k_work_sync out_work_sync, so disable waits for the RX worker to finish before draining the FIFO and freeing the packet buffer. The affected code is the MCTP subsystem, which is marked experimental, built only with CONFIG_MCTP_USB.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120572" data-description="incorrect boundary conditions in the layout: block and inline component. this vulnerability was fixed in firefox 159.0.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120572" target="_blank">CVE-2026-120572</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:35 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Incorrect boundary conditions in the Layout: Block and Inline component. This vulnerability was fixed in Firefox 159.0.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-119742" data-description="nagios xi before 2026r2 contains an os command injection vulnerability in the mib upload feature where the install_mib() function in mibs.php sanitizes uploaded filenames with an incomplete character deny-list that omits semicolons and pipes before passing them to a grep command executed via exec(). an authenticated administrator can upload a mib file with a crafted filename using tab characters to bypass the deny-list and pipe to sh via a multipart post request to mibs.php, resulting in arbitrary os command execution as the web server user.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119742" target="_blank">CVE-2026-119742</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
+                    <p>Nagios XI before 2026R2 contains an OS command injection vulnerability in the MIB upload feature where the install_mib() function in mibs.php sanitizes uploaded filenames with an incomplete character deny-list that omits semicolons and pipes before passing them to a grep command executed via exec(). An authenticated administrator can upload a MIB file with a crafted filename using tab characters to bypass the deny-list and pipe to sh via a multipart POST request to mibs.php, resulting in arbitrary OS command execution as the web server user.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-119179" data-description="a flaw in the connection management layer of the mongodb node.js driver can leave a pooled network connection in the pool for reuse while data from an earlier operation is still outstanding on it. in applications that enable an optional client-side operation timeout, an unauthenticated party that can send ordinary requests to the application may cause database replies to be paired with the wrong requests. this may result in unintended disclosure of other users' records, incorrect operation results being returned, and failures of legitimate requests.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119179" target="_blank">CVE-2026-119179</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
+                    <p>A flaw in the connection management layer of the MongoDB Node.js driver can leave a pooled network connection in the pool for reuse while data from an earlier operation is still outstanding on it. In applications that enable an optional client-side operation timeout, an unauthenticated party that can send ordinary requests to the application may cause database replies to be paired with the wrong requests. This may result in unintended disclosure of other users' records, incorrect operation results being returned, and failures of legitimate requests.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-99270" data-description="in the linux kernel, the following vulnerability has been resolved:
 
 tcp: fix potential uaf in reqsk_timer_handler().
@@ -188,106 +300,6 @@ cve-2026-108053: nombre in ‘/cuentascorrientes/create’;">
                     <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
 
 CVE-2026-108053: Nombre in ‘/CuentasCorrientes/Create’;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108052" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108052: codigo in ‘/categoriasficheros/edit/{id}’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108052" target="_blank">CVE-2026-108052</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108052: Codigo in ‘/CategoriasFicheros/Edit/{id}’;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108051" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108051: nombre in ‘/articulos/create’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108051" target="_blank">CVE-2026-108051</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108051: Nombre in ‘/Articulos/Create’;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108050" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108050: referenceotherparty in ‘/documents/deliverynotes/edit/{id}’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108050" target="_blank">CVE-2026-108050</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108050: ReferenceOtherParty in ‘/Documents/DeliveryNotes/Edit/{id}’;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108049" data-description="clickjacking vulnerability in the alosuite web application. the affected login interface can be embedded in a web page controlled by an attacker because it does not implement adequate user interface protection mechanisms, such as the x-frame-options header or an appropriate content-security-policy (frame-ancestors) directive. by tricking a victim into interacting with a malicious web page, an attacker can trigger unwanted actions within the alosuite application embedded in the frame, which could compromise the integrity of user interactions and facilitate further attacks against authenticated users.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108049" target="_blank">CVE-2026-108049</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Clickjacking vulnerability in the Alosuite web application. The affected login interface can be embedded in a web page controlled by an attacker because it does not implement adequate user interface protection mechanisms, such as the X-Frame-Options header or an appropriate Content-Security-Policy (frame-ancestors) directive. By tricking a victim into interacting with a malicious web page, an attacker can trigger unwanted actions within the Alosuite application embedded in the frame, which could compromise the integrity of user interactions and facilitate further attacks against authenticated users.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108048" data-description="vulnerability due to a lack of request limits in alosuite’s password recovery functionality. the ‘/account/resetpwd’ endpoint does not enforce adequate restrictions on the number or frequency of password reset requests sent for a single account. as a result, a remote attacker can repeatedly call the endpoint to generate an unlimited number of password reset emails addressed to a user, causing an email flood and enabling abuse of the password recovery mechanism. the absence of request limits or other controls against automation can harm legitimate users, consume application and email infrastructure resources, and facilitate automated attacks against the password recovery service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108048" target="_blank">CVE-2026-108048</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Vulnerability due to a lack of request limits in Alosuite’s password recovery functionality. The ‘/Account/resetPwd’ endpoint does not enforce adequate restrictions on the number or frequency of password reset requests sent for a single account. As a result, a remote attacker can repeatedly call the endpoint to generate an unlimited number of password reset emails addressed to a user, causing an email flood and enabling abuse of the password recovery mechanism. The absence of request limits or other controls against automation can harm legitimate users, consume application and email infrastructure resources, and facilitate automated attacks against the password recovery service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108047" data-description="inadequate authorization vulnerability in alosuite’s user invitation functionality. the ‘/requests/userinvitation’ endpoint does not properly validate the assignment of privileges on the server, allowing an attacker to manipulate the invitation parameters during the request process. by intercepting and modifying a legitimate invitation request, an unauthenticated attacker can assign administrative privileges to a newly invited user without the appropriate authorization checks. a successful exploit results in unauthorized privilege escalation, granting full administrative access to the affected application.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108047" target="_blank">CVE-2026-108047</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Inadequate authorization vulnerability in Alosuite’s user invitation functionality. The ‘/Requests/userInvitation’ endpoint does not properly validate the assignment of privileges on the server, allowing an attacker to manipulate the invitation parameters during the request process. By intercepting and modifying a legitimate invitation request, an unauthenticated attacker can assign administrative privileges to a newly invited user without the appropriate authorization checks. A successful exploit results in unauthorized privilege escalation, granting full administrative access to the affected application.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108046" data-description="direct object reference (idor) vulnerability in alosuite due to insufficient authorization checks when processing object identifiers. by modifying the identifier provided to the ‘/companies/edit/{id}’ endpoint, an attacker can access information associated with other companies or users without the appropriate authorization. the vulnerability allows unauthenticated remote attackers to enumerate valid object identifiers and retrieve information that should be restricted to authorized users, resulting in the unauthorized disclosure of application data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108046" target="_blank">CVE-2026-108046</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Direct Object Reference (IDOR) vulnerability in Alosuite due to insufficient authorization checks when processing object identifiers. By modifying the identifier provided to the ‘/Companies/Edit/{id}’ endpoint, an attacker can access information associated with other companies or users without the appropriate authorization. The vulnerability allows unauthenticated remote attackers to enumerate valid object identifiers and retrieve information that should be restricted to authorized users, resulting in the unauthorized disclosure of application data.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99269" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-sched_ext: wait for scx_opss_dispatching before moving tasks off dsqs
-
-a task can be found on a non-local dsq while the cpu which dispatched it
-is still running ops.dequeue() and hasn't cleared scx_opss_dispatching.
-the dsq consume and move paths don't wait for the dispatch to finish and
-can operate on the task concurrently with the dispatcher.
-
-call scx_wait_dispatching() in scx_move_local_task_to_local_dsq(),
-unlink_dsq_and_switch_rq_lock() and move_task_between_dsqs() before they
-operate on the task. in scx_move_local_task_to_local_dsq(), wait before
-scx_resolve_local_dsq() as it may update p->scx.flags.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99269" target="_blank">CVE-2026-99269</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 06:17:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-sched_ext: Wait for SCX_OPSS_DISPATCHING before moving tasks off DSQs
-
-A task can be found on a non-local DSQ while the CPU which dispatched it
-is still running ops.dequeue() and hasn't cleared SCX_OPSS_DISPATCHING.
-The DSQ consume and move paths don't wait for the dispatch to finish and
-can operate on the task concurrently with the dispatcher.
-
-Call scx_wait_dispatching() in scx_move_local_task_to_local_dsq(),
-unlink_dsq_and_switch_rq_lock() and move_task_between_dsqs() before they
-operate on the task. In scx_move_local_task_to_local_dsq(), wait before
-scx_resolve_local_dsq() as it may update p->scx.flags.</p>
                 </div>
         
             </div>
