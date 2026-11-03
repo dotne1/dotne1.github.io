@@ -34,272 +34,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-89295" data-description="in eclipse mnestix aas generator versions 0.1.0 up until but excluding 1.5.0, a practical upper bound on the client-supplied count parameter of the get /api/v1/idgenerator/submodelids/{count} and get /api/v2/idgenerator/submodelids/{count} endpoints is not enforced. the service generates and retains identifiers in memory before returning a response. a remote unauthenticated attacker can submit a large count to cause excessive memory consumption, potentially resulting in denial of service. exploitation requires network access to the endpoint and successful retrieval of the id-generation configuration from the configured backend repository.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89295" target="_blank">CVE-2026-89295</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:39 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-43603" data-description="a null pointer dereference in the linux gpu driver could potentially lead to a kernel crash and result in denial of service.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-43603" target="_blank">CVE-2026-43603</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:39 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In Eclipse Mnestix AAS Generator versions 0.1.0 up until but excluding 1.5.0, a practical upper bound on the client-supplied count parameter of the GET /api/v1/IdGenerator/submodelIds/{count} and GET /api/v2/IdGenerator/submodelIds/{count} endpoints is not enforced. The service generates and retains identifiers in memory before returning a response. A remote unauthenticated attacker can submit a large count to cause excessive memory consumption, potentially resulting in denial of service. Exploitation requires network access to the endpoint and successful retrieval of the ID-generation configuration from the configured backend repository.</p>
+                    <p>A NULL pointer dereference in the Linux GPU driver could potentially lead to a kernel crash and result in denial of service.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-85035" data-description="the can_add_rx_filter_msgq() system call installs a can rx filter whose callback (can_msgq_put() in drivers/can/can_common.c) is handed the caller's struct k_msgq * as user_data. the controller driver stores that raw pointer in its filter table and dereferences it from the rx path every time a matching frame arrives. the system call verifier z_vrfy_can_add_rx_filter_msgq() in drivers/can/can_handlers.c validated the queue only with k_syscall_obj(), which is a point-in-time check of type, initialization and caller permission and says nothing about the object's lifetime.
-
-on a build with config_userspace=y and config_dynamic_objects=y, an unprivileged user-mode thread that has been granted access to a can device can obtain a message queue whose lifetime it fully controls: k_object_alloc(k_obj_msgq) followed by k_msgq_alloc_init(). the lifetime of such an object is driven solely by its permission bitmask, and a pointer retained by the kernel is not represented there. after registering the filter, the thread calls k_object_release() — or simply terminates — and unref_check() frees the struct k_msgq storage while the can driver still holds the pointer.
-
-the next matching can frame causes k_msgq_put() to run in supervisor context against freed memory that the attacker can have groomed with another kernel allocation: the frame payload is memcpy()d through the reused block's write_ptr, and the queue's wait_q (and poll_events under config_poll) list nodes are manipulated. this yields kernel-heap corruption reachable from a user-mode thread, defeating the isolation config_userspace is intended to provide; the same dangling pointer also arises benignly when an application thread exits without calling can_remove_rx_filter().
-
-the fix validates the queue with k_syscall_obj_static(), which additionally rejects objects carrying k_obj_flag_alloc, so only statically defined queues (can_msgq_define()) may be registered from user mode. supervisor-mode callers bypass the verifier and must themselves keep the queue valid until the filter is removed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85035" target="_blank">CVE-2026-85035</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The can_add_rx_filter_msgq() system call installs a CAN RX filter whose callback (can_msgq_put() in drivers/can/can_common.c) is handed the caller's struct k_msgq * as user_data. The controller driver stores that raw pointer in its filter table and dereferences it from the RX path every time a matching frame arrives. The system call verifier z_vrfy_can_add_rx_filter_msgq() in drivers/can/can_handlers.c validated the queue only with K_SYSCALL_OBJ(), which is a point-in-time check of type, initialization and caller permission and says nothing about the object's lifetime.
-
-On a build with CONFIG_USERSPACE=y and CONFIG_DYNAMIC_OBJECTS=y, an unprivileged user-mode thread that has been granted access to a CAN device can obtain a message queue whose lifetime it fully controls: k_object_alloc(K_OBJ_MSGQ) followed by k_msgq_alloc_init(). The lifetime of such an object is driven solely by its permission bitmask, and a pointer retained by the kernel is not represented there. After registering the filter, the thread calls k_object_release() — or simply terminates — and unref_check() frees the struct k_msgq storage while the CAN driver still holds the pointer.
-
-The next matching CAN frame causes k_msgq_put() to run in supervisor context against freed memory that the attacker can have groomed with another kernel allocation: the frame payload is memcpy()d through the reused block's write_ptr, and the queue's wait_q (and poll_events under CONFIG_POLL) list nodes are manipulated. This yields kernel-heap corruption reachable from a user-mode thread, defeating the isolation CONFIG_USERSPACE is intended to provide; the same dangling pointer also arises benignly when an application thread exits without calling can_remove_rx_filter().
-
-The fix validates the queue with K_SYSCALL_OBJ_STATIC(), which additionally rejects objects carrying K_OBJ_FLAG_ALLOC, so only statically defined queues (CAN_MSGQ_DEFINE()) may be registered from user mode. Supervisor-mode callers bypass the verifier and must themselves keep the queue valid until the filter is removed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85034" data-description="the bluetooth host's gatt client passed the value of a received handle value notification, handle value indication or multiple handle value notification to bt_gatt_subscribe_params::notify callbacks using only the length derived from the received att pdu. bt_att_recv() in subsys/bluetooth/host/att.c validates only a minimum pdu length and does not enforce the negotiated att mtu, and the fixed att l2cap channel in subsys/bluetooth/host/l2cap.c applies no rx.mtu check either, so the only ceiling was the acl reassembly buffer config_bt_buf_acl_rx_size. values longer than the 512-octet maximum attribute length defined by the bluetooth core specification (vol 3, part f, section 3.2.9) could therefore be handed to subscribers that size their buffers to that documented limit.
-
-a remote peer that a device has connected and subscribed to — a malicious, spoofed or compromised gatt server within radio range — triggers the flaw by sending a notification or indication whose value exceeds 512 octets on a subscribed handle. in the le audio unicast client this reaches a concrete out-of-bounds write: unicast_client_ep_notify() in subsys/bluetooth/audio/bap_unicast_client.c copies the notification into the 512-byte att_buf of struct unicast_client with net_buf_simple_add_mem() and no tailroom check whenever length equals bt_audio_get_max_ntf_size(), i.e. the negotiated att mtu minus three. notify_handler() in subsys/bluetooth/audio/bap_broadcast_assistant.c has the same shape. reaching the overflow requires a build whose att mtu exceeds 515 octets (config_bt_l2cap_tx_mtu and config_bt_buf_acl_rx_size set for full-length attribute support); the shipped defaults are far smaller.
-
-the overflow writes peer-controlled bytes past att_buf directly over the adjacent struct net_buf_simple net_buf — its data, __buf, len and size fields — which the subsequent long-read accumulation then uses as its destination, turning a small linear overflow into a controlled write. net_buf_simple_add() only asserts on insufficient tailroom unless config_net_buf_hardening is enabled, and that option is disabled by default, so ordinary production builds perform the copy. beyond the in-tree le audio clients, any application subscriber that sized its receive buffer to the specification's 512-octet limit was exposed to the same overflow.
-
-the fix rejects notification, indication and multiple-notification values longer than bt_att_max_attribute_len in call_notify_cb_and_maybe_unsubscribe() in subsys/bluetooth/host/gatt.c before any subscriber callback is invoked, so no subscriber can be handed more than the specified maximum. remaining tuples of a multiple handle value notification are still delivered and oversized indications are still confirmed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85034" target="_blank">CVE-2026-85034</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.7</p>
-                    <p>The Bluetooth host's GATT client passed the value of a received Handle Value Notification, Handle Value Indication or Multiple Handle Value Notification to bt_gatt_subscribe_params::notify callbacks using only the length derived from the received ATT PDU. bt_att_recv() in subsys/bluetooth/host/att.c validates only a minimum PDU length and does not enforce the negotiated ATT MTU, and the fixed ATT L2CAP channel in subsys/bluetooth/host/l2cap.c applies no rx.mtu check either, so the only ceiling was the ACL reassembly buffer CONFIG_BT_BUF_ACL_RX_SIZE. Values longer than the 512-octet maximum attribute length defined by the Bluetooth Core Specification (Vol 3, Part F, Section 3.2.9) could therefore be handed to subscribers that size their buffers to that documented limit.
-
-A remote peer that a device has connected and subscribed to — a malicious, spoofed or compromised GATT server within radio range — triggers the flaw by sending a notification or indication whose value exceeds 512 octets on a subscribed handle. In the LE Audio unicast client this reaches a concrete out-of-bounds write: unicast_client_ep_notify() in subsys/bluetooth/audio/bap_unicast_client.c copies the notification into the 512-byte att_buf of struct unicast_client with net_buf_simple_add_mem() and no tailroom check whenever length equals bt_audio_get_max_ntf_size(), i.e. the negotiated ATT MTU minus three. notify_handler() in subsys/bluetooth/audio/bap_broadcast_assistant.c has the same shape. Reaching the overflow requires a build whose ATT MTU exceeds 515 octets (CONFIG_BT_L2CAP_TX_MTU and CONFIG_BT_BUF_ACL_RX_SIZE set for full-length attribute support); the shipped defaults are far smaller.
-
-The overflow writes peer-controlled bytes past att_buf directly over the adjacent struct net_buf_simple net_buf — its data, __buf, len and size fields — which the subsequent long-read accumulation then uses as its destination, turning a small linear overflow into a controlled write. net_buf_simple_add() only asserts on insufficient tailroom unless CONFIG_NET_BUF_HARDENING is enabled, and that option is disabled by default, so ordinary production builds perform the copy. Beyond the in-tree LE Audio clients, any application subscriber that sized its receive buffer to the specification's 512-octet limit was exposed to the same overflow.
-
-The fix rejects notification, indication and multiple-notification values longer than BT_ATT_MAX_ATTRIBUTE_LEN in call_notify_cb_and_maybe_unsubscribe() in subsys/bluetooth/host/gatt.c before any subscriber callback is invoked, so no subscriber can be handed more than the specified maximum. Remaining tuples of a multiple handle value notification are still delivered and oversized indications are still confirmed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85033" data-description="the avrcp target role in subsys/bluetooth/host/classic/avrcp.c keeps its vendor-dependent response transmit state in a per-connection object selected by connection index (get_avrcp_tg()), with the per-transfer context (tid, sent_len, and the bt_avrcp_tg_flag_tx_ongoing flag) stored in the user_data of the queued response net_buf. the avctp teardown handler avrcp_disconnected() did not cancel tg->vd_rsp_tx_work and did not release the buffers still queued on tg->vd_rsp_tx_pending, so a link drop in the middle of a fragmented response left the buffer on the list with tx_ongoing still set.
-
-a remote avrcp controller can trigger this deterministically: it issues a vendor-dependent command whose response exceeds one avrcp fragment (for example getelementattributes or getcapabilities), lets bt_avrcp_tg_vendor_tx_work() emit the start fragment, and then drops the acl link instead of sending request_continuing_response. the avctp control channel requires an encrypted br/edr link (bt_security_l2), so the attacker must be a paired peer within radio range; no user interaction is needed.
-
-because the target objects are static and reused, the next connection landing on the same connection index finds the stale buffer at the head of vd_rsp_tx_pending. every run of the tx work sees tx_ongoing and returns immediately, so all further vendor-dependent responses queue behind the stale head and are never sent — a persistent loss of avrcp target function that no timeout clears and only a reboot recovers. each cycle also leaks one response buffer from a shallow application pool, and a new peer that sends request_continuing_response clears the stale tx_ongoing via bt_avrcp_tg_process_continuing_cmd(), causing the un-sent remainder of the previous peer's response to be transmitted to it.
-
-the fix cancels tg->vd_rsp_tx_work and unrefs every buffer on tg->vd_rsp_tx_pending in avrcp_disconnected(); since the tx context lives in the buffer user_data, releasing the buffers also resets the tx state machine. there is no memory corruption: the pre-fix buffer is leaked with a live reference, so no use-after-free arises.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85033" target="_blank">CVE-2026-85033</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
-                    <p>The AVRCP Target role in subsys/bluetooth/host/classic/avrcp.c keeps its vendor-dependent response transmit state in a per-connection object selected by connection index (get_avrcp_tg()), with the per-transfer context (tid, sent_len, and the BT_AVRCP_TG_FLAG_TX_ONGOING flag) stored in the user_data of the queued response net_buf. The AVCTP teardown handler avrcp_disconnected() did not cancel tg->vd_rsp_tx_work and did not release the buffers still queued on tg->vd_rsp_tx_pending, so a link drop in the middle of a fragmented response left the buffer on the list with TX_ONGOING still set.
-
-A remote AVRCP Controller can trigger this deterministically: it issues a vendor-dependent command whose response exceeds one AVRCP fragment (for example GetElementAttributes or GetCapabilities), lets bt_avrcp_tg_vendor_tx_work() emit the START fragment, and then drops the ACL link instead of sending REQUEST_CONTINUING_RESPONSE. The AVCTP control channel requires an encrypted BR/EDR link (BT_SECURITY_L2), so the attacker must be a paired peer within radio range; no user interaction is needed.
-
-Because the Target objects are static and reused, the next connection landing on the same connection index finds the stale buffer at the head of vd_rsp_tx_pending. Every run of the TX work sees TX_ONGOING and returns immediately, so all further vendor-dependent responses queue behind the stale head and are never sent — a persistent loss of AVRCP Target function that no timeout clears and only a reboot recovers. Each cycle also leaks one response buffer from a shallow application pool, and a new peer that sends REQUEST_CONTINUING_RESPONSE clears the stale TX_ONGOING via bt_avrcp_tg_process_continuing_cmd(), causing the un-sent remainder of the previous peer's response to be transmitted to it.
-
-The fix cancels tg->vd_rsp_tx_work and unrefs every buffer on tg->vd_rsp_tx_pending in avrcp_disconnected(); since the TX context lives in the buffer user_data, releasing the buffers also resets the TX state machine. There is no memory corruption: the pre-fix buffer is leaked with a live reference, so no use-after-free arises.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-85032" data-description="the mctp over usb device class in subsys/pmci/mctp/mctp_usb.c splits rx handling across two threads: the system workqueue runs mctp_usb_class_out_work(), which parses host out data byte by byte and fills a packet buffer at usb->rx_pkt, while the usb device stack thread runs mctp_usb_class_disable(). the disable handler used k_work_cancel(), which removes a queued work item but returns immediately without waiting for a handler that is already running, and then called mctp_usb_reset_rx_state() to mctp_pktbuf_free() the packet buffer the worker may still be using.
-
-both entry points into mctp_usb_class_disable() are driven by the attached usb host: a set_configuration request and a usb bus reset both reach it via usbd_config_reset() in subsys/usb/device_next/usbd_config.c. a host that streams partial mctp frames on the bulk out endpoint and repeatedly forces a configuration change or bus reset therefore controls both the data being parsed and the moment the teardown runs, and can retry the race indefinitely without credentials or user interaction.
-
-if the free lands while the worker holds the pointer, the worker writes host-supplied bytes into freed memory of the dedicated mctp heap (config_mctp_heap_size in subsys/pmci/mctp/mctp_memory.c), corrupting recycled buffers or sys_heap free-block metadata; this window requires genuine parallelism, i.e. config_smp or a preemptible config_system_workqueue_priority. with the default cooperative workqueue the worker can still yield inside mctp_bus_rx() (application callback or a control-message reply blocking in mctp_usb_tx()), after which it resumes and calls mctp_pktbuf_free(usb->rx_pkt) on a pointer the teardown has nulled, dereferencing null and faulting on targets with null-pointer detection.
-
-the fix replaces the cancel with k_work_cancel_sync() plus a new struct k_work_sync out_work_sync, so disable waits for the rx worker to finish before draining the fifo and freeing the packet buffer. the affected code is the mctp subsystem, which is marked experimental, built only with config_mctp_usb.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-85032" target="_blank">CVE-2026-85032</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>The MCTP over USB device class in subsys/pmci/mctp/mctp_usb.c splits RX handling across two threads: the system workqueue runs mctp_usb_class_out_work(), which parses host OUT data byte by byte and fills a packet buffer at usb->rx_pkt, while the USB device stack thread runs mctp_usb_class_disable(). The disable handler used k_work_cancel(), which removes a queued work item but returns immediately without waiting for a handler that is already running, and then called mctp_usb_reset_rx_state() to mctp_pktbuf_free() the packet buffer the worker may still be using.
-
-Both entry points into mctp_usb_class_disable() are driven by the attached USB host: a SET_CONFIGURATION request and a USB bus reset both reach it via usbd_config_reset() in subsys/usb/device_next/usbd_config.c. A host that streams partial MCTP frames on the bulk OUT endpoint and repeatedly forces a configuration change or bus reset therefore controls both the data being parsed and the moment the teardown runs, and can retry the race indefinitely without credentials or user interaction.
-
-If the free lands while the worker holds the pointer, the worker writes host-supplied bytes into freed memory of the dedicated MCTP heap (CONFIG_MCTP_HEAP_SIZE in subsys/pmci/mctp/mctp_memory.c), corrupting recycled buffers or sys_heap free-block metadata; this window requires genuine parallelism, i.e. CONFIG_SMP or a preemptible CONFIG_SYSTEM_WORKQUEUE_PRIORITY. With the default cooperative workqueue the worker can still yield inside mctp_bus_rx() (application callback or a control-message reply blocking in mctp_usb_tx()), after which it resumes and calls mctp_pktbuf_free(usb->rx_pkt) on a pointer the teardown has NULLed, dereferencing NULL and faulting on targets with null-pointer detection.
-
-The fix replaces the cancel with k_work_cancel_sync() plus a new struct k_work_sync out_work_sync, so disable waits for the RX worker to finish before draining the FIFO and freeing the packet buffer. The affected code is the MCTP subsystem, which is marked experimental, built only with CONFIG_MCTP_USB.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120572" data-description="incorrect boundary conditions in the layout: block and inline component. this vulnerability was fixed in firefox 159.0.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120572" target="_blank">CVE-2026-120572</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:35 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-40661" data-description="an out-of-bounds write (oow) condition in the amd compressonator sdk could allow an attacker with local access to supply a specially crafted directdraw surface (dds) file to a user or an automated pipeline, potentially resulting in heap corruption or denial of service (dos).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40661" target="_blank">CVE-2026-40661</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:39 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Incorrect boundary conditions in the Layout: Block and Inline component. This vulnerability was fixed in Firefox 159.0.1.</p>
+                    <p>An out-of-bounds write (OOW) condition in the AMD Compressonator SDK could allow an attacker with local access to supply a specially crafted DirectDraw Surface (DDS) file to a user or an automated pipeline, potentially resulting in heap corruption or denial of service (DoS).</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-119742" data-description="nagios xi before 2026r2 contains an os command injection vulnerability in the mib upload feature where the install_mib() function in mibs.php sanitizes uploaded filenames with an incomplete character deny-list that omits semicolons and pipes before passing them to a grep command executed via exec(). an authenticated administrator can upload a mib file with a crafted filename using tab characters to bypass the deny-list and pipe to sh via a multipart post request to mibs.php, resulting in arbitrary os command execution as the web server user.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119742" target="_blank">CVE-2026-119742</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>Nagios XI before 2026R2 contains an OS command injection vulnerability in the MIB upload feature where the install_mib() function in mibs.php sanitizes uploaded filenames with an incomplete character deny-list that omits semicolons and pipes before passing them to a grep command executed via exec(). An authenticated administrator can upload a MIB file with a crafted filename using tab characters to bypass the deny-list and pipe to sh via a multipart POST request to mibs.php, resulting in arbitrary OS command execution as the web server user.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-119179" data-description="a flaw in the connection management layer of the mongodb node.js driver can leave a pooled network connection in the pool for reuse while data from an earlier operation is still outstanding on it. in applications that enable an optional client-side operation timeout, an unauthenticated party that can send ordinary requests to the application may cause database replies to be paired with the wrong requests. this may result in unintended disclosure of other users' records, incorrect operation results being returned, and failures of legitimate requests.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119179" target="_blank">CVE-2026-119179</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 08:17:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>A flaw in the connection management layer of the MongoDB Node.js driver can leave a pooled network connection in the pool for reuse while data from an earlier operation is still outstanding on it. In applications that enable an optional client-side operation timeout, an unauthenticated party that can send ordinary requests to the application may cause database replies to be paired with the wrong requests. This may result in unintended disclosure of other users' records, incorrect operation results being returned, and failures of legitimate requests.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99270" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-tcp: fix potential uaf in reqsk_timer_handler().
-
-when tcp socket migration fails at inet_ehash_insert() in
-reqsk_timer_handler(), we jump to the no_ownership: label
-and free the new reqsk immediately with __reqsk_free().
-
-thus, we must stop the new reqsk's timer before jumping to the
-label, but the timer might be missed since the cited commit,
-resulting in uaf.
-
-as we are in the original reqsk's timer context, we can safely
-call timer_delete_sync() for the new reqsk.
-
-let's pass false to __inet_csk_reqsk_queue_drop() to stop
-the new reqsk's timer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99270" target="_blank">CVE-2026-99270</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:24 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-40660" data-description="a heap-based out-of-bounds (oob) read vulnerability in the amd compressonator sdk could allow an attacker with local access to read out-of-bounds heap memory, potentially resulting in information disclosure or application crash.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40660" target="_blank">CVE-2026-40660</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:39 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-tcp: Fix potential UAF in reqsk_timer_handler().
-
-When TCP socket migration fails at inet_ehash_insert() in
-reqsk_timer_handler(), we jump to the no_ownership: label
-and free the new reqsk immediately with __reqsk_free().
-
-Thus, we must stop the new reqsk's timer before jumping to the
-label, but the timer might be missed since the cited commit,
-resulting in UAF.
-
-As we are in the original reqsk's timer context, we can safely
-call timer_delete_sync() for the new reqsk.
-
-Let's pass false to __inet_csk_reqsk_queue_drop() to stop
-the new reqsk's timer.</p>
+                    <p>A heap-based out-of-bounds (OOB) read vulnerability in the AMD Compressonator SDK could allow an attacker with local access to read out-of-bounds heap memory, potentially resulting in information disclosure or application crash.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-76124" data-description="the buddyboss app plugin for wordpress is vulnerable to arbitrary file upload in all versions up to, and including, 3.2.1 via the send_feedback function. this is due to insufficient file type validation that relies solely on the client-supplied content-type header without server-side content inspection or extension validation. this makes it possible for authenticated attackers, with subscriber-level access and above, to upload files that may be executable, which makes remote code execution possible. while uploaded files are deleted after email transmission, a race condition exists during smtp execution that allows access to the file, and files persist indefinitely when wp_mail() fails.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-76124" target="_blank">CVE-2026-76124</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-40659" data-description="an integer overflow condition in the amd compressonator sdk could allow an attacker with local access to supply a specially crafted directdraw surface (dds) file, potentially resulting in denial of service (dos).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40659" target="_blank">CVE-2026-40659</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An integer overflow condition in the AMD Compressonator SDK could allow an attacker with local access to supply a specially crafted DirectDraw Surface (DDS) file, potentially resulting in denial of service (DoS).</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-40652" data-description="an out-of-bounds read condition in the amd compressonator sdk could allow an attacker with local access to supply a specially crafted truevision advanced raster graphics adapter (tga) file to a user or an automated pipeline, potentially resulting in disclosure of sensitive heap memory contents or denial of service.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-40652" target="_blank">CVE-2026-40652</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:39 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An out-of-bounds read condition in the AMD Compressonator SDK could allow an attacker with local access to supply a specially crafted Truevision Advanced Raster Graphics Adapter (TGA) file to a user or an automated pipeline, potentially resulting in disclosure of sensitive heap memory contents or denial of service.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121513" data-description="off-by-one heap overflow in µd3tn v0.15.1 spp parser allows unauthenticated remote attacker to reliably cause dos">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121513" target="_blank">CVE-2026-121513</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:38 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The BuddyBoss App plugin for WordPress is vulnerable to Arbitrary File Upload in all versions up to, and including, 3.2.1 via the send_feedback function. This is due to insufficient file type validation that relies solely on the client-supplied Content-Type header without server-side content inspection or extension validation. This makes it possible for authenticated attackers, with subscriber-level access and above, to upload files that may be executable, which makes remote code execution possible. While uploaded files are deleted after email transmission, a race condition exists during SMTP execution that allows access to the file, and files persist indefinitely when wp_mail() fails.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Off-by-one Heap Overflow in µD3TN v0.15.1 SPP Parser allows Unauthenticated Remote Attacker to Reliably Cause DoS</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-65160" data-description="nvidia nvjpeg contains a vulnerability where an attacker could cause a divide-by-zero. a successful exploit of this vulnerability might lead to denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-65160" target="_blank">CVE-2026-65160</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121512" data-description="memory leak with amplification in µd3tn bpv6 eid reference handling allows unauthenticated remote attacker to cause dos">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121512" target="_blank">CVE-2026-121512</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Memory Leak with Amplification in µD3TN BPv6 EID Reference Handling allows Unauthenticated Remote Attacker to Cause DoS</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121511" data-description="heap out-of-bounds read in µd3tn bpv6/bpv7 fragmenter allows local attacker to read memory and reliably cause dos">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121511" target="_blank">CVE-2026-121511</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Heap Out-of-Bounds Read in µD3TN BPv6/BPv7 Fragmenter allows Local Attacker to Read Memory and Reliably Cause DoS</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121510" data-description="remote unauthenticated heap out-of-bounds write in µd3tn bpv6 administrative record parser allows unauthenticated remote attacker to reliably cause dos">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121510" target="_blank">CVE-2026-121510</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Remote Unauthenticated Heap Out-of-Bounds Write in µD3TN BPv6 Administrative Record Parser allows Unauthenticated Remote Attacker to Reliably Cause DoS</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121508" data-description="use-after-free in µd3tn bpv6 fragmenter cleanup allows unauthenticated remote attacker to cause dos on allocation failure">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121508" target="_blank">CVE-2026-121508</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:38 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>NVIDIA nvJPEG contains a vulnerability where an attacker could cause a divide-by-zero. A successful exploit of this vulnerability might lead to denial of service.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Use-After-Free in µD3TN BPv6 Fragmenter Cleanup allows Unauthenticated Remote Attacker to Cause DoS on Allocation Failure</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-121458" data-description="instatic before 0.0.21 contains a missing authorization vulnerability in its ai/mcp content read tools that allows low-privileged authenticated users with ai.chat and content.edit.own capabilities to access data rows belonging to other users by calling content_get_document and content_list_documents without the object-level authorization checks enforced by the normal http api. attackers can use the mcp interface to retrieve private or unpublished draft content and enumerate rows from the posts system table, resulting in cross-user data disclosure.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121458" target="_blank">CVE-2026-121458</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:21 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121507" data-description="double free in µd3tn bpv6 fragmenter block duplication allows unauthenticated remote attacker to cause dos on allocation failure">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121507" target="_blank">CVE-2026-121507</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Double Free in µD3TN BPv6 Fragmenter Block Duplication allows Unauthenticated Remote Attacker to Cause DoS on Allocation Failure</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121506" data-description="an out-of-bounds read and write in nts client extension field parsing (extens_client_recv) in ntpsec before 1.2.5 allows a remote attacker who can send ntp server-mode replies to an nts client to corrupt heap memory and crash ntpd, and, combined with the nts-ke client out-of-bounds read fixed in 1.2.4, to bypass nts authentication and set the client's time, via an nts authenticator and encrypted extension fields field whose nonce length exceeds the field.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121506" target="_blank">CVE-2026-121506</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>An out-of-bounds read and write in NTS client extension field parsing (extens_client_recv) in NTPsec before 1.2.5 allows a remote attacker who can send NTP server-mode replies to an NTS client to corrupt heap memory and crash ntpd, and, combined with the NTS-KE client out-of-bounds read fixed in 1.2.4, to bypass NTS authentication and set the client's time, via an NTS Authenticator and Encrypted Extension Fields field whose nonce length exceeds the field.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121505" data-description="an out-of-bounds read in the nts-ke client response parser (nts_client_process_response_core) in ntpsec before 1.2.4 allows a malicious nts-ke server to read the client's stack memory, including pointers that defeat aslr, which the client then sends in cleartext as nts cookies, via an nts-ke record whose declared length exceeds the data received.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121505" target="_blank">CVE-2026-121505</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>An out-of-bounds read in the NTS-KE client response parser (nts_client_process_response_core) in NTPsec before 1.2.4 allows a malicious NTS-KE server to read the client's stack memory, including pointers that defeat ASLR, which the client then sends in cleartext as NTS cookies, via an NTS-KE record whose declared length exceeds the data received.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121449" data-description="dockhand from 1.0.47 before 1.0.54 exposes plaintext stack secrets because deploystack() attaches resolved secret values to its result as resolvedsecrets, which git-stack routes return unfiltered. holders of a stack's webhook secret or users with stacks:start permission can trigger the git stack webhook, manual deploy, or create-and-deploy endpoints to receive stored and external-provider secrets such as 1password or vault values.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121449" target="_blank">CVE-2026-121449</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:37 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Instatic before 0.0.21 contains a missing authorization vulnerability in its AI/MCP content read tools that allows low-privileged authenticated users with ai.chat and content.edit.own capabilities to access data rows belonging to other users by calling content_get_document and content_list_documents without the object-level authorization checks enforced by the normal HTTP API. Attackers can use the MCP interface to retrieve private or unpublished draft content and enumerate rows from the posts system table, resulting in cross-user data disclosure.</p>
+                    <p>Dockhand from 1.0.47 before 1.0.54 exposes plaintext stack secrets because deployStack() attaches resolved secret values to its result as resolvedSecrets, which Git-stack routes return unfiltered. Holders of a stack's webhook secret or users with stacks:start permission can trigger the Git stack webhook, manual deploy, or create-and-deploy endpoints to receive stored and external-provider secrets such as 1Password or Vault values.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-108060" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:cve-2026-108060: nombre in ‘/trabajadores/create’.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108060" target="_blank">CVE-2026-108060</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:CVE-2026-108060: Nombre in ‘/Trabajadores/Create’.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121448" data-description="dockhand before 1.0.54 contains a path traversal vulnerability that allows authenticated users to read, overwrite, and delete .env files outside the stacks root by double-encoding the stack name. attackers can send %252e%252e sequences to /api/stacks/[name]/env/raw to disclose cross-environment secrets, write into protected directories, or poison deployment variables.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121448" target="_blank">CVE-2026-121448</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
+                    <p>Dockhand before 1.0.54 contains a path traversal vulnerability that allows authenticated users to read, overwrite, and delete .env files outside the stacks root by double-encoding the stack name. Attackers can send %252e%252e sequences to /api/stacks/[name]/env/raw to disclose cross-environment secrets, write into protected directories, or poison deployment variables.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-108059" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108059: observaciones in ‘/terceros/create’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108059" target="_blank">CVE-2026-108059</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108059: Observaciones in ‘/Terceros/Create’;</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121447" data-description="svg-sanitizer before 1.1.0 contains a cross-site scripting vulnerability that allows attackers to bypass sanitization by placing javascript: urls in the animatetransform values attribute. attackers can upload crafted svg files whose animatetransform targets the href attribute, executing arbitrary javascript when safari users click the link.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121447" target="_blank">CVE-2026-121447</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>svg-sanitizer before 1.1.0 contains a cross-site scripting vulnerability that allows attackers to bypass sanitization by placing javascript: URLs in the animateTransform values attribute. Attackers can upload crafted SVG files whose animateTransform targets the href attribute, executing arbitrary JavaScript when Safari users click the link.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-108058" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108058: nombre in ‘/plantillasmail/edit’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108058" target="_blank">CVE-2026-108058</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108058: Nombre in ‘/PlantillasMail/Edit’;</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121446" data-description="svg-sanitizer from 0.5.0 before 1.1.0 contains an incomplete filtering vulnerability that allows attackers to bypass remote url removal by using css escape sequences inside url() in svg presentation attributes. attackers can supply svg files with attributes like fill containing escaped slashes that browsers resolve to remote urls, triggering external requests and enabling data exfiltration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121446" target="_blank">CVE-2026-121446</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>svg-sanitizer from 0.5.0 before 1.1.0 contains an incomplete filtering vulnerability that allows attackers to bypass remote URL removal by using CSS escape sequences inside url() in SVG presentation attributes. Attackers can supply SVG files with attributes like fill containing escaped slashes that browsers resolve to remote URLs, triggering external requests and enabling data exfiltration.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-108057" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108057: nombre in ‘/plantillaspdf/edit/1273129’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108057" target="_blank">CVE-2026-108057</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108057: Nombre in ‘/PlantillasPdf/Edit/1273129’;</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121445" data-description="darylldoyle svg-sanitizer from 1.0.0 before 1.1.0 contains a regular expression denial of service vulnerability in the image-set pattern of stripremotecsstokens() when removeremotereferences is enabled. attackers can submit svgs with many unclosed image-set tokens to exhaust cpu, or trigger pcre limits causing sanitize() to throw a typeerror and leave unsanitized content.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121445" target="_blank">CVE-2026-121445</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>darylldoyle svg-sanitizer from 1.0.0 before 1.1.0 contains a regular expression denial of service vulnerability in the image-set pattern of stripRemoteCssTokens() when removeRemoteReferences is enabled. Attackers can submit SVGs with many unclosed image-set tokens to exhaust CPU, or trigger PCRE limits causing sanitize() to throw a TypeError and leave unsanitized content.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-108056" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108056: nombrepf in ‘/empresas/create’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108056" target="_blank">CVE-2026-108056</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108056: NombrePF in ‘/Empresas/Create’;</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121444" data-description="svg-sanitizer from 0.11.0 before 1.1.0 contains an algorithmic complexity denial of service vulnerability in hasinfiniteloop() and countuse() of the use reference-graph analysis. attackers can upload a small layered svg with 15 levels of fanned-out use elements, forcing exponential path enumeration that pins php workers for hours.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121444" target="_blank">CVE-2026-121444</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>svg-sanitizer from 0.11.0 before 1.1.0 contains an algorithmic complexity denial of service vulnerability in hasInfiniteLoop() and countUse() of the use reference-graph analysis. Attackers can upload a small layered SVG with 15 levels of fanned-out use elements, forcing exponential path enumeration that pins PHP workers for hours.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-108055" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108055: nombre in ‘/inmuebles/create’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108055" target="_blank">CVE-2026-108055</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108055: Nombre in ‘/Inmuebles/Create’;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108054" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108054: nombre in ‘/familias/edit/{id}’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108054" target="_blank">CVE-2026-108054</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108054: Nombre in ‘/Familias/Edit/{id}’;</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-108053" data-description="a stored cross-site scripting (xss) vulnerability in alosuite that affects the delivery note functionality. insufficient sanitization and encoding of the specified fields allow javascript to be stored, which executes in other users’ browsers when they view the affected records. exploitation requires authenticated access to the affected functionality. the code can alter the displayed content and perform actions within the context of the victim’s session. the list of features, parameters, and endpoints is as follows:
-
-cve-2026-108053: nombre in ‘/cuentascorrientes/create’;">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108053" target="_blank">CVE-2026-108053</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-03 07:17:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A stored Cross-Site Scripting (XSS) vulnerability in Alosuite that affects the delivery note functionality. Insufficient sanitization and encoding of the specified fields allow JavaScript to be stored, which executes in other users’ browsers when they view the affected records. Exploitation requires authenticated access to the affected functionality. The code can alter the displayed content and perform actions within the context of the victim’s session. The list of features, parameters, and endpoints is as follows:
-
-CVE-2026-108053: Nombre in ‘/CuentasCorrientes/Create’;</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-121443" data-description="svg-sanitizer from 1.1.0 before 1.1.1 contains a denial of service vulnerability that allows remote attackers to crash requests by submitting svg input ending inside an unclosed tag. attackers can upload truncated input like a single '<' to trigger an uncaught valueerror from strpos() in haselementwithtoomanyattributes() or hasinternaldtdsubset() on php 8, failing the request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121443" target="_blank">CVE-2026-121443</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-03 09:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>svg-sanitizer from 1.1.0 before 1.1.1 contains a denial of service vulnerability that allows remote attackers to crash requests by submitting SVG input ending inside an unclosed tag. Attackers can upload truncated input like a single '<' to trigger an uncaught ValueError from strpos() in hasElementWithTooManyAttributes() or hasInternalDtdSubset() on PHP 8, failing the request.</p>
                 </div>
         
             </div>
