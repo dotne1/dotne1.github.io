@@ -34,176 +34,276 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-87045" data-description="the http/2 server in subsys/net/lib/http/http_server_http2.c clears the connection's stream binding at the start of every frame. handle_http_frame_header() executed client->current_stream = null unconditionally, but a continuation frame does not open a new stream and enter_http_frame_continuation_state() never re-bound one, so the rest of the header block was processed with client->current_stream unset. two paths then write through the null pointer. a request for an unregistered resource, or a method the matched resource does not support, is answered by send_http2_404() or send_http2_405(), and both call send_headers_frame(), which unconditionally sets client->current_stream->headers_sent = true. a post, put or patch to a registered dynamic resource reaches handle_http2_dynamic_resource(), which unlike its siblings (handle_http2_static_resource(), dynamic_get_del_opts_req_v2(), dynamic_post_put_req_v2()) had no client->current_stream == null guard, and stores through the pointer with client->current_stream->current_detail = dynamic_detail.
+                <div class="cve-entry" data-cve-id="CVE-2026-90436" data-description="** unsupported when assigned ** deserialization of an inbound soap fault in apache axis 1.x allows unauthenticated remote class instantiation. when a soap <fault> carries a <detail><exceptionname> element, axis loads the named class and, if a string <data> element is also present, instantiates it through its string constructor before checking that it is an axisfault. loading alone runs the class's static initializer. with a suitable class on the application's classpath this leads to remote code execution. the fault is parsed while the engine resolves the target service, before any per-service handler chain runs, so authentication handlers configured on a service do not protect against it. this affects all apache axis 1.x versions through 1.4.
 
-any peer that can reach the server can trigger this without authentication or prior state. a single stray continuation frame with end_headers set, sent right after the client preface and requesting any unregistered path, is enough, because nothing rejected a continuation that no headers frame had opened. a legitimate split header block (a headers frame with end_headers clear whose payload ends on a header-field boundary, then a continuation with end_headers set) reaches the same state. the in-tree test test_http2_post_headers_with_continuation() did not catch this because it splits the header block mid field, which takes the handle_incomplete_http_header() shortcut that keeps the stream bound.
 
-the result is a write to a fixed low address (a small offset into struct http2_stream_ctx), which faults on mainstream targets (flash/vector-table region on cortex-m, or a trap under mpu/mmu null-pointer detection), and the default fatal-error handler halts the system. impact is an unauthenticated, remotely triggerable denial of service against any device running the http/2 server: the 404 path needs no particular resource to be registered, and http/2 is built into config_http_server with cleartext h2c accepted, so tls does not prevent it. neither the target address nor the written value is attacker-controlled, so there is no confidentiality or integrity impact. applications built without config_http_server are not affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87045" target="_blank">CVE-2026-87045</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>The HTTP/2 server in subsys/net/lib/http/http_server_http2.c clears the connection's stream binding at the start of every frame. handle_http_frame_header() executed client->current_stream = NULL unconditionally, but a CONTINUATION frame does not open a new stream and enter_http_frame_continuation_state() never re-bound one, so the rest of the header block was processed with client->current_stream unset. Two paths then write through the NULL pointer. A request for an unregistered resource, or a method the matched resource does not support, is answered by send_http2_404() or send_http2_405(), and both call send_headers_frame(), which unconditionally sets client->current_stream->headers_sent = true. A POST, PUT or PATCH to a registered dynamic resource reaches handle_http2_dynamic_resource(), which unlike its siblings (handle_http2_static_resource(), dynamic_get_del_opts_req_v2(), dynamic_post_put_req_v2()) had no client->current_stream == NULL guard, and stores through the pointer with client->current_stream->current_detail = dynamic_detail.
 
-Any peer that can reach the server can trigger this without authentication or prior state. A single stray CONTINUATION frame with END_HEADERS set, sent right after the client preface and requesting any unregistered path, is enough, because nothing rejected a CONTINUATION that no HEADERS frame had opened. A legitimate split header block (a HEADERS frame with END_HEADERS clear whose payload ends on a header-field boundary, then a CONTINUATION with END_HEADERS set) reaches the same state. The in-tree test test_http2_post_headers_with_continuation() did not catch this because it splits the header block mid field, which takes the handle_incomplete_http_header() shortcut that keeps the stream bound.
-
-The result is a write to a fixed low address (a small offset into struct http2_stream_ctx), which faults on mainstream targets (flash/vector-table region on Cortex-M, or a trap under MPU/MMU null-pointer detection), and the default fatal-error handler halts the system. Impact is an unauthenticated, remotely triggerable denial of service against any device running the HTTP/2 server: the 404 path needs no particular resource to be registered, and HTTP/2 is built into CONFIG_HTTP_SERVER with cleartext h2c accepted, so TLS does not prevent it. Neither the target address nor the written value is attacker-controlled, so there is no confidentiality or integrity impact. Applications built without CONFIG_HTTP_SERVER are not affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-64894" data-description="inclusion of functionality from untrusted control sphere vulnerability in johnson controls easyio neo iomanager and tools installer allows malicious software update.
-
-this issue affects easyio neo iomanager and tools installer: 1.1.0.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-64894" target="_blank">CVE-2026-64894</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:22 CDT</p>
+as axis 1 has been eol we recommend you migrate to a different soap engine, such as apache axis 2/java. alternatively you could use a build of axis with the patch from https://github.com/apache/axis-axis1-java/commit/41f3b4e8d04e310ca81f86b92630ab2c11d608bd applied. the apache axis project does not expect to create an axis 1.x release fixing this problem.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90436" target="_blank">CVE-2026-90436</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:59 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Inclusion of functionality from untrusted control sphere vulnerability in Johnson Controls EasyIO Neo IOManager and Tools Installer allows Malicious Software Update.
+                    <p>** UNSUPPORTED WHEN ASSIGNED ** Deserialization of an inbound SOAP fault in Apache Axis 1.x allows unauthenticated remote class instantiation. When a SOAP <Fault> carries a <detail><exceptionName> element, Axis loads the named class and, if a String <data> element is also present, instantiates it through its String constructor before checking that it is an AxisFault. Loading alone runs the class's static initializer. With a suitable class on the application's classpath this leads to remote code execution. The fault is parsed while the engine resolves the target service, before any per-service handler chain runs, so authentication handlers configured on a service do not protect against it. This affects all Apache Axis 1.x versions through 1.4.
 
-This issue affects EasyIO Neo IOManager and Tools Installer: 1.1.0.0.</p>
+
+
+As Axis 1 has been EOL we recommend you migrate to a different SOAP engine, such as Apache Axis 2/Java. Alternatively you could use a build of Axis with the patch from https://github.com/apache/axis-axis1-java/commit/41f3b4e8d04e310ca81f86b92630ab2c11d608bd applied. The Apache Axis project does not expect to create an Axis 1.x release fixing this problem.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-59105" data-description="jumis (formerly tildes jumis) creates and uses a microsoft sql server login named ##tilde_jumisadmin## whose password is derived deterministically from a single non-secret input - the sql server name (@@servername). the derivation algorithm is hard-coded in the client application and is identical across every installation; it contains a hard-coded secret key for entropy. because the only input (the server name) is not secret - the instance suffix is hard-coded and the host name is discoverable via the sql server browser service (udp 1434), the tds pre-login response, or dns/netbios - any party able to reach a jumis sql server can compute the password offline and authenticate. the ##tilde_jumisadmin## login is a member of the sysadmin server role. successful authentication therefore grants full administrative control of the sql server instance and read/write access to every customer's accounting database hosted on it. the on-premise server installation also programmatically enables xp_cmdshell during routine operation, so sysadmin access escalates to operating-system command execution on the database server.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59105" target="_blank">CVE-2026-59105</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Jumis (formerly Tildes Jumis) creates and uses a Microsoft SQL Server login named ##Tilde_JumisAdmin## whose password is derived deterministically from a single non-secret input - the SQL Server name (@@servername). The derivation algorithm is hard-coded in the client application and is identical across every installation; it contains a hard-coded secret key for entropy. Because the only input (the server name) is not secret - the instance suffix is hard-coded and the host name is discoverable via the SQL Server Browser service (UDP 1434), the TDS pre-login response, or DNS/NetBIOS - any party able to reach a Jumis SQL Server can compute the password offline and authenticate. The ##Tilde_JumisAdmin## login is a member of the sysadmin server role. Successful authentication therefore grants full administrative control of the SQL Server instance and read/write access to every customer's accounting database hosted on it. The on-premise server installation also programmatically enables xp_cmdshell during routine operation, so sysadmin access escalates to operating-system command execution on the database server.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-80303" data-description="an integer underflow vulnerability in the avast windows filtering platform (wfp) stream parser on windows allows denial of service by causing a system crash.
+
+
+
+the wfp callout driver processes network stream data and computes length values for packet fragment reassembly. the length calculation does not properly validate input stream sizes against expected boundaries. when processing specially crafted input, the length computation underflows, resulting in allocation or buffer access with an extremely large wrapped-around size value.
+
+
+
+the underflow can be triggered remotely via network traffic destined for the filtered port, or locally via crafted data provided to the filtering interface. the resulting memory allocation failure or out-of-bounds access causes a kernel panic and system crash.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-80303" target="_blank">CVE-2026-80303</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An integer underflow vulnerability in the Avast Windows Filtering Platform (WFP) stream parser on Windows allows denial of service by causing a system crash.
+
+
+
+The WFP callout driver processes network stream data and computes length values for packet fragment reassembly. The length calculation does not properly validate input stream sizes against expected boundaries. When processing specially crafted input, the length computation underflows, resulting in allocation or buffer access with an extremely large wrapped-around size value.
+
+
+
+The underflow can be triggered remotely via network traffic destined for the filtered port, or locally via crafted data provided to the filtering interface. The resulting memory allocation failure or out-of-bounds access causes a kernel panic and system crash.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-53980" data-description="charmbracelet wish before 2.0.5 contains a path traversal vulnerability in the git middleware (charm.land/wish/v2) that allows authenticated ssh users to escape the configured repository directory by supplying crafted repo paths that bypass a flawed forward-slash-count containment check in git.middleware(). attackers can use a single-depth path ../evil, or on windows a payload ..\..\evil that defeats the slash-count guard entirely, to read or write arbitrary repositories outside the intended root via git-upload-pack, git-upload-archive, or git-receive-pack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-53980" target="_blank">CVE-2026-53980</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Charmbracelet wish before 2.0.5 contains a path traversal vulnerability in the git middleware (charm.land/wish/v2) that allows authenticated SSH users to escape the configured repository directory by supplying crafted repo paths that bypass a flawed forward-slash-count containment check in git.Middleware(). Attackers can use a single-depth path ../evil, or on Windows a payload ..\..\evil that defeats the slash-count guard entirely, to read or write arbitrary repositories outside the intended root via git-upload-pack, git-upload-archive, or git-receive-pack.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-80302" data-description="insufficient isolation in the avast sandbox file virtualization layer on windows allows a local, low-privileged attacker executing inside the sandbox to write arbitrary files outside sandbox containment and execute code on the host.
+
+
+
+the sandbox virtualizes file system operations by intercepting write requests to protected system directories. however, the virtualization implementation fails to properly validate write targets in certain edge cases, allowing writes to bypass the virtualization redirection and reach the actual host file system in protected locations.
+
+
+
+an attacker can exploit this to overwrite executable files, system libraries, or startup configurations with arbitrary content, leading to code execution with host privileges on subsequent system operations or reboot.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-80302" target="_blank">CVE-2026-80302</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:59 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Insufficient isolation in the Avast sandbox file virtualization layer on Windows allows a local, low-privileged attacker executing inside the sandbox to write arbitrary files outside sandbox containment and execute code on the host.
+
+
+
+The sandbox virtualizes file system operations by intercepting write requests to protected system directories. However, the virtualization implementation fails to properly validate write targets in certain edge cases, allowing writes to bypass the virtualization redirection and reach the actual host file system in protected locations.
+
+
+
+An attacker can exploit this to overwrite executable files, system libraries, or startup configurations with arbitrary content, leading to code execution with host privileges on subsequent system operations or reboot.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-123786" data-description="agenta before 0.122.5 contains a server-side request forgery vulnerability that allows workspace members with workflow edit rights to redirect workflow invocations by setting arbitrary revision urls. attackers can capture the attached secret-resolve authorization token to read provider secrets from the vault api, or reach internal and cloud metadata addresses.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123786" target="_blank">CVE-2026-123786</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.5</p>
-                    <p>Agenta before 0.122.5 contains a server-side request forgery vulnerability that allows workspace members with workflow edit rights to redirect workflow invocations by setting arbitrary revision URLs. Attackers can capture the attached secret-resolve Authorization token to read provider secrets from the vault API, or reach internal and cloud metadata addresses.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-80301" data-description="improper isolation in the avast sandbox on windows allows a local, low-privileged attacker executing inside the sandbox to access com interfaces to the task scheduler service, escape containment, and execute code with elevated privileges outside the sandbox.
+
+
+
+the sandbox virtualizes file system and registry access but does not adequately restrict com interface access to task scheduler. a process inside the sandbox can instantiate com objects bound to task scheduler functionality and invoke methods to schedule and execute tasks on the host system. the task scheduler com pathway is not blocked by the sandbox policy, allowing arbitrary code execution in the host security context.
+
+
+
+this escape vector bypasses the sandbox's intended process and file isolation boundaries and can be chained with other host-level privilege escalation techniques.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-80301" target="_blank">CVE-2026-80301</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper isolation in the Avast sandbox on Windows allows a local, low-privileged attacker executing inside the sandbox to access COM interfaces to the Task Scheduler service, escape containment, and execute code with elevated privileges outside the sandbox.
+
+
+
+The sandbox virtualizes file system and registry access but does not adequately restrict COM interface access to Task Scheduler. A process inside the sandbox can instantiate COM objects bound to Task Scheduler functionality and invoke methods to schedule and execute tasks on the host system. The Task Scheduler COM pathway is not blocked by the sandbox policy, allowing arbitrary code execution in the host security context.
+
+
+
+This escape vector bypasses the sandbox's intended process and file isolation boundaries and can be chained with other host-level privilege escalation techniques.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-123785" data-description="fluxbox through 1.3.7 contains an infinite loop vulnerability in menu::updatemenu() in src/fbtk/menu.cc that allows attackers to hang the window manager via crafted style geometry values. attackers can supply a style with an oversized unbounded menu.titleheight so the column loop never terminates, causing sustained cpu use and denial of service at startup.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123785" target="_blank">CVE-2026-123785</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>Fluxbox through 1.3.7 contains an infinite loop vulnerability in Menu::updateMenu() in src/FbTk/Menu.cc that allows attackers to hang the window manager via crafted style geometry values. Attackers can supply a style with an oversized unbounded menu.titleHeight so the column loop never terminates, causing sustained CPU use and denial of service at startup.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123784" data-description="fluxbox through 1.3.7 contains an os command injection vulnerability in roottheme::reconfigtheme() that allows attackers to execute commands via crafted style background values. attackers can embed shell metacharacters in background pixmap paths, random directories, or gradient texture text, which are concatenated unescaped into an fbsetbg command run via $shell -c when the style loads.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123784" target="_blank">CVE-2026-123784</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Fluxbox through 1.3.7 contains an OS command injection vulnerability in RootTheme::reconfigTheme() that allows attackers to execute commands via crafted style background values. Attackers can embed shell metacharacters in background pixmap paths, random directories, or gradient texture text, which are concatenated unescaped into an fbsetbg command run via $SHELL -c when the style loads.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123783" data-description="skyvern through 1.0.56 contains a sandbox bypass vulnerability that allows authenticated users to execute code by reconstructing functions from raw bytecode with types.codetype. attackers can deploy scripts that evade the is_safe_script_code ast denylist and import blocked modules such as subprocess or socket to run code in the skyvern server process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123783" target="_blank">CVE-2026-123783</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Skyvern through 1.0.56 contains a sandbox bypass vulnerability that allows authenticated users to execute code by reconstructing functions from raw bytecode with types.CodeType. Attackers can deploy scripts that evade the is_safe_script_code AST denylist and import blocked modules such as subprocess or socket to run code in the Skyvern server process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123782" data-description="chatwiki before 2.10.0 contains an insecure direct object reference vulnerability in saveformfield and updateformrequired that allows authenticated users to modify other tenants' form fields. attackers can pass their own form_id to satisfy the ownership check alongside another tenant's sequential form_field id to alter field names, descriptions, types and required flags, disrupting how submitted entries are stored.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123782" target="_blank">CVE-2026-123782</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>ChatWiki before 2.10.0 contains an insecure direct object reference vulnerability in SaveFormField and UpdateFormRequired that allows authenticated users to modify other tenants' form fields. Attackers can pass their own form_id to satisfy the ownership check alongside another tenant's sequential form_field id to alter field names, descriptions, types and required flags, disrupting how submitted entries are stored.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123665" data-description="a weakness has been identified in kubescape up to 4.0.15. impacted is the function getwriter of the file core/pkg/resultshandling/printer/printresults.go of the component output. executing a manipulation of the argument outputfile can lead to permission issues. the attack requires local access. upgrading to version 4.0.16 is recommended to address this issue. this patch is called d90f77314c7d4f2b53cf2425844bde2315bd26d2. upgrading the affected component is advised.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123665" target="_blank">CVE-2026-123665</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.8</p>
-                    <p>A weakness has been identified in kubescape up to 4.0.15. Impacted is the function GetWriter of the file core/pkg/resultshandling/printer/printresults.go of the component Output. Executing a manipulation of the argument outputFile can lead to permission issues. The attack requires local access. Upgrading to version 4.0.16 is recommended to address this issue. This patch is called d90f77314c7d4f2b53cf2425844bde2315bd26d2. Upgrading the affected component is advised.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123664" data-description="a security flaw has been discovered in nasa-gcn gcn.nasa.gov up to b299b562af665878964b981a459f0a9c04b11adf. this issue affects some unknown processing of the file /user/email of the component email notification handler. performing a manipulation of the argument recipient results in improper authorization. the attack is possible to be carried out remotely. the exploit has been released to the public and may be used for attacks. this product adopts a rolling release strategy to maintain continuous delivery. therefore, version details for affected or updated releases cannot be specified. the pull request to fix this issue awaits acceptance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123664" target="_blank">CVE-2026-123664</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>A security flaw has been discovered in nasa-gcn gcn.nasa.gov up to b299b562af665878964b981a459f0a9c04b11adf. This issue affects some unknown processing of the file /user/email of the component Email Notification Handler. Performing a manipulation of the argument Recipient results in improper authorization. The attack is possible to be carried out remotely. The exploit has been released to the public and may be used for attacks. This product adopts a rolling release strategy to maintain continuous delivery. Therefore, version details for affected or updated releases cannot be specified. The pull request to fix this issue awaits acceptance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123624" data-description="chatwiki before 2.10.0 contains an insecure direct object reference vulnerability that allows authenticated users to modify other tenants' fast commands by supplying arbitrary sequential ids to post /manage/savefastcommand. attackers can overwrite another tenant's command title, type, content and robot binding, redirecting webpage-jump commands to attacker urls and reassigning the record to their own tenant.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123624" target="_blank">CVE-2026-123624</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>ChatWiki before 2.10.0 contains an insecure direct object reference vulnerability that allows authenticated users to modify other tenants' fast commands by supplying arbitrary sequential ids to POST /manage/saveFastCommand. Attackers can overwrite another tenant's command title, type, content and robot binding, redirecting webpage-jump commands to attacker URLs and reassigning the record to their own tenant.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123622" data-description="usermin through 2.570 contains a cross-site scripting vulnerability in mailbox/detach.cgi that allows remote attackers to execute script by supplying an arbitrary type parameter that bypasses javascript filtering. attackers can email an html attachment containing script and lure recipients to a detach.cgi link with type=text/html to run script in the victim's authenticated usermin session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123622" target="_blank">CVE-2026-123622</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>Usermin through 2.570 contains a cross-site scripting vulnerability in mailbox/detach.cgi that allows remote attackers to execute script by supplying an arbitrary type parameter that bypasses JavaScript filtering. Attackers can email an HTML attachment containing script and lure recipients to a detach.cgi link with type=text/html to run script in the victim's authenticated Usermin session.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123621" data-description="usermin through 2.570 contains a path traversal vulnerability in mailbox/detachall.cgi that allows remote unauthenticated attackers to write files outside the temporary directory via unsanitized attachment filenames. attackers can email attachments with ../ sequences in filenames, and when the recipient downloads all attachments, files like ~/.forward are overwritten, enabling command execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123621" target="_blank">CVE-2026-123621</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Usermin through 2.570 contains a path traversal vulnerability in mailbox/detachall.cgi that allows remote unauthenticated attackers to write files outside the temporary directory via unsanitized attachment filenames. Attackers can email attachments with ../ sequences in filenames, and when the recipient downloads all attachments, files like ~/.forward are overwritten, enabling command execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123620" data-description="usermin through 2.570 contains an os command injection vulnerability in the read mail module that allows authenticated users to execute commands through unsanitized imap folder names. attackers can create a folder containing shell metacharacters via an external imap client, then delete it in usermin to run commands as their system account, bypassing webmail-only restrictions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123620" target="_blank">CVE-2026-123620</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Usermin through 2.570 contains an OS command injection vulnerability in the Read Mail module that allows authenticated users to execute commands through unsanitized IMAP folder names. Attackers can create a folder containing shell metacharacters via an external IMAP client, then delete it in Usermin to run commands as their system account, bypassing webmail-only restrictions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123619" data-description="lektor through 3.3.14 and 3.4.0b15 contains an absolute path traversal vulnerability in the admin api on windows that allows attackers to escape the project directory by supplying drive-letter paths that cleanup_path does not normalise. attackers can use a malicious web page with cross-site requests or dns rebinding against the unauthenticated local server to recursively delete directories via deleterecord or write attacker-controlled files via newattachment.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123619" target="_blank">CVE-2026-123619</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>Lektor through 3.3.14 and 3.4.0b15 contains an absolute path traversal vulnerability in the admin API on Windows that allows attackers to escape the project directory by supplying drive-letter paths that cleanup_path does not normalise. Attackers can use a malicious web page with cross-site requests or DNS rebinding against the unauthenticated local server to recursively delete directories via deleterecord or write attacker-controlled files via newattachment.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123618" data-description="abp framework before 10.7.1 contains an authentication bypass vulnerability that skips account state and two-factor checks when password login succeeds through a registered iexternalloginprovider. attackers holding the external directory password for deactivated, locked, or 2fa-protected accounts can obtain valid access tokens from the /connect/token password grant.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123618" target="_blank">CVE-2026-123618</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>ABP Framework before 10.7.1 contains an authentication bypass vulnerability that skips account state and two-factor checks when password login succeeds through a registered IExternalLoginProvider. Attackers holding the external directory password for deactivated, locked, or 2FA-protected accounts can obtain valid access tokens from the /connect/token password grant.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123617" data-description="openwhyd before 1.65.1 contains a nosql injection vulnerability that allows unauthenticated attackers to manipulate user lookups by passing json objects in the id parameter. attackers can send mongodb query operators such as $ne or $gt to post /api/user to select and enumerate other users' public profile records.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123617" target="_blank">CVE-2026-123617</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:19 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-66987" data-description="hcl aion is affected by a vulnerability where the account lockout mechanism did not sufficiently restrict repeated failed login attempts, allowing an attacker to make a large number of password guesses against a user account. this may increase the risk of account compromise through brute-force attacks, potentially resulting in unintended behavior or security impact under certain conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66987" target="_blank">CVE-2026-66987</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:58 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Openwhyd before 1.65.1 contains a NoSQL injection vulnerability that allows unauthenticated attackers to manipulate user lookups by passing JSON objects in the id parameter. Attackers can send MongoDB query operators such as $ne or $gt to POST /api/user to select and enumerate other users' public profile records.</p>
+                    <p>HCL AION is affected by a vulnerability where the account lockout mechanism did not sufficiently restrict repeated failed login attempts, allowing an attacker to make a large number of password guesses against a user account. This may increase the risk of account compromise through brute-force attacks, potentially resulting in unintended behavior or security impact under certain conditions.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-123492" data-description="siyuan before 3.8.9 contains a nil pointer dereference vulnerability in privatecachemiddleware that allows authenticated attackers to crash the kernel by reading nonexistent mcp resources. attackers with a valid api token can send a resources/read request in an initialized mcp session, causing a panic that terminates the kernel process and interrupts service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123492" target="_blank">CVE-2026-123492</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:18 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-66986" data-description="hcl aion is affected by a vulnerability where user sessions did not expire after a sufficient period of inactivity. an unattended authenticated session could be used by another person with access to the same system to view information or perform actions on behalf of the user, potentially resulting in unintended behavior or security impact under certain conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66986" target="_blank">CVE-2026-66986</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:58 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
+                    <p>HCL AION is affected by a vulnerability where user sessions did not expire after a sufficient period of inactivity. An unattended authenticated session could be used by another person with access to the same system to view information or perform actions on behalf of the user, potentially resulting in unintended behavior or security impact under certain conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66984" data-description="hcl aion is affected by a vulnerability where certain application responses revealed internal server file system paths. this information could help an attacker understand the application structure and plan further attacks, potentially resulting in unintended behavior or security impact under certain conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66984" target="_blank">CVE-2026-66984</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
+                    <p>HCL AION is affected by a vulnerability where certain application responses revealed internal server file system paths. This information could help an attacker understand the application structure and plan further attacks, potentially resulting in unintended behavior or security impact under certain conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66982" data-description="hcl aion is affected by a vulnerability where browser autocomplete was enabled on sensitive login form fields, allowing the browser to store and suggest previously entered values. a malicious user with access to the same browser or system could retrieve saved credentials, potentially resulting in unintended behavior or security impact under certain conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66982" target="_blank">CVE-2026-66982</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:57 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
+                    <p>HCL AION is affected by a vulnerability where browser autocomplete was enabled on sensitive login form fields, allowing the browser to store and suggest previously entered values. A malicious user with access to the same browser or system could retrieve saved credentials, potentially resulting in unintended behavior or security impact under certain conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-66981" data-description="hcl aion is affected by a vulnerability where the application trusted the value of the http host header supplied in requests without validation. an attacker could manipulate this header to influence links, redirects or responses generated by the application, potentially resulting in unintended behavior or security impact under certain conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66981" target="_blank">CVE-2026-66981</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:57 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>SiYuan before 3.8.9 contains a nil pointer dereference vulnerability in privateCacheMiddleware that allows authenticated attackers to crash the kernel by reading nonexistent MCP resources. Attackers with a valid API token can send a resources/read request in an initialized MCP session, causing a panic that terminates the kernel process and interrupts service.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>HCL AION is affected by a vulnerability where the application trusted the value of the HTTP Host header supplied in requests without validation. An attacker could manipulate this header to influence links, redirects or responses generated by the application, potentially resulting in unintended behavior or security impact under certain conditions.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-123491" data-description="craft cms 4.0.0 before 4.18.9 and 5.0.0 before 5.11.2 contains an sql injection vulnerability in graphql eager-loading: arguments on eager-loadable nodes absent from the public schema are copied into eagerloadplan criteria without cleansing. unauthenticated attackers can supply a parenthesized select argument to inject sql expressions and read arbitrary database content, including password hashes and session tokens.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123491" target="_blank">CVE-2026-123491</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-06 09:17:18 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-58141" data-description="dify before 1.15.0 contains a server-side request forgery vulnerability that allows any authenticated console user to bypass ssrf protections and issue arbitrary http requests to internal services and cloud metadata endpoints due to the squid proxy configuration only defining source acls without destination deny rules and the make_request() helper performing no independent destination ip validation. attackers can use endpoints such as get /console/api/remote-files/<url>, post /console/api/remote-files/upload, the http request workflow node, website crawl, or document import from url to reach internal components like the sandbox, internal apis, and postgresql, and on aws deployments read iam credentials from the instance metadata service, with the http request node further enabling post, put, and delete writes to internal services relying on network isolation for authorization.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58141" target="_blank">CVE-2026-58141</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:18:54 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>Craft CMS 4.0.0 before 4.18.9 and 5.0.0 before 5.11.2 contains an SQL injection vulnerability in GraphQL eager-loading: arguments on eager-loadable nodes absent from the public schema are copied into EagerLoadPlan criteria without cleansing. Unauthenticated attackers can supply a parenthesized select argument to inject SQL expressions and read arbitrary database content, including password hashes and session tokens.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
+                    <p>Dify before 1.15.0 contains a server-side request forgery vulnerability that allows any authenticated console user to bypass SSRF protections and issue arbitrary HTTP requests to internal services and cloud metadata endpoints due to the Squid proxy configuration only defining source ACLs without destination deny rules and the make_request() helper performing no independent destination IP validation. Attackers can use endpoints such as GET /console/api/remote-files/<url>, POST /console/api/remote-files/upload, the HTTP Request workflow node, website crawl, or document import from URL to reach internal components like the sandbox, internal APIs, and PostgreSQL, and on AWS deployments read IAM credentials from the instance metadata service, with the HTTP Request node further enabling POST, PUT, and DELETE writes to internal services relying on network isolation for authorization.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-21834" data-description="hcl aion is affected by a vulnerability where the content-security-policy (csp) security response header was missing from application responses. without this header, the browser does not restrict the sources of scripts and other content, increasing exposure to cross-site scripting and content-injection attacks, potentially resulting in unintended behavior or security impact under certain conditions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-21834" target="_blank">CVE-2026-21834</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:56 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
+                    <p>HCL AION is affected by a vulnerability where the Content-Security-Policy (CSP) security response header was missing from application responses. Without this header, the browser does not restrict the sources of scripts and other content, increasing exposure to cross-site scripting and content-injection attacks, potentially resulting in unintended behavior or security impact under certain conditions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-12067" data-description="missing exception handlers in avastsvc native message dispatcher (ashserv.dll) on windows allow a local, unprivileged attacker to crash the service by sending specially crafted json messages.
+
+
+
+the vulnerability spans multiple handler pathways in the rpc-based native message protocol:
+
+  *  log_nmsvc.message handler: converts json fields to strings without type validation and without exception boundaries. 
+  *  openinsz_nmsvc handler: converts url and origin fields to strings without type checking, exposing an exception.
+  *  openinsz_nmsvc.profile handler: converts the profile field to an integer without validation.
+
+
+in all three cases, the exceptions are not caught by action-specific handlers and propagate up the dispatcher. the common root cause is the absence of try-catch blocks around json type conversions in the native message processing chain.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-12067" target="_blank">CVE-2026-12067</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing exception handlers in AvastSvc native message dispatcher (ashServ.dll) on Windows allow a local, unprivileged attacker to crash the service by sending specially crafted JSON messages.
+
+
+
+The vulnerability spans multiple handler pathways in the RPC-based native message protocol:
+
+  *  Log_NmSvc.message handler: converts JSON fields to strings without type validation and without exception boundaries. 
+  *  OpenInSz_NmSvc handler: converts URL and origin fields to strings without type checking, exposing an exception.
+  *  OpenInSz_NmSvc.profile handler: converts the profile field to an integer without validation.
+
+
+In all three cases, the exceptions are not caught by action-specific handlers and propagate up the dispatcher. The common root cause is the absence of try-catch blocks around JSON type conversions in the native message processing chain.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123792" data-description="the symfony yaml components inline and parser, parse some yaml documents inefficiently, so that a small crafted document can take disproportionately long to process, keeping a php process busy for seconds or minutes, potentially causing a denial of service in symfony versions prior to 5.4.56, 6.x prior to 6.4.50, 7.x prior to 7.4.23, and 8.x prior to 8.1.11.
+
+the parser repeats work it has already done in several places. an embedded mapping in a flow sequence is parsed again for every scalar appended to it, and so are the collections nested in it, so the parse time grows exponentially with the nesting depth. the patterns matching mapping keys and tags scan a run of spaces once per character of the run, and each scalar of a flow collection is matched against a copy of the rest of the collection, so the parse time grows quadratically with the size of the input. nested blocks are also copied at each nesting level, which consumes memory as well as time. a few other constructs, such as an empty sequence item followed by a blank line or an anchor named 0, trigger similar repeated work.
+
+
+any code parsing untrusted yaml is affected, with the default flags. in symfony 7.4 and later, that includes #[maprequestpayload] when the yaml component is installed and the endpoint does not restrict acceptformat. a single unauthenticated request with a yaml content type keeps a php worker busy until max_execution_time. json documents are valid yaml, so a json payload sent with a yaml content type is enough for the flow collection case. in symfony 6.4, #[maprequestpayload] accepts yaml only when the application registers a yaml request format.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123792" target="_blank">CVE-2026-123792</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Symfony Yaml components Inline and Parser, parse some YAML documents inefficiently, so that a small crafted document can take disproportionately long to process, keeping a PHP process busy for seconds or minutes, potentially causing a denial of service in Symfony versions prior to 5.4.56, 6.x prior to 6.4.50, 7.x prior to 7.4.23, and 8.x prior to 8.1.11.
+
+The parser repeats work it has already done in several places. An embedded mapping in a flow sequence is parsed again for every scalar appended to it, and so are the collections nested in it, so the parse time grows exponentially with the nesting depth. The patterns matching mapping keys and tags scan a run of spaces once per character of the run, and each scalar of a flow collection is matched against a copy of the rest of the collection, so the parse time grows quadratically with the size of the input. Nested blocks are also copied at each nesting level, which consumes memory as well as time. A few other constructs, such as an empty sequence item followed by a blank line or an anchor named 0, trigger similar repeated work.
+
+
+Any code parsing untrusted YAML is affected, with the default flags. In Symfony 7.4 and later, that includes #[MapRequestPayload] when the Yaml component is installed and the endpoint does not restrict acceptFormat. A single unauthenticated request with a YAML content type keeps a PHP worker busy until max_execution_time. JSON documents are valid YAML, so a JSON payload sent with a YAML content type is enough for the flow collection case. In Symfony 6.4, #[MapRequestPayload] accepts YAML only when the application registers a yaml request format.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123677" data-description="a vulnerability was found in xxyopen/201206030 novel up to 3.5.0. affected is the function getbookchapter of the file src/main/java/io/github/xxyopen/novel/service/impl/bookserviceimpl.java of the component book chapter read handler. performing a manipulation of the argument chapterid results in authorization bypass. the attack may be initiated remotely. the exploit has been made public and could be used. the patch is named b8134e774820e0971fa9d8074405b49a01c99bdc. it is suggested to install a patch to address this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123677" target="_blank">CVE-2026-123677</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A vulnerability was found in xxyopen/201206030 novel up to 3.5.0. Affected is the function getBookChapter of the file src/main/java/io/github/xxyopen/novel/service/impl/BookServiceImpl.java of the component Book Chapter Read Handler. Performing a manipulation of the argument chapterId results in authorization bypass. The attack may be initiated remotely. The exploit has been made public and could be used. The patch is named b8134e774820e0971fa9d8074405b49a01c99bdc. It is suggested to install a patch to address this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123676" data-description="a vulnerability has been found in xxyopen/201206030 novel up to 3.5.0. this impacts the function bookserviceimpl.getbookcontentabout of the file src/main/java/io/github/xxyopen/novel/service/impl/bookserviceimpl.java of the component book content service. such manipulation of the argument chapterid leads to improper authorization. the attack can be launched remotely. the exploit has been disclosed to the public and may be used. the name of the patch is 966c4bdde3521dc0a165d15a2acff66ee33eaaa7. applying a patch is advised to resolve this issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123676" target="_blank">CVE-2026-123676</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability has been found in xxyopen/201206030 novel up to 3.5.0. This impacts the function BookServiceImpl.getBookContentAbout of the file src/main/java/io/github/xxyopen/novel/service/impl/BookServiceImpl.java of the component Book Content Service. Such manipulation of the argument chapterId leads to improper authorization. The attack can be launched remotely. The exploit has been disclosed to the public and may be used. The name of the patch is 966c4bdde3521dc0a165d15a2acff66ee33eaaa7. Applying a patch is advised to resolve this issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123675" data-description="a flaw has been found in openbmb internet of agents up to 9d78e88e47160eb42ee1ee8538c05e1c2c47877a. this affects the function execute_code of the file im_client/agents/tools/code_executor.py of the component code executor tool. this manipulation of the argument filename/lang causes code injection. the attack can be initiated remotely. the exploit has been published and may be used. continious delivery with rolling releases is used by this product. therefore, no version details of affected nor updated releases are available. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123675" target="_blank">CVE-2026-123675</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
+                    <p>A flaw has been found in OpenBMB Internet of Agents up to 9d78e88e47160eb42ee1ee8538c05e1c2c47877a. This affects the function execute_code of the file im_client/agents/tools/code_executor.py of the component Code Executor Tool. This manipulation of the argument filename/lang causes code injection. The attack can be initiated remotely. The exploit has been published and may be used. Continious delivery with rolling releases is used by this product. Therefore, no version details of affected nor updated releases are available. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123623" data-description="grida through 0.0.24 contains a missing authorization vulnerability in the forms file-preview api routes that allows unauthenticated attackers to read other organizations' form response files. attackers can use form and field ids exposed in public form payloads with a chosen path parameter to obtain service-role signed urls for attachments and connected supabase bucket objects.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123623" target="_blank">CVE-2026-123623</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>Grida through 0.0.24 contains a missing authorization vulnerability in the Forms file-preview API routes that allows unauthenticated attackers to read other organizations' form response files. Attackers can use form and field IDs exposed in public form payloads with a chosen path parameter to obtain service-role signed URLs for attachments and connected Supabase bucket objects.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121881" data-description="sql injection vulnerability in the get_last_seen code-server session-state rpc in posit software, pbc posit workbench before 2026.08.0 allows authenticated users to read arbitrary data from the workbench database via the sessionids parameter.
+
+
+
+note: exploitation requires a valid authenticated session; no administrative privileges are needed. the vulnerability is limited to disclosure of database contents.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121881" target="_blank">CVE-2026-121881</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>SQL injection vulnerability in the get_last_seen code-server session-state RPC in Posit Software, PBC Posit Workbench before 2026.08.0 allows authenticated users to read arbitrary data from the Workbench database via the sessionIds parameter.
+
+
+
+NOTE: exploitation requires a valid authenticated session; no administrative privileges are needed. The vulnerability is limited to disclosure of database contents.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121880" data-description="authorization bypass through user-controlled key in the localhost port-proxy (/p/<token>/) in posit software, pbc rstudio server and posit workbench before 2026.08.0 allows remote authenticated users to reach web applications and other services bound to 127.0.0.1 under a different user's session, and to view their live rendered content and data, via a proxy url constructed from the attacker's own port token for an arbitrary port number. the port token is a documented obfuscation measure and not an authorization boundary, and the proxy does not verify that the requested port belongs to the requesting user's session.
+
+
+
+note: exploitation requires an authenticated account on the same multi-user server and a target service listening on localhost at the time of access. impact may be greater on hosts that co-locate additional privileged localhost services, and the bypass is not prevented by allow-shell=false; no setting restricts the port-proxy without disabling all application proxying.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121880" target="_blank">CVE-2026-121880</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Authorization bypass through user-controlled key in the localhost port-proxy (/p/<token>/) in Posit Software, PBC RStudio Server and Posit Workbench before 2026.08.0 allows remote authenticated users to reach web applications and other services bound to 127.0.0.1 under a different user's session, and to view their live rendered content and data, via a proxy URL constructed from the attacker's own port token for an arbitrary port number. The port token is a documented obfuscation measure and not an authorization boundary, and the proxy does not verify that the requested port belongs to the requesting user's session.
+
+
+
+NOTE: exploitation requires an authenticated account on the same multi-user server and a target service listening on localhost at the time of access. Impact may be greater on hosts that co-locate additional privileged localhost services, and the bypass is not prevented by allow-shell=false; no setting restricts the port-proxy without disabling all application proxying.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-121623" data-description="the symfony serializer component dataurinormalizer::denormalize() matches the data: scheme with a case-sensitive regular expression, allowing a value with an uppercase scheme, such as data:,/../../../etc/passwd, to bypass it, resulting in arbitrary local file read through path traversal in symfony versions prior to 5.4.56, 6.x prior to 6.4.50, 7.x prior to 7.4.23, and 8.x prior to 8.1.11.
+
+a value whose scheme is not lowercase data: are treated as a local file path and opened instead of being decoded as inline data, so the resulting file, \splfileinfo, or \splfileobject points at a file on the server, which the application then handles as the uploaded content.
+
+any endpoint that deserializes untrusted input into one of these types is affected. frameworkbundle registers dataurinormalizer ahead of objectnormalizer by default. a single request with a crafted data: value is enough to read arbitrary local files that the application can access, with no authentication needed if the endpoint is public.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121623" target="_blank">CVE-2026-121623</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-06 10:17:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The Symfony Serializer component DataUriNormalizer::denormalize() matches the data: scheme with a case-sensitive regular expression, allowing a value with an uppercase scheme, such as DATA:,/../../../etc/passwd, to bypass it, resulting in Arbitrary Local File Read through Path Traversal in Symfony versions prior to 5.4.56, 6.x prior to 6.4.50, 7.x prior to 7.4.23, and 8.x prior to 8.1.11.
+
+A value whose scheme is not lowercase data: are treated as a local file path and opened instead of being decoded as inline data, so the resulting File, \SplFileInfo, or \SplFileObject points at a file on the server, which the application then handles as the uploaded content.
+
+Any endpoint that deserializes untrusted input into one of these types is affected. FrameworkBundle registers DataUriNormalizer ahead of ObjectNormalizer by default. A single request with a crafted DATA: value is enough to read arbitrary local files that the application can access, with no authentication needed if the endpoint is public.</p>
                 </div>
         
             </div>
