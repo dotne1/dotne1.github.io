@@ -34,6 +34,136 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-99284" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: skbuff: propagate shared-frag marker in skb_zerocopy()
+
+skb_zerocopy() moves frag descriptors from @from into @to and takes a
+reference on each frag, but it does not copy skb_shinfo(from)->flags into
+skb_shinfo(to)->flags.  a destination skb holding the same page-cache
+backed frags as the source therefore reports skb_has_shared_frag() as
+false.
+
+that breaks the invariant relied on by later in-place writers.  esp input
+checks skb_has_shared_frag() before deciding whether an uncloned
+nonlinear skb can skip skb_cow_data(); with the marker lost, an skb that
+skb_zerocopy() built for nfnetlink_queue or for an openvswitch upcall is
+decrypted in place, letting an unprivileged user write into the page
+cache of a root-owned read-only file.
+
+propagate skbfl_shared_frag when frag descriptors are copied, as done for
+the other frag-transfer helpers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99284" target="_blank">CVE-2026-99284</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 15:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: skbuff: propagate shared-frag marker in skb_zerocopy()
+
+skb_zerocopy() moves frag descriptors from @from into @to and takes a
+reference on each frag, but it does not copy skb_shinfo(from)->flags into
+skb_shinfo(to)->flags.  A destination skb holding the same page-cache
+backed frags as the source therefore reports skb_has_shared_frag() as
+false.
+
+That breaks the invariant relied on by later in-place writers.  ESP input
+checks skb_has_shared_frag() before deciding whether an uncloned
+nonlinear skb can skip skb_cow_data(); with the marker lost, an skb that
+skb_zerocopy() built for nfnetlink_queue or for an openvswitch upcall is
+decrypted in place, letting an unprivileged user write into the page
+cache of a root-owned read-only file.
+
+Propagate SKBFL_SHARED_FRAG when frag descriptors are copied, as done for
+the other frag-transfer helpers.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99283" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+netfilter: conntrack: tcp: use unack timeout for non-closing rst packets
+
+commit be0502a3f2e9 ("netfilter: conntrack: tcp: only close if rst
+matches exact sequence") keeps an established conntrack entry in
+established when an in-window rst does not match the expected sequence
+number exactly, so the endpoint can validate the rst with a challenge
+ack.
+
+the timeout selection nevertheless uses the close timeout for every rst
+packet.  the bug is that timeout selection is based on the packet type,
+not on the state transition result: even when rst validation keeps
+new_state in established, the timeout is still forced to
+tcp_conntrack_close.
+
+linux tcp independently rate limits challenge acks per socket.  a second
+non-exact rst can therefore arrive after the first challenge ack has
+restored the timeout but before the rate limit expires.  the second rst
+lowers the timeout to 10 seconds again while the endpoint suppresses the
+second challenge ack, allowing the conntrack entry to expire while both
+tcp endpoints remain established.
+
+using the established timeout for such rsts would avoid this short
+expiration window, but it could also retain stale entries for the
+five-day default because conntrack cannot reliably match the endpoint's
+exact tcp state.
+
+use the unack timeout for rst packets that leave the conntrack entry in
+tcp_conntrack_established.  exact-match rsts and accepted rst packet
+trains still fall through to timeouts[new_state], which preserves the
+close timeout when conntrack accepts the rst as closing the flow.
+
+this avoids the aggressive 10-second expiration window for non-exact
+rsts while preserving the short timeout for rsts that conntrack accepts
+as closing the flow.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99283" target="_blank">CVE-2026-99283</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 15:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+netfilter: conntrack: tcp: use UNACK timeout for non-closing RST packets
+
+Commit be0502a3f2e9 ("netfilter: conntrack: tcp: only close if RST
+matches exact sequence") keeps an established conntrack entry in
+ESTABLISHED when an in-window RST does not match the expected sequence
+number exactly, so the endpoint can validate the RST with a challenge
+ACK.
+
+The timeout selection nevertheless uses the CLOSE timeout for every RST
+packet.  The bug is that timeout selection is based on the packet type,
+not on the state transition result: even when RST validation keeps
+new_state in ESTABLISHED, the timeout is still forced to
+TCP_CONNTRACK_CLOSE.
+
+Linux TCP independently rate limits challenge ACKs per socket.  A second
+non-exact RST can therefore arrive after the first challenge ACK has
+restored the timeout but before the rate limit expires.  The second RST
+lowers the timeout to 10 seconds again while the endpoint suppresses the
+second challenge ACK, allowing the conntrack entry to expire while both
+TCP endpoints remain established.
+
+Using the ESTABLISHED timeout for such RSTs would avoid this short
+expiration window, but it could also retain stale entries for the
+five-day default because conntrack cannot reliably match the endpoint's
+exact TCP state.
+
+Use the UNACK timeout for RST packets that leave the conntrack entry in
+TCP_CONNTRACK_ESTABLISHED.  Exact-match RSTs and accepted RST packet
+trains still fall through to timeouts[new_state], which preserves the
+CLOSE timeout when conntrack accepts the RST as closing the flow.
+
+This avoids the aggressive 10-second expiration window for non-exact
+RSTs while preserving the short timeout for RSTs that conntrack accepts
+as closing the flow.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124060" data-description="a vulnerability was detected in totolink ca300-poe 6.2c.884. affected by this issue is the function uploadcustommodule of the file /cgi-bin/cstecgi.cgi. the manipulation of the argument file results in buffer overflow. the attack may be launched remotely. the exploit is now public and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124060" target="_blank">CVE-2026-124060</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 15:17:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>A vulnerability was detected in TOTOLINK CA300-PoE 6.2c.884. Affected by this issue is the function UploadCustomModule of the file /cgi-bin/cstecgi.cgi. The manipulation of the argument File results in buffer overflow. The attack may be launched remotely. The exploit is now public and may be used.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-124059" data-description="a security vulnerability has been detected in totolink ca300-poe 6.2c.884. affected by this vulnerability is the function setwifiwdsaddconfig of the file /cgi-bin/cstecgi.cgi. the manipulation of the argument apclikeystr leads to buffer overflow. the attack may be initiated remotely. the exploit has been disclosed publicly and may be used.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124059" target="_blank">CVE-2026-124059</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-07 13:17:28 CDT</p>
@@ -168,30 +298,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
                     <p>Frappe ERPNext before 15.121.4 and 16.x before 16.36.0 contains a missing authorization vulnerability in the whitelisted get_linked_payments_for_doc method. Any authenticated user, including portal users, can supply arbitrary company, doctype, and docname values to read Payment Ledger Entry allocation data for other companies' invoices and vouchers.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124312" data-description="fraunhofer hhi vvdec through 3.2.1 contains a heap out-of-bounds read vulnerability that allows attackers to crash the decoder by supplying a collocated picture of different resolution. attackers can craft a vvc bitstream enabling tmvp with a smaller collocated reference picture, causing getcolinfo to read past the colmotion allocation when error concealment is enabled.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124312" target="_blank">CVE-2026-124312</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 09:17:15 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
-                    <p>Fraunhofer HHI VVdeC through 3.2.1 contains a heap out-of-bounds read vulnerability that allows attackers to crash the decoder by supplying a collocated picture of different resolution. Attackers can craft a VVC bitstream enabling TMVP with a smaller collocated reference picture, causing getColInfo to read past the colMotion allocation when error concealment is enabled.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124311" data-description="fraunhofer hhi vvdec through 3.2.1 contains a null pointer dereference vulnerability in interprediction::xpredinterblk that allows attackers to crash the decoder by switching sps to enable reference wrap-around. attackers can supply a crafted vvc bitstream activating a new sps with sps_ref_wraparound_enabled_flag set, causing reads from missing pic_recon_wrap buffers and denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124311" target="_blank">CVE-2026-124311</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 09:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>Fraunhofer HHI VVdeC through 3.2.1 contains a NULL pointer dereference vulnerability in InterPrediction::xPredInterBlk that allows attackers to crash the decoder by switching SPS to enable reference wrap-around. Attackers can supply a crafted VVC bitstream activating a new SPS with sps_ref_wraparound_enabled_flag set, causing reads from missing PIC_RECON_WRAP buffers and denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124310" data-description="fraunhofer hhi vvdec before 3.2.1 contains an out-of-bounds read vulnerability that allows attackers to crash the decoder by supplying bitstreams with overlapping slice ctu coverage. attackers can code a ctu in a second slice so a bi-predicted bdof coding unit carries a negative reference index, causing slice::getrefpic to read outside m_apcrefpiclist and crash decoding.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124310" target="_blank">CVE-2026-124310</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 09:17:14 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>Fraunhofer HHI VVdeC before 3.2.1 contains an out-of-bounds read vulnerability that allows attackers to crash the decoder by supplying bitstreams with overlapping slice CTU coverage. Attackers can code a CTU in a second slice so a bi-predicted BDOF coding unit carries a negative reference index, causing Slice::getRefPic to read outside m_apcRefPicList and crash decoding.</p>
                 </div>
         
             </div>
