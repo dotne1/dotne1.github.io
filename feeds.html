@@ -34,6 +34,772 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-99282" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/sched: sch_teql: fix use-after-free on lower qdisc drop
+
+the issue: teql_master_xmit() tests the slave's ndo_start_xmit() return
+value against netdev_tx_ok alone. a slave that consumes the skb but
+returns an error code (rc < net_xmit_mask, e.g. net_xmit_drop) is treated
+as if the skb were still owned, so the loop restores skb->dev and calls
+__skb_pull() on it. a vlan slave returns the result of dev_queue_xmit()
+from its ndo_start_xmit() (propagated since cbbef5e18307), and when the
+lower qdisc drops the packet that value is net_xmit_drop after the skb
+has been freed, giving a use-after-free in teql_master_xmit().
+
+the fix: test for consumption with dev_xmit_complete(), which accepts
+netdev_tx_ok and every rc < net_xmit_mask, matching other callers that
+need to distinguish consumed results from busy. only netdev_tx_ok keeps
+the packet counted in tx_packets/tx_bytes and advances the slave; a
+consumed result that is neither a success nor net_xmit_cn ends the
+attempt and is charged to tx_dropped, so lower-qdisc drops are no longer
+reported as good transmits. net_xmit_cn is counted like success because
+it can accompany acceptance of the current packet: pfifo_head_drop drops
+the old head, enqueues the current skb and returns net_xmit_cn.
+
+conditions to recreate the bug:
+with config_net_sch_teql,
+config_vlan_8021q and config_dummy enabled, add lkrdummy0 (dummy) and
+lkrvlan0 (vlan id 37 on lkrdummy0); set a pfifo limit 0 root on lkrdummy0
+and a teql0 root on lkrvlan0; bring teql0 up with an address and send one
+udp packet to it. the vlan xmit returns net_xmit_drop from the lower
+qdisc while holding a freed skb.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99282" target="_blank">CVE-2026-99282</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/sched: sch_teql: fix use-after-free on lower qdisc drop
+
+The issue: teql_master_xmit() tests the slave's ndo_start_xmit() return
+value against NETDEV_TX_OK alone. A slave that consumes the skb but
+returns an error code (rc < NET_XMIT_MASK, e.g. NET_XMIT_DROP) is treated
+as if the skb were still owned, so the loop restores skb->dev and calls
+__skb_pull() on it. A VLAN slave returns the result of dev_queue_xmit()
+from its ndo_start_xmit() (propagated since cbbef5e18307), and when the
+lower qdisc drops the packet that value is NET_XMIT_DROP after the skb
+has been freed, giving a use-after-free in teql_master_xmit().
+
+The Fix: test for consumption with dev_xmit_complete(), which accepts
+NETDEV_TX_OK and every rc < NET_XMIT_MASK, matching other callers that
+need to distinguish consumed results from busy. Only NETDEV_TX_OK keeps
+the packet counted in tx_packets/tx_bytes and advances the slave; a
+consumed result that is neither a success nor NET_XMIT_CN ends the
+attempt and is charged to tx_dropped, so lower-qdisc drops are no longer
+reported as good transmits. NET_XMIT_CN is counted like success because
+it can accompany acceptance of the current packet: pfifo_head_drop drops
+the old head, enqueues the current skb and returns NET_XMIT_CN.
+
+Conditions to recreate the bug:
+With CONFIG_NET_SCH_TEQL,
+CONFIG_VLAN_8021Q and CONFIG_DUMMY enabled, add lkrdummy0 (dummy) and
+lkrvlan0 (VLAN id 37 on lkrdummy0); set a pfifo limit 0 root on lkrdummy0
+and a teql0 root on lkrvlan0; bring teql0 up with an address and send one
+UDP packet to it. The VLAN xmit returns NET_XMIT_DROP from the lower
+qdisc while holding a freed skb.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99281" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+tun: require cap_net_admin to attach to an ownerless device
+
+twenty years ago i made creating a tuntap device require cap_net_admin
+in commit ca6bb5d7ab22 ("[net]: require cap_net_admin to create tuntap
+devices.")
+
+the idea was to allow the permissions on /dev/net/tun to be relaxed to
+0666 and thus allow owners of tun devices assigned with tunsetowner to
+actually open it and get at their devices.
+
+what we missed at the time was that persistent devices with *no* owner
+were already essentially world-consumable, and anyone who could open
+the device node could also attach to those.
+
+even then, using persistent devices with no explicitly set owner — on
+the (false) presumption that cap_net_admin would be required to open
+them — wasn't an egregious userspace bug. there are cases where it does
+make sense to separate the creation/configuration of the netdevice, from
+the process which shovels packets into it.
+
+since then, tunsetgroup was added a year later in commit 8c644623fe7e
+("[net]: allow group ownership of tun/tap devices."). its commit message
+noted that if both uid and gid are set, both have to match (in itself a
+bizarre choice) — but still not that with *neither* set, no permission
+at all was required.
+
+then in 2012 commit c8d68e6be1c3 ("tuntap: multiqueue support") allowed
+new queues to be attached to a device from the moment of its creation,
+with no way for userspace to close the race between creation and a
+subsequent tunset{owner,group}.
+
+in 2024, commit 3ca459eaba1bf ("tun: fix group permission check") tried
+to fix things to be saner: only require the user *or* the group to
+match, in line with standard posix permissions, and require
+cap_net_admin if neither the user nor group authorised the access
+(although it put the cap_net_admin check first, and would wrongly have
+reported the capability as having been used even when it was not).
+
+that fix was reverted in commit a70c7b3cbc06 ("tun: revert fix group
+permission check") due to allegedly causing a regression in an selinux
+test suite which *expected* the attachment to succeed when authorised
+by none of user, group, nor cap_net_admin:
+https://lore.kernel.org/netdev/cafqzxntkcbt4f+pwyvrmqgot3p1eva01fcg_antpt6dakxncug@mail.gmail.com/
+
+we should not break uapi. but we don't have to consider an selinux test
+case which deliberately exercises a security flaw to be uapi worth
+preserving either. to which end, i have fixed it in selinux-testsuite
+commit b2f894f0016b ("tests/tun_tap: set an owner on the device for the
+relabel tests").
+
+so: fix the lack of cap_net_admin check on devices which *haven't* been
+assigned an owner or group, while leaving the weird tun ownership model
+as it was (user *and* group have to match, if both are set). if someone
+still wants to fix the latter (which wasn't actually the reason the
+previous attempt was reverted), they can do it under separate cover.
+
+permit attaching to an existing device only if an owner and/or group was
+set and the caller matches all that were set, or if the caller has
+cap_net_admin. the only behavioural change is that a device with no
+owner or group now requires cap_net_admin to attach — precisely the
+loophole we want to close.
+
+and put the cap_net_admin check in the right place this time.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99281" target="_blank">CVE-2026-99281</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+tun: Require CAP_NET_ADMIN to attach to an ownerless device
+
+Twenty years ago I made creating a tuntap device require CAP_NET_ADMIN
+in commit ca6bb5d7ab22 ("[NET]: Require CAP_NET_ADMIN to create tuntap
+devices.")
+
+The idea was to allow the permissions on /dev/net/tun to be relaxed to
+0666 and thus allow owners of tun devices assigned with TUNSETOWNER to
+actually open it and get at their devices.
+
+What we missed at the time was that persistent devices with *no* owner
+were already essentially world-consumable, and anyone who could open
+the device node could also attach to those.
+
+Even then, using persistent devices with no explicitly set owner — on
+the (false) presumption that CAP_NET_ADMIN would be required to open
+them — wasn't an egregious userspace bug. There are cases where it does
+make sense to separate the creation/configuration of the netdevice, from
+the process which shovels packets into it.
+
+Since then, TUNSETGROUP was added a year later in commit 8c644623fe7e
+("[NET]: Allow group ownership of TUN/TAP devices."). Its commit message
+noted that if both uid and gid are set, both have to match (in itself a
+bizarre choice) — but still not that with *neither* set, no permission
+at all was required.
+
+Then in 2012 commit c8d68e6be1c3 ("tuntap: multiqueue support") allowed
+new queues to be attached to a device from the moment of its creation,
+with no way for userspace to close the race between creation and a
+subsequent TUNSET{OWNER,GROUP}.
+
+In 2024, commit 3ca459eaba1bf ("tun: fix group permission check") tried
+to fix things to be saner: only require the user *or* the group to
+match, in line with standard POSIX permissions, and require
+CAP_NET_ADMIN if neither the user nor group authorised the access
+(although it put the CAP_NET_ADMIN check first, and would wrongly have
+reported the capability as having been used even when it was not).
+
+That fix was reverted in commit a70c7b3cbc06 ("tun: revert fix group
+permission check") due to allegedly causing a regression in an selinux
+test suite which *expected* the attachment to succeed when authorised
+by none of user, group, nor CAP_NET_ADMIN:
+https://lore.kernel.org/netdev/CAFqZXNtkCBT4f+PwyVRmQGoT3p1eVa01fCG_aNtpt6dakXncUg@mail.gmail.com/
+
+We should not break UAPI. But we don't have to consider an selinux test
+case which deliberately exercises a security flaw to be UAPI worth
+preserving either. To which end, I have fixed it in selinux-testsuite
+commit b2f894f0016b ("tests/tun_tap: set an owner on the device for the
+relabel tests").
+
+So: fix the lack of CAP_NET_ADMIN check on devices which *haven't* been
+assigned an owner or group, while leaving the weird tun ownership model
+as it was (user *and* group have to match, if both are set). If someone
+still wants to fix the latter (which wasn't actually the reason the
+previous attempt was reverted), they can do it under separate cover.
+
+Permit attaching to an existing device only if an owner and/or group was
+set and the caller matches all that were set, or if the caller has
+CAP_NET_ADMIN. The only behavioural change is that a device with no
+owner or group now requires CAP_NET_ADMIN to attach — precisely the
+loophole we want to close.
+
+And put the CAP_NET_ADMIN check in the right place this time.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99280" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: drain session procfs readers before dropping table references
+
+session registration failure and connection cleanup can drop the table
+reference while the per-session procfs entry is still accessible. if a
+reader holds the last remaining reference, its final put calls
+proc_remove() from its own callback and waits for that callback to
+finish.
+
+remove the procfs entry before dropping the table reference in the
+registration failure path. queue sessions removed during connection
+cleanup and drain their procfs readers after releasing both session
+locks, then return their table references. keep the global hash node
+unhashed while a session is queued so a concurrent unregister cannot
+drop the reference again.
+
+previous-session replacement also destroys the file table before the
+session is finally freed. detach the idr under the lock used by procfs
+file counters, and report zero files after it has been detached. this
+prevents a reader from accessing the idr during or after its
+destruction.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99280" target="_blank">CVE-2026-99280</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: drain session procfs readers before dropping table references
+
+Session registration failure and connection cleanup can drop the table
+reference while the per-session procfs entry is still accessible. If a
+reader holds the last remaining reference, its final put calls
+proc_remove() from its own callback and waits for that callback to
+finish.
+
+Remove the procfs entry before dropping the table reference in the
+registration failure path. Queue sessions removed during connection
+cleanup and drain their procfs readers after releasing both session
+locks, then return their table references. Keep the global hash node
+unhashed while a session is queued so a concurrent unregister cannot
+drop the reference again.
+
+Previous-session replacement also destroys the file table before the
+session is finally freed. Detach the idr under the lock used by procfs
+file counters, and report zero files after it has been detached. This
+prevents a reader from accessing the idr during or after its
+destruction.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99279" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: reclaim ended sessions on logoff and expiration
+
+logoff and previous-session replacement leave sessions expired with a
+zero credential expiry. ended sessions can retain their memory and
+connection slots when no further setup arrives on the owning connection.
+
+unpublish a logged-off session while the request reference keeps its
+response signing and encryption keys alive. remove its procfs entry
+before dropping the table reference so a reader cannot remove its own
+entry on the last put. clear proc_entry after removal to avoid removing
+it twice.
+
+reclaim ended sessions from the global table in the existing expiration
+worker before it acquires conn_list_lock. only select expired sessions
+with zero credential expiry and no references beyond the table
+reference. keep sessions whose kerberos credentials expired available
+for reauthentication.
+
+unlink the session from its setup connection and all channel
+connections, so smb2 sessions and sessions with only secondary smb3
+channels are covered. the session already holds connection references,
+and sessions_table_lock prevents concurrent channel removal. queue
+sessions on a separate disposal list, leaving their hash nodes unhashed,
+and remove procfs entries and drop table references outside the locks.
+
+keep the pending setup check before allocating a new session so
+abandoned inprogress sessions can release their slots even at the
+connection limit. retain the timeout and reference checks and dispose of
+those sessions outside the locks. leave ended expired sessions to the
+expiration worker.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99279" target="_blank">CVE-2026-99279</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: reclaim ended sessions on logoff and expiration
+
+LOGOFF and previous-session replacement leave sessions Expired with a
+zero credential expiry. Ended sessions can retain their memory and
+connection slots when no further setup arrives on the owning connection.
+
+Unpublish a logged-off session while the request reference keeps its
+response signing and encryption keys alive. Remove its procfs entry
+before dropping the table reference so a reader cannot remove its own
+entry on the last put. Clear proc_entry after removal to avoid removing
+it twice.
+
+Reclaim ended sessions from the global table in the existing expiration
+worker before it acquires conn_list_lock. Only select Expired sessions
+with zero credential expiry and no references beyond the table
+reference. Keep sessions whose Kerberos credentials expired available
+for reauthentication.
+
+Unlink the session from its setup connection and all channel
+connections, so SMB2 sessions and sessions with only secondary SMB3
+channels are covered. The session already holds connection references,
+and sessions_table_lock prevents concurrent channel removal. Queue
+sessions on a separate disposal list, leaving their hash nodes unhashed,
+and remove procfs entries and drop table references outside the locks.
+
+Keep the pending setup check before allocating a new session so
+abandoned InProgress sessions can release their slots even at the
+connection limit. Retain the timeout and reference checks and dispose of
+those sessions outside the locks. Leave ended Expired sessions to the
+expiration worker.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99278" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: limit sessions on each connection
+
+the pending setup limit only counts inprogress sessions. a client can
+complete authentication repeatedly and retain an unbounded number of valid
+sessions on one connection.
+
+reserve a connection slot before allocating a session and retain a
+connection reference while authentication is in progress. the first smb3
+channel takes over that reservation; binding to another connection reserves
+one slot there. reauthentication and authentication continuation reuse the
+existing reservation. return slots on allocation or insertion failure,
+channel removal, and final session destruction.
+
+accept max_sessions_per_connection in reserved startup-request space and
+default to 64 when older tools leave it zero. keep the request size and
+existing field offsets unchanged. expose the configured limit in procfs.
+the existing connection limits bound the aggregate number of sessions
+without a separate global session allocation limit.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99278" target="_blank">CVE-2026-99278</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: limit sessions on each connection
+
+The pending setup limit only counts InProgress sessions. A client can
+complete authentication repeatedly and retain an unbounded number of Valid
+sessions on one connection.
+
+Reserve a connection slot before allocating a session and retain a
+connection reference while authentication is in progress. The first SMB3
+channel takes over that reservation; binding to another connection reserves
+one slot there. Reauthentication and authentication continuation reuse the
+existing reservation. Return slots on allocation or insertion failure,
+channel removal, and final session destruction.
+
+Accept max_sessions_per_connection in reserved startup-request space and
+default to 64 when older tools leave it zero. Keep the request size and
+existing field offsets unchanged. Expose the configured limit in procfs.
+The existing connection limits bound the aggregate number of sessions
+without a separate global session allocation limit.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99277" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: hold a connection reference for each session channel
+
+ksmbd_session_unregister() removes a session from the global and per-
+connection tables before dropping the table reference. a concurrent
+reference holder can keep the session and its channel list alive after
+those removals.
+
+connection cleanup can no longer find the unpublished session to remove its
+channels. since a channel only stores a raw conn pointer, the connection
+can be freed while another session reference holder is still accessing it,
+for example during smb3.1.1 binding or a procfs read.
+
+take a connection reference when registering a channel and release it on
+insertion failure, channel removal, or final session destruction. keep the
+channels and signing keys until the session is destroyed so a response can
+still be signed after the session has been unregistered.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99277" target="_blank">CVE-2026-99277</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: hold a connection reference for each session channel
+
+ksmbd_session_unregister() removes a session from the global and per-
+connection tables before dropping the table reference. A concurrent
+reference holder can keep the session and its channel list alive after
+those removals.
+
+Connection cleanup can no longer find the unpublished session to remove its
+channels. Since a channel only stores a raw conn pointer, the connection
+can be freed while another session reference holder is still accessing it,
+for example during SMB3.1.1 binding or a procfs read.
+
+Take a connection reference when registering a channel and release it on
+insertion failure, channel removal, or final session destruction. Keep the
+channels and signing keys until the session is destroyed so a response can
+still be signed after the session has been unregistered.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99276" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: defer connection scavenging while session locks are busy
+
+the expiration worker holds conn_list_lock for reading while checking
+for authenticated sessions. without this change, the check can wait for
+conn->session_lock or sessions_table_lock.
+
+in destroy_previous_session(), the status updates after
+ksmbd_conn_wait_idle_sess() run with both session locks held for
+writing. both the ksmbd_sess_good error path and the
+ksmbd_sess_need_setup success path call ksmbd_all_conn_set_status(),
+which takes conn_list_lock for reading.
+
+a writer queued on conn_list_lock can block these new read acquisitions.
+the worker then waits for a session lock held by
+destroy_previous_session(), which waits behind the writer. the writer
+cannot proceed until the worker releases conn_list_lock.
+
+try both session locks instead of waiting in the scavenging check. keep
+the connection when either lock is busy and let the periodic worker
+retry later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99276" target="_blank">CVE-2026-99276</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: defer connection scavenging while session locks are busy
+
+The expiration worker holds conn_list_lock for reading while checking
+for authenticated sessions. Without this change, the check can wait for
+conn->session_lock or sessions_table_lock.
+
+In destroy_previous_session(), the status updates after
+ksmbd_conn_wait_idle_sess() run with both session locks held for
+writing. Both the KSMBD_SESS_GOOD error path and the
+KSMBD_SESS_NEED_SETUP success path call ksmbd_all_conn_set_status(),
+which takes conn_list_lock for reading.
+
+A writer queued on conn_list_lock can block these new read acquisitions.
+The worker then waits for a session lock held by
+destroy_previous_session(), which waits behind the writer. The writer
+cannot proceed until the worker releases conn_list_lock.
+
+Try both session locks instead of waiting in the scavenging check. Keep
+the connection when either lock is busy and let the periodic worker
+retry later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99275" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+smb: client: reject short session_setup responses
+
+smb2_check_message() accepts frames shorter than struct smb2_pdu when
+the smb2 status is non-zero, before the minimum-pdu check added by
+b4694f269e66d. a 64-byte status_more_processing_required session_setup
+response is therefore accepted even though it cannot contain the
+securitybufferoffset and securitybufferlength fields.
+
+the parser then reads those fields from stale bytes left in the reused
+receive buffer by an earlier frame. with a long stale
+securitybufferlength, decode_ntlmssp_challenge() copies up to about
+64 kb from beyond the receive object and sends the data back to the
+server in the ntlmv2 authenticate target info.
+
+reject short mpr session_setup responses before the short-error path,
+and validate securitybufferoffset + securitybufferlength against the
+received response length before decoding the challenge.
+
+the ordering bypass is not new: the short-error early return predates
+b4694f269e66d, and the unvalidated securitybufferlength read predates
+the 2016 raw ntlmssp split in 166cea4dc3a4, so all supported stable
+trees are affected. reproduced on 6.6.87.2; the path is unchanged on
+mainline.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99275" target="_blank">CVE-2026-99275</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+smb: client: reject short SESSION_SETUP responses
+
+smb2_check_message() accepts frames shorter than struct smb2_pdu when
+the SMB2 status is non-zero, before the minimum-PDU check added by
+b4694f269e66d. A 64-byte STATUS_MORE_PROCESSING_REQUIRED SESSION_SETUP
+response is therefore accepted even though it cannot contain the
+SecurityBufferOffset and SecurityBufferLength fields.
+
+The parser then reads those fields from stale bytes left in the reused
+receive buffer by an earlier frame. With a long stale
+SecurityBufferLength, decode_ntlmssp_challenge() copies up to about
+64 KB from beyond the receive object and sends the data back to the
+server in the NTLMv2 AUTHENTICATE target info.
+
+Reject short MPR SESSION_SETUP responses before the short-error path,
+and validate SecurityBufferOffset + SecurityBufferLength against the
+received response length before decoding the challenge.
+
+The ordering bypass is not new: the short-error early return predates
+b4694f269e66d, and the unvalidated SecurityBufferLength read predates
+the 2016 raw NTLMSSP split in 166cea4dc3a4, so all supported stable
+trees are affected. Reproduced on 6.6.87.2; the path is unchanged on
+mainline.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99274" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+smb: client: fix fiemap wild read on empty truncated response
+
+smb3_fiemap() treats -e2big from smb2_ioctl() as a truncated range blob
+and loops for the next chunk. if the server reports
+status_buffer_overflow with outputcount == 0, smb2_ioctl() returns
+-e2big with out_data == null and out_data_len == 0, and the existing
+length checks accept the empty result. the loop then evaluates
+
+	next = out_data[num - 1].file_offset + ...
+
+with num == 0, reading 16 bytes before null.
+
+reject a truncated range blob that contains no range, so the resume
+offset is never computed from an empty response. also require the last
+range in a truncated blob to advance the resume offset without
+overflowing, and to stay within the requested range; a malicious or
+broken server could otherwise make no progress or underflow len and loop
+forever. free the previous response buffer before retrying.
+
+reproduced on 6.6.87.2 with a malicious smb2 server that answers
+fsctl_query_allocated_ranges with status_buffer_overflow and
+outputcount == 0; an fs_ioc_fiemap ioctl on the mount oopses in
+cifs_fiemap() with cr2 = fffffffffffffff8. the code path is unchanged
+on mainline.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99274" target="_blank">CVE-2026-99274</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+smb: client: fix fiemap wild read on empty truncated response
+
+smb3_fiemap() treats -E2BIG from SMB2_ioctl() as a truncated range blob
+and loops for the next chunk. If the server reports
+STATUS_BUFFER_OVERFLOW with OutputCount == 0, SMB2_ioctl() returns
+-E2BIG with out_data == NULL and out_data_len == 0, and the existing
+length checks accept the empty result. The loop then evaluates
+
+	next = out_data[num - 1].file_offset + ...
+
+with num == 0, reading 16 bytes before NULL.
+
+Reject a truncated range blob that contains no range, so the resume
+offset is never computed from an empty response. Also require the last
+range in a truncated blob to advance the resume offset without
+overflowing, and to stay within the requested range; a malicious or
+broken server could otherwise make no progress or underflow len and loop
+forever. Free the previous response buffer before retrying.
+
+Reproduced on 6.6.87.2 with a malicious SMB2 server that answers
+FSCTL_QUERY_ALLOCATED_RANGES with STATUS_BUFFER_OVERFLOW and
+OutputCount == 0; an FS_IOC_FIEMAP ioctl on the mount oopses in
+cifs_fiemap() with CR2 = fffffffffffffff8. The code path is unchanged
+on mainline.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99273" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: reserve space for the utf-16 terminator in stream info
+
+smb_strtoutf16() always writes a terminating zero utf-16 unit after the
+converted characters, but get_file_stream_info() budgets only
+sizeof(struct smb2_file_stream_info) + streamlen * 2 for a stream entry
+and sizeof(struct smb2_file_stream_info) + 7 * 2 for the trailing
+"::$data" entry. when an entry exactly fills the 448-byte small response
+buffer, the terminator is written two bytes past the allocation.
+
+reserve one extra utf-16 unit in both budget checks. the terminator is
+not part of the wire format, so the reported lengths are unchanged.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99273" target="_blank">CVE-2026-99273</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: reserve space for the UTF-16 terminator in stream info
+
+smb_strtoUTF16() always writes a terminating zero UTF-16 unit after the
+converted characters, but get_file_stream_info() budgets only
+sizeof(struct smb2_file_stream_info) + streamlen * 2 for a stream entry
+and sizeof(struct smb2_file_stream_info) + 7 * 2 for the trailing
+"::$DATA" entry. When an entry exactly fills the 448-byte small response
+buffer, the terminator is written two bytes past the allocation.
+
+Reserve one extra UTF-16 unit in both budget checks. The terminator is
+not part of the wire format, so the reported lengths are unchanged.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99272" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+smb: client: validate the data area in smb2_read()
+
+smb2_read() copies le32_to_cpu(rsp->datalength) bytes from
+(char *)rsp + rsp->dataoffset without checking that the range lies
+within the response actually received. a read response with
+dataoffset == 0 makes smb2_get_data_area_len() zero the data length, so
+smb2_check_message() accepts a frame as short as the fixed response,
+while smb2_read() still uses the server-supplied datalength, capped only
+by cifs_max_msgsize and the caller's length.
+
+a malicious server can answer the synchronous read used by the
+mfsymlinks (or sfu) symlink parser with an 81-byte read response
+carrying dataoffset 0 and datalength 1067, making the client copy 1067
+bytes from a 448-byte receive object (kasan slab-out-of-bounds; up to
+16 kib in the general case).
+
+clamp a zero (or header-overlapping) dataoffset to read_rsp_size, as
+handle_read_data() does for the asynchronous path, and reject the
+response unless dataoffset + datalength fits within rsp_iov.iov_len.
+the smb1 helper was fixed the same way in 5be5bdda5863.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99272" target="_blank">CVE-2026-99272</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+smb: client: validate the data area in SMB2_read()
+
+SMB2_read() copies le32_to_cpu(rsp->DataLength) bytes from
+(char *)rsp + rsp->DataOffset without checking that the range lies
+within the response actually received. A READ response with
+DataOffset == 0 makes smb2_get_data_area_len() zero the data length, so
+smb2_check_message() accepts a frame as short as the fixed response,
+while SMB2_read() still uses the server-supplied DataLength, capped only
+by CIFS_MAX_MSGSIZE and the caller's length.
+
+A malicious server can answer the synchronous read used by the
+mfsymlinks (or SFU) symlink parser with an 81-byte READ response
+carrying DataOffset 0 and DataLength 1067, making the client copy 1067
+bytes from a 448-byte receive object (KASAN slab-out-of-bounds; up to
+16 KiB in the general case).
+
+Clamp a zero (or header-overlapping) DataOffset to read_rsp_size, as
+handle_read_data() does for the asynchronous path, and reject the
+response unless DataOffset + DataLength fits within rsp_iov.iov_len.
+The SMB1 helper was fixed the same way in 5be5bdda5863.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99271" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: line6: clear prev_fbuf on capture buffer release
+
+a kasan slab-use-after-free read was reported in submit_audio_out_urb()
+when generating an impulse test signal:
+
+  bug: kasan: slab-use-after-free in create_impulse_test_signal sound/usb/line6/playback.c:76 [inline]
+  bug: kasan: slab-use-after-free in submit_audio_out_urb+0x1848/0x1b20 sound/usb/line6/playback.c:249
+  read of size 2 at addr ffff888008d74870 by task syz.2.3214/7785
+
+  allocated by task 11:
+   kmem_cache_alloc_noprof+0x2f0/0x390 mm/slub.c:4144
+   line6_buffer_acquire+0x1a1/0x220 sound/usb/line6/pcm.c:158
+   line6_pcm_acquire+0xb6/0x230 sound/usb/line6/pcm.c:329
+   line6_startup_work+0x3c/0x50 sound/usb/line6/driver.c:728
+
+  freed by task 7785:
+   kfree+0xf8/0x390 mm/slub.c:6566
+   line6_buffer_release sound/usb/line6/pcm.c:176 [inline]
+   line6_buffer_release+0xa5/0xf0 sound/usb/line6/pcm.c:170
+   __line6_pcm_release sound/usb/line6/pcm.c:305 [inline]
+   line6_pcm_release+0x5a/0x80 sound/usb/line6/pcm.c:313
+   snd_toneport_monitor_put+0x11b/0x190 sound/usb/line6/toneport.c:183
+
+line6pcm->prev_fbuf points into the capture pcm stream buffer
+(line6pcm->in.buffer), which is updated during audio_in_callback() to
+feed rate synchronization, software monitoring, and impulse test signal
+generation on playback side.
+
+when all capture streams are closed, line6_buffer_release() frees
+pstr->buffer with kfree().  however, it does not clear line6pcm->prev_fbuf.
+if playback is subsequently started (e.g. via impulse test signal
+volume control snd_line6_impulse_volume_put()), submit_audio_out_urb()
+dereferences the stale pointer line6pcm->prev_fbuf under in.lock,
+resulting in a slab-use-after-free read.
+
+clear prev_fbuf and prev_fsize in line6_buffer_release() when releasing
+the capture stream buffer under in.lock, ensuring that no stale buffer
+pointer can be accessed by submit_audio_out_urb().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99271" target="_blank">CVE-2026-99271</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: line6: Clear prev_fbuf on capture buffer release
+
+A KASAN slab-use-after-free read was reported in submit_audio_out_urb()
+when generating an impulse test signal:
+
+  BUG: KASAN: slab-use-after-free in create_impulse_test_signal sound/usb/line6/playback.c:76 [inline]
+  BUG: KASAN: slab-use-after-free in submit_audio_out_urb+0x1848/0x1b20 sound/usb/line6/playback.c:249
+  Read of size 2 at addr ffff888008d74870 by task syz.2.3214/7785
+
+  Allocated by task 11:
+   kmem_cache_alloc_noprof+0x2f0/0x390 mm/slub.c:4144
+   line6_buffer_acquire+0x1a1/0x220 sound/usb/line6/pcm.c:158
+   line6_pcm_acquire+0xb6/0x230 sound/usb/line6/pcm.c:329
+   line6_startup_work+0x3c/0x50 sound/usb/line6/driver.c:728
+
+  Freed by task 7785:
+   kfree+0xf8/0x390 mm/slub.c:6566
+   line6_buffer_release sound/usb/line6/pcm.c:176 [inline]
+   line6_buffer_release+0xa5/0xf0 sound/usb/line6/pcm.c:170
+   __line6_pcm_release sound/usb/line6/pcm.c:305 [inline]
+   line6_pcm_release+0x5a/0x80 sound/usb/line6/pcm.c:313
+   snd_toneport_monitor_put+0x11b/0x190 sound/usb/line6/toneport.c:183
+
+line6pcm->prev_fbuf points into the capture PCM stream buffer
+(line6pcm->in.buffer), which is updated during audio_in_callback() to
+feed rate synchronization, software monitoring, and impulse test signal
+generation on playback side.
+
+When all capture streams are closed, line6_buffer_release() frees
+pstr->buffer with kfree().  However, it does not clear line6pcm->prev_fbuf.
+If playback is subsequently started (e.g. via impulse test signal
+volume control snd_line6_impulse_volume_put()), submit_audio_out_urb()
+dereferences the stale pointer line6pcm->prev_fbuf under in.lock,
+resulting in a slab-use-after-free read.
+
+Clear prev_fbuf and prev_fsize in line6_buffer_release() when releasing
+the capture stream buffer under in.lock, ensuring that no stale buffer
+pointer can be accessed by submit_audio_out_urb().</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123988" data-description="a vulnerability has been found in sililawijesinghe food ordering system up to ba314e897e3365600461e5ea59432e39ceaa0fa5. this issue affects some unknown processing of the file /food-ordering-system/admin/. such manipulation leads to exposure of information through directory listing. the attack can be launched remotely. the exploit has been disclosed to the public and may be used. this product does not use versioning. this is why information about affected and unaffected releases are unavailable. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123988" target="_blank">CVE-2026-123988</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability has been found in SililaWijesinghe Food Ordering System up to ba314e897e3365600461e5ea59432e39ceaa0fa5. This issue affects some unknown processing of the file /Food-Ordering-System/admin/. Such manipulation leads to exposure of information through directory listing. The attack can be launched remotely. The exploit has been disclosed to the public and may be used. This product does not use versioning. This is why information about affected and unaffected releases are unavailable. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123966" data-description="a vulnerability was determined in tenda ac19 16.03.10.07. affected by this issue is the function saveparentcontrolinfo of the file /goform/saveparentcontrolinfo. this manipulation of the argument deviceid causes heap-based buffer overflow. the attack is possible to be carried out remotely. the exploit has been publicly disclosed and may be utilized.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123966" target="_blank">CVE-2026-123966</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
+                    <p>A vulnerability was determined in Tenda AC19 16.03.10.07. Affected by this issue is the function saveParentControlInfo of the file /goform/saveParentControlInfo. This manipulation of the argument deviceId causes heap-based buffer overflow. The attack is possible to be carried out remotely. The exploit has been publicly disclosed and may be utilized.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-120984" data-description="a flaw was found in the keycloak server's client management component. when a client is created or imported with authorization services enabled, the system fails to properly clear an internal session attribute used during the setup process. this allows an authenticated attacker with client management permissions to bypass security controls and upload a malicious javascript policy, which is then executed on the server when an authorization request is made. successful exploitation could allow the attacker to run arbitrary code on the server, potentially compromising the entire system.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120984" target="_blank">CVE-2026-120984</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-07 08:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>A flaw was found in the Keycloak server's client management component. When a client is created or imported with authorization services enabled, the system fails to properly clear an internal session attribute used during the setup process. This allows an authenticated attacker with client management permissions to bypass security controls and upload a malicious JavaScript policy, which is then executed on the server when an authorization request is made. Successful exploitation could allow the attacker to run arbitrary code on the server, potentially compromising the entire system.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-123964" data-description="a vulnerability was detected in openbmb internet of agents up to 9d78e88e47160eb42ee1ee8538c05e1c2c47877a. this affects the function launch_goal of the file im_client/communication/communication_layer.py of the component collaboration layer. performing a manipulation of the argument max_turns results in infinite loop. the attack may be initiated remotely. the exploit is now public and may be used. this product uses a rolling release model to deliver continuous updates. as a result, specific version information for affected or updated releases is not available. the project was informed of the problem early through an issue report but has not responded yet.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123964" target="_blank">CVE-2026-123964</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-07 07:16:38 CDT</p>
@@ -72,126 +838,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 5.3</p>
                     <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in Crocoblock JetFormBuilder jetformbuilder allows Code Injection.This issue affects JetFormBuilder: from n/a through 3.6.8.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123477" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in crocoblock jetengine jet-engine allows stored xss.this issue affects jetengine: from n/a through 3.9.0.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123477" target="_blank">CVE-2026-123477</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Crocoblock JetEngine jet-engine allows Stored XSS.This issue affects JetEngine: from n/a through 3.9.0.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123474" data-description="missing authorization vulnerability in leapworx premium blocks – gutenberg blocks for wordpress premium-blocks-for-gutenberg allows exploiting incorrectly configured access control security levels.this issue affects premium blocks – gutenberg blocks for wordpress: from n/a through 2.3.18.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123474" target="_blank">CVE-2026-123474</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in LeapWorx Premium Blocks – Gutenberg Blocks for WordPress premium-blocks-for-gutenberg allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Premium Blocks – Gutenberg Blocks for WordPress: from n/a through 2.3.18.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123467" data-description="missing authorization vulnerability in stylemixthemes motors motors-car-dealership-classified-listings allows exploiting incorrectly configured access control security levels.this issue affects motors: from n/a through 1.4.128.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123467" target="_blank">CVE-2026-123467</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in StylemixThemes Motors motors-car-dealership-classified-listings allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Motors: from n/a through 1.4.128.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123462" data-description="missing authorization vulnerability in mycred mycred mycred allows exploiting incorrectly configured access control security levels.this issue affects mycred: from n/a through 4.0.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123462" target="_blank">CVE-2026-123462</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in myCred myCred mycred allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects myCred: from n/a through 4.0.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123183" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in pluginus.net active products tables for woocommerce profit-products-tables-for-woocommerce allows code injection.this issue affects active products tables for woocommerce: from n/a through 2.1.6.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123183" target="_blank">CVE-2026-123183</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in PluginUs.Net Active Products Tables for WooCommerce profit-products-tables-for-woocommerce allows Code Injection.This issue affects Active Products Tables for WooCommerce: from n/a through 2.1.6.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-122669" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in everest forms everest forms everest-forms allows stored xss.this issue affects everest forms: from n/a through 3.6.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-122669" target="_blank">CVE-2026-122669</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Everest Forms Everest Forms everest-forms allows Stored XSS.This issue affects Everest Forms: from n/a through 3.6.3.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-122663" data-description="missing authorization vulnerability in villatheme curcy woo-multi-currency allows exploiting incorrectly configured access control security levels.this issue affects curcy: from n/a through 2.2.20.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-122663" target="_blank">CVE-2026-122663</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in VillaTheme CURCY woo-multi-currency allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects CURCY: from n/a through 2.2.20.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-122660" data-description="missing authorization vulnerability in bakkbone australia floristpress bakkbone-florist-companion allows exploiting incorrectly configured access control security levels.this issue affects floristpress: from n/a through 7.8.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-122660" target="_blank">CVE-2026-122660</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing Authorization vulnerability in BAKKBONE Australia FloristPress bakkbone-florist-companion allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects FloristPress: from n/a through 7.8.5.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-122659" data-description="missing authorization vulnerability in wp manageninja llc fluent booking fluent-booking allows exploiting incorrectly configured access control security levels.this issue affects fluent booking: from n/a through 2.5.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-122659" target="_blank">CVE-2026-122659</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Missing Authorization vulnerability in WP ManageNinja LLC Fluent Booking fluent-booking allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Fluent Booking: from n/a through 2.5.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-122041" data-description="the checkout field editor for woocommerce (pro) plugin for wordpress is vulnerable to unauthorized deletion of arbitrary attachments due to a missing capability/ownership check in the ajax_remove_uploaded() function in versions up to, and including, 3.8.0. the handler is registered for both wp_ajax and wp_ajax_nopriv and is gated solely by the 'file_handling_nonce' nonce, which is emitted inside the public checkout page markup (data-nonce attribute) whenever a file upload checkout field is configured. this makes it possible for unauthenticated attackers to delete arbitrary attachments (including those belonging to other users or posts) by submitting a crafted attachment_id, which can lead to loss of important media and potential denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-122041" target="_blank">CVE-2026-122041</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
-                    <p>The Checkout Field Editor for WooCommerce (Pro) plugin for WordPress is vulnerable to unauthorized deletion of arbitrary attachments due to a missing capability/ownership check in the ajax_remove_uploaded() function in versions up to, and including, 3.8.0. The handler is registered for both wp_ajax and wp_ajax_nopriv and is gated solely by the 'file_handling_nonce' nonce, which is emitted inside the public checkout page markup (data-nonce attribute) whenever a File Upload checkout field is configured. This makes it possible for unauthenticated attackers to delete arbitrary attachments (including those belonging to other users or posts) by submitting a crafted attachment_id, which can lead to loss of important media and potential denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121784" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in magepeople inc. wpbookingly service-booking-manager allows stored xss.this issue affects wpbookingly: from n/a through 1.4.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121784" target="_blank">CVE-2026-121784</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Magepeople inc. WpBookingly service-booking-manager allows Stored XSS.This issue affects WpBookingly: from n/a through 1.4.3.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121777" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in cool plugins cool formkit lite extensions-for-elementor-form allows code injection.this issue affects cool formkit lite: from n/a through 2.7.10.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121777" target="_blank">CVE-2026-121777</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in Cool Plugins Cool Formkit Lite extensions-for-elementor-form allows Code Injection.This issue affects Cool Formkit Lite: from n/a through 2.7.10.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121775" data-description="missing authorization vulnerability in villatheme curcy woo-multi-currency allows exploiting incorrectly configured access control security levels.this issue affects curcy: from n/a through 2.2.20.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121775" target="_blank">CVE-2026-121775</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in VillaTheme CURCY woo-multi-currency allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects CURCY: from n/a through 2.2.20.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121579" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in unlimited elements unlimited elements for elementor (free widgets, addons, templates) unlimited-elements-for-elementor allows stored xss.this issue affects unlimited elements for elementor (free widgets, addons, templates): from n/a through 2.0.26.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121579" target="_blank">CVE-2026-121579</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Unlimited Elements Unlimited Elements For Elementor (Free Widgets, Addons, Templates) unlimited-elements-for-elementor allows Stored XSS.This issue affects Unlimited Elements For Elementor (Free Widgets, Addons, Templates): from n/a through 2.0.26.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121575" data-description="missing authorization vulnerability in wp user manager wp user manager wp-user-manager allows exploiting incorrectly configured access control security levels.this issue affects wp user manager: from n/a through 2.10.4.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121575" target="_blank">CVE-2026-121575</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-07 07:16:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in WP User Manager WP User Manager wp-user-manager allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects WP User Manager: from n/a through 2.10.4.</p>
                 </div>
         
             </div>
