@@ -34,356 +34,164 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-99288" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-inet: reject unhashed sockets during established lookups
-
-tcp established ehash lookups are lockless. the socket caches involved
-use slab_typesafe_by_rcu, so memory can be reused before an rcu reader
-that retained its old address has finished.
-
-after a tuple match, __inet_lookup_established() and
-__inet6_lookup_established() acquire a reference and repeat the tuple
-check. they do not check whether the new object is hashed. if the
-address is reused for a socket with the same tuple, the lookup can
-acquire a reference to the new object and return it while its nulls node
-is unhashed.
-
-a poc that drives reuse with a syn cookie request socket reproduced the
-crash. the new request socket is unhashed and has a null rsk_listener.
-a lookup that had loaded the address of the old request socket acquired
-the reference published by tcp_get_cookie_sock() and returned the new
-object. tcp_v4_rcv() then read sk_state through the null listener.
-
-the resulting crash was:
-
-  bug: kernel null pointer dereference, address: 0000000000000012
-  #pf: supervisor read access in kernel mode
-  #pf: error_code(0x0000) - not-present page
-  ...
-  oops: oops: 0000 [#1] smp nopti
-  cpu: 4 uid: 0 pid: 0 comm: swapper/4 not tainted 7.3.0-00591-g0e135910deec #1 preempt(lazy)
-  ...
-  rip: 0010:tcp_v4_rcv+0x44e/0x1280
-  ...
-  r10: 0000000000000001 r11: 00000000024ca8c0 r12: 0000000000000000
-  ...
-  cr2: 0000000000000012 cr3: 0000000103d50004 cr4: 0000000000770ef0
-  ...
-  call trace:
-   <irq>
-   ? raw_local_deliver+0xae/0x240
-   ip_protocol_deliver_rcu+0x2d/0x180
-   ip_local_deliver_finish+0x84/0x100
-   ip_sublist_rcv_finish+0x5f/0x70
-   ip_sublist_rcv+0x12a/0x1d0
-   ip_list_rcv+0xfd/0x130
-   __netif_receive_skb_list_core+0x223/0x250
-   netif_receive_skb_list_internal+0x1d2/0x2c0
-   ? try_fill_recv+0x39/0x7b0
-   napi_complete_done+0x74/0x170
-   virtnet_poll+0x445/0x600
-   __napi_poll+0x27/0x1e0
-   net_rx_action+0x2fe/0x3b0
-   handle_softirqs+0xc2/0x2c0
-   __irq_exit_rcu+0x74/0xd0
-   common_interrupt+0x7f/0x90
-   </irq>
-  ...
-  kernel panic - not syncing: fatal exception in interrupt
-
-after taking a reference, check whether the nulls node is unhashed in
-both ipv4 and ipv6 established lookups. if it is unhashed or the tuple
-no longer matches, drop the reference and restart the lookup.
-
-lookups racing with the time_wait hashdance, or with a request being
-replaced by its child, now restart and find the new socket instead of
-returning the old one.
-
-request sockets that were never inserted into ehash can have a nonzero
-refcount, and a stale lookup can hold a transient reference. therefore,
-when syn cookie, fast open, and request migration paths fail after
-setting a nonzero refcount, release the references held by those paths
-with reqsk_put() instead of freeing the request directly.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99288" target="_blank">CVE-2026-99288</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-inet: reject unhashed sockets during established lookups
-
-TCP established ehash lookups are lockless. The socket caches involved
-use SLAB_TYPESAFE_BY_RCU, so memory can be reused before an RCU reader
-that retained its old address has finished.
-
-After a tuple match, __inet_lookup_established() and
-__inet6_lookup_established() acquire a reference and repeat the tuple
-check. They do not check whether the new object is hashed. If the
-address is reused for a socket with the same tuple, the lookup can
-acquire a reference to the new object and return it while its nulls node
-is unhashed.
-
-A PoC that drives reuse with a SYN cookie request socket reproduced the
-crash. The new request socket is unhashed and has a NULL rsk_listener.
-A lookup that had loaded the address of the old request socket acquired
-the reference published by tcp_get_cookie_sock() and returned the new
-object. tcp_v4_rcv() then read sk_state through the NULL listener.
-
-The resulting crash was:
-
-  BUG: kernel NULL pointer dereference, address: 0000000000000012
-  #PF: supervisor read access in kernel mode
-  #PF: error_code(0x0000) - not-present page
-  ...
-  Oops: Oops: 0000 [#1] SMP NOPTI
-  CPU: 4 UID: 0 PID: 0 Comm: swapper/4 Not tainted 7.3.0-00591-g0e135910deec #1 PREEMPT(lazy)
-  ...
-  RIP: 0010:tcp_v4_rcv+0x44e/0x1280
-  ...
-  R10: 0000000000000001 R11: 00000000024ca8c0 R12: 0000000000000000
-  ...
-  CR2: 0000000000000012 CR3: 0000000103d50004 CR4: 0000000000770ef0
-  ...
-  Call Trace:
-   <IRQ>
-   ? raw_local_deliver+0xae/0x240
-   ip_protocol_deliver_rcu+0x2d/0x180
-   ip_local_deliver_finish+0x84/0x100
-   ip_sublist_rcv_finish+0x5f/0x70
-   ip_sublist_rcv+0x12a/0x1d0
-   ip_list_rcv+0xfd/0x130
-   __netif_receive_skb_list_core+0x223/0x250
-   netif_receive_skb_list_internal+0x1d2/0x2c0
-   ? try_fill_recv+0x39/0x7b0
-   napi_complete_done+0x74/0x170
-   virtnet_poll+0x445/0x600
-   __napi_poll+0x27/0x1e0
-   net_rx_action+0x2fe/0x3b0
-   handle_softirqs+0xc2/0x2c0
-   __irq_exit_rcu+0x74/0xd0
-   common_interrupt+0x7f/0x90
-   </IRQ>
-  ...
-  Kernel panic - not syncing: Fatal exception in interrupt
-
-After taking a reference, check whether the nulls node is unhashed in
-both IPv4 and IPv6 established lookups. If it is unhashed or the tuple
-no longer matches, drop the reference and restart the lookup.
-
-Lookups racing with the TIME_WAIT hashdance, or with a request being
-replaced by its child, now restart and find the new socket instead of
-returning the old one.
-
-Request sockets that were never inserted into ehash can have a nonzero
-refcount, and a stale lookup can hold a transient reference. Therefore,
-when SYN cookie, Fast Open, and request migration paths fail after
-setting a nonzero refcount, release the references held by those paths
-with reqsk_put() instead of freeing the request directly.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99287" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xen-netback: zero out sring pointers on unmap
-
-if xenvif_map_frontend_data_rings() fails when a ring is already mapped,
-it unmaps them via xenvif_unmap_frontend_data_rings() which keeps the
-ring pointers unchanged. xenvif_connect_data()'s cleanup path calls
-xenvif_disconnect_queue() which in turn calls
-xenvif_unmap_frontend_data_rings() again, which will attempt to unmap the
-pointers a second time.
-
-zero out the ring pointers after they are unmapped to avoid this issue.
-
-this is xsa-532">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99287" target="_blank">CVE-2026-99287</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xen-netback: Zero out sring pointers on unmap
-
-If xenvif_map_frontend_data_rings() fails when a ring is already mapped,
-it unmaps them via xenvif_unmap_frontend_data_rings() which keeps the
-ring pointers unchanged. xenvif_connect_data()'s cleanup path calls
-xenvif_disconnect_queue() which in turn calls
-xenvif_unmap_frontend_data_rings() again, which will attempt to unmap the
-pointers a second time.
-
-Zero out the ring pointers after they are unmapped to avoid this issue.
-
-This is XSA-532</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99286" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xen-netback: fix xenbus connection failure cleanup
-
-xenvif_get_stats and xenvif_get_ethtool_stats capture vif->num_queues
-under rcu_read_lock. we need to unpublish vif->num_queues before
-synchronize_net to ensure that readers that come afterwards will not
-read a non-zero vif->num_queues and attempt to access invalid queues.
-
-this is the same cleanup algorithm as used in backend_disconnect and
-added in commit b17075d5c198 ("xen-netback: fix race condition on xenbus
-disconnect").
-
-this is xsa-531">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99286" target="_blank">CVE-2026-99286</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xen-netback: Fix XenBus connection failure cleanup
-
-xenvif_get_stats and xenvif_get_ethtool_stats capture vif->num_queues
-under rcu_read_lock. We need to unpublish vif->num_queues before
-synchronize_net to ensure that readers that come afterwards will not
-read a non-zero vif->num_queues and attempt to access invalid queues.
-
-This is the same cleanup algorithm as used in backend_disconnect and
-added in commit b17075d5c198 ("xen-netback: fix race condition on XenBus
-disconnect").
-
-This is XSA-531</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-97015" data-description="heap-based buffer overflow in windows bitlocker allows an unauthorized attacker to bypass a security feature with a physical attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97015" target="_blank">CVE-2026-97015</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95786" data-description="a vulnerability exists in a system interface that may, under certain conditions, fail to properly enforce authorization boundaries. successful exploitation could allow an unauthorized party to access or modify protected system information, potentially affecting confidentiality and integrity.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95786" target="_blank">CVE-2026-95786</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:49 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>Heap-based buffer overflow in Windows BitLocker allows an unauthorized attacker to bypass a security feature with a physical attack.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>A vulnerability exists in a system interface that may, under certain conditions, fail to properly enforce authorization boundaries. Successful exploitation could allow an unauthorized party to access or modify protected system information, potentially affecting confidentiality and integrity.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-97013" data-description="access of resource using incompatible type ('type confusion') in windows shell allows an authorized attacker to elevate privileges locally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97013" target="_blank">CVE-2026-97013</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95785" data-description="a vulnerability exists in a system component that may, under certain conditions, allow an authorized user to make unauthorized changes to system-managed content. successful exploitation could affect system confidentiality, integrity, and availability, and may disrupt trusted interactions among system functions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95785" target="_blank">CVE-2026-95785</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:49 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Access of resource using incompatible type ('type confusion') in Windows Shell allows an authorized attacker to elevate privileges locally.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
+                    <p>A vulnerability exists in a system component that may, under certain conditions, allow an authorized user to make unauthorized changes to system-managed content. Successful exploitation could affect system confidentiality, integrity, and availability, and may disrupt trusted interactions among system functions.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-97006" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97006" target="_blank">CVE-2026-97006</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-97002" data-description="out-of-bounds read in windows vmswitch allows an authorized attacker to elevate privileges locally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97002" target="_blank">CVE-2026-97002</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95784" data-description="a vulnerability exists in a system component that may, under certain conditions, disrupt the availability of affected services. successful exploitation could result in temporary service interruption or loss of functionality.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95784" target="_blank">CVE-2026-95784</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:49 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Out-of-bounds read in Windows VMSwitch allows an authorized attacker to elevate privileges locally.</p>
+                    <p>A vulnerability exists in a system component that may, under certain conditions, disrupt the availability of affected services. Successful exploitation could result in temporary service interruption or loss of functionality.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-97000" data-description="null pointer dereference in windows usm communication manager allows an authorized attacker to elevate privileges locally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97000" target="_blank">CVE-2026-97000</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>Null pointer dereference in Windows USM Communication Manager allows an authorized attacker to elevate privileges locally.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-96994" data-description="use after free in winsock allows an authorized attacker to elevate privileges locally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96994" target="_blank">CVE-2026-96994</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>Use after free in Winsock allows an authorized attacker to elevate privileges locally.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-96993" data-description="release of invalid pointer or reference in windows performance monitor allows an unauthorized attacker to execute code over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96993" target="_blank">CVE-2026-96993</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95783" data-description="a vulnerability exists in a network-facing component that may, under certain conditions, result in service disruption. successful exploitation could cause temporary unavailability of affected functionality.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95783" target="_blank">CVE-2026-95783</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:49 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>Release of invalid pointer or reference in Windows Performance Monitor allows an unauthorized attacker to execute code over a network.</p>
+                    <p>A vulnerability exists in a network-facing component that may, under certain conditions, result in service disruption. Successful exploitation could cause temporary unavailability of affected functionality.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96992" data-description="use after free in windows pci bus driver allows an unauthorized attacker to elevate privileges with a physical attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96992" target="_blank">CVE-2026-96992</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>Use after free in Windows PCI Bus Driver allows an unauthorized attacker to elevate privileges with a physical attack.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95782" data-description="a vulnerability exists in a monitoring component that may, under certain conditions, allow security controls to be circumvented. successful exploitation could result in unauthorized access to information intended for authorized users only.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95782" target="_blank">CVE-2026-95782</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:49 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A vulnerability exists in a monitoring component that may, under certain conditions, allow security controls to be circumvented. Successful exploitation could result in unauthorized access to information intended for authorized users only.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96989" data-description="out-of-bounds read in secondary logon allows an authorized attacker to disclose information locally.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96989" target="_blank">CVE-2026-96989</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>Out-of-bounds read in Secondary Logon allows an authorized attacker to disclose information locally.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95781" data-description="a security vulnerability exists in athonetos that may allow an unauthorized party to affect service operation or gain access to certain protected system functions. successful exploitation could result in a compromise of service integrity or unauthorized system access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95781" target="_blank">CVE-2026-95781</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>A security vulnerability exists in AthonetOS that may allow an unauthorized party to affect service operation or gain access to certain protected system functions. Successful exploitation could result in a compromise of service integrity or unauthorized system access.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96988" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96988" target="_blank">CVE-2026-96988</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95780" data-description="a vulnerability exists in the authentication and session-management mechanisms that may result in access not being fully terminated following certain account or session state changes. under specific conditions, a remote user with prior legitimate access could retain access to protected system resources beyond the intended authorization period. successful exploitation could result in continued unauthorized access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95780" target="_blank">CVE-2026-95780</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>A vulnerability exists in the authentication and session-management mechanisms that may result in access not being fully terminated following certain account or session state changes. Under specific conditions, a remote user with prior legitimate access could retain access to protected system resources beyond the intended authorization period. Successful exploitation could result in continued unauthorized access.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96987" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96987" target="_blank">CVE-2026-96987</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95405" data-description="in acquirememory of bt_bqr_offload.cc, there is a possible way to trigger an out of bounds write via a buffer size underflow due to an incorrect bounds check. this could lead to local escalation of privilege with no additional execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95405" target="_blank">CVE-2026-95405</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In acquireMemory of bt_bqr_offload.cc, there is a possible way to trigger an out of bounds write via a buffer size underflow due to an incorrect bounds check. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96986" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96986" target="_blank">CVE-2026-96986</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95404" data-description="in multiple locations, there is a possible way to modify coprocessor instruction and data memory from non-secure software due to an insecure default value. this could lead to local escalation of privilege with system execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95404" target="_blank">CVE-2026-95404</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In multiple locations, there is a possible way to modify coprocessor instruction and data memory from non-secure software due to an insecure default value. This could lead to local escalation of privilege with System execution privileges needed. User interaction is not needed for exploitation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96985" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96985" target="_blank">CVE-2026-96985</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95403" data-description="in multiple locations, there is a possible way to trigger an out of bounds write in the shared memory tracking bitmap due to a missing bounds check. this could lead to local escalation of privilege with no additional execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95403" target="_blank">CVE-2026-95403</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In multiple locations, there is a possible way to trigger an out of bounds write in the shared memory tracking bitmap due to a missing bounds check. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96984" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96984" target="_blank">CVE-2026-96984</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95402" data-description="in slice_header of hevc_decoder, there is a possible non-heap buffer overflow due to a buffer overflow. this could lead to local escalation of privilege with execution privileges needed. user interaction is for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95402" target="_blank">CVE-2026-95402</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In slice_header of hevc_decoder, there is a possible Non-Heap Buffer Overflow due to a buffer overflow. This could lead to local escalation of privilege with execution privileges needed. User interaction is for exploitation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96983" data-description="use after free in windows dns allows an unauthorized attacker to deny service over an adjacent network.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96983" target="_blank">CVE-2026-96983</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Use after free in Windows DNS allows an unauthorized attacker to deny service over an adjacent network.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95401" data-description="in knee_function_info of hevc_decoder, there is a possible non-heap buffer overflow due to a buffer overflow. this could lead to local escalation of privilege with execution privileges needed. user interaction is for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95401" target="_blank">CVE-2026-95401</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In knee_function_info of hevc_decoder, there is a possible Non-Heap Buffer Overflow due to a buffer overflow. This could lead to local escalation of privilege with execution privileges needed. User interaction is for exploitation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96982" data-description="integer overflow or wraparound in hid parser library allows an unauthorized attacker to elevate privileges with a physical attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96982" target="_blank">CVE-2026-96982</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>Integer overflow or wraparound in HID Parser Library allows an unauthorized attacker to elevate privileges with a physical attack.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95400" data-description="in stnfc_hal_write of hal_st21nfc.cc, there is a possible way to trigger an out of bounds write into global memory due to an incorrect bounds check. this could lead to local escalation of privilege with no additional execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95400" target="_blank">CVE-2026-95400</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In StNfc_hal_write of hal_st21nfc.cc, there is a possible way to trigger an out of bounds write into global memory due to an incorrect bounds check. This could lead to local escalation of privilege with no additional execution privileges needed. User interaction is not needed for exploitation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96981" data-description="out-of-bounds write in windows pci bus driver allows an unauthorized attacker to elevate privileges with a physical attack.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96981" target="_blank">CVE-2026-96981</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>Out-of-bounds write in Windows PCI Bus Driver allows an unauthorized attacker to elevate privileges with a physical attack.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95399" data-description="in multiple functions of face_status.h, there is a possible way to modify verified biometric enrollment data in shared memory due to a race condition. this could lead to local escalation of privilege with system execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95399" target="_blank">CVE-2026-95399</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In multiple functions of face_status.h, there is a possible way to modify verified biometric enrollment data in shared memory due to a race condition. This could lead to local escalation of privilege with System execution privileges needed. User interaction is not needed for exploitation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95397" data-description="in sub_layer_hrd_parameters of hevc_decoder, there is a possible non-heap buffer overflow due to a buffer overflow. this could lead to local escalation of privilege with execution privileges needed. user interaction is for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95397" target="_blank">CVE-2026-95397</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:47 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In sub_layer_hrd_parameters of hevc_decoder, there is a possible Non-Heap Buffer Overflow due to a buffer overflow. This could lead to local escalation of privilege with execution privileges needed. User interaction is for exploitation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59637" data-description="in userdata_report of hwcodec_firmware, there is a possible logic error due to a logic error in the code. this could lead to local information disclosure with execution privileges needed. user interaction is for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59637" target="_blank">CVE-2026-59637</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In userdata_report of hwcodec_firmware, there is a possible Logic error due to a logic error in the code. This could lead to local information disclosure with execution privileges needed. User interaction is for exploitation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59636" data-description="in has_booted_successfully of sys_state_setup_otp_ta.c, there is a possible way to trigger a permanent denial of service via premature anti-rollback fuse updates due to a logic error. this could lead to local denial of service with no additional execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59636" target="_blank">CVE-2026-59636</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In has_booted_successfully of sys_state_setup_otp_ta.c, there is a possible way to trigger a permanent denial of service via premature anti-rollback fuse updates due to a logic error. This could lead to local denial of service with no additional execution privileges needed. User interaction is not needed for exploitation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59635" data-description="in cpb_cnt of avc_decoder, there is a possible non-heap buffer overflow due to a buffer overflow. this could lead to local escalation of privilege with execution privileges needed. user interaction is for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59635" target="_blank">CVE-2026-59635</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In cpb_cnt of avc_decoder, there is a possible Non-Heap Buffer Overflow due to a buffer overflow. This could lead to local escalation of privilege with execution privileges needed. User interaction is for exploitation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59632" data-description="in respondreceivedmessage of mtsmessagecontroller.cpp, there is a possible way to trigger memory exhaustion via an undrained message queue due to a type confusion. this could lead to remote denial of service with no additional execution privileges needed. user interaction is not needed for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59632" target="_blank">CVE-2026-59632</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In RespondReceivedMessage of MtsMessageController.cpp, there is a possible way to trigger memory exhaustion via an undrained message queue due to a type confusion. This could lead to remote denial of service with no additional execution privileges needed. User interaction is not needed for exploitation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59631" data-description="in s_inter_rps_pred of hevc_decoder, there is a possible non-heap buffer overflow due to a buffer overflow. this could lead to local escalation of privilege with execution privileges needed. user interaction is for exploitation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59631" target="_blank">CVE-2026-59631</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 14:19:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In s_inter_rps_pred of hevc_decoder, there is a possible Non-Heap Buffer Overflow due to a buffer overflow. This could lead to local escalation of privilege with execution privileges needed. User interaction is for exploitation.</p>
                 </div>
         
             </div>
