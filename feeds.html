@@ -34,226 +34,280 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-97891" data-description="in eclipse kura version 5.0.0 to 5.6.2, the web console allocates a new http session for every request to its built-in authentication endpoints (/admin/auth, /admin/login/password, /admin/login/cert) before checking the http method, parsing the request, or validating any submitted credentials, and does not limit how many such sessions can be allocated. an unauthenticated client that sends requests to these endpoints without honoring the returned session cookie can cause the server to allocate an unbounded number of sessions, exhausting the jvm heap and crashing the kura process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97891" target="_blank">CVE-2026-97891</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:57 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99285" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+netfilter: nft_byteorder: remove multi-register support
+
+64bit byteorder conversion is broken when several registers need to be
+converted because the source register array advances in steps for 4 bytes
+instead of 8:
+
+  for (i = ...
+      src64 = nft_reg_load64(&src[i]);
+                             ~~~~~ u32 *src
+      nft_reg_store64(&dst64[i],
+
+remove the multi-register support, it has other issues as well:
+
+pablo points out that commit
+caf3ef7468f7 ("netfilter: nf_tables: prevent oob access in nft_byteorder_eval")
+alters semantics: before the loop operated on registers, i.e.
+ for ( ... )
+   dst32[i] = htons((u16)src32[i])
+
+ .. but after the patch it will operate on bytes, which makes this
+ useless to convert e.g. concatenations, which store each compound
+ in its own register.
+
+multi-convert of u32 has one theoretical application:
+
+ct mark . meta mark . tcp dport @intervalset
+
+because ct mark and meta mark are host byte order, use with
+intervals has to convert the byteorder for ct/meta mark value
+to network byte order (bigendian).
+
+nftables emits this:
+ [ meta load mark => reg 1 ]
+ [ byteorder reg 1 = hton(reg 1, 4, 4) ]
+ [ ct load mark => reg 9 ]
+ [ byteorder reg 9 = hton(reg 9, 4, 4) ]
+ ...
+
+i.e. two separate calls.  theoretically it could be changed to do:
+ [ meta load mark => reg 1 ]
+ [ ct load mark => reg 9 ]
+ [ byteorder reg 1 = htonl(reg 1, 4, 8) ]
+ ...
+
+but then all it would take to change the set to
+meta mark . tcp dport . ct mark
+
+... and we'd be back to two "byteorder" calls. iow, support to
+convert a range of registers is both dysfunctional and dubious.
+
+simplify this: remove the feature.
+
+pablo neira ayuso points out that nftables before 1.1.0 can generate
+incorrect byteorder conversions, see 9fe58952c45a,
+"evaluate: skip byteorder conversion for selector smaller than 2 bytes"
+in nftables.git).  affected rulesets fail to load with this change and
+old userspace due to 'len != size' check.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99285" target="_blank">CVE-2026-99285</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:49 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In Eclipse Kura version 5.0.0 to 5.6.2, the Web Console allocates a new HTTP session for every request to its built-in authentication endpoints (/admin/auth, /admin/login/password, /admin/login/cert) before checking the HTTP method, parsing the request, or validating any submitted credentials, and does not limit how many such sessions can be allocated. An unauthenticated client that sends requests to these endpoints without honoring the returned session cookie can cause the server to allocate an unbounded number of sessions, exhausting the JVM heap and crashing the Kura process.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+netfilter: nft_byteorder: remove multi-register support
+
+64bit byteorder conversion is broken when several registers need to be
+converted because the source register array advances in steps for 4 bytes
+instead of 8:
+
+  for (i = ...
+      src64 = nft_reg_load64(&src[i]);
+                             ~~~~~ u32 *src
+      nft_reg_store64(&dst64[i],
+
+Remove the multi-register support, it has other issues as well:
+
+Pablo points out that commit
+caf3ef7468f7 ("netfilter: nf_tables: prevent OOB access in nft_byteorder_eval")
+alters semantics: before the loop operated on registers, i.e.
+ for ( ... )
+   dst32[i] = htons((u16)src32[i])
+
+ .. but after the patch it will operate on bytes, which makes this
+ useless to convert e.g. concatenations, which store each compound
+ in its own register.
+
+Multi-convert of u32 has one theoretical application:
+
+ct mark . meta mark . tcp dport @intervalset
+
+Because ct mark and meta mark are host byte order, use with
+intervals has to convert the byteorder for ct/meta mark value
+to network byte order (bigendian).
+
+nftables emits this:
+ [ meta load mark => reg 1 ]
+ [ byteorder reg 1 = hton(reg 1, 4, 4) ]
+ [ ct load mark => reg 9 ]
+ [ byteorder reg 9 = hton(reg 9, 4, 4) ]
+ ...
+
+I.e. two separate calls.  Theoretically it could be changed to do:
+ [ meta load mark => reg 1 ]
+ [ ct load mark => reg 9 ]
+ [ byteorder reg 1 = htonl(reg 1, 4, 8) ]
+ ...
+
+But then all it would take to change the set to
+meta mark . tcp dport . ct mark
+
+... and we'd be back to two "byteorder" calls. IOW, support to
+convert a range of registers is both dysfunctional and dubious.
+
+Simplify this: remove the feature.
+
+Pablo Neira Ayuso points out that nftables before 1.1.0 can generate
+incorrect byteorder conversions, see 9fe58952c45a,
+"evaluate: skip byteorder conversion for selector smaller than 2 bytes"
+in nftables.git).  Affected rulesets fail to load with this change and
+old userspace due to 'len != size' check.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-97401" data-description="in kura versions <= 5.6.2, `commandcloudapp.execute()` extracts a caller-supplied zip archive into a caller-supplied directory inside the kura jvm process before dispatching the command to the executor service. on a packaged kura installation the jvm runs as `kurad` with `cap_dac_override`, while the configurable "unprivileged" executor drops to the `kura` user via `su`.
-
-
-
-a caller with permissions `rest.command` who is intentionally restricted to unprivileged command execution (`privileged.command.service.enable=false`, the default) can therefore set `workingdirectory` to `/` and use the zip body to write or overwrite arbitrary files on the device as `kurad`, completely bypassing the unprivileged sandbox the operator selected.
-
-
-
-the command service is disabled by default since kura 4.0.0 [1]. the issue does not apply when the command service is disabled.
-
-
-
-[1] https://github.com/eclipse-kura/kura/blob/f9f969231892769a269876b23f19fa0e8173e3df/kura/distrib/release_notes.txt#l94">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97401" target="_blank">CVE-2026-97401</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In Kura versions <= 5.6.2, `CommandCloudApp.execute()` extracts a caller-supplied ZIP archive into a caller-supplied directory inside the Kura JVM process before dispatching the command to the executor service. On a packaged Kura installation the JVM runs as `kurad` with `CAP_DAC_OVERRIDE`, while the configurable "Unprivileged" executor drops to the `kura` user via `su`.
-
-
-
-A caller with permissions `rest.command` who is intentionally restricted to unprivileged command execution (`privileged.command.service.enable=false`, the default) can therefore set `workingDirectory` to `/` and use the ZIP body to write or overwrite arbitrary files on the device as `kurad`, completely bypassing the unprivileged sandbox the operator selected.
-
-
-
-The command service is disabled by default since Kura 4.0.0 [1]. The issue does not apply when the command service is disabled.
-
-
-
-[1] https://github.com/eclipse-kura/kura/blob/f9f969231892769a269876b23f19fa0e8173e3df/kura/distrib/RELEASE_NOTES.txt#L94</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-92684" data-description="missing authentication for critical function in aggregation queries in neo4j @neo4j/graphql 5.0.0 before 5.12.17 and 7.0.0 before 7.6.8 allows remote attackers to read protected data via graphql aggregation queries. field-level @authentication is not enforced on string aggregates, which can return stored values verbatim, and connection-root aggregates bypass an entity's aggregate authentication requirement, allowing unauthenticated callers to obtain aggregate results.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92684" target="_blank">CVE-2026-92684</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Missing Authentication for Critical Function in aggregation queries in Neo4j @neo4j/graphql 5.0.0 before 5.12.17 and 7.0.0 before 7.6.8 allows remote attackers to read protected data via GraphQL aggregation queries. Field-level @authentication is not enforced on string aggregates, which can return stored values verbatim, and connection-root aggregates bypass an entity's AGGREGATE authentication requirement, allowing unauthenticated callers to obtain aggregate results.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-83528" data-description="exposure of pii in ivanti epmm before version 12.10.0.1, 12.9.0.3, and 12.8.0.5 allows a remote authenticated attacker with admin privileges to leak gdpr protected user information.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-83528" target="_blank">CVE-2026-83528</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:49 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-79914" data-description="nocobase is an ai-powered no-code/low-code platform for building business applications and enterprise solutions. versions 2.1.0 through 2.1.14 contain a server-side request forgery vulnerability in the customrequests:send endpoint. a low-privileged authenticated user can override the stored request url at runtime using options.url, causing the nocobase server to send requests to attacker-controlled or internal destinations. exploitation could expose internal services, docker host gateways, or cloud metadata endpoints and allow the server to be used as a trusted network proxy. this issue has been fixed in version 2.1.15.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79914" target="_blank">CVE-2026-79914</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:48 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Exposure of PII in Ivanti EPMM before version 12.10.0.1, 12.9.0.3, and 12.8.0.5 allows a remote authenticated attacker with admin privileges to leak GDPR protected user information.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>NocoBase is an AI-powered no-code/low-code platform for building business applications and enterprise solutions. Versions 2.1.0 through 2.1.14 contain a server-side request forgery vulnerability in the customRequests:send endpoint. A low-privileged authenticated user can override the stored request URL at runtime using options.url, causing the NocoBase server to send requests to attacker-controlled or internal destinations. Exploitation could expose internal services, Docker host gateways, or cloud metadata endpoints and allow the server to be used as a trusted network proxy. This issue has been fixed in version 2.1.15.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-82518" data-description="akamai cli before 2.0.6 contains a path traversal vulnerability that allows malicious packages to write files outside the install directory via unvalidated commands[].name values in cli.json. attackers who convince victims to install or update a package can use '..' segments to overwrite executables on the user's path, persisting after uninstall.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82518" target="_blank">CVE-2026-82518</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Akamai CLI before 2.0.6 contains a path traversal vulnerability that allows malicious packages to write files outside the install directory via unvalidated commands[].name values in cli.json. Attackers who convince victims to install or update a package can use '..' segments to overwrite executables on the user's PATH, persisting after uninstall.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-66335" data-description="ami aptiov contains vulnerabilities in bios where
-privileged users may cause the “heap-based buffer overflow” by local access.
-successful exploitation of this vulnerability may lead to a denial of service
-during firmware update processing, such as a crash or failed update if the
-out-of-bounds write hits unmapped memory. it could also impact confidentiality,
-integrity, and availability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66335" target="_blank">CVE-2026-66335</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-63540" data-description="heap-based buffer overflow for some hyperscan before version v5.4.2.1 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires passive user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63540" target="_blank">CVE-2026-63540</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>AMI APTIOV contains vulnerabilities in BIOS where
-privileged users may cause the “Heap-based Buffer Overflow” by local access.
-Successful exploitation of this vulnerability may lead to a denial of service
-during firmware update processing, such as a crash or failed update if the
-out-of-bounds write hits unmapped memory. It could also impact Confidentiality,
-Integrity, and Availability.</p>
+                    <p>Heap-based buffer overflow for some Hyperscan before version v5.4.2.1 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires passive user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-66334" data-description="ami aptiov contains vulnerabilities in bios where
-privileged users may cause the “out-of-bounds write” by
-local access. successful exploitation of this vulnerability may lead to a
-denial of service during firmware update processing, such as a crash or failed
-update if the out-of-bounds write hits unmapped memory. it could also impact integrity, and availability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66334" target="_blank">CVE-2026-66334</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-63028" data-description="improper initialization in the migtd virtio-vsock stream handling for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63028" target="_blank">CVE-2026-63028</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>AMI APTIOV contains vulnerabilities in BIOS where
-privileged users may cause the “Out-of-Bounds Write” by
-local access. Successful exploitation of this vulnerability may lead to a
-denial of service during firmware update processing, such as a crash or failed
-update if the out-of-bounds write hits unmapped memory. It could also impact Integrity, and Availability.</p>
+                    <p>Improper initialization in the MigTD virtio-vsock stream handling for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-66333" data-description="ami aptiov contains vulnerabilities in bios where
-privileged users may cause the “out-of-bounds read” by
-local access. successful exploitation of this vulnerability may lead to a
-denial of service during firmware update processing, such as a crash or failed
-update if the out-of-bounds read hits unmapped memory. it could also impact
-confidentiality, and availability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66333" target="_blank">CVE-2026-66333</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-63027" data-description="incorrect behavior order in the get_tcb_level_by_svn for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63027" target="_blank">CVE-2026-63027</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>AMI APTIOV contains vulnerabilities in BIOS where
-privileged users may cause the “Out-of-Bounds Read” by
-local access. Successful exploitation of this vulnerability may lead to a
-denial of service during firmware update processing, such as a crash or failed
-update if the out-of-bounds read hits unmapped memory. It could also impact
-Confidentiality, and Availability.</p>
+                    <p>Incorrect behavior order in the get_tcb_level_by_svn for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. Network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-66332" data-description="ami aptiov contains a vulnerability in bios
-where a privileged
-user may cause the “out-of-bound read” by local
-access. successful exploitation of this vulnerability may lead to a denial of
-service during firmware update processing, such as a crash or failed update if
-the out-of-bounds read hits unmapped memory. it could also potentially impact confidentiality and availability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66332" target="_blank">CVE-2026-66332</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-63018" data-description="integer underflow (wrap or wraparound) for some intel(r) metrics discovery application programming interface software before version 1.16.189 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63018" target="_blank">CVE-2026-63018</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>AMI APTIOV contains a vulnerability in BIOS
-where a privileged
-user may cause the “Out-of-Bound Read” by local
-access. Successful exploitation of this vulnerability may lead to a denial of
-service during firmware update processing, such as a crash or failed update if
-the out-of-bounds read hits unmapped memory. It could also potentially impact Confidentiality and Availability.</p>
+                    <p>Integer underflow (wrap or wraparound) for some Intel(R) Metrics Discovery Application Programming Interface software before version 1.16.189 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63653" data-description="group-office is an enterprise customer relationship management and groupware tool. prior to version 26.0.37, go/modules/community/bookmarks/controller/bookmark.php's description() action takes a fully attacker-controlled url parameter and passes it, unvalidated, to \go\base\util\httpclient::request(). httpclient::_initrequest() sets curlopt_url directly from this value with no host/ip validation at all. this can result in ssrf via bookmark/description jmap action. this issue has been patched in version 26.0.37.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63653" target="_blank">CVE-2026-63653</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
-                    <p>Group-Office is an enterprise customer relationship management and groupware tool. Prior to version 26.0.37, go/modules/community/bookmarks/controller/Bookmark.php's description() action takes a fully attacker-controlled url parameter and passes it, unvalidated, to \GO\Base\Util\HttpClient::request(). HttpClient::_initRequest() sets CURLOPT_URL directly from this value with no host/IP validation at all. This can result in SSRF via Bookmark/description JMAP action. This issue has been patched in version 26.0.37.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-63651" data-description="livedocs is a primary-source-first documentation for ai agents. prior to version 0.7.0, fetch_docs and introspect (kinds openapi/graphql, and resolve_source's docs_url) pass a client-supplied url straight to urlsession with no scheme or host allowlist, and redirects are followed unconditionally. a prompt-injection payload embedded in fetched documentation can steer the model to call fetch_docs against internal or metadata endpoints and stream the response back into the conversation. this issue has been patched in version 0.7.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63651" target="_blank">CVE-2026-63651</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-62930" data-description="unchecked return value in the migtd's tls implementation for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62930" target="_blank">CVE-2026-62930</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>LiveDocs is a primary-source-first documentation for AI agents. Prior to version 0.7.0, fetch_docs and introspect (kinds openapi/graphql, and resolve_source's docs_url) pass a client-supplied URL straight to URLSession with no scheme or host allowlist, and redirects are followed unconditionally. A prompt-injection payload embedded in fetched documentation can steer the model to call fetch_docs against internal or metadata endpoints and stream the response back into the conversation. This issue has been patched in version 0.7.0.</p>
+                    <p>Unchecked return value in the MigTD's TLS implementation for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. Network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63011" data-description="group-office is an enterprise customer relationship management and groupware tool. prior to versions 6.8.167, 25.0.102, and 26.0.27, the contact/labels jmap endpoint in groupoffice accepts a fully attacker-controlled template string (tpl parameter) that is passed without restriction to templateparser::parse(). when the template contains an [assign] block whose expression includes a {{...}} variable reference, the engine calls eval() on the expanded expression after running it through a validateexpression() guard. the guard double-quotes unrecognized tokens, but php 7+ allows a string enclosed in parentheses to be invoked as a function ("system")("id") is valid php and calls system("id"). a single authenticated http request is sufficient to execute arbitrary os commands as the web server user (www-data). this issue has been patched in versions 6.8.167, 25.0.102, and 26.0.27.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63011" target="_blank">CVE-2026-63011</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:45 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-62929" data-description="expired pointer dereference in the migtd's virtio-vsock implementation for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege and information disclosure. system software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62929" target="_blank">CVE-2026-62929</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Group-Office is an enterprise customer relationship management and groupware tool. Prior to versions 6.8.167, 25.0.102, and 26.0.27, the Contact/labels JMAP endpoint in GroupOffice accepts a fully attacker-controlled template string (tpl parameter) that is passed without restriction to TemplateParser::parse(). When the template contains an [assign] block whose expression includes a {{...}} variable reference, the engine calls eval() on the expanded expression after running it through a validateExpression() guard. The guard double-quotes unrecognized tokens, but PHP 7+ allows a string enclosed in parentheses to be invoked as a function ("system")("id") is valid PHP and calls system("id"). A single authenticated HTTP request is sufficient to execute arbitrary OS commands as the web server user (www-data). This issue has been patched in versions 6.8.167, 25.0.102, and 26.0.27.</p>
+                    <p>Expired pointer dereference in the MigTD's virtio-vsock implementation for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege and information disclosure. System software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63010" data-description="group-office is an enterprise customer relationship management and groupware tool. prior to versions 6.8.172, 25.0.108, and 26.0.33, a low-privileged user can create manual reminders containing arbitrary html/javascript and assign them to any other user (including administrators). when the victim's browser polls for pending notifications, the payload renders unsanitized as innerhtml in the extjs notification panel, achieving stored cross-site scripting (xss) leading to full account takeover (ato) of the victim's session. this issue has been patched in versions 6.8.172, 25.0.108, and 26.0.33.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63010" target="_blank">CVE-2026-63010</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:45 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-62920" data-description="unchecked return value in the migtd error handling for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with a privileged user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62920" target="_blank">CVE-2026-62920</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Group-Office is an enterprise customer relationship management and groupware tool. Prior to versions 6.8.172, 25.0.108, and 26.0.33, a low-privileged user can create manual reminders containing arbitrary HTML/JavaScript and assign them to any other user (including administrators). When the victim's browser polls for pending notifications, the payload renders unsanitized as innerHTML in the ExtJS notification panel, achieving Stored Cross-Site Scripting (XSS) leading to full Account Takeover (ATO) of the victim's session. This issue has been patched in versions 6.8.172, 25.0.108, and 26.0.33.</p>
+                    <p>Unchecked return value in the MigTD error handling for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with a privileged user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61547" data-description="rabbitmq-c is a c-language amqp client library for rabbitmq. prior to version 0.17.0, a heap buffer overflow exists in rabbitmq-c when the public amqp_send_frame() api is used to serialize an oversized amqp_frame_body. the issue occurs because amqp_frame_to_bytes() copies frame.payload.body_fragment.len bytes into the connection outbound buffer without validating that the body fragment fits within the allocated frame buffer. an application that passes an oversized body frame to amqp_send_frame() can trigger a heap out-of-bounds write, resulting in process crash and memory corruption. this issue has been patched in version 0.17.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61547" target="_blank">CVE-2026-61547</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>rabbitmq-c is a C-language AMQP client library for RabbitMQ. Prior to version 0.17.0, a heap buffer overflow exists in rabbitmq-c when the public amqp_send_frame() API is used to serialize an oversized AMQP_FRAME_BODY. The issue occurs because amqp_frame_to_bytes() copies frame.payload.body_fragment.len bytes into the connection outbound buffer without validating that the body fragment fits within the allocated frame buffer. An application that passes an oversized body frame to amqp_send_frame() can trigger a heap out-of-bounds write, resulting in process crash and memory corruption. This issue has been patched in version 0.17.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-59986" data-description="rabbitmq-c is a c-language amqp client library for rabbitmq. prior to version 0.17.0, the bounds check (*offset = o + len) <= encoded.len overflows when o + len > size_max on 32-bit systems. len is a uint32_t read from the amqp wire as a bytes/utf8 field length. the overflow wraps the check to a small value that passes, producing a decoded amqp_bytes_t with a multi-gb .len pointing into a small frame buffer. this results in an out-of-bounds read of up to ~4gb of process memory on 32-bit systems (arm, mips, x86 ilp32, embedded iot amqp clients). enabling information disclosure or denial of service. not exploitable on 64-bit systems where size_t is 64-bit. this issue has been patched in version 0.17.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59986" target="_blank">CVE-2026-59986</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>rabbitmq-c is a C-language AMQP client library for RabbitMQ. Prior to version 0.17.0, the bounds check (*offset = o + len) <= encoded.len overflows when o + len > SIZE_MAX on 32-bit systems. len is a uint32_t read from the AMQP wire as a BYTES/UTF8 field length. The overflow wraps the check to a small value that passes, producing a decoded amqp_bytes_t with a multi-GB .len pointing into a small frame buffer. This results in an out-of-bounds read of up to ~4GB of process memory on 32-bit systems (ARM, MIPS, x86 ILP32, embedded IoT AMQP clients). Enabling information disclosure or denial of service. Not exploitable on 64-bit systems where size_t is 64-bit. This issue has been patched in version 0.17.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-57907" data-description="a privilege escalation vulnerability in watchguard endpoint protection's inter-process communication between the console and the protection service allows a local, low-privileged authenticated user to execute arbitrary code with system privileges by injecting code into the trusted console process and issuing privileged commands to the service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57907" target="_blank">CVE-2026-57907</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-62275" data-description="detection of error condition without action in the migtd's vmcall_raw transport for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62275" target="_blank">CVE-2026-62275</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A privilege escalation vulnerability in WatchGuard Endpoint Protection's inter-process communication between the console and the protection service allows a local, low-privileged authenticated user to execute arbitrary code with SYSTEM privileges by injecting code into the trusted console process and issuing privileged commands to the service.</p>
+                    <p>Detection of error condition without action in the MigTD's vmcall_raw transport for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-57884" data-description="uncontrolled search path for some intel(r) graphics software before version 26.14.2303.1 within ring 3: user applications may allow an escalation of privilege. unprivileged software adversary with an authenticated user combined with a high complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are present without special internal knowledge and requires active user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57884" target="_blank">CVE-2026-57884</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-61887" data-description="missing critical step in authentication in the migtd spdm rebind implementation for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege and information disclosure. network adversary with an unauthenticated user combined with a low complexity attack may enable remote code execution. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (high) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61887" target="_blank">CVE-2026-61887</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Uncontrolled search path for some Intel(R) Graphics Software before version 26.14.2303.1 within Ring 3: User Applications may allow an escalation of privilege. Unprivileged software adversary with an authenticated user combined with a high complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are present without special internal knowledge and requires active user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                    <p>Missing critical step in authentication in the MigTD SPDM rebind implementation for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege and information disclosure. Network adversary with an unauthenticated user combined with a low complexity attack may enable remote code execution. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (high) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-56438" data-description="uncontrolled search path for the libva software for all versions within ring 3: user applications may allow an escalation of privilege. unprivileged software adversary with an authenticated user combined with a high complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are present without special internal knowledge and requires active user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-56438" target="_blank">CVE-2026-56438</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-61473" data-description="authentication bypass by capture-replay in the migtd for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61473" target="_blank">CVE-2026-61473</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Uncontrolled search path for the libva software for all versions within Ring 3: User Applications may allow an escalation of privilege. Unprivileged software adversary with an authenticated user combined with a high complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are present without special internal knowledge and requires active user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                    <p>Authentication bypass by capture-replay in the MigTD for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-50177" data-description="deserialization of untrusted data for some intel(r) neural compressor software before version 3.8 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50177" target="_blank">CVE-2026-50177</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-61470" data-description="improper control of a resource through its lifetime in the migtd's tls client for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. network adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61470" target="_blank">CVE-2026-61470</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Deserialization of untrusted data for some Intel(R) Neural Compressor software before version 3.8 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                    <p>Improper control of a resource through its lifetime in the MigTD's TLS client for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. Network adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-50109" data-description="out-of-bounds write for some intel(r) performance counter monitor (intel(r) pcm) within ring 3: user applications may allow a denial of service. unprivileged software adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via network access when attack requirements are present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-50109" target="_blank">CVE-2026-50109</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 11:17:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-61469" data-description="off-by-one error in the migtd's vmcall_raw transport for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61469" target="_blank">CVE-2026-61469</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Out-of-bounds write for some Intel(R) Performance Counter Monitor (Intel(R) PCM) within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via network access when attack requirements are present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                    <p>Off-by-one error in the MigTD's vmcall_raw transport for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61468" data-description="improper privilege management in the migtd logging for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an information disclosure. system software adversary with a privileged user combined with a low complexity attack may enable data exposure. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61468" target="_blank">CVE-2026-61468</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper privilege management in the MigTD logging for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an information disclosure. System software adversary with a privileged user combined with a low complexity attack may enable data exposure. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61467" data-description="use after free in the migtd virtio driver for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (high) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61467" target="_blank">CVE-2026-61467</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Use after free in the MigTD virtio driver for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (high) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61383" data-description="incorrect calculation of buffer size in the migtd's servtd_get_quote for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with an unauthenticated user combined with a high complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61383" target="_blank">CVE-2026-61383</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Incorrect calculation of buffer size in the MigTD's servtd_get_quote for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with an unauthenticated user combined with a high complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-61377" data-description="sensitive information uncleared in resource before release for reuse in the migtd for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an information disclosure. system software adversary with a privileged user combined with a high complexity attack may enable data exposure. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61377" target="_blank">CVE-2026-61377</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Sensitive information uncleared in resource before release for reuse in the MigTD for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an information disclosure. System software adversary with a privileged user combined with a high complexity attack may enable data exposure. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (none) and availability (none) impacts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-60142" data-description="write-what-where condition in the migtd for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an information disclosure and escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-60142" target="_blank">CVE-2026-60142</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Write-what-where condition in the MigTD for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an information disclosure and escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-60141" data-description="improper null termination for some intel(r) metrics discovery application programming interface before version 1.16.189 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-60141" target="_blank">CVE-2026-60141</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Improper null termination for some Intel(R) Metrics Discovery Application Programming Interface before version 1.16.189 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
                 </div>
         
             </div>
