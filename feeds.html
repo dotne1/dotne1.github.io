@@ -34,280 +34,356 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-99285" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-99288" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-netfilter: nft_byteorder: remove multi-register support
+inet: reject unhashed sockets during established lookups
 
-64bit byteorder conversion is broken when several registers need to be
-converted because the source register array advances in steps for 4 bytes
-instead of 8:
+tcp established ehash lookups are lockless. the socket caches involved
+use slab_typesafe_by_rcu, so memory can be reused before an rcu reader
+that retained its old address has finished.
 
-  for (i = ...
-      src64 = nft_reg_load64(&src[i]);
-                             ~~~~~ u32 *src
-      nft_reg_store64(&dst64[i],
+after a tuple match, __inet_lookup_established() and
+__inet6_lookup_established() acquire a reference and repeat the tuple
+check. they do not check whether the new object is hashed. if the
+address is reused for a socket with the same tuple, the lookup can
+acquire a reference to the new object and return it while its nulls node
+is unhashed.
 
-remove the multi-register support, it has other issues as well:
+a poc that drives reuse with a syn cookie request socket reproduced the
+crash. the new request socket is unhashed and has a null rsk_listener.
+a lookup that had loaded the address of the old request socket acquired
+the reference published by tcp_get_cookie_sock() and returned the new
+object. tcp_v4_rcv() then read sk_state through the null listener.
 
-pablo points out that commit
-caf3ef7468f7 ("netfilter: nf_tables: prevent oob access in nft_byteorder_eval")
-alters semantics: before the loop operated on registers, i.e.
- for ( ... )
-   dst32[i] = htons((u16)src32[i])
+the resulting crash was:
 
- .. but after the patch it will operate on bytes, which makes this
- useless to convert e.g. concatenations, which store each compound
- in its own register.
+  bug: kernel null pointer dereference, address: 0000000000000012
+  #pf: supervisor read access in kernel mode
+  #pf: error_code(0x0000) - not-present page
+  ...
+  oops: oops: 0000 [#1] smp nopti
+  cpu: 4 uid: 0 pid: 0 comm: swapper/4 not tainted 7.3.0-00591-g0e135910deec #1 preempt(lazy)
+  ...
+  rip: 0010:tcp_v4_rcv+0x44e/0x1280
+  ...
+  r10: 0000000000000001 r11: 00000000024ca8c0 r12: 0000000000000000
+  ...
+  cr2: 0000000000000012 cr3: 0000000103d50004 cr4: 0000000000770ef0
+  ...
+  call trace:
+   <irq>
+   ? raw_local_deliver+0xae/0x240
+   ip_protocol_deliver_rcu+0x2d/0x180
+   ip_local_deliver_finish+0x84/0x100
+   ip_sublist_rcv_finish+0x5f/0x70
+   ip_sublist_rcv+0x12a/0x1d0
+   ip_list_rcv+0xfd/0x130
+   __netif_receive_skb_list_core+0x223/0x250
+   netif_receive_skb_list_internal+0x1d2/0x2c0
+   ? try_fill_recv+0x39/0x7b0
+   napi_complete_done+0x74/0x170
+   virtnet_poll+0x445/0x600
+   __napi_poll+0x27/0x1e0
+   net_rx_action+0x2fe/0x3b0
+   handle_softirqs+0xc2/0x2c0
+   __irq_exit_rcu+0x74/0xd0
+   common_interrupt+0x7f/0x90
+   </irq>
+  ...
+  kernel panic - not syncing: fatal exception in interrupt
 
-multi-convert of u32 has one theoretical application:
+after taking a reference, check whether the nulls node is unhashed in
+both ipv4 and ipv6 established lookups. if it is unhashed or the tuple
+no longer matches, drop the reference and restart the lookup.
 
-ct mark . meta mark . tcp dport @intervalset
+lookups racing with the time_wait hashdance, or with a request being
+replaced by its child, now restart and find the new socket instead of
+returning the old one.
 
-because ct mark and meta mark are host byte order, use with
-intervals has to convert the byteorder for ct/meta mark value
-to network byte order (bigendian).
-
-nftables emits this:
- [ meta load mark => reg 1 ]
- [ byteorder reg 1 = hton(reg 1, 4, 4) ]
- [ ct load mark => reg 9 ]
- [ byteorder reg 9 = hton(reg 9, 4, 4) ]
- ...
-
-i.e. two separate calls.  theoretically it could be changed to do:
- [ meta load mark => reg 1 ]
- [ ct load mark => reg 9 ]
- [ byteorder reg 1 = htonl(reg 1, 4, 8) ]
- ...
-
-but then all it would take to change the set to
-meta mark . tcp dport . ct mark
-
-... and we'd be back to two "byteorder" calls. iow, support to
-convert a range of registers is both dysfunctional and dubious.
-
-simplify this: remove the feature.
-
-pablo neira ayuso points out that nftables before 1.1.0 can generate
-incorrect byteorder conversions, see 9fe58952c45a,
-"evaluate: skip byteorder conversion for selector smaller than 2 bytes"
-in nftables.git).  affected rulesets fail to load with this change and
-old userspace due to 'len != size' check.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99285" target="_blank">CVE-2026-99285</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:49 CDT</p>
+request sockets that were never inserted into ehash can have a nonzero
+refcount, and a stale lookup can hold a transient reference. therefore,
+when syn cookie, fast open, and request migration paths fail after
+setting a nonzero refcount, release the references held by those paths
+with reqsk_put() instead of freeing the request directly.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99288" target="_blank">CVE-2026-99288</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>In the Linux kernel, the following vulnerability has been resolved:
 
-netfilter: nft_byteorder: remove multi-register support
+inet: reject unhashed sockets during established lookups
 
-64bit byteorder conversion is broken when several registers need to be
-converted because the source register array advances in steps for 4 bytes
-instead of 8:
+TCP established ehash lookups are lockless. The socket caches involved
+use SLAB_TYPESAFE_BY_RCU, so memory can be reused before an RCU reader
+that retained its old address has finished.
 
-  for (i = ...
-      src64 = nft_reg_load64(&src[i]);
-                             ~~~~~ u32 *src
-      nft_reg_store64(&dst64[i],
+After a tuple match, __inet_lookup_established() and
+__inet6_lookup_established() acquire a reference and repeat the tuple
+check. They do not check whether the new object is hashed. If the
+address is reused for a socket with the same tuple, the lookup can
+acquire a reference to the new object and return it while its nulls node
+is unhashed.
 
-Remove the multi-register support, it has other issues as well:
+A PoC that drives reuse with a SYN cookie request socket reproduced the
+crash. The new request socket is unhashed and has a NULL rsk_listener.
+A lookup that had loaded the address of the old request socket acquired
+the reference published by tcp_get_cookie_sock() and returned the new
+object. tcp_v4_rcv() then read sk_state through the NULL listener.
 
-Pablo points out that commit
-caf3ef7468f7 ("netfilter: nf_tables: prevent OOB access in nft_byteorder_eval")
-alters semantics: before the loop operated on registers, i.e.
- for ( ... )
-   dst32[i] = htons((u16)src32[i])
+The resulting crash was:
 
- .. but after the patch it will operate on bytes, which makes this
- useless to convert e.g. concatenations, which store each compound
- in its own register.
+  BUG: kernel NULL pointer dereference, address: 0000000000000012
+  #PF: supervisor read access in kernel mode
+  #PF: error_code(0x0000) - not-present page
+  ...
+  Oops: Oops: 0000 [#1] SMP NOPTI
+  CPU: 4 UID: 0 PID: 0 Comm: swapper/4 Not tainted 7.3.0-00591-g0e135910deec #1 PREEMPT(lazy)
+  ...
+  RIP: 0010:tcp_v4_rcv+0x44e/0x1280
+  ...
+  R10: 0000000000000001 R11: 00000000024ca8c0 R12: 0000000000000000
+  ...
+  CR2: 0000000000000012 CR3: 0000000103d50004 CR4: 0000000000770ef0
+  ...
+  Call Trace:
+   <IRQ>
+   ? raw_local_deliver+0xae/0x240
+   ip_protocol_deliver_rcu+0x2d/0x180
+   ip_local_deliver_finish+0x84/0x100
+   ip_sublist_rcv_finish+0x5f/0x70
+   ip_sublist_rcv+0x12a/0x1d0
+   ip_list_rcv+0xfd/0x130
+   __netif_receive_skb_list_core+0x223/0x250
+   netif_receive_skb_list_internal+0x1d2/0x2c0
+   ? try_fill_recv+0x39/0x7b0
+   napi_complete_done+0x74/0x170
+   virtnet_poll+0x445/0x600
+   __napi_poll+0x27/0x1e0
+   net_rx_action+0x2fe/0x3b0
+   handle_softirqs+0xc2/0x2c0
+   __irq_exit_rcu+0x74/0xd0
+   common_interrupt+0x7f/0x90
+   </IRQ>
+  ...
+  Kernel panic - not syncing: Fatal exception in interrupt
 
-Multi-convert of u32 has one theoretical application:
+After taking a reference, check whether the nulls node is unhashed in
+both IPv4 and IPv6 established lookups. If it is unhashed or the tuple
+no longer matches, drop the reference and restart the lookup.
 
-ct mark . meta mark . tcp dport @intervalset
+Lookups racing with the TIME_WAIT hashdance, or with a request being
+replaced by its child, now restart and find the new socket instead of
+returning the old one.
 
-Because ct mark and meta mark are host byte order, use with
-intervals has to convert the byteorder for ct/meta mark value
-to network byte order (bigendian).
-
-nftables emits this:
- [ meta load mark => reg 1 ]
- [ byteorder reg 1 = hton(reg 1, 4, 4) ]
- [ ct load mark => reg 9 ]
- [ byteorder reg 9 = hton(reg 9, 4, 4) ]
- ...
-
-I.e. two separate calls.  Theoretically it could be changed to do:
- [ meta load mark => reg 1 ]
- [ ct load mark => reg 9 ]
- [ byteorder reg 1 = htonl(reg 1, 4, 8) ]
- ...
-
-But then all it would take to change the set to
-meta mark . tcp dport . ct mark
-
-... and we'd be back to two "byteorder" calls. IOW, support to
-convert a range of registers is both dysfunctional and dubious.
-
-Simplify this: remove the feature.
-
-Pablo Neira Ayuso points out that nftables before 1.1.0 can generate
-incorrect byteorder conversions, see 9fe58952c45a,
-"evaluate: skip byteorder conversion for selector smaller than 2 bytes"
-in nftables.git).  Affected rulesets fail to load with this change and
-old userspace due to 'len != size' check.</p>
+Request sockets that were never inserted into ehash can have a nonzero
+refcount, and a stale lookup can hold a transient reference. Therefore,
+when SYN cookie, Fast Open, and request migration paths fail after
+setting a nonzero refcount, release the references held by those paths
+with reqsk_put() instead of freeing the request directly.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-79914" data-description="nocobase is an ai-powered no-code/low-code platform for building business applications and enterprise solutions. versions 2.1.0 through 2.1.14 contain a server-side request forgery vulnerability in the customrequests:send endpoint. a low-privileged authenticated user can override the stored request url at runtime using options.url, causing the nocobase server to send requests to attacker-controlled or internal destinations. exploitation could expose internal services, docker host gateways, or cloud metadata endpoints and allow the server to be used as a trusted network proxy. this issue has been fixed in version 2.1.15.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79914" target="_blank">CVE-2026-79914</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99287" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xen-netback: zero out sring pointers on unmap
+
+if xenvif_map_frontend_data_rings() fails when a ring is already mapped,
+it unmaps them via xenvif_unmap_frontend_data_rings() which keeps the
+ring pointers unchanged. xenvif_connect_data()'s cleanup path calls
+xenvif_disconnect_queue() which in turn calls
+xenvif_unmap_frontend_data_rings() again, which will attempt to unmap the
+pointers a second time.
+
+zero out the ring pointers after they are unmapped to avoid this issue.
+
+this is xsa-532">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99287" target="_blank">CVE-2026-99287</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xen-netback: Zero out sring pointers on unmap
+
+If xenvif_map_frontend_data_rings() fails when a ring is already mapped,
+it unmaps them via xenvif_unmap_frontend_data_rings() which keeps the
+ring pointers unchanged. xenvif_connect_data()'s cleanup path calls
+xenvif_disconnect_queue() which in turn calls
+xenvif_unmap_frontend_data_rings() again, which will attempt to unmap the
+pointers a second time.
+
+Zero out the ring pointers after they are unmapped to avoid this issue.
+
+This is XSA-532</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99286" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+xen-netback: fix xenbus connection failure cleanup
+
+xenvif_get_stats and xenvif_get_ethtool_stats capture vif->num_queues
+under rcu_read_lock. we need to unpublish vif->num_queues before
+synchronize_net to ensure that readers that come afterwards will not
+read a non-zero vif->num_queues and attempt to access invalid queues.
+
+this is the same cleanup algorithm as used in backend_disconnect and
+added in commit b17075d5c198 ("xen-netback: fix race condition on xenbus
+disconnect").
+
+this is xsa-531">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99286" target="_blank">CVE-2026-99286</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:31 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+xen-netback: Fix XenBus connection failure cleanup
+
+xenvif_get_stats and xenvif_get_ethtool_stats capture vif->num_queues
+under rcu_read_lock. We need to unpublish vif->num_queues before
+synchronize_net to ensure that readers that come afterwards will not
+read a non-zero vif->num_queues and attempt to access invalid queues.
+
+This is the same cleanup algorithm as used in backend_disconnect and
+added in commit b17075d5c198 ("xen-netback: fix race condition on XenBus
+disconnect").
+
+This is XSA-531</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-97015" data-description="heap-based buffer overflow in windows bitlocker allows an unauthorized attacker to bypass a security feature with a physical attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97015" target="_blank">CVE-2026-97015</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>NocoBase is an AI-powered no-code/low-code platform for building business applications and enterprise solutions. Versions 2.1.0 through 2.1.14 contain a server-side request forgery vulnerability in the customRequests:send endpoint. A low-privileged authenticated user can override the stored request URL at runtime using options.url, causing the NocoBase server to send requests to attacker-controlled or internal destinations. Exploitation could expose internal services, Docker host gateways, or cloud metadata endpoints and allow the server to be used as a trusted network proxy. This issue has been fixed in version 2.1.15.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
+                    <p>Heap-based buffer overflow in Windows BitLocker allows an unauthorized attacker to bypass a security feature with a physical attack.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63540" data-description="heap-based buffer overflow for some hyperscan before version v5.4.2.1 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires passive user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63540" target="_blank">CVE-2026-63540</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Heap-based buffer overflow for some Hyperscan before version v5.4.2.1 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires passive user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-97013" data-description="access of resource using incompatible type ('type confusion') in windows shell allows an authorized attacker to elevate privileges locally.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97013" target="_blank">CVE-2026-97013</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>Access of resource using incompatible type ('type confusion') in Windows Shell allows an authorized attacker to elevate privileges locally.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63028" data-description="improper initialization in the migtd virtio-vsock stream handling for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63028" target="_blank">CVE-2026-63028</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper initialization in the MigTD virtio-vsock stream handling for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-97006" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97006" target="_blank">CVE-2026-97006</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63027" data-description="incorrect behavior order in the get_tcb_level_by_svn for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63027" target="_blank">CVE-2026-63027</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Incorrect behavior order in the get_tcb_level_by_svn for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. Network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-97002" data-description="out-of-bounds read in windows vmswitch allows an authorized attacker to elevate privileges locally.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97002" target="_blank">CVE-2026-97002</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:23 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Out-of-bounds read in Windows VMSwitch allows an authorized attacker to elevate privileges locally.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-63018" data-description="integer underflow (wrap or wraparound) for some intel(r) metrics discovery application programming interface software before version 1.16.189 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63018" target="_blank">CVE-2026-63018</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Integer underflow (wrap or wraparound) for some Intel(R) Metrics Discovery Application Programming Interface software before version 1.16.189 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-97000" data-description="null pointer dereference in windows usm communication manager allows an authorized attacker to elevate privileges locally.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97000" target="_blank">CVE-2026-97000</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
+                    <p>Null pointer dereference in Windows USM Communication Manager allows an authorized attacker to elevate privileges locally.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-62930" data-description="unchecked return value in the migtd's tls implementation for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62930" target="_blank">CVE-2026-62930</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Unchecked return value in the MigTD's TLS implementation for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. Network adversary with an unauthenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96994" data-description="use after free in winsock allows an authorized attacker to elevate privileges locally.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96994" target="_blank">CVE-2026-96994</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
+                    <p>Use after free in Winsock allows an authorized attacker to elevate privileges locally.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-62929" data-description="expired pointer dereference in the migtd's virtio-vsock implementation for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege and information disclosure. system software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62929" target="_blank">CVE-2026-62929</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Expired pointer dereference in the MigTD's virtio-vsock implementation for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege and information disclosure. System software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96993" data-description="release of invalid pointer or reference in windows performance monitor allows an unauthorized attacker to execute code over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96993" target="_blank">CVE-2026-96993</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Release of invalid pointer or reference in Windows Performance Monitor allows an unauthorized attacker to execute code over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-62920" data-description="unchecked return value in the migtd error handling for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with a privileged user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62920" target="_blank">CVE-2026-62920</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Unchecked return value in the MigTD error handling for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with a privileged user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96992" data-description="use after free in windows pci bus driver allows an unauthorized attacker to elevate privileges with a physical attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96992" target="_blank">CVE-2026-96992</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>Use after free in Windows PCI Bus Driver allows an unauthorized attacker to elevate privileges with a physical attack.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-62275" data-description="detection of error condition without action in the migtd's vmcall_raw transport for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62275" target="_blank">CVE-2026-62275</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Detection of error condition without action in the MigTD's vmcall_raw transport for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96989" data-description="out-of-bounds read in secondary logon allows an authorized attacker to disclose information locally.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96989" target="_blank">CVE-2026-96989</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>Out-of-bounds read in Secondary Logon allows an authorized attacker to disclose information locally.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61887" data-description="missing critical step in authentication in the migtd spdm rebind implementation for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege and information disclosure. network adversary with an unauthenticated user combined with a low complexity attack may enable remote code execution. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (high) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61887" target="_blank">CVE-2026-61887</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Missing critical step in authentication in the MigTD SPDM rebind implementation for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege and information disclosure. Network adversary with an unauthenticated user combined with a low complexity attack may enable remote code execution. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (high) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96988" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96988" target="_blank">CVE-2026-96988</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:22 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61473" data-description="authentication bypass by capture-replay in the migtd for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61473" target="_blank">CVE-2026-61473</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Authentication bypass by capture-replay in the MigTD for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (high) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96987" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96987" target="_blank">CVE-2026-96987</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61470" data-description="improper control of a resource through its lifetime in the migtd's tls client for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. network adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. this result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61470" target="_blank">CVE-2026-61470</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper control of a resource through its lifetime in the MigTD's TLS client for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. Network adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. This result may potentially occur via adjacent access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96986" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96986" target="_blank">CVE-2026-96986</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61469" data-description="off-by-one error in the migtd's vmcall_raw transport for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61469" target="_blank">CVE-2026-61469</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Off-by-one error in the MigTD's vmcall_raw transport for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with an unauthenticated user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (low) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96985" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96985" target="_blank">CVE-2026-96985</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61468" data-description="improper privilege management in the migtd logging for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an information disclosure. system software adversary with a privileged user combined with a low complexity attack may enable data exposure. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61468" target="_blank">CVE-2026-61468</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper privilege management in the MigTD logging for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an information disclosure. System software adversary with a privileged user combined with a low complexity attack may enable data exposure. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96984" data-description="out-of-bounds read in windows dns allows an authorized attacker to disclose information over a network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96984" target="_blank">CVE-2026-96984</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Out-of-bounds read in Windows DNS allows an authorized attacker to disclose information over a network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61467" data-description="use after free in the migtd virtio driver for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable data corruption. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (high) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61467" target="_blank">CVE-2026-61467</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Use after free in the MigTD virtio driver for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable data corruption. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (high) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96983" data-description="use after free in windows dns allows an unauthorized attacker to deny service over an adjacent network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96983" target="_blank">CVE-2026-96983</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Use after free in Windows DNS allows an unauthorized attacker to deny service over an adjacent network.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61383" data-description="incorrect calculation of buffer size in the migtd's servtd_get_quote for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow a denial of service. system software adversary with an unauthenticated user combined with a high complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61383" target="_blank">CVE-2026-61383</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Incorrect calculation of buffer size in the MigTD's servtd_get_quote for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow a denial of service. System software adversary with an unauthenticated user combined with a high complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96982" data-description="integer overflow or wraparound in hid parser library allows an unauthorized attacker to elevate privileges with a physical attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96982" target="_blank">CVE-2026-96982</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
+                    <p>Integer overflow or wraparound in HID Parser Library allows an unauthorized attacker to elevate privileges with a physical attack.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-61377" data-description="sensitive information uncleared in resource before release for reuse in the migtd for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an information disclosure. system software adversary with a privileged user combined with a high complexity attack may enable data exposure. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61377" target="_blank">CVE-2026-61377</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Sensitive information uncleared in resource before release for reuse in the MigTD for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an information disclosure. System software adversary with a privileged user combined with a high complexity attack may enable data exposure. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (none) and availability (none) of the vulnerable system, resulting in subsequent system confidentiality (high), integrity (none) and availability (none) impacts.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-60142" data-description="write-what-where condition in the migtd for the intel(r) tdx migration trust domain (migtd) within ring 0: hypervisor may allow an information disclosure and escalation of privilege. system software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. this result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-60142" target="_blank">CVE-2026-60142</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Write-what-where condition in the MigTD for the Intel(R) TDX Migration Trust Domain (MigTD) within Ring 0: Hypervisor may allow an information disclosure and escalation of privilege. System software adversary with a privileged user combined with a low complexity attack may enable escalation of privilege. This result may potentially occur via local access when attack requirements are not present without special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (high), integrity (high) and availability (high) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-60141" data-description="improper null termination for some intel(r) metrics discovery application programming interface before version 1.16.189 within ring 3: user applications may allow a denial of service. unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. this result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. the potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-60141" target="_blank">CVE-2026-60141</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-10 12:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Improper null termination for some Intel(R) Metrics Discovery Application Programming Interface before version 1.16.189 within Ring 3: User Applications may allow a denial of service. Unprivileged software adversary with an authenticated user combined with a low complexity attack may enable denial of service. This result may potentially occur via local access when attack requirements are not present with special internal knowledge and requires no user interaction. The potential vulnerability may impact the confidentiality (none), integrity (none) and availability (low) of the vulnerable system, resulting in subsequent system confidentiality (none), integrity (none) and availability (none) impacts.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-96981" data-description="out-of-bounds write in windows pci bus driver allows an unauthorized attacker to elevate privileges with a physical attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96981" target="_blank">CVE-2026-96981</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-10 13:22:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>Out-of-bounds write in Windows PCI Bus Driver allows an unauthorized attacker to elevate privileges with a physical attack.</p>
                 </div>
         
             </div>
