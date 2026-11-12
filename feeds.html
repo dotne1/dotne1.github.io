@@ -34,6 +34,140 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-91007" data-description="the user-mode syscall verifiers for the charger driver api in drivers/charger/charger_handlers.c did not inspect the prop argument before copying union charger_propval across the user/kernel boundary. two members of that union are function pointers — status_notification (charger_prop_status_notification) and online_notification (charger_prop_online_notification), declared in include/zephyr/drivers/charger.h — and z_vrfy_charger_set_prop() forwarded the caller-supplied union verbatim to the driver's set_property callback for any property. z_vrfy_charger_get_prop() had the mirror defect and copied the stored kernel callback address back out to user memory.
+
+with config_userspace enabled, any user-mode thread that has been granted a charger device object could call charger_set_prop() with charger_prop_status_notification or charger_prop_online_notification and an arbitrary pointer value. drivers that implement these properties — drivers/charger/charger_max20335.c, drivers/charger/charger_pf1550.c and drivers/charger/charger_bq2518x.c — store the pointer in device data and later invoke it from their interrupt work handlers, which run in supervisor mode, on any charger state change such as a cable plug/unplug.
+
+the result is a control-flow hijack at kernel privilege from an unprivileged thread, defeating the isolation that config_userspace is meant to provide; the read path additionally disclosed a kernel code address to user mode, and clearing a notifier installed by a supervisor thread let user mode suppress charger notifications. supervisor-mode callers of charger_set_prop()/charger_get_prop() are unaffected.
+
+the fix makes both verifiers reject the two notifier properties outright — including when the supplied callback is null, since the notifiers are device state — and adds a build_assert on charger_prop_common_count so that new properties force a re-review of the union's user-mode safety.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91007" target="_blank">CVE-2026-91007</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>The user-mode syscall verifiers for the charger driver API in drivers/charger/charger_handlers.c did not inspect the prop argument before copying union charger_propval across the user/kernel boundary. Two members of that union are function pointers — status_notification (CHARGER_PROP_STATUS_NOTIFICATION) and online_notification (CHARGER_PROP_ONLINE_NOTIFICATION), declared in include/zephyr/drivers/charger.h — and z_vrfy_charger_set_prop() forwarded the caller-supplied union verbatim to the driver's set_property callback for any property. z_vrfy_charger_get_prop() had the mirror defect and copied the stored kernel callback address back out to user memory.
+
+With CONFIG_USERSPACE enabled, any user-mode thread that has been granted a charger device object could call charger_set_prop() with CHARGER_PROP_STATUS_NOTIFICATION or CHARGER_PROP_ONLINE_NOTIFICATION and an arbitrary pointer value. Drivers that implement these properties — drivers/charger/charger_max20335.c, drivers/charger/charger_pf1550.c and drivers/charger/charger_bq2518x.c — store the pointer in device data and later invoke it from their interrupt work handlers, which run in supervisor mode, on any charger state change such as a cable plug/unplug.
+
+The result is a control-flow hijack at kernel privilege from an unprivileged thread, defeating the isolation that CONFIG_USERSPACE is meant to provide; the read path additionally disclosed a kernel code address to user mode, and clearing a notifier installed by a supervisor thread let user mode suppress charger notifications. Supervisor-mode callers of charger_set_prop()/charger_get_prop() are unaffected.
+
+The fix makes both verifiers reject the two notifier properties outright — including when the supplied callback is NULL, since the notifiers are device state — and adds a BUILD_ASSERT on CHARGER_PROP_COMMON_COUNT so that new properties force a re-review of the union's user-mode safety.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-70642" data-description="tooljet before 3.21.94, fixed in commit e5f387a, contains an authorization bypass vulnerability in the app environments init endpoint that allows authenticated users to read app version metadata belonging to other workspaces. attackers can send get requests to /api/app-environments/init with an editing_version_id from another workspace to retrieve the version name, description, status, current environment id, and app id, because the lookup is not scoped to the caller's organization.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-70642" target="_blank">CVE-2026-70642</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>ToolJet before 3.21.94, fixed in commit e5f387a, contains an authorization bypass vulnerability in the app environments init endpoint that allows authenticated users to read app version metadata belonging to other workspaces. Attackers can send GET requests to /api/app-environments/init with an editing_version_id from another workspace to retrieve the version name, description, status, current environment ID, and app ID, because the lookup is not scoped to the caller's organization.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-70641" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority as a duplicate of cve-2026-82873.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-70641" target="_blank">CVE-2026-70641</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority as a duplicate of CVE-2026-82873.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-19809" data-description="the user-mode system call verifier z_vrfy_charger_get_prop() in drivers/charger/charger_handlers.c declares an uninitialized union charger_propval k_val on the kernel (privileged) stack, passes it to the charger driver back end via z_impl_charger_get_prop(), and then copies the full sizeof(union charger_propval) back into the calling user thread's buffer with k_usermode_to_copy(). that discloses kernel stack contents on two paths:
+
+on error. the copy-out ignores the driver's return code. in-tree back ends return an error without writing through the value pointer for properties they do not implement: charger_gpio_get_prop() returns -enotsup unconditionally, and bq24190_get_prop() has a default: return -enotsup; arm that never touches val. the whole union is then stack residue.
+on success. a back end writes only the one union member the requested property selects (for example sbs_charger.c writes the one-byte val->present for charger_prop_present and returns 0), yet the handler still copies the whole union, so every byte beyond that member is uninitialized.
+
+the handler is compiled only when config_userspace=y and is reachable by any user-mode thread that has been granted access to a charger device object. k_syscall_driver_charger() validates only the device object and its api pointer, not the property identifier, so an unprivileged thread can choose prop freely: an unimplemented property forces the error path, a narrow one the success path, and the call can be repeated at will.
+
+each call discloses up to the size of the union (12 bytes on a 32-bit target, 16 bytes on 64-bit targets where the function-pointer members widen it) of supervisor-stack memory. the bytes are residue of earlier kernel-side frames on the thread's privileged stack and can contain kernel object addresses and saved return addresses, which an unprivileged thread cannot otherwise observe and which help defeat address-layout assumptions when exploiting a separate memory-safety defect. there is no integrity or availability impact.
+
+two commits fix it, and both are needed. 5054384e983c skips the copy-out when the back end reports an error. c31cac727d02 zeroes the union before the driver call, so the bytes copied out on success are driver-written data or zeros. a tree carrying only the first still leaks on every successful call.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19809" target="_blank">CVE-2026-19809</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
+                    <p>The user-mode system call verifier z_vrfy_charger_get_prop() in drivers/charger/charger_handlers.c declares an uninitialized union charger_propval k_val on the kernel (privileged) stack, passes it to the charger driver back end via z_impl_charger_get_prop(), and then copies the full sizeof(union charger_propval) back into the calling user thread's buffer with k_usermode_to_copy(). That discloses kernel stack contents on two paths:
+
+On error. The copy-out ignores the driver's return code. In-tree back ends return an error without writing through the value pointer for properties they do not implement: charger_gpio_get_prop() returns -ENOTSUP unconditionally, and bq24190_get_prop() has a default: return -ENOTSUP; arm that never touches val. The whole union is then stack residue.
+On success. A back end writes only the one union member the requested property selects (for example sbs_charger.c writes the one-byte val->present for CHARGER_PROP_PRESENT and returns 0), yet the handler still copies the whole union, so every byte beyond that member is uninitialized.
+
+The handler is compiled only when CONFIG_USERSPACE=y and is reachable by any user-mode thread that has been granted access to a charger device object. K_SYSCALL_DRIVER_CHARGER() validates only the device object and its API pointer, not the property identifier, so an unprivileged thread can choose prop freely: an unimplemented property forces the error path, a narrow one the success path, and the call can be repeated at will.
+
+Each call discloses up to the size of the union (12 bytes on a 32-bit target, 16 bytes on 64-bit targets where the function-pointer members widen it) of supervisor-stack memory. The bytes are residue of earlier kernel-side frames on the thread's privileged stack and can contain kernel object addresses and saved return addresses, which an unprivileged thread cannot otherwise observe and which help defeat address-layout assumptions when exploiting a separate memory-safety defect. There is no integrity or availability impact.
+
+Two commits fix it, and both are needed. 5054384e983c skips the copy-out when the back end reports an error. c31cac727d02 zeroes the union before the driver call, so the bytes copied out on success are driver-written data or zeros. A tree carrying only the first still leaks on every successful call.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127145" data-description="sogo before 5.12.13 contains a server-side request forgery vulnerability that allows authenticated users to make the server connect to arbitrary internal host:port destinations by supplying a user-controlled url to the calendar/addwebcalendar endpoint. attackers can trigger a reload of the subscribed web calendar via the reload endpoint and distinguish response outcomes such as connection failures, timeouts, authentication prompts, or invalid content to probe the internal network from the server's position.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127145" target="_blank">CVE-2026-127145</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>SOGo before 5.12.13 contains a server-side request forgery vulnerability that allows authenticated users to make the server connect to arbitrary internal host:port destinations by supplying a user-controlled URL to the Calendar/addWebCalendar endpoint. Attackers can trigger a reload of the subscribed web calendar via the reload endpoint and distinguish response outcomes such as connection failures, timeouts, authentication prompts, or invalid content to probe the internal network from the server's position.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127141" data-description="sogo before 5.12.13 contains a denial of service vulnerability that allows authenticated attackers to exhaust all worker processes by configuring an auxiliary imap mail account pointing to a controlled host that accepts a tcp connection but never sends an imap greeting response. attackers can issue concurrent get requests to the mail view of this account to hold workers indefinitely without an effective timeout, occupying every sogo worker and denying service to all users for approximately five minutes until the watchdog kills and respawns the stuck workers.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127141" target="_blank">CVE-2026-127141</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>SOGo before 5.12.13 contains a denial of service vulnerability that allows authenticated attackers to exhaust all worker processes by configuring an auxiliary IMAP mail account pointing to a controlled host that accepts a TCP connection but never sends an IMAP greeting response. Attackers can issue concurrent GET requests to the mail view of this account to hold workers indefinitely without an effective timeout, occupying every SOGo worker and denying service to all users for approximately five minutes until the watchdog kills and respawns the stuck workers.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127135" data-description="sogo before 5.12.13 contains a sieve script injection vulnerability that allows authenticated users to inject arbitrary sieve directives by inserting unescaped notification address values into a generated sieve script. attackers can embed sieve redirect or discard statements within the notificationaddress preference to bypass the administrator-configured forwarding-domain constraint and redirect or discard incoming mail.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127135" target="_blank">CVE-2026-127135</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>SOGo before 5.12.13 contains a Sieve script injection vulnerability that allows authenticated users to inject arbitrary Sieve directives by inserting unescaped notification address values into a generated Sieve script. Attackers can embed Sieve redirect or discard statements within the notificationAddress preference to bypass the administrator-configured forwarding-domain constraint and redirect or discard incoming mail.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127131" data-description="sogo before 5.12.13 contains a missing rate limiting vulnerability in its web login totp verification that allows attackers who already possess a victim's password to brute-force the second-factor code without triggering any lockout. attackers can send repeated post requests to /sogo/connect with wrong verification codes at high speed since failed totp attempts never increment the failed-login counter and sogomaximumfailedlogincount does not apply, enabling indefinite guessing across 30-second code windows to bypass two-factor authentication.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127131" target="_blank">CVE-2026-127131</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>SOGo before 5.12.13 contains a missing rate limiting vulnerability in its web login TOTP verification that allows attackers who already possess a victim's password to brute-force the second-factor code without triggering any lockout. Attackers can send repeated POST requests to /SOGo/connect with wrong verification codes at high speed since failed TOTP attempts never increment the failed-login counter and SOGoMaximumFailedLoginCount does not apply, enabling indefinite guessing across 30-second code windows to bypass two-factor authentication.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127121" data-description="sogo before 5.12.13 contains an improper cryptographic signature verification vulnerability that allows remote attackers to replace a victim's contact s/mime certificate by sending a spoofed multipart/signed message with a mismatched signature and an impersonated from address. attackers can deliver a crafted cms signeddata object containing their own self-signed certificate, which sogo's uixmailview stores on the contact card without validating signature authenticity or certificate identity, enabling subsequent encrypted communications to be decrypted with the attacker's private key.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127121" target="_blank">CVE-2026-127121</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>SOGo before 5.12.13 contains an improper cryptographic signature verification vulnerability that allows remote attackers to replace a victim's contact S/MIME certificate by sending a spoofed multipart/signed message with a mismatched signature and an impersonated From address. Attackers can deliver a crafted CMS signedData object containing their own self-signed certificate, which SOGo's UIxMailView stores on the contact card without validating signature authenticity or certificate identity, enabling subsequent encrypted communications to be decrypted with the attacker's private key.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127111" data-description="sogo before 5.12.13 contains an improper restriction of excessive authentication attempts vulnerability that allows unauthenticated attackers to reset account passwords by repeatedly guessing secret-question answers via the passwordrecoverycheck endpoint without lockout or rate limiting. attackers can submit unlimited candidate answers to obtain a valid recovery jwt, then use it to change the account password without the old credential and log in via the connect endpoint, achieving full account takeover on accounts without totp enabled.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127111" target="_blank">CVE-2026-127111</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>SOGo before 5.12.13 contains an improper restriction of excessive authentication attempts vulnerability that allows unauthenticated attackers to reset account passwords by repeatedly guessing secret-question answers via the passwordRecoveryCheck endpoint without lockout or rate limiting. Attackers can submit unlimited candidate answers to obtain a valid recovery JWT, then use it to change the account password without the old credential and log in via the connect endpoint, achieving full account takeover on accounts without TOTP enabled.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127109" data-description="a code injection vulnerability in promzard’s template-loading functionality allows an attacker who can control property names in the context object (ctx) to execute arbitrary code with the privileges of the node.js process. the library inserts context property names into a generated function’s parameter list without validation or escaping and evaluates the resulting source using `vm.runinthiscontext()`. a crafted property name can escape the parameter list and inject javascript code, even when the template file is fully trusted.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127109" target="_blank">CVE-2026-127109</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A code injection vulnerability in promzard’s template-loading functionality allows an attacker who can control property names in the context object (ctx) to execute arbitrary code with the privileges of the Node.js process. The library inserts context property names into a generated function’s parameter list without validation or escaping and evaluates the resulting source using `vm.runInThisContext()`. A crafted property name can escape the parameter list and inject JavaScript code, even when the template file is fully trusted.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-126330" data-description="docker sandboxes can silently republish a sandbox service after an operator removes its automatically assigned host-port mapping. the daemon removes the active binding but retains the original publication request, allowing a later port change or sandbox restart to publish the service again on a new host port. an attacker able to reach the restored endpoint may regain access to the service. both tcp and udp mappings are affected. exposure is limited to the original bind address, which defaults to loopback. the issue is fixed in version 0.53.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126330" target="_blank">CVE-2026-126330</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Docker Sandboxes can silently republish a sandbox service after an operator removes its automatically assigned host-port mapping. The daemon removes the active binding but retains the original publication request, allowing a later port change or sandbox restart to publish the service again on a new host port. An attacker able to reach the restored endpoint may regain access to the service. Both TCP and UDP mappings are affected. Exposure is limited to the original bind address, which defaults to loopback. The issue is fixed in version 0.53.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-126329" data-description="docker sandboxes reuses existing state and configuration directories without verifying their ownership. if sbx or sandboxd is run as root with home or, on linux, xdg_state_home pointing to an attacker-controlled location, a local unprivileged user can substitute control-plane sockets and configuration trusted by the root process, potentially executing commands as root. exploitation requires a privileged invocation with an attacker-influenced environment. the issue affects linux and macos and is fixed in version 0.53.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126329" target="_blank">CVE-2026-126329</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 10:19:04 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Docker Sandboxes reuses existing state and configuration directories without verifying their ownership. If sbx or sandboxd is run as root with HOME or, on Linux, XDG_STATE_HOME pointing to an attacker-controlled location, a local unprivileged user can substitute control-plane sockets and configuration trusted by the root process, potentially executing commands as root. Exploitation requires a privileged invocation with an attacker-influenced environment. The issue affects Linux and macOS and is fixed in version 0.53.0.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-6467" data-description="uncontrolled search path element in postgresql create extension allows an attacker with database-level create privilege to execute arbitrary code as the bootstrap superuser, via alter schema ... rename or create extension ... schema "$user".  alter extension was also affected.  a trusted-extension script located the wrong object and executed arbitrary sql of the attacker's choice.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-6467" target="_blank">CVE-2026-6467</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-12 09:17:51 CDT</p>
@@ -88,110 +222,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.3</p>
                     <p>A security flaw has been discovered in JeecgBoot up to 3.9.5. This vulnerability affects the function OpenApiController.call of the file /openapi/call of the component Authentication Filter. The manipulation results in server-side request forgery. The attack can be executed remotely. The exploit has been released to the public and may be used for attacks. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-126997" data-description="a vulnerability was identified in jeecgboot up to 3.9.6. this affects the function resttemplate.exchange of the file org/jeecg/modules/airag/flow/c/a.class of the component flow-run endpoint. the manipulation leads to server-side request forgery. remote exploitation of the attack is possible. the exploit is publicly available and might be used. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126997" target="_blank">CVE-2026-126997</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:49 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was identified in JeecgBoot up to 3.9.6. This affects the function RestTemplate.exchange of the file org/jeecg/modules/airag/flow/c/a.class of the component flow-run Endpoint. The manipulation leads to server-side request forgery. Remote exploitation of the attack is possible. The exploit is publicly available and might be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-126996" data-description="a vulnerability was determined in sakanaai text-to-lora 0.0.1. affected by this issue is the function get_tokenizer of the file src/hyper_llm_modulator/utils/model_loading.py of the component checkpoint loading. executing a manipulation of the argument base_model_name_or_path can lead to path traversal. the attack may be launched remotely. the exploit has been publicly disclosed and may be utilized. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126996" target="_blank">CVE-2026-126996</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was determined in SakanaAI text-to-LoRA 0.0.1. Affected by this issue is the function get_tokenizer of the file src/hyper_llm_modulator/utils/model_loading.py of the component Checkpoint Loading. Executing a manipulation of the argument base_model_name_or_path can lead to path traversal. The attack may be launched remotely. The exploit has been publicly disclosed and may be utilized. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123790" data-description="comfyui-easy-use version 1.3.6 contains a path traversal vulnerability in the `save_preview()` handler for post `/easyuse/save/{name}`. the handler checks the source directory before appending a user-supplied filename and allows the request to select the `custom_nodes` directory as a copy destination. an unauthenticated attacker who can reach the comfyui server can overwrite an installed custom node’s python entry point with an uploaded file. when comfyui restarts and loads the modified node, the attacker’s code runs with the privileges of the comfyui process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123790" target="_blank">CVE-2026-123790</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>ComfyUI-Easy-Use version 1.3.6 contains a path traversal vulnerability in the `save_preview()` handler for POST `/easyuse/save/{name}`. The handler checks the source directory before appending a user-supplied filename and allows the request to select the `custom_nodes` directory as a copy destination. An unauthenticated attacker who can reach the ComfyUI server can overwrite an installed custom node’s Python entry point with an uploaded file. When ComfyUI restarts and loads the modified node, the attacker’s code runs with the privileges of the ComfyUI process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120154" data-description="improper protection in postgresql insert ... on conflict allows an attacker having insert, update, and applicable select privileges on the table to read every row despite row security policies, via iterated insert ... on conflict do update.  unlike cve-2026-16237, this does not facilitate improper writes.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120154" target="_blank">CVE-2026-120154</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Improper protection in PostgreSQL INSERT ... ON CONFLICT allows an attacker having INSERT, UPDATE, and applicable SELECT privileges on the table to read every row despite row security policies, via iterated INSERT ... ON CONFLICT DO UPDATE.  Unlike CVE-2026-16237, this does not facilitate improper writes.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120153" data-description="sql injection in postgresql extension-script substitutions allows an attacker with database-level create privilege to execute arbitrary code as the bootstrap superuser, via a schema or owner name containing newlines or other special substrings.  this is similar to cve-2023-39417, but it requires a non-bundled extension with a vulnerable script pattern.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120153" target="_blank">CVE-2026-120153</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>SQL injection in PostgreSQL extension-script substitutions allows an attacker with database-level CREATE privilege to execute arbitrary code as the bootstrap superuser, via a schema or owner name containing newlines or other special substrings.  This is similar to CVE-2023-39417, but it requires a non-bundled extension with a vulnerable script pattern.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120152" data-description="use after free in postgresql pg_show_all_settings() allows a database user to retrieve memory contents, via loading a module while the function is scanning custom-variable placeholders that the module replaces and frees.  within major versions 16-18, minor versions before postgresql 18.7, 17.12, and 16.16 are affected.  versions before postgresql 16 are unaffected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120152" target="_blank">CVE-2026-120152</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Use after free in PostgreSQL pg_show_all_settings() allows a database user to retrieve memory contents, via loading a module while the function is scanning custom-variable placeholders that the module replaces and frees.  Within major versions 16-18, minor versions before PostgreSQL 18.7, 17.12, and 16.16 are affected.  Versions before PostgreSQL 16 are unaffected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120151" data-description="type confusion in postgresql plpgsql record-field assignment allows an object creator to execute arbitrary code as the operating system user running the database, via a reentrant domain check that changes a record variable's row type while a value is being cast.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120151" target="_blank">CVE-2026-120151</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Type confusion in PostgreSQL plpgsql record-field assignment allows an object creator to execute arbitrary code as the operating system user running the database, via a reentrant domain CHECK that changes a RECORD variable's row type while a value is being cast.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120150" data-description="use after free in postgresql expanded-record domain checks allows an object creator to execute arbitrary code as the operating system user running the database, via repeated checks of a domain over a composite type that cause reuse of a dangling memory-context pointer.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120150" target="_blank">CVE-2026-120150</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Use after free in PostgreSQL expanded-record domain checks allows an object creator to execute arbitrary code as the operating system user running the database, via repeated checks of a domain over a composite type that cause reuse of a dangling memory-context pointer.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120149" data-description="heap-based buffer overflow in postgresql foreign batch inserts allows a foreign server to execute arbitrary code, via reporting that it inserted more rows than the server supplied.  postgres_fdw can legitimately encounter this when a rule on the remote table expands an insert into additional rows.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120149" target="_blank">CVE-2026-120149</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Heap-based buffer overflow in PostgreSQL foreign batch inserts allows a foreign server to execute arbitrary code, via reporting that it inserted more rows than the server supplied.  postgres_fdw can legitimately encounter this when a rule on the remote table expands an INSERT into additional rows.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120148" data-description="type confusion in postgresql extended statistics allows an object creator to execute arbitrary code as the operating system user running the database, via a statistics expression of an anonymous record type whose backend-local type identifier denotes a different row type in another session.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120148" target="_blank">CVE-2026-120148</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Type confusion in PostgreSQL extended statistics allows an object creator to execute arbitrary code as the operating system user running the database, via a statistics expression of an anonymous RECORD type whose backend-local type identifier denotes a different row type in another session.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120147" data-description="use after free in the postgresql dblink extension allows an object creator to execute arbitrary code as the operating system user running the database, via type conversion code that re-enters dblink and closes a connection whose results an outer dblink call is reading.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120147" target="_blank">CVE-2026-120147</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Use after free in the PostgreSQL dblink extension allows an object creator to execute arbitrary code as the operating system user running the database, via type conversion code that re-enters dblink and closes a connection whose results an outer dblink call is reading.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120146" data-description="missing authorization in postgresql reassign owned allows a role granted inherit but not set to transfer objects to the granted role.  it also allows reassignment of database ownership without the createdb privilege.  the equivalent alter ... owner commands block this.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120146" target="_blank">CVE-2026-120146</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Missing authorization in PostgreSQL REASSIGN OWNED allows a role granted INHERIT but not SET to transfer objects to the granted role.  It also allows reassignment of database ownership without the CREATEDB privilege.  The equivalent ALTER ... OWNER commands block this.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120145" data-description="missing authorization in postgresql logical replication allows a compromised publisher to execute arbitrary code as the operating system user running the superuser-owned subscription, via naming a system catalog as a replication target.  only subscriptions owned by a superuser are vulnerable.  versions before postgresql 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120145" target="_blank">CVE-2026-120145</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Missing authorization in PostgreSQL logical replication allows a compromised publisher to execute arbitrary code as the operating system user running the superuser-owned subscription, via naming a system catalog as a replication target.  Only subscriptions owned by a superuser are vulnerable.  Versions before PostgreSQL 18.7, 17.12, 16.16, 15.20, and 14.25 are affected.</p>
                 </div>
         
             </div>
