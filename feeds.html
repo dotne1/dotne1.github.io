@@ -34,200 +34,204 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-95518" data-description="time-of-check time-of-use (toctou) race condition vulnerability in tübi̇tak bi̇lgem yazılım teknolojileri araştırma enstitüsü pardus package installer allows leveraging time-of-check and time-of-use (toctou) race conditions.
+                <div class="cve-entry" data-cve-id="CVE-2026-92241" data-description="the avrcp browsing channel's l2cap receive-buffer callback, browsing_avrcp_l2cap_alloc_buf() in subsys/bluetooth/host/classic/avrcp.c, allocated from the shared avctp_browsing_rx_pool with k_forever. l2cap invokes that callback from the bluetooth rx work queue thread (bt_workq, "bt rx wq"), both for the head buffer of a new sdu and — through l2cap_br_alloc_frag() and net_buf_append_bytes() — for every further fragment of a reassembled sdu. that same thread is the only context that ever releases these buffers, after bt_l2cap_br_recv_seg() delivers a completed sdu and calls net_buf_unref(), so a wait taken there can never be satisfied.
 
-this issue affects pardus package installer: from 0.7.0 before 0.7.1.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95518" target="_blank">CVE-2026-95518</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>Time-of-check time-of-use (TOCTOU) race condition vulnerability in TÜBİTAK BİLGEM Yazılım Teknolojileri Araştırma Enstitüsü Pardus Package Installer allows Leveraging Time-of-Check and Time-of-Use (TOCTOU) Race Conditions.
+the pool holds config_bt_max_conn + 1 buffers of config_bt_avrcp_browsing_l2cap_mtu bytes (two buffers of 339 bytes in the default configuration). a connected browsing peer can drain it because bt_l2cap_br_recv_seg() in subsys/bluetooth/host/classic/l2cap_br.c accepts the sdu length declared in an sar_start segment without bounding it by br_chan->rx.mtu: a peer that announces a large sdu and then streams continuation segments forces one pool buffer per segment-worth of data. once the pool is empty the next allocation blocks forever inside the callback.
 
-This issue affects Pardus Package Installer: from 0.7.0 before 0.7.1.</p>
+triggering the flaw requires a build with config_bt_classic and the experimental config_bt_avrcp_browsing option, an application that registers avrcp callbacks, and a br/edr peer that has established the avrcp control channel and then the browsing channel, which requires an encrypted (paired) link. no malformed packet is needed — a few hundred bytes of ordinary segmented l2cap traffic suffice.
+
+the consequence is a permanent hang of the whole bluetooth host, not just of avrcp: the blocked thread drains bt_dev.rx_queue for all hci acl data and low-priority events and also runs the host's internal work items, so all connections stop being serviced and the state is unrecoverable without a reboot. there is no memory-corruption or information-disclosure component. the fix allocates with k_no_wait, so an empty pool now yields a local-busy indication or a channel disconnect that the application can recover from.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92241" target="_blank">CVE-2026-92241</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.7</p>
+                    <p>The AVRCP browsing channel's L2CAP receive-buffer callback, browsing_avrcp_l2cap_alloc_buf() in subsys/bluetooth/host/classic/avrcp.c, allocated from the shared avctp_browsing_rx_pool with K_FOREVER. L2CAP invokes that callback from the Bluetooth RX work queue thread (bt_workq, "BT RX WQ"), both for the head buffer of a new SDU and — through l2cap_br_alloc_frag() and net_buf_append_bytes() — for every further fragment of a reassembled SDU. That same thread is the only context that ever releases these buffers, after bt_l2cap_br_recv_seg() delivers a completed SDU and calls net_buf_unref(), so a wait taken there can never be satisfied.
+
+The pool holds CONFIG_BT_MAX_CONN + 1 buffers of CONFIG_BT_AVRCP_BROWSING_L2CAP_MTU bytes (two buffers of 339 bytes in the default configuration). A connected browsing peer can drain it because bt_l2cap_br_recv_seg() in subsys/bluetooth/host/classic/l2cap_br.c accepts the SDU length declared in an SAR_START segment without bounding it by br_chan->rx.mtu: a peer that announces a large SDU and then streams continuation segments forces one pool buffer per segment-worth of data. Once the pool is empty the next allocation blocks forever inside the callback.
+
+Triggering the flaw requires a build with CONFIG_BT_CLASSIC and the experimental CONFIG_BT_AVRCP_BROWSING option, an application that registers AVRCP callbacks, and a BR/EDR peer that has established the AVRCP control channel and then the browsing channel, which requires an encrypted (paired) link. No malformed packet is needed — a few hundred bytes of ordinary segmented L2CAP traffic suffice.
+
+The consequence is a permanent hang of the whole Bluetooth host, not just of AVRCP: the blocked thread drains bt_dev.rx_queue for all HCI ACL data and low-priority events and also runs the host's internal work items, so all connections stop being serviced and the state is unrecoverable without a reboot. There is no memory-corruption or information-disclosure component. The fix allocates with K_NO_WAIT, so an empty pool now yields a local-busy indication or a channel disconnect that the application can recover from.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86356" data-description="dell powerstore contains an authorization-bypass vulnerability that could lead to elevation of privilege to administrator.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86356" target="_blank">CVE-2026-86356</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:30 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-91094" data-description="a directory traversal bug was discovered when unpacking 3.0 (quilt) source packages, where the packaging tarball could contain the quilt database directory (.pc) with attacker controlled symlinks, where that in combination with patches that would fail to apply, could be used to make the code used to restore the backup files to either modify or remove the files pointed to by the attacker controlled symlinks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91094" target="_blank">CVE-2026-91094</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A directory traversal bug was discovered when unpacking 3.0 (quilt) source packages, where the packaging tarball could contain the quilt database directory (.pc) with attacker controlled symlinks, where that in combination with patches that would fail to apply, could be used to make the code used to restore the backup files to either modify or remove the files pointed to by the attacker controlled symlinks.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-86353" data-description="dell powerstore contains a use of a weak cryptographic algorithm vulnerability that could allow an attacker with existing privileged access to the appliance to recover stored credentials.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86353" target="_blank">CVE-2026-86353</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
+                    <p>Dell PowerStore contains a use of a weak cryptographic algorithm vulnerability that could allow an attacker with existing privileged access to the appliance to recover stored credentials.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82179" data-description="dell powerstore contains an authorization bypass vulnerability. an authenticated administrator could exploit this vulnerability to bypass multi-approver controls on critical operations.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82179" target="_blank">CVE-2026-82179</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
+                    <p>Dell PowerStore contains an authorization bypass vulnerability. An authenticated administrator could exploit this vulnerability to bypass multi-approver controls on critical operations.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82177" data-description="dell powerstore contains an os command injection vulnerability. a high-privileged attacker could exploit this vulnerability, potentially leading to arbitrary root command execution on the appliance.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82177" target="_blank">CVE-2026-82177</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
+                    <p>Dell PowerStore contains an OS Command Injection vulnerability. A high-privileged attacker could exploit this vulnerability, potentially leading to arbitrary root command execution on the appliance.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77706" data-description="improper handling of highly compressed data (data amplification) vulnerability in fileorbis bilişim hizmetleri ticaret anonim şirketi fileorbis nextgen fileserver allows sustained client engagement.
+
+this issue affects fileorbis nextgen fileserver: before 12.7.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77706" target="_blank">CVE-2026-77706</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper handling of highly compressed data (data amplification) vulnerability in Fileorbis Bilişim Hizmetleri Ticaret Anonim Şirketi FileOrbis NextGen FileServer allows Sustained Client Engagement.
+
+This issue affects FileOrbis NextGen FileServer: before 12.7.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-128790" data-description="in eclipse basyx go components versions up to and including 1.1.2, abac-enabled deployments of the submodel repository and the aas environment do not apply an access rule's `filterlist` fragment filters to single submodel reads.
+
+
+
+`get /submodels` removes the fields that a rule's `filterlist` hides, but `get /submodels/{submodelidentifier}` and `get /submodels/{submodelidentifier}/$metadata` return them unfiltered. an authenticated caller with read access to a submodel can therefore read fields that the access rules hide from them, for example `supplementalsemanticids` keys that name the other parties allowed to read the submodel.
+
+
+
+if versioning is enabled (`history.mode` set to `api` or `audit`), `get /submodels/{submodelidentifier}/$history` and `get /shells/{aasidentifier}/$history` in the submodel repository, aas repository and aas environment return the complete stored version without applying the rule's formula or fragment filters. a caller whose rules grant read on these routes can read fields that the access rules hide, and submodels and asset administration shells that the direct read does not return to them at all.
+
+
+
+the issue is fixed in eclipse basyx go components v1.1.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128790" target="_blank">CVE-2026-128790</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In Eclipse BaSyx Go Components versions up to and including 1.1.2, ABAC-enabled deployments of the Submodel Repository and the AAS Environment do not apply an access rule's `FILTERLIST` fragment filters to single Submodel reads.
+
+
+
+`GET /submodels` removes the fields that a rule's `FILTERLIST` hides, but `GET /submodels/{submodelIdentifier}` and `GET /submodels/{submodelIdentifier}/$metadata` return them unfiltered. An authenticated caller with READ access to a Submodel can therefore read fields that the access rules hide from them, for example `supplementalSemanticIds` keys that name the other parties allowed to read the Submodel.
+
+
+
+If versioning is enabled (`history.mode` set to `api` or `audit`), `GET /submodels/{submodelIdentifier}/$history` and `GET /shells/{aasIdentifier}/$history` in the Submodel Repository, AAS Repository and AAS Environment return the complete stored version without applying the rule's formula or fragment filters. A caller whose rules grant READ on these routes can read fields that the access rules hide, and Submodels and Asset Administration Shells that the direct read does not return to them at all.
+
+
+
+The issue is fixed in Eclipse BaSyx Go Components v1.1.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127125" data-description="p-net before 1.0.4 aborts the application relationship of an rpc session when a fragment of a response has been resent without being acknowledged, without checking that the session has an application relationship. a request for an existing application relationship that is sent on another activity than its connect, and gets a fragmented response, is handled on a session without one. if the response is not acknowledged, a null pointer is dereferenced and the device crashes. a conformant io-controller does not send such requests. the attacker must have observed the ar uuid of an established application relationship and requires adjacent network access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127125" target="_blank">CVE-2026-127125</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:55 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 aborts the Application Relationship of an RPC session when a fragment of a response has been resent without being acknowledged, without checking that the session has an Application Relationship. A request for an existing Application Relationship that is sent on another activity than its Connect, and gets a fragmented response, is handled on a session without one. If the response is not acknowledged, a NULL pointer is dereferenced and the device crashes. A conformant IO-controller does not send such requests. The attacker must have observed the AR UUID of an established Application Relationship and requires ADJACENT network access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127124" data-description="p-net before 1.0.4 keeps the rpc session that is allocated for a fragment of a request with an unknown activity uuid, without a timeout, when the rest of the request never arrives. a session that does not get an application relationship is also kept after the response. repeated fragments or requests with different activity uuids exhaust the available sessions, one udp packet per session. once they are exhausted the device no longer answers a connect request until it is restarted. an unauthenticated attacker with adjacent network access can use this to cause a denial of service.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127124" target="_blank">CVE-2026-127124</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 keeps the RPC session that is allocated for a fragment of a request with an unknown activity UUID, without a timeout, when the rest of the request never arrives. A session that does not get an Application Relationship is also kept after the response. Repeated fragments or requests with different activity UUIDs exhaust the available sessions, one UDP packet per session. Once they are exhausted the device no longer answers a Connect request until it is restarted. An unauthenticated attacker with ADJACENT network access can use this to cause a denial of service.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127123" data-description="p-net before 1.0.4 releases the application relationship of an rpc session, without the abort procedure, when a fragment of a request has another data representation (endianness) than the first fragment of the call. the application is not told that the application relationship is gone, the cyclic data stops, and the resources of the application relationship are left referencing a cleared structure. another host can then connect in its place. a host with adjacent network access that has observed the activity uuid of the connection, which is sent in clear in every rpc request, can do this with one pdu.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127123" target="_blank">CVE-2026-127123</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 releases the Application Relationship of an RPC session, without the abort procedure, when a fragment of a request has another data representation (endianness) than the first fragment of the call. The application is not told that the Application Relationship is gone, the cyclic data stops, and the resources of the Application Relationship are left referencing a cleared structure. Another host can then connect in its place. A host with ADJACENT network access that has observed the activity UUID of the connection, which is sent in clear in every RPC request, can do this with one PDU.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127122" data-description="p-net before 1.0.4 does not check the number of mcr request blocks in a connect request against the number of multicast communication relations that an application relationship has room for (pnet_max_mc_cr, 1 by default). each further block is written past the end of the array, into the rest of the application relationship and, with more blocks, into the following one. the written data comes from the request. no established application relationship is needed, and the attacker requires adjacent network access. builds with pnet_option_mc_cr disabled are not affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127122" target="_blank">CVE-2026-127122</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:54 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 does not check the number of MCR request blocks in a Connect request against the number of multicast communication relations that an Application Relationship has room for (PNET_MAX_MC_CR, 1 by default). Each further block is written past the end of the array, into the rest of the Application Relationship and, with more blocks, into the following one. The written data comes from the request. No established Application Relationship is needed, and the attacker requires ADJACENT network access. Builds with PNET_OPTION_MC_CR disabled are not affected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-125800" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in brainstorm force spectra ultimate-addons-for-gutenberg allows stored xss.this issue affects spectra: from n/a through 2.20.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125800" target="_blank">CVE-2026-125800</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Brainstorm Force Spectra ultimate-addons-for-gutenberg allows Stored XSS.This issue affects Spectra: from n/a through 2.20.5.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124762" data-description="p-net before 1.0.4 finds the rpc session of a received pdu by its activity uuid only, and a reject, fault or cancel pdu for the session aborts the application relationship, without checking that the pdu is the answer to a call of the device or where it comes from. a host with adjacent network access that has observed the activity uuid of the connection, which is sent in clear in every rpc request, can abort the application relationship with one pdu. it also allocates a session for an unknown activity uuid and changes the address stored for an existing session.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124762" target="_blank">CVE-2026-124762</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 finds the RPC session of a received PDU by its activity UUID only, and a reject, fault or cancel PDU for the session aborts the Application Relationship, without checking that the PDU is the answer to a call of the device or where it comes from. A host with ADJACENT network access that has observed the activity UUID of the connection, which is sent in clear in every RPC request, can abort the Application Relationship with one PDU. It also allocates a session for an unknown activity UUID and changes the address stored for an existing session.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124761" data-description="p-net before 1.0.4 copies the ip suite of a dcp set request to the current and the non-volatile configuration, and starts saving it, before the state of the device is checked. if the request is refused, for example because an application relationship is active, the configuration is not restored and is still saved. after a restart the device uses the refused address, and may not answer the controller or may use its address. a host with adjacent network access can use this while an application relationship is active.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124761" target="_blank">CVE-2026-124761</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 copies the IP suite of a DCP Set request to the current and the non-volatile configuration, and starts saving it, before the state of the device is checked. If the request is refused, for example because an Application Relationship is active, the configuration is not restored and is still saved. After a restart the device uses the refused address, and may not answer the controller or may use its address. A host with ADJACENT network access can use this while an Application Relationship is active.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124760" data-description="p-net before 1.0.4 sets the alarm receiver state to waiting for confirmation before the data of a received alarm notification is parsed. if the parsing fails the state is not restored, and later alarm notifications of the same priority are discarded without acknowledge until the application relationship is released. the application relationship and the cyclic data exchange keep working. the attacker must be able to send an alarm notification in the context of an established application relationship and requires adjacent network access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124760" target="_blank">CVE-2026-124760</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 sets the alarm receiver state to waiting for confirmation before the data of a received alarm notification is parsed. If the parsing fails the state is not restored, and later alarm notifications of the same priority are discarded without acknowledge until the Application Relationship is released. The Application Relationship and the cyclic data exchange keep working. The attacker must be able to send an alarm notification in the context of an established Application Relationship and requires ADJACENT network access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124759" data-description="p-net before 1.0.4 routes a received rta alarm frame to an application relationship using only the destination alarm reference in the frame, without checking the source of the frame. a host with adjacent network access can abort an established application relationship with a single alarm error frame, or deliver forged alarm notifications with chosen type, slot, subslot, usi and payload to the application.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124759" target="_blank">CVE-2026-124759</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 routes a received RTA alarm frame to an Application Relationship using only the destination alarm reference in the frame, without checking the source of the frame. A host with ADJACENT network access can abort an established Application Relationship with a single alarm ERROR frame, or deliver forged alarm notifications with chosen type, slot, subslot, USI and payload to the application.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124758" data-description="p-net before 1.0.4 does not check the record data length of an iodwrite request to a non-user record index against the size of the record block header. the 32-bit length is reduced by the header size before it is passed to the record handlers, so a length smaller than the header underflows and the handlers receive a data length of about 65530. the fixed-size reads of the i&m and pdport handlers can then read past the end of the session buffer. the result of the write is discarded. the attacker must have an established application relationship or be able to send in the context of one, and requires adjacent network access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124758" target="_blank">CVE-2026-124758</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>P-Net before 1.0.4 does not check the record data length of an IODWrite request to a non-user record index against the size of the record block header. The 32-bit length is reduced by the header size before it is passed to the record handlers, so a length smaller than the header underflows and the handlers receive a data length of about 65530. The fixed-size reads of the I&M and PDPort handlers can then read past the end of the session buffer. The result of the write is discarded. The attacker must have an established Application Relationship or be able to send in the context of one, and requires ADJACENT network access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-116413" data-description="dell powerstore contains a use-of-broken-cryptography vulnerability. a low-privileged attacker could exploit it to impersonate another identity, potentially leading to unauthorized access.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116413" target="_blank">CVE-2026-116413</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
+                    <p>Dell PowerStore contains a use-of-broken-cryptography vulnerability. A low-privileged attacker could exploit it to impersonate another identity, potentially leading to unauthorized access.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-116412" data-description="dell powerstore contains an insecure-file-permissions vulnerability. a local low-privileged attacker could exploit this vulnerability to disclose administrative credentials.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116412" target="_blank">CVE-2026-116412</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:48 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>Dell PowerStore contains an insecure-file-permissions vulnerability. A local low-privileged attacker could exploit this vulnerability to disclose administrative credentials.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-116411" data-description="dell powerstore contains a server-side request forgery (ssrf) vulnerability. an authenticated user with limited privileges could potentially exploit this vulnerability, potentially leading to information disclosure via requests to internal services.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116411" target="_blank">CVE-2026-116411</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:48 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Dell PowerStore contains an authorization-bypass vulnerability that could lead to elevation of privilege to administrator.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86355" data-description="dell powerstore contains an external control of file name or path vulnerability. a remote authenticated attacker could exploit this vulnerability, potentially leading to privilege escalation on the appliance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86355" target="_blank">CVE-2026-86355</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.3</p>
-                    <p>Dell PowerStore contains an External Control of File Name or Path vulnerability. A remote authenticated attacker could exploit this vulnerability, potentially leading to privilege escalation on the appliance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-128834" data-description="missing authorization vulnerability in brainstorm force spectra ultimate-addons-for-gutenberg allows exploiting incorrectly configured access control security levels.this issue affects spectra: from n/a through 2.20.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128834" target="_blank">CVE-2026-128834</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in Brainstorm Force Spectra ultimate-addons-for-gutenberg allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Spectra: from n/a through 2.20.5.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125833" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in yith yith woocommerce ajax product filter yith-woocommerce-ajax-navigation allows stored xss.this issue affects yith woocommerce ajax product filter: from n/a through 5.24.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125833" target="_blank">CVE-2026-125833</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in YITH YITH WooCommerce Ajax Product Filter yith-woocommerce-ajax-navigation allows Stored XSS.This issue affects YITH WooCommerce Ajax Product Filter: from n/a through 5.24.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125816" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in pt norther lights production mapsvg mapsvg-lite-interactive-vector-maps allows stored xss.this issue affects mapsvg: from n/a through 9.0.4.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125816" target="_blank">CVE-2026-125816</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in PT Norther Lights Production MapSVG mapsvg-lite-interactive-vector-maps allows Stored XSS.This issue affects MapSVG: from n/a through 9.0.4.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125815" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in noah hearle we’re open! opening-hours allows code injection.this issue affects we’re open!: from n/a through 2.8.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125815" target="_blank">CVE-2026-125815</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in Noah Hearle We’re Open! opening-hours allows Code Injection.This issue affects We’re Open!: from n/a through 2.8.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125814" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in rymera web co product feed pro for woocommerce woo-product-feed-pro allows code injection.this issue affects product feed pro for woocommerce: from n/a through 13.5.8.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125814" target="_blank">CVE-2026-125814</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in Rymera Web Co Product Feed PRO for WooCommerce woo-product-feed-pro allows Code Injection.This issue affects Product Feed PRO for WooCommerce: from n/a through 13.5.8.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125801" data-description="concurrent execution using shared resource with improper synchronization ('race condition') vulnerability in automattic woocommerce woocommerce allows leveraging race conditions.this issue affects woocommerce: from 11.0.0 through 11.2.2.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125801" target="_blank">CVE-2026-125801</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:18:21 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition') vulnerability in Automattic WooCommerce woocommerce allows Leveraging Race Conditions.This issue affects WooCommerce: from 11.0.0 through 11.2.2.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121771" data-description="insertion of sensitive information into sent data vulnerability in publishpress gutenberg blocks advanced-gutenberg allows retrieve embedded sensitive data.this issue affects gutenberg blocks: from n/a through 3.7.6.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121771" target="_blank">CVE-2026-121771</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Insertion of Sensitive Information Into Sent Data vulnerability in PublishPress Gutenberg Blocks advanced-gutenberg allows Retrieve Embedded Sensitive Data.This issue affects Gutenberg Blocks: from n/a through 3.7.6.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-121721" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in publishpress gutenberg blocks advanced-gutenberg allows stored xss.this issue affects gutenberg blocks: from n/a through 3.7.6.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-121721" target="_blank">CVE-2026-121721</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in PublishPress Gutenberg Blocks advanced-gutenberg allows Stored XSS.This issue affects Gutenberg Blocks: from n/a through 3.7.6.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-119518" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in wproyal royal elementor addons royal-elementor-addons allows stored xss.this issue affects royal elementor addons: from n/a through 1.7.1070.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119518" target="_blank">CVE-2026-119518</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in WProyal Royal Elementor Addons royal-elementor-addons allows Stored XSS.This issue affects Royal Elementor Addons: from n/a through 1.7.1070.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-112830" data-description="missing authorization vulnerability in brizy brizy brizy allows exploiting incorrectly configured access control security levels.this issue affects brizy: from n/a through 2.8.25.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112830" target="_blank">CVE-2026-112830</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Missing Authorization vulnerability in Brizy Brizy brizy allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Brizy: from n/a through 2.8.25.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-107526" data-description="dell powerstore contains an improper input validation vulnerability. an authenticated low-privileged attacker could exploit this vulnerability, potentially leading to stored cross-site scripting in the management interface.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107526" target="_blank">CVE-2026-107526</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
-                    <p>Dell PowerStore contains an improper input validation vulnerability. An authenticated low-privileged attacker could exploit this vulnerability, potentially leading to stored cross-site scripting in the management interface.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-107525" data-description="dell powerstore contains an information disclosure vulnerability. an unauthenticated attacker could exploit this vulnerability to obtain service metadata useful for further attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107525" target="_blank">CVE-2026-107525</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:40 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Dell PowerStore contains an information disclosure vulnerability. An unauthenticated attacker could exploit this vulnerability to obtain service metadata useful for further attacks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-105880" data-description="authorization bypass through user-controlled key vulnerability in tobias webinarignition webinar-ignition allows exploiting incorrectly configured access control security levels.this issue affects webinarignition: from n/a through 4.27.125.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105880" target="_blank">CVE-2026-105880</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:39 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>Authorization Bypass Through User-Controlled Key vulnerability in Tobias WebinarIgnition webinar-ignition allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects WebinarIgnition: from n/a through 4.27.125.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2025-41725" data-description="affected devices running firmware versions prior to 4.1.0 may crash and become unavailable when receiving specific malformed bluetooth messages from an unauthenticated attacker.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-41725" target="_blank">CVE-2025-41725</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 07:17:38 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Affected devices running firmware versions prior to 4.1.0 may crash and become unavailable when receiving specific malformed Bluetooth messages from an unauthenticated attacker.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-120221" data-description="in frrouting 8.4 and later, bgpd frees the same memory twice when dynamic bgp neighbors disconnect, if the peer-group used by a "bgp listen range" also has a site-of-origin configured ("neighbor pg soo"). each dynamic neighbor shares the peer-group's soo value instead of getting its own copy, but frees it as its own when the neighbor is deleted, which happens as soon as its connection closes. the first disconnect leaves the peer-group pointing at freed memory, and the second disconnect frees it again, causing bgpd to abort and drop all bgp sessions on the router. any host whose address falls inside the listen range can trigger this by opening and closing two tcp connections to the bgp port, without sending any bgp message and without knowing the as number, and can repeat it each time bgpd restarts. if the peer-group has a tcp-md5 password, only hosts that know the password can trigger it. two ordinary flaps of legitimate dynamic neighbors have the same effect. between the two frees, displaying the configuration ("show running-config") or establishing a dynamic neighbor also reads the freed memory, which can crash bgpd after a single disconnect. only configurations that combine a listen range with a soo on the same peer-group are affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120221" target="_blank">CVE-2026-120221</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 06:17:03 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In FRRouting 8.4 and later, bgpd frees the same memory twice when dynamic BGP neighbors disconnect, if the peer-group used by a "bgp listen range" also has a Site-of-Origin configured ("neighbor PG soo"). Each dynamic neighbor shares the peer-group's SoO value instead of getting its own copy, but frees it as its own when the neighbor is deleted, which happens as soon as its connection closes. The first disconnect leaves the peer-group pointing at freed memory, and the second disconnect frees it again, causing bgpd to abort and drop all BGP sessions on the router. Any host whose address falls inside the listen range can trigger this by opening and closing two TCP connections to the BGP port, without sending any BGP message and without knowing the AS number, and can repeat it each time bgpd restarts. If the peer-group has a TCP-MD5 password, only hosts that know the password can trigger it. Two ordinary flaps of legitimate dynamic neighbors have the same effect. Between the two frees, displaying the configuration ("show running-config") or establishing a dynamic neighbor also reads the freed memory, which can crash bgpd after a single disconnect. Only configurations that combine a listen range with a SoO on the same peer-group are affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125659" data-description="this vulnerability exists in the emudhra embridge due to missing authorization checks in the filebrowser api endpoints. these endpoints perform file system enumeration using the localsystem account without adequately validating the requesting caller's authorization. an unauthenticated attacker on the same lan could exploit this vulnerability by sending malicious webpage to the local https web api.
-
- 
-
-successful exploitation of this vulnerability could allow the attacker to enumerate file and directory names and obtain information about the directory structure of the targeted system. 
-
-
-
-the vulnerability however, does not provide access to file contents or permit file modification, deletion, or code execution, or access to cryptographic keys and hardware token pins.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125659" target="_blank">CVE-2026-125659</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 05:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>This vulnerability exists in the eMudhra emBridge due to missing authorization checks in the FileBrowser API endpoints. These endpoints perform file system enumeration using the LocalSystem account without adequately validating the requesting caller's authorization. An unauthenticated attacker on the same LAN could exploit this vulnerability by sending malicious webpage to the local HTTPS Web API.
-
- 
-
-Successful exploitation of this vulnerability could allow the attacker to enumerate file and directory names and obtain information about the directory structure of the targeted system. 
-
-
-
-The vulnerability however, does not provide access to file contents or permit file modification, deletion, or code execution, or access to cryptographic keys and hardware token PINs.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-123338" data-description="out-of-bounds write vulnerability in apache datasketches c++. an
-  application that deserializes a req sketch from an untrusted source
-  can have heap memory corrupted by a crafted sketch, because the
-  serialized compactor headers were not validated.
-
-  this issue affects apache datasketches c++: from 3.0.0 through 5.3.0.
-
-  users are recommended to upgrade to version 5.3.1, which fixes the
-  issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123338" target="_blank">CVE-2026-123338</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 05:17:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Out-of-bounds Write vulnerability in Apache DataSketches C++. An
-  application that deserializes a REQ sketch from an untrusted source
-  can have heap memory corrupted by a crafted sketch, because the
-  serialized compactor headers were not validated.
-
-  This issue affects Apache DataSketches C++: from 3.0.0 through 5.3.0.
-
-  Users are recommended to upgrade to version 5.3.1, which fixes the
-  issue.</p>
+                    <p>Dell PowerStore contains a Server-Side Request Forgery (SSRF) vulnerability. An authenticated user with limited privileges could potentially exploit this vulnerability, potentially leading to information disclosure via requests to internal services.</p>
                 </div>
         
             </div>
