@@ -34,6 +34,38 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-111342" data-description="memory overflow in ldap authentication can lead to unpredictable or erroneous behavior or denial of service in citrix netscaler adc and citrix netscaler gateway.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111342" target="_blank">CVE-2026-111342</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 22:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Memory overflow in LDAP authentication can lead to unpredictable or erroneous behavior or Denial of Service in Citrix NetScaler ADC and Citrix NetScaler Gateway.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-111341" data-description="memory overflow in client-certificate authentication can lead to unpredictable or erroneous behavior or denial of service in citrix netscaler adc and citrix netscaler gateway.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111341" target="_blank">CVE-2026-111341</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 22:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Memory overflow in client-certificate authentication can lead to unpredictable or erroneous behavior or Denial of Service in Citrix NetScaler ADC and Citrix NetScaler Gateway.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-111340" data-description="memory overflow in kba (knowledge-based authentication) can lead to unpredictable or erroneous behavior or denial of service in citrix netscaler adc and citrix netscaler gateway.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111340" target="_blank">CVE-2026-111340</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 22:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Memory overflow in KBA (knowledge-based authentication) can lead to unpredictable or erroneous behavior or Denial of Service in Citrix NetScaler ADC and Citrix NetScaler Gateway.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-107415" data-description="memory overflow in email otp authentication can lead to unpredictable or erroneous behavior or denial of service in citrix netscaler adc and citrix netscaler gateway.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107415" target="_blank">CVE-2026-107415</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-12 22:17:36 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Memory overflow in Email OTP authentication can lead to unpredictable or erroneous behavior or Denial of Service in Citrix NetScaler ADC and Citrix NetScaler Gateway.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-74911" data-description="software installed and run as a non-privileged user may conduct improper gpu system calls to the execution of an error path that triggers an oob read & write.
 
 
@@ -246,80 +278,6 @@ this weakens the confidentiality of image-encryption keys within the bootloader 
 The affected code is built when encrypted images (MCUBOOT_ENC_IMAGES, Zephyr CONFIG_BOOT_ENCRYPT_IMAGE) are combined with serial recovery. It runs when an encrypted image is uploaded to the primary slot over the recovery protocol, and when the image list or state is queried while an encrypted image is in the secondary slot. After these functions return, the image's AES content key remains in dead stack memory. An attacker who can later read device RAM, for example through a debug port or retained RAM, can recover it.
 
 This weakens the confidentiality of image-encryption keys within the bootloader trust boundary. A recovered key exposes the plaintext of the encrypted firmware image it protects. The device's long-term private decryption key is not exposed. No remote or recovery-protocol channel that returns this memory is known, so exploitation requires a separate memory-read capability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127916" data-description="bootutil_img_hash() computes the image digest over ih_hdr_size + ih_img_size + ih_protect_tlv_size bytes, all three taken from the candidate image's header, and reads that span out of the slot without checking that it fits in the flash area. the three sizes are also summed without an overflow check. nothing earlier on the validation path bounds the whole span either: bootutil_img_validate() compares the image size against bootutil_max_image_size() only after the hash has been computed.
-
-the callers bound part of the span, or none of it:
-
-on the swap and overwrite upgrade path, boot_validate_slot() first runs the image header check (boot_is_header_valid(), later boot_check_header_valid()). before mcuboot 2.2.0 that check covered only ih_hdr_size + ih_img_size, so for every image the protected-tlv area (ih_protect_tlv_size, a uint16_t, up to 65535 bytes) was hashed without being bounded. from 2.2.0 the check includes ih_protect_tlv_size, except for a compressed image in the secondary slot when mcuboot_decompress_images (config_boot_decompression) is enabled, which leaves the same gap of up to 64 kb.
-the serial recovery image-list and image-state handlers (bs_list() and bs_set() in boot/boot_serial/src/boot_serial.c) and zephyr's single-slot and firmware loaders (boot/zephyr/single_loader.c, boot/zephyr/firmware_loader.c) call bootutil_img_validate() with no header check at all, so on those paths ih_img_size is unbounded as well.
-
-the image is hashed before its signature is checked, so anyone who can place an image in a slot (an ota or smp update delivered through the application, or serial recovery) reaches this read before authentication.
-
-whether a malformed header produces an actual read beyond the area depends on the flash backend:
-
-backends whose flash_area_read() bounds-checks the request (zephyr, espressif, nuttx, mbed) return an error once the chunked read crosses the end of the area. validation fails and the image is rejected, with no over-read.
-with mcuboot_hash_storage_directly (zephyr config_boot_img_hash_directly_on_storage, available from 2.2.0, not enabled by default) the span is hashed through a single direct pointer into memory-mapped flash, with no bounds check.
-the cypress psoc6 port's flash_area_read() (boot/cypress/cy_flash_pal/cy_flash_map.c, from 1.6.0) does not bound the read: its assert()s compare against the area's absolute offset rather than its size, and it copies with memcpy().
-
-the bytes read past the area feed only the digest, which is compared internally and never returned, so nothing is disclosed. the realistic effect is a read fault during image validation: up to 64 kb past the slot on the upgrade path, and potentially much further on the paths that skip the header check. where validation is repeated at every boot (a pending upgrade, or the single-slot loader checking its image), the fault can recur on each reset and keep the device from booting.
-
-the fix makes bootutil_img_hash() add the three sizes with boot_u32_safe_add() and reject an image whose span, including the sector offset used in swap-using-offset mode, does not fit in the flash area, before any of it is hashed. because the bound is applied where the bytes are read, it covers every caller.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127916" target="_blank">CVE-2026-127916</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 20:18:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.9</p>
-                    <p>bootutil_img_hash() computes the image digest over ih_hdr_size + ih_img_size + ih_protect_tlv_size bytes, all three taken from the candidate image's header, and reads that span out of the slot without checking that it fits in the flash area. The three sizes are also summed without an overflow check. Nothing earlier on the validation path bounds the whole span either: bootutil_img_validate() compares the image size against bootutil_max_image_size() only after the hash has been computed.
-
-The callers bound part of the span, or none of it:
-
-On the swap and overwrite upgrade path, boot_validate_slot() first runs the image header check (boot_is_header_valid(), later boot_check_header_valid()). Before MCUboot 2.2.0 that check covered only ih_hdr_size + ih_img_size, so for every image the protected-TLV area (ih_protect_tlv_size, a uint16_t, up to 65535 bytes) was hashed without being bounded. From 2.2.0 the check includes ih_protect_tlv_size, except for a compressed image in the secondary slot when MCUBOOT_DECOMPRESS_IMAGES (CONFIG_BOOT_DECOMPRESSION) is enabled, which leaves the same gap of up to 64 KB.
-The serial recovery image-list and image-state handlers (bs_list() and bs_set() in boot/boot_serial/src/boot_serial.c) and Zephyr's single-slot and firmware loaders (boot/zephyr/single_loader.c, boot/zephyr/firmware_loader.c) call bootutil_img_validate() with no header check at all, so on those paths ih_img_size is unbounded as well.
-
-The image is hashed before its signature is checked, so anyone who can place an image in a slot (an OTA or SMP update delivered through the application, or serial recovery) reaches this read before authentication.
-
-Whether a malformed header produces an actual read beyond the area depends on the flash backend:
-
-Backends whose flash_area_read() bounds-checks the request (Zephyr, Espressif, NuttX, Mbed) return an error once the chunked read crosses the end of the area. Validation fails and the image is rejected, with no over-read.
-With MCUBOOT_HASH_STORAGE_DIRECTLY (Zephyr CONFIG_BOOT_IMG_HASH_DIRECTLY_ON_STORAGE, available from 2.2.0, not enabled by default) the span is hashed through a single direct pointer into memory-mapped flash, with no bounds check.
-The Cypress PSoC6 port's flash_area_read() (boot/cypress/cy_flash_pal/cy_flash_map.c, from 1.6.0) does not bound the read: its assert()s compare against the area's absolute offset rather than its size, and it copies with memcpy().
-
-The bytes read past the area feed only the digest, which is compared internally and never returned, so nothing is disclosed. The realistic effect is a read fault during image validation: up to 64 KB past the slot on the upgrade path, and potentially much further on the paths that skip the header check. Where validation is repeated at every boot (a pending upgrade, or the single-slot loader checking its image), the fault can recur on each reset and keep the device from booting.
-
-The fix makes bootutil_img_hash() add the three sizes with boot_u32_safe_add() and reject an image whose span, including the sector offset used in swap-using-offset mode, does not fit in the flash area, before any of it is hashed. Because the bound is applied where the bytes are read, it covers every caller.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127915" data-description="the mcuboot tlv iterator bootutil_tlv_iter_next() in boot/bootutil/src/tlv.c walks image trailer tlvs with a single loop guard (it->tlv_off < it->tlv_end) and advances by sizeof(struct image_tlv) + tlv.it_len using the attacker-controlled it_len field, without validating that the entry's header or payload stays within it->tlv_end. as a result the 4-byte header read can extend up to 3 bytes past the declared tlv area, and the returned (off, len) can describe a payload that runs past it.
-
-the path is pre-authentication: tlvs are parsed during bootutil_img_validate() before the signature is verified, and a crafted image can be presented through dfu / serial-recovery / ota. however the impact is contained by surrounding guards: bootutil_img_validate() first rejects a tlv area larger than bootutil_max_image_size(), the default load_image_data sink is flash_area_read() which bounds-checks against the flash partition and fails an out-of-partition read, and every payload consumer (expected_hash_tlv, expected_key_tlv, expected_sig_tlv, image_tlv_sec_cnt) clamps len against a fixed buffer before copying.
-
-the residual effect in a default flash build is therefore an out-of-region read confined to the attacker's own slot partition whose result is never observable, yielding at worst a clean validation failure rather than memory corruption or information disclosure. a genuine (though still bounded) out-of-bounds read remains under the non-default mcuboot_ram_load configuration, where load_image_data is an unchecked memcpy. the fix is to validate each entry's header and payload against it->tlv_end inside the iterator.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127915" target="_blank">CVE-2026-127915</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 20:18:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.0</p>
-                    <p>The MCUboot TLV iterator bootutil_tlv_iter_next() in boot/bootutil/src/tlv.c walks image trailer TLVs with a single loop guard (it->tlv_off < it->tlv_end) and advances by sizeof(struct image_tlv) + tlv.it_len using the attacker-controlled it_len field, without validating that the entry's header or payload stays within it->tlv_end. As a result the 4-byte header read can extend up to 3 bytes past the declared TLV area, and the returned (off, len) can describe a payload that runs past it.
-
-The path is pre-authentication: TLVs are parsed during bootutil_img_validate() before the signature is verified, and a crafted image can be presented through DFU / serial-recovery / OTA. However the impact is contained by surrounding guards: bootutil_img_validate() first rejects a TLV area larger than bootutil_max_image_size(), the default LOAD_IMAGE_DATA sink is flash_area_read() which bounds-checks against the flash partition and fails an out-of-partition read, and every payload consumer (EXPECTED_HASH_TLV, EXPECTED_KEY_TLV, EXPECTED_SIG_TLV, IMAGE_TLV_SEC_CNT) clamps len against a fixed buffer before copying.
-
-The residual effect in a default flash build is therefore an out-of-region read confined to the attacker's own slot partition whose result is never observable, yielding at worst a clean validation failure rather than memory corruption or information disclosure. A genuine (though still bounded) out-of-bounds read remains under the non-default MCUBOOT_RAM_LOAD configuration, where LOAD_IMAGE_DATA is an unchecked memcpy. The fix is to validate each entry's header and payload against it->tlv_end inside the iterator.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127284" data-description="a security flaw has been discovered in sourcecodester food ordering system 1.0. this affects an unknown part of the file admin/add_category.php of the component admin write handler. performing a manipulation of the argument title/description/price/current_image/featured/active/id results in sql injection. it is possible to initiate the attack remotely. the exploit has been released to the public and may be used for attacks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127284" target="_blank">CVE-2026-127284</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 20:18:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A security flaw has been discovered in SourceCodester Food Ordering System 1.0. This affects an unknown part of the file admin/add_category.php of the component Admin Write Handler. Performing a manipulation of the argument title/description/price/current_image/featured/active/id results in sql injection. It is possible to initiate the attack remotely. The exploit has been released to the public and may be used for attacks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127283" data-description="a vulnerability was identified in sourcecodester food ordering system 1.0. affected by this issue is some unknown functionality of the file admin/update_food.php of the component admin image handler. such manipulation of the argument cmd leads to unrestricted upload. the attack may be performed from remote. the exploit is publicly available and might be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127283" target="_blank">CVE-2026-127283</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-12 20:18:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was identified in SourceCodester Food Ordering System 1.0. Affected by this issue is some unknown functionality of the file admin/update_food.php of the component Admin Image Handler. Such manipulation of the argument cmd leads to unrestricted upload. The attack may be performed from remote. The exploit is publicly available and might be used.</p>
                 </div>
         
             </div>
