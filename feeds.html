@@ -34,204 +34,188 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-92241" data-description="the avrcp browsing channel's l2cap receive-buffer callback, browsing_avrcp_l2cap_alloc_buf() in subsys/bluetooth/host/classic/avrcp.c, allocated from the shared avctp_browsing_rx_pool with k_forever. l2cap invokes that callback from the bluetooth rx work queue thread (bt_workq, "bt rx wq"), both for the head buffer of a new sdu and — through l2cap_br_alloc_frag() and net_buf_append_bytes() — for every further fragment of a reassembled sdu. that same thread is the only context that ever releases these buffers, after bt_l2cap_br_recv_seg() delivers a completed sdu and calls net_buf_unref(), so a wait taken there can never be satisfied.
-
-the pool holds config_bt_max_conn + 1 buffers of config_bt_avrcp_browsing_l2cap_mtu bytes (two buffers of 339 bytes in the default configuration). a connected browsing peer can drain it because bt_l2cap_br_recv_seg() in subsys/bluetooth/host/classic/l2cap_br.c accepts the sdu length declared in an sar_start segment without bounding it by br_chan->rx.mtu: a peer that announces a large sdu and then streams continuation segments forces one pool buffer per segment-worth of data. once the pool is empty the next allocation blocks forever inside the callback.
-
-triggering the flaw requires a build with config_bt_classic and the experimental config_bt_avrcp_browsing option, an application that registers avrcp callbacks, and a br/edr peer that has established the avrcp control channel and then the browsing channel, which requires an encrypted (paired) link. no malformed packet is needed — a few hundred bytes of ordinary segmented l2cap traffic suffice.
-
-the consequence is a permanent hang of the whole bluetooth host, not just of avrcp: the blocked thread drains bt_dev.rx_queue for all hci acl data and low-priority events and also runs the host's internal work items, so all connections stop being serviced and the state is unrecoverable without a reboot. there is no memory-corruption or information-disclosure component. the fix allocates with k_no_wait, so an empty pool now yields a local-busy indication or a channel disconnect that the application can recover from.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-92241" target="_blank">CVE-2026-92241</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:01 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.7</p>
-                    <p>The AVRCP browsing channel's L2CAP receive-buffer callback, browsing_avrcp_l2cap_alloc_buf() in subsys/bluetooth/host/classic/avrcp.c, allocated from the shared avctp_browsing_rx_pool with K_FOREVER. L2CAP invokes that callback from the Bluetooth RX work queue thread (bt_workq, "BT RX WQ"), both for the head buffer of a new SDU and — through l2cap_br_alloc_frag() and net_buf_append_bytes() — for every further fragment of a reassembled SDU. That same thread is the only context that ever releases these buffers, after bt_l2cap_br_recv_seg() delivers a completed SDU and calls net_buf_unref(), so a wait taken there can never be satisfied.
-
-The pool holds CONFIG_BT_MAX_CONN + 1 buffers of CONFIG_BT_AVRCP_BROWSING_L2CAP_MTU bytes (two buffers of 339 bytes in the default configuration). A connected browsing peer can drain it because bt_l2cap_br_recv_seg() in subsys/bluetooth/host/classic/l2cap_br.c accepts the SDU length declared in an SAR_START segment without bounding it by br_chan->rx.mtu: a peer that announces a large SDU and then streams continuation segments forces one pool buffer per segment-worth of data. Once the pool is empty the next allocation blocks forever inside the callback.
-
-Triggering the flaw requires a build with CONFIG_BT_CLASSIC and the experimental CONFIG_BT_AVRCP_BROWSING option, an application that registers AVRCP callbacks, and a BR/EDR peer that has established the AVRCP control channel and then the browsing channel, which requires an encrypted (paired) link. No malformed packet is needed — a few hundred bytes of ordinary segmented L2CAP traffic suffice.
-
-The consequence is a permanent hang of the whole Bluetooth host, not just of AVRCP: the blocked thread drains bt_dev.rx_queue for all HCI ACL data and low-priority events and also runs the host's internal work items, so all connections stop being serviced and the state is unrecoverable without a reboot. There is no memory-corruption or information-disclosure component. The fix allocates with K_NO_WAIT, so an empty pool now yields a local-busy indication or a channel disconnect that the application can recover from.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-91094" data-description="a directory traversal bug was discovered when unpacking 3.0 (quilt) source packages, where the packaging tarball could contain the quilt database directory (.pc) with attacker controlled symlinks, where that in combination with patches that would fail to apply, could be used to make the code used to restore the backup files to either modify or remove the files pointed to by the attacker controlled symlinks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-91094" target="_blank">CVE-2026-91094</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:01 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95615" data-description="os command injection vulnerability in audio messages api in zenitel connect before 1.11.0 allows remote authenticated users to execute arbitrary os commands as root in the hiatus application container via filename parameter to the /api/system/audio_messages endpoint.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95615" target="_blank">CVE-2026-95615</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:38 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A directory traversal bug was discovered when unpacking 3.0 (quilt) source packages, where the packaging tarball could contain the quilt database directory (.pc) with attacker controlled symlinks, where that in combination with patches that would fail to apply, could be used to make the code used to restore the backup files to either modify or remove the files pointed to by the attacker controlled symlinks.</p>
+                    <p>OS command injection vulnerability in audio messages API in Zenitel Connect before 1.11.0 allows remote authenticated users to execute arbitrary OS commands as root in the hiatus application container via filename parameter to the /api/system/audio_messages endpoint.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-86353" data-description="dell powerstore contains a use of a weak cryptographic algorithm vulnerability that could allow an attacker with existing privileged access to the appliance to recover stored credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86353" target="_blank">CVE-2026-86353</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
-                    <p>Dell PowerStore contains a use of a weak cryptographic algorithm vulnerability that could allow an attacker with existing privileged access to the appliance to recover stored credentials.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95614" data-description="the host configuration watcher in zenitel connect before 1.11.0 applies a rsyslog configuration file written to a data volume that is shared with the hiatus application container, which allows local attackers with write access to the hiatus container filesystem to execute arbitrary os commands as root on the host operating system via a crafted rsyslog configuration file.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95614" target="_blank">CVE-2026-95614</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The host configuration watcher in Zenitel Connect before 1.11.0 applies a rsyslog configuration file written to a data volume that is shared with the hiatus application container, which allows local attackers with write access to the hiatus container filesystem to execute arbitrary OS commands as root on the host operating system via a crafted rsyslog configuration file.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-82179" data-description="dell powerstore contains an authorization bypass vulnerability. an authenticated administrator could exploit this vulnerability to bypass multi-approver controls on critical operations.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82179" target="_blank">CVE-2026-82179</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>Dell PowerStore contains an authorization bypass vulnerability. An authenticated administrator could exploit this vulnerability to bypass multi-approver controls on critical operations.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95613" data-description="the prest database rest api in zenitel connect firmware before 1.11.0 signs and verifies jwts with the platform ca private key, which is stored on a data volume shared between containers, and sets the postgresql session role from the unvalidated sub claim of each request while connected to the database as the "postgres" superuser, which allows local attackers who can read the platform ca private key from the container filesystem to execute database operations as the postgresql superuser, including reading the master encryption key and password hashes, via a forged jwt with sub=postgres sent to the prest api.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95613" target="_blank">CVE-2026-95613</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The pREST database REST API in Zenitel Connect firmware before 1.11.0 signs and verifies JWTs with the platform CA private key, which is stored on a data volume shared between containers, and sets the PostgreSQL session role from the unvalidated sub claim of each request while connected to the database as the "postgres" superuser, which allows local attackers who can read the platform CA private key from the container filesystem to execute database operations as the PostgreSQL superuser, including reading the master encryption key and password hashes, via a forged JWT with sub=postgres sent to the pREST API.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-82177" data-description="dell powerstore contains an os command injection vulnerability. a high-privileged attacker could exploit this vulnerability, potentially leading to arbitrary root command execution on the appliance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82177" target="_blank">CVE-2026-82177</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>Dell PowerStore contains an OS Command Injection vulnerability. A high-privileged attacker could exploit this vulnerability, potentially leading to arbitrary root command execution on the appliance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-77706" data-description="improper handling of highly compressed data (data amplification) vulnerability in fileorbis bilişim hizmetleri ticaret anonim şirketi fileorbis nextgen fileserver allows sustained client engagement.
+                <div class="cve-entry" data-cve-id="CVE-2026-95379" data-description="path traversal in the certificate.deletecertificate json-rpc method (post /api/rpc) of the turbineweb web interface in zenitel vsff6, vsff8, vsff8mp, vsff8mn, and vsft devices with software versions from 10.0.3.0 before 10.1.3.0 allows authenticated administrators to delete arbitrary files as root via a relative path (../) in the file_name parameter.
 
-this issue affects fileorbis nextgen fileserver: before 12.7.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77706" target="_blank">CVE-2026-77706</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:18:00 CDT</p>
+
+
+this can be used to cause denial of service or render the device inoperable by removing critical system files, and to weaken device security by removing files such as firewall rules or certificate trust stores.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95379" target="_blank">CVE-2026-95379</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Path traversal in the certificate.deleteCertificate JSON-RPC method (POST /api/rpc) of the turbineweb web interface in Zenitel VSFF6, VSFF8, VSFF8MP, VSFF8MN, and VSFT devices with software versions from 10.0.3.0 before 10.1.3.0 allows authenticated administrators to delete arbitrary files as root via a relative path (../) in the file_name parameter.
+
+
+
+This can be used to cause denial of service or render the device inoperable by removing critical system files, and to weaken device security by removing files such as firewall rules or certificate trust stores.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95378" data-description="path traversal in the certificate upload endpoint (/api/certificate/upload) of the turbineweb web interface in zenitel vsff6, vsff8, vsff8mp, vsff8mn, and vsft devices with software versions from 10.0.3.0 before 10.1.3.0 allows authenticated administrators to write arbitrary files as root via a crafted filename parameter in a multipart upload request when the type field is set to any value other than https_certificate. in that case, both path validation and certificate content validation are skipped.
+
+
+
+this can be escalated to arbitrary code execution as root, for example by overwriting startup scripts or planting ssh keys.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95378" target="_blank">CVE-2026-95378</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Path traversal in the certificate upload endpoint (/api/certificate/upload) of the turbineweb web interface in Zenitel VSFF6, VSFF8, VSFF8MP, VSFF8MN, and VSFT devices with software versions from 10.0.3.0 before 10.1.3.0 allows authenticated administrators to write arbitrary files as root via a crafted filename parameter in a multipart upload request when the type field is set to any value other than https_certificate. In that case, both path validation and certificate content validation are skipped.
+
+
+
+This can be escalated to arbitrary code execution as root, for example by overwriting startup scripts or planting SSH keys.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95377" data-description="os command injection in the tftp provisioning module of zenitel edgeaudioclient before 9.6.3.0, and 10.x before 10.1.3.0, on vsff6, vsff8, vsff8mp, vsff8mn, and vsft devices allows unauthenticated adjacent attackers to execute arbitrary commands as root via a crafted dhcp option 66 (tftp server name) value supplied by a rogue dhcp server on the same network segment. the dhcp-supplied value is passed to a shell without sanitization. devices using dhcp, the default configuration, are affected on every boot and lease renewal.
+
+
+
+the same injection is also reachable via the config_update_tftp_server and sw_update_tftp_server configuration fields by an attacker able to modify the device configuration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95377" target="_blank">CVE-2026-95377</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>OS command injection in the TFTP provisioning module of Zenitel EdgeAudioClient before 9.6.3.0, and 10.x before 10.1.3.0, on VSFF6, VSFF8, VSFF8MP, VSFF8MN, and VSFT devices allows unauthenticated adjacent attackers to execute arbitrary commands as root via a crafted DHCP option 66 (TFTP Server Name) value supplied by a rogue DHCP server on the same network segment. The DHCP-supplied value is passed to a shell without sanitization. Devices using DHCP, the default configuration, are affected on every boot and lease renewal.
+
+
+
+The same injection is also reachable via the config_update_tftp_server and sw_update_tftp_server configuration fields by an attacker able to modify the device configuration.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82174" data-description="dell powerstore contains a content-injection vulnerability. an unauthenticated attacker could exploit this vulnerability to display misleading text on the genuine login page for phishing.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82174" target="_blank">CVE-2026-82174</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Dell PowerStore contains a content-injection vulnerability. An unauthenticated attacker could exploit this vulnerability to display misleading text on the genuine login page for phishing.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-63079" data-description="rbh access technologies integra32 security management system 5.1.11 r5.0 contains an unauthenticated deserialization vulnerability in its deprecated .net remoting service, exposed on tcp port 2001 via the axcvclt.dll library using binaryserverformattersinkprovider at typefilterlevel.full without requiring authentication. a remote unauthenticated attacker can send a malicious serialized gadget payload (such as a ysoserial.net typeconfusedelegate chain) to the integrauri object endpoint, or exploit marshalbyrefobject/marshalbyvalue unmarshalling for arbitrary file read/write and smb/ntlmv2 credential coercion, to achieve remote code execution as nt authority\system and fully compromise the host.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63079" target="_blank">CVE-2026-63079</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:30 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>RBH Access Technologies Integra32 Security Management System 5.1.11 R5.0 contains an unauthenticated deserialization vulnerability in its deprecated .NET Remoting service, exposed on TCP port 2001 via the AxcvcLt.dll library using BinaryServerFormatterSinkProvider at TypeFilterLevel.Full without requiring authentication. A remote unauthenticated attacker can send a malicious serialized gadget payload (such as a ysoserial.net TypeConfuseDelegate chain) to the IntegraURI object endpoint, or exploit MarshalByRefObject/MarshalByValue unmarshalling for arbitrary file read/write and SMB/NTLMv2 credential coercion, to achieve remote code execution as NT AUTHORITY\SYSTEM and fully compromise the host.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-62974" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, a malformed but non-empty bacnet writeproperty request can drive the official server demo into a non-terminating request-processing loop with repeated heap-backed side effects. this results in a remote unauthenticated denial of service via uncontrolled resource consumption and a non-terminating request path. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62974" target="_blank">CVE-2026-62974</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:29 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, a malformed but non-empty BACnet WriteProperty request can drive the official server demo into a non-terminating request-processing loop with repeated heap-backed side effects. This results in a remote unauthenticated denial of service via uncontrolled resource consumption and a non-terminating request path. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-62973" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, a remote out-of-bounds read exists in the official bacnet client application apps/readpropm in bacnet-stack commit e2bdbf6. when readpropm sends a legitimate readpropertymultiple request to a malicious bacnet/ip peer, the peer can reply with a malformed but structurally valid readpropertymultiple-ack that drives the client into a global-buffer-overflow read on the global receive buffer rx_buf. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62973" target="_blank">CVE-2026-62973</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, a remote out-of-bounds read exists in the official BACnet client application apps/readpropm in bacnet-stack commit e2bdbf6. When readpropm sends a legitimate ReadPropertyMultiple request to a malicious BACnet/IP peer, the peer can reply with a malformed but structurally valid ReadPropertyMultiple-ACK that drives the client into a global-buffer-overflow read on the global receive buffer Rx_Buf. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-62972" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, lighting_command_decode in src/bacnet/lighting.c decodes its first field with the bounded apdu_size - apdu_len, but every nested decode in the operation switch is called with the original full apdu_size while the read pointer has been advanced to &apdu[apdu_len]. the leaf decoders bound their reads against the size they are told, so they read up to apdu_len bytes past the end of the caller's buffer, resulting in an out-of-bounds read. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-62972" target="_blank">CVE-2026-62972</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:28 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, lighting_command_decode in src/bacnet/lighting.c decodes its first field with the bounded apdu_size - apdu_len, but every nested decode in the operation switch is called with the original full apdu_size while the read pointer has been advanced to &apdu[apdu_len]. The leaf decoders bound their reads against the size they are told, so they read up to apdu_len bytes past the end of the caller's buffer, resulting in an out-of-bounds read. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58498" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, there is a remote global-buffer-overflow in the official router-ipv6 application shipped with bacnet-stack, this results in an out-of-bounds write to the global transmit buffer under asan. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58498" target="_blank">CVE-2026-58498</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.6</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, there is a remote global-buffer-overflow in the official router-ipv6 application shipped with bacnet-stack, this results in an out-of-bounds write to the global transmit buffer under ASan. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-58265" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, a bacnet/sc peer can trigger a heap out-of-bounds read (up to 3 bytes), pre-authentication, in the bacnet/sc header-option decoder. bvlc_sc_decode_proprietary_option() reads the vendor-id and option-type at fixed offsets [3],[4],[5] before checking the option's declared header length, and the option-list validator never enforces a minimum length for proprietary options. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-58265" target="_blank">CVE-2026-58265</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:12 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper handling of highly compressed data (data amplification) vulnerability in Fileorbis Bilişim Hizmetleri Ticaret Anonim Şirketi FileOrbis NextGen FileServer allows Sustained Client Engagement.
-
-This issue affects FileOrbis NextGen FileServer: before 12.7.</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, a BACnet/SC peer can trigger a heap out-of-bounds read (up to 3 bytes), pre-authentication, in the BACnet/SC header-option decoder. bvlc_sc_decode_proprietary_option() reads the vendor-id and option-type at fixed offsets [3],[4],[5] before checking the option's declared header length, and the option-list validator never enforces a minimum length for proprietary options. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-128790" data-description="in eclipse basyx go components versions up to and including 1.1.2, abac-enabled deployments of the submodel repository and the aas environment do not apply an access rule's `filterlist` fragment filters to single submodel reads.
-
-
-
-`get /submodels` removes the fields that a rule's `filterlist` hides, but `get /submodels/{submodelidentifier}` and `get /submodels/{submodelidentifier}/$metadata` return them unfiltered. an authenticated caller with read access to a submodel can therefore read fields that the access rules hide from them, for example `supplementalsemanticids` keys that name the other parties allowed to read the submodel.
-
-
-
-if versioning is enabled (`history.mode` set to `api` or `audit`), `get /submodels/{submodelidentifier}/$history` and `get /shells/{aasidentifier}/$history` in the submodel repository, aas repository and aas environment return the complete stored version without applying the rule's formula or fragment filters. a caller whose rules grant read on these routes can read fields that the access rules hide, and submodels and asset administration shells that the direct read does not return to them at all.
-
-
-
-the issue is fixed in eclipse basyx go components v1.1.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128790" target="_blank">CVE-2026-128790</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In Eclipse BaSyx Go Components versions up to and including 1.1.2, ABAC-enabled deployments of the Submodel Repository and the AAS Environment do not apply an access rule's `FILTERLIST` fragment filters to single Submodel reads.
-
-
-
-`GET /submodels` removes the fields that a rule's `FILTERLIST` hides, but `GET /submodels/{submodelIdentifier}` and `GET /submodels/{submodelIdentifier}/$metadata` return them unfiltered. An authenticated caller with READ access to a Submodel can therefore read fields that the access rules hide from them, for example `supplementalSemanticIds` keys that name the other parties allowed to read the Submodel.
-
-
-
-If versioning is enabled (`history.mode` set to `api` or `audit`), `GET /submodels/{submodelIdentifier}/$history` and `GET /shells/{aasIdentifier}/$history` in the Submodel Repository, AAS Repository and AAS Environment return the complete stored version without applying the rule's formula or fragment filters. A caller whose rules grant READ on these routes can read fields that the access rules hide, and Submodels and Asset Administration Shells that the direct read does not return to them at all.
-
-
-
-The issue is fixed in Eclipse BaSyx Go Components v1.1.3.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127125" data-description="p-net before 1.0.4 aborts the application relationship of an rpc session when a fragment of a response has been resent without being acknowledged, without checking that the session has an application relationship. a request for an existing application relationship that is sent on another activity than its connect, and gets a fragmented response, is handled on a session without one. if the response is not acknowledged, a null pointer is dereferenced and the device crashes. a conformant io-controller does not send such requests. the attacker must have observed the ar uuid of an established application relationship and requires adjacent network access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127125" target="_blank">CVE-2026-127125</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 aborts the Application Relationship of an RPC session when a fragment of a response has been resent without being acknowledged, without checking that the session has an Application Relationship. A request for an existing Application Relationship that is sent on another activity than its Connect, and gets a fragmented response, is handled on a session without one. If the response is not acknowledged, a NULL pointer is dereferenced and the device crashes. A conformant IO-controller does not send such requests. The attacker must have observed the AR UUID of an established Application Relationship and requires ADJACENT network access.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127124" data-description="p-net before 1.0.4 keeps the rpc session that is allocated for a fragment of a request with an unknown activity uuid, without a timeout, when the rest of the request never arrives. a session that does not get an application relationship is also kept after the response. repeated fragments or requests with different activity uuids exhaust the available sessions, one udp packet per session. once they are exhausted the device no longer answers a connect request until it is restarted. an unauthenticated attacker with adjacent network access can use this to cause a denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127124" target="_blank">CVE-2026-127124</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 keeps the RPC session that is allocated for a fragment of a request with an unknown activity UUID, without a timeout, when the rest of the request never arrives. A session that does not get an Application Relationship is also kept after the response. Repeated fragments or requests with different activity UUIDs exhaust the available sessions, one UDP packet per session. Once they are exhausted the device no longer answers a Connect request until it is restarted. An unauthenticated attacker with ADJACENT network access can use this to cause a denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127123" data-description="p-net before 1.0.4 releases the application relationship of an rpc session, without the abort procedure, when a fragment of a request has another data representation (endianness) than the first fragment of the call. the application is not told that the application relationship is gone, the cyclic data stops, and the resources of the application relationship are left referencing a cleared structure. another host can then connect in its place. a host with adjacent network access that has observed the activity uuid of the connection, which is sent in clear in every rpc request, can do this with one pdu.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127123" target="_blank">CVE-2026-127123</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 releases the Application Relationship of an RPC session, without the abort procedure, when a fragment of a request has another data representation (endianness) than the first fragment of the call. The application is not told that the Application Relationship is gone, the cyclic data stops, and the resources of the Application Relationship are left referencing a cleared structure. Another host can then connect in its place. A host with ADJACENT network access that has observed the activity UUID of the connection, which is sent in clear in every RPC request, can do this with one PDU.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127122" data-description="p-net before 1.0.4 does not check the number of mcr request blocks in a connect request against the number of multicast communication relations that an application relationship has room for (pnet_max_mc_cr, 1 by default). each further block is written past the end of the array, into the rest of the application relationship and, with more blocks, into the following one. the written data comes from the request. no established application relationship is needed, and the attacker requires adjacent network access. builds with pnet_option_mc_cr disabled are not affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127122" target="_blank">CVE-2026-127122</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:54 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 does not check the number of MCR request blocks in a Connect request against the number of multicast communication relations that an Application Relationship has room for (PNET_MAX_MC_CR, 1 by default). Each further block is written past the end of the array, into the rest of the Application Relationship and, with more blocks, into the following one. The written data comes from the request. No established Application Relationship is needed, and the attacker requires ADJACENT network access. Builds with PNET_OPTION_MC_CR disabled are not affected.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-125800" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in brainstorm force spectra ultimate-addons-for-gutenberg allows stored xss.this issue affects spectra: from n/a through 2.20.5.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125800" target="_blank">CVE-2026-125800</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Brainstorm Force Spectra ultimate-addons-for-gutenberg allows Stored XSS.This issue affects Spectra: from n/a through 2.20.5.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124762" data-description="p-net before 1.0.4 finds the rpc session of a received pdu by its activity uuid only, and a reject, fault or cancel pdu for the session aborts the application relationship, without checking that the pdu is the answer to a call of the device or where it comes from. a host with adjacent network access that has observed the activity uuid of the connection, which is sent in clear in every rpc request, can abort the application relationship with one pdu. it also allocates a session for an unknown activity uuid and changes the address stored for an existing session.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124762" target="_blank">CVE-2026-124762</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 finds the RPC session of a received PDU by its activity UUID only, and a reject, fault or cancel PDU for the session aborts the Application Relationship, without checking that the PDU is the answer to a call of the device or where it comes from. A host with ADJACENT network access that has observed the activity UUID of the connection, which is sent in clear in every RPC request, can abort the Application Relationship with one PDU. It also allocates a session for an unknown activity UUID and changes the address stored for an existing session.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124761" data-description="p-net before 1.0.4 copies the ip suite of a dcp set request to the current and the non-volatile configuration, and starts saving it, before the state of the device is checked. if the request is refused, for example because an application relationship is active, the configuration is not restored and is still saved. after a restart the device uses the refused address, and may not answer the controller or may use its address. a host with adjacent network access can use this while an application relationship is active.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124761" target="_blank">CVE-2026-124761</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 copies the IP suite of a DCP Set request to the current and the non-volatile configuration, and starts saving it, before the state of the device is checked. If the request is refused, for example because an Application Relationship is active, the configuration is not restored and is still saved. After a restart the device uses the refused address, and may not answer the controller or may use its address. A host with ADJACENT network access can use this while an Application Relationship is active.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124760" data-description="p-net before 1.0.4 sets the alarm receiver state to waiting for confirmation before the data of a received alarm notification is parsed. if the parsing fails the state is not restored, and later alarm notifications of the same priority are discarded without acknowledge until the application relationship is released. the application relationship and the cyclic data exchange keep working. the attacker must be able to send an alarm notification in the context of an established application relationship and requires adjacent network access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124760" target="_blank">CVE-2026-124760</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 sets the alarm receiver state to waiting for confirmation before the data of a received alarm notification is parsed. If the parsing fails the state is not restored, and later alarm notifications of the same priority are discarded without acknowledge until the Application Relationship is released. The Application Relationship and the cyclic data exchange keep working. The attacker must be able to send an alarm notification in the context of an established Application Relationship and requires ADJACENT network access.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124759" data-description="p-net before 1.0.4 routes a received rta alarm frame to an application relationship using only the destination alarm reference in the frame, without checking the source of the frame. a host with adjacent network access can abort an established application relationship with a single alarm error frame, or deliver forged alarm notifications with chosen type, slot, subslot, usi and payload to the application.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124759" target="_blank">CVE-2026-124759</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 routes a received RTA alarm frame to an Application Relationship using only the destination alarm reference in the frame, without checking the source of the frame. A host with ADJACENT network access can abort an established Application Relationship with a single alarm ERROR frame, or deliver forged alarm notifications with chosen type, slot, subslot, USI and payload to the application.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-124758" data-description="p-net before 1.0.4 does not check the record data length of an iodwrite request to a non-user record index against the size of the record block header. the 32-bit length is reduced by the header size before it is passed to the record handlers, so a length smaller than the header underflows and the handlers receive a data length of about 65530. the fixed-size reads of the i&m and pdport handlers can then read past the end of the session buffer. the result of the write is discarded. the attacker must have an established application relationship or be able to send in the context of one, and requires adjacent network access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124758" target="_blank">CVE-2026-124758</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>P-Net before 1.0.4 does not check the record data length of an IODWrite request to a non-user record index against the size of the record block header. The 32-bit length is reduced by the header size before it is passed to the record handlers, so a length smaller than the header underflows and the handlers receive a data length of about 65530. The fixed-size reads of the I&M and PDPort handlers can then read past the end of the session buffer. The result of the write is discarded. The attacker must have an established Application Relationship or be able to send in the context of one, and requires ADJACENT network access.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116413" data-description="dell powerstore contains a use-of-broken-cryptography vulnerability. a low-privileged attacker could exploit it to impersonate another identity, potentially leading to unauthorized access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116413" target="_blank">CVE-2026-116413</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-52790" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, there is a library-level memory safety issue that is reachable from an unmodified official sample server (apps/server-basic/main.c) over bacnet/ip resulting in a stack-use-after-return in writable device string properties. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52790" target="_blank">CVE-2026-52790</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:02 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>Dell PowerStore contains a use-of-broken-cryptography vulnerability. A low-privileged attacker could exploit it to impersonate another identity, potentially leading to unauthorized access.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, there is a library-level memory safety issue that is reachable from an unmodified official sample server (apps/server-basic/main.c) over BACnet/IP resulting in a stack-use-after-return in writable Device string properties. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-116412" data-description="dell powerstore contains an insecure-file-permissions vulnerability. a local low-privileged attacker could exploit this vulnerability to disclose administrative credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116412" target="_blank">CVE-2026-116412</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:48 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>Dell PowerStore contains an insecure-file-permissions vulnerability. A local low-privileged attacker could exploit this vulnerability to disclose administrative credentials.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116411" data-description="dell powerstore contains a server-side request forgery (ssrf) vulnerability. an authenticated user with limited privileges could potentially exploit this vulnerability, potentially leading to information disclosure via requests to internal services.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116411" target="_blank">CVE-2026-116411</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-13 08:17:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-52789" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, a denial of service (dos) vulnerability exists in the bacnet stack's readpropertymultiple (rpm) handler. when processing a malformed rpm request packet that lacks the expected closing tags, the function handler_read_property_multiple enters an infinite loop. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52789" target="_blank">CVE-2026-52789</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:02 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Dell PowerStore contains a Server-Side Request Forgery (SSRF) vulnerability. An authenticated user with limited privileges could potentially exploit this vulnerability, potentially leading to information disclosure via requests to internal services.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, a Denial of Service (DoS) vulnerability exists in the BACnet stack's ReadPropertyMultiple (RPM) handler. When processing a malformed RPM request packet that lacks the expected closing tags, the function handler_read_property_multiple enters an infinite loop. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-52788" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0, the bsc_node_parse_urls() function in src/bacnet/datalink/bsc/bsc-node.c contains three distinct bugs when parsing space-separated websocket uris from a bacnet/sc address resolution ack message. two bugs cause out-of-bounds writes past the utf8_urls[10][129] array in the static bsc_address_resolution structure. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52788" target="_blank">CVE-2026-52788</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0, the bsc_node_parse_urls() function in src/bacnet/datalink/bsc/bsc-node.c contains three distinct bugs when parsing space-separated WebSocket URIs from a BACnet/SC Address Resolution ACK message. Two bugs cause out-of-bounds writes past the utf8_urls[10][129] array in the static BSC_ADDRESS_RESOLUTION structure. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-52787" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to versions 1.4.5, 1.5.1, and 1.6.0-rc2, a reachable out-of-bounds write exists when encoding the device.address-binding property. this issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0-rc2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-52787" target="_blank">CVE-2026-52787</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:02 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to versions 1.4.5, 1.5.1, and 1.6.0-rc2, a reachable out-of-bounds write exists when encoding the device.address-binding property. This issue has been patched in versions 1.4.5, 1.5.1, and 1.6.0-rc2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-49990" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. from versions 1.4.2 to before 1.4.5, and 1.5.0 to before 1.5.1, a signed filestartposition taken from atomicreadfile and atomicwritefile stream-access requests is not validated tightly enough before it reaches the ram file backends. practical impact includes: reliable denial of service via process crash, out-of-bounds read that may expose adjacent memory contents, or out-of-bounds write that may corrupt heap memory and destabilize the process. this issue has been patched in versions 1.4.5 and 1.5.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49990" target="_blank">CVE-2026-49990</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.6</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. From versions 1.4.2 to before 1.4.5, and 1.5.0 to before 1.5.1, a signed fileStartPosition taken from AtomicReadFile and AtomicWriteFile stream-access requests is not validated tightly enough before it reaches the RAM file backends. Practical impact includes: reliable denial of service via process crash, out-of-bounds read that may expose adjacent memory contents, or out-of-bounds write that may corrupt heap memory and destabilize the process. This issue has been patched in versions 1.4.5 and 1.5.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-49341" data-description="bacnet stack is a bacnet open source protocol stack c library for embedded systems. prior to version 1.5.1, there is a remotely reachable denial-of-service vulnerability in bacnet-stack affecting the default demo server built from the unmodified apps/server/main.c. this issue has been patched in version 1.5.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-49341" target="_blank">CVE-2026-49341</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>BACnet Stack is a BACnet open source protocol stack C library for embedded systems. Prior to version 1.5.1, there is a remotely reachable denial-of-service vulnerability in bacnet-stack affecting the default demo server built from the unmodified apps/server/main.c. This issue has been patched in version 1.5.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-129110" data-description="syspass 3.0.1 through 3.2.11 contains an authentication bypass vulnerability that allows unauthenticated attackers to reinstall an already-installed instance by posting to the install/install handler, which never checks isinstalled(). attackers can overwrite config.xml, point the application at an attacker-controlled database, create an administrator account, and plant serialized publiclink gadget chains triggered via account/viewlink to execute commands.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129110" target="_blank">CVE-2026-129110</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-13 10:19:00 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>sysPass 3.0.1 through 3.2.11 contains an authentication bypass vulnerability that allows unauthenticated attackers to reinstall an already-installed instance by POSTing to the install/install handler, which never checks isInstalled(). Attackers can overwrite config.xml, point the application at an attacker-controlled database, create an administrator account, and plant serialized PublicLink gadget chains triggered via account/viewLink to execute commands.</p>
                 </div>
         
             </div>
