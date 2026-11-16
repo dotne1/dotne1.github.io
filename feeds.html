@@ -34,6 +34,58 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-129706" data-description="in the vulnerability-lookup web application, the flask-login session identifier was set to the bare numeric user id (user.get_id() returned self.id). because the session id contained no component derived from the user's credential, it remained valid indefinitely regardless of any subsequent password change, account recovery, or administrator-initiated password reset. an attacker who had obtained a valid session for a user account (for example through cross-site scripting, session hijacking, or a previously exposed feed or api key) could continue to access that user's account after the user changed their password, because the session cookie still carried the same static user id and the user_loader accepted it without any credential-bound validation.
+
+the affected component is the session management layer of the vulnerability-lookup flask application, specifically the user.get_id() method in website/models/user.py and the load_user callback in website/web/views/session_mgmt.py. the vulnerability required that an attacker already possessed a valid session for the target user; no additional authentication or special deployment configuration was needed beyond a standard deployment of the application.
+
+the security impact is that a user cannot effectively revoke an attacker's access by changing their password, performing an account recovery, or having an administrator reset the credential. the attacker retains full authenticated access to the user's profile, subscriptions, and any role-gated functionality for the lifetime of the session cookie. additionally, sessions that were opened via a feed key or api key before a prior fix (commit 3605d5b6) also persisted indefinitely.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129706" target="_blank">CVE-2026-129706</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-16 03:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the vulnerability-lookup web application, the Flask-Login session identifier was set to the bare numeric user ID (User.get_id() returned self.id). Because the session ID contained no component derived from the user's credential, it remained valid indefinitely regardless of any subsequent password change, account recovery, or administrator-initiated password reset. An attacker who had obtained a valid session for a user account (for example through cross-site scripting, session hijacking, or a previously exposed feed or API key) could continue to access that user's account after the user changed their password, because the session cookie still carried the same static user ID and the user_loader accepted it without any credential-bound validation.
+
+The affected component is the session management layer of the vulnerability-lookup Flask application, specifically the User.get_id() method in website/models/user.py and the load_user callback in website/web/views/session_mgmt.py. The vulnerability required that an attacker already possessed a valid session for the target user; no additional authentication or special deployment configuration was needed beyond a standard deployment of the application.
+
+The security impact is that a user cannot effectively revoke an attacker's access by changing their password, performing an account recovery, or having an administrator reset the credential. The attacker retains full authenticated access to the user's profile, subscriptions, and any role-gated functionality for the lifetime of the session cookie. Additionally, sessions that were opened via a feed key or API key before a prior fix (commit 3605d5b6) also persisted indefinitely.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-129703" data-description="in the vulnerability-lookup web application, the authentication decorators for feed-key requests (auth_feedkey_func in website/decorators.py) and api-key requests (auth_func in website/web/api/v1/common.py) called flask-login's login_user() function. this caused the http response to a request authenticated solely by a feed key (supplied as the x-feed-key url parameter) or an api key (supplied as the x-api-key header) to set a session cookie that grants full authenticated access to every page in the application, without requiring a password or two-factor authentication.
+
+the practical impact is that any party possessing a leaked feed url (a common occurrence, as feed urls are shared with rss readers) or an api key could obtain a valid web session for the associated account. this session provides access to the user's account page, which exposes the api key and other profile data, and for accounts with the administrator role, access to the /admin interface, enabling full administrative control of the application.
+
+the vulnerability affects all users whose feed key or api key is exposed. no prior authentication, user interaction, or special network conditions are required; a single http request with the token is sufficient to establish the session. the session persists until it expires, and because it is not bound to the original credential (a related cwe-613 issue noted by the developers), revoking the feed key or api key does not invalidate the already-created session.
+
+the fix replaces the login_user() call with assignment to g._login_user, which flask-login's current_user property reads for the current request only, without writing any session cookie. the affected views remain unchanged and continue to see the authenticated user for the single request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129703" target="_blank">CVE-2026-129703</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-16 03:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the vulnerability-lookup web application, the authentication decorators for feed-key requests (auth_feedkey_func in website/decorators.py) and API-key requests (auth_func in website/web/api/v1/common.py) called Flask-Login's login_user() function. This caused the HTTP response to a request authenticated solely by a feed key (supplied as the X-FEED-KEY URL parameter) or an API key (supplied as the X-API-KEY header) to set a session cookie that grants full authenticated access to every page in the application, without requiring a password or two-factor authentication.
+
+The practical impact is that any party possessing a leaked feed URL (a common occurrence, as feed URLs are shared with RSS readers) or an API key could obtain a valid web session for the associated account. This session provides access to the user's account page, which exposes the API key and other profile data, and for accounts with the administrator role, access to the /admin interface, enabling full administrative control of the application.
+
+The vulnerability affects all users whose feed key or API key is exposed. No prior authentication, user interaction, or special network conditions are required; a single HTTP request with the token is sufficient to establish the session. The session persists until it expires, and because it is not bound to the original credential (a related CWE-613 issue noted by the developers), revoking the feed key or API key does not invalidate the already-created session.
+
+The fix replaces the login_user() call with assignment to g._login_user, which Flask-Login's current_user property reads for the current request only, without writing any session cookie. The affected views remain unchanged and continue to see the authenticated user for the single request.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124672" data-description="the burst statistics wordpress plugin before 3.7.5 does not verify that a request is actually being routed to its own rest api before unloading every other active plugin for that request, allowing unauthenticated attackers to have requests processed with other plugins' protections (such as rest access restrictions, hidden login pages and two-factor authentication) switched off, and to cause other plugins' scheduled tasks to be discarded.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124672" target="_blank">CVE-2026-124672</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-16 03:17:13 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>The Burst Statistics WordPress plugin before 3.7.5 does not verify that a request is actually being routed to its own REST API before unloading every other active plugin for that request, allowing unauthenticated attackers to have requests processed with other plugins' protections (such as REST access restrictions, hidden login pages and two-factor authentication) switched off, and to cause other plugins' scheduled tasks to be discarded.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-114453" data-description="the kadence memberships wordpress plugin before 4.0.6 does not check that the membership level submitted when renewing a membership matches the level being renewed, pricing the renewal from the submitted level while activating the membership at its own level, allowing unauthenticated users to activate a paid membership without paying on sites that also offer a free level.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-114453" target="_blank">CVE-2026-114453</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-16 03:17:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>The Kadence Memberships WordPress plugin before 4.0.6 does not check that the membership level submitted when renewing a membership matches the level being renewed, pricing the renewal from the submitted level while activating the membership at its own level, allowing unauthenticated users to activate a paid membership without paying on sites that also offer a free level.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-105925" data-description="a denial of service vulnerability in the qt qxmlsimplereader class of the qt 5 core compatibility apis module (qt 6) and the qt xml module (qt 5).">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-105925" target="_blank">CVE-2026-105925</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-16 02:16:48 CDT</p>
@@ -160,38 +212,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
                     <p>Several endpoints that work on both issues and pull requests did not check which of the two the addressed item is. A user who can read a repository's issues but not its pull requests could read pull request data through the issue sub-resources of the API (timeline, attachments, labels, subscriptions, tracked times and reactions), and list pull requests through the repository's issue search and milestone pages; the same applied in the other direction. These endpoints now check read access to the unit the item belongs to. The API endpoints were fixed in 28.2.0 and 28.3.0, the search and milestone pages in 28.4.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-129341" data-description="the web endpoint that removes an attachment skipped the permission check when the request came from the user who had uploaded the attachment, and it was reachable with read access to issues or pull requests. a user who had uploaded a release asset could still delete it after losing write access to the repository. the endpoint now only deletes attachments that the user uploaded and that are not yet linked to an issue, comment or release.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129341" target="_blank">CVE-2026-129341</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-15 16:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The web endpoint that removes an attachment skipped the permission check when the request came from the user who had uploaded the attachment, and it was reachable with read access to issues or pull requests. A user who had uploaded a release asset could still delete it after losing write access to the repository. The endpoint now only deletes attachments that the user uploaded and that are not yet linked to an issue, comment or release.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-129337" data-description="git over http lowers the required permission for pushes to read access, so that the agit flow works, and relies on the repository's server-side hooks to enforce write access. a repository that is still being created by a migration, fork or template generation has no hooks yet, so a user with read access to it could push branches and tags during that window, or after a failed migration that left the repository in that state. git over http now refuses requests to repositories that are still being created.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129337" target="_blank">CVE-2026-129337</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-15 16:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Git over HTTP lowers the required permission for pushes to read access, so that the AGit flow works, and relies on the repository's server-side hooks to enforce write access. A repository that is still being created by a migration, fork or template generation has no hooks yet, so a user with read access to it could push branches and tags during that window, or after a failed migration that left the repository in that state. Git over HTTP now refuses requests to repositories that are still being created.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-128365" data-description="removing a team's review request looked up a review by the negated team id, which for the team with id 2 is the id of the built-in actions user, and marked the review it found as official. in the organization that owns that team, a user who can change the review requests of a pull request could make an approval left by the actions user count toward the approvals required by branch protection. merging still required permission to merge. removing a team review request no longer changes any review.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128365" target="_blank">CVE-2026-128365</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-15 16:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Removing a team's review request looked up a review by the negated team ID, which for the team with ID 2 is the ID of the built-in Actions user, and marked the review it found as official. In the organization that owns that team, a user who can change the review requests of a pull request could make an approval left by the Actions user count toward the approvals required by branch protection. Merging still required permission to merge. Removing a team review request no longer changes any review.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-128359" data-description="when gitea acts as an oauth2 or openid connect provider, the token endpoint did not check the state of the user. after an administrator deactivated an account or prohibited its sign-in, existing refresh tokens and unused authorization codes of that user could still be exchanged for new tokens, so applications that sign users in through gitea kept them signed in. the token endpoint now refuses users who may not sign in, and token introspection reports their tokens as inactive.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128359" target="_blank">CVE-2026-128359</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-15 16:17:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When Gitea acts as an OAuth2 or OpenID Connect provider, the token endpoint did not check the state of the user. After an administrator deactivated an account or prohibited its sign-in, existing refresh tokens and unused authorization codes of that user could still be exchanged for new tokens, so applications that sign users in through Gitea kept them signed in. The token endpoint now refuses users who may not sign in, and token introspection reports their tokens as inactive.</p>
                 </div>
         
             </div>
