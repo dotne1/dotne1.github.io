@@ -34,182 +34,318 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-95823" data-description="tcp_pkt_linearize() in subsys/net/ip/tcp.c is used by th_get() whenever a received tcp header is not contiguous in a single net_buf. while pulling the header bytes out of the following fragments, the loop called net_buf_unref() on an emptied fragment without first detaching its frags pointer. net_buf_unref() walks the whole fragment list, so the payload buffers still linked behind that fragment were freed as well, and the stale pointer was then reinstalled into the packet as buf->frags, producing a use-after-free and a later double free during packet teardown. the same loop also advanced to second->frags unconditionally: when the fragment still held payload after the header remainder was pulled, it was spliced out of the packet without ever being unreferenced, permanently leaking that buffer and silently dropping the data it carried.
-
-the defect is reached from tcp_recv() via th_get() on every received tcp segment, before connection lookup or any header validation, so a single unauthenticated segment that matches a listening socket is sufficient. an attacker only needs the tcp header to straddle a net_buf boundary, which they can arrange from off-link: ipv6 extension headers are accepted on receive and their length is added to the header offset by th_get(), so a destination options header of a suitable length places the tcp header across the boundary of the fixed-size receive buffers (config_net_buf_data_size). packet chains assembled from several sources - ipv4/ipv6 reassembly, 6lowpan/802.15.4 reassembly, tunnel or virtual interfaces that strip an outer header, or drivers producing scatter-gather chains - can additionally present a short interior fragment that the loop empties exactly, which is the case that frees the remainder of the packet while it is still in use.
-
-the reliably reachable consequence is exhaustion of the receive buffer pool: each crafted segment leaks one net_buf from the fixed config_net_buf_rx_count pool, the buffers are never reclaimed, and once the pool is empty the device can no longer receive network traffic until it is rebooted. where a fragment is emptied exactly, the impact rises to memory corruption: freed pool buffers are written through by the remainder of the loop, their contents may be delivered to the application, and the packet is double-freed on teardown.
-
-the fix saves and clears second->frags before the net_buf_unref() so only the emptied header fragment is released, and advances to the next fragment only when second->len == 0, keeping any fragment that still holds payload in the packet. this restores the detach-before-unref ownership pattern used elsewhere in the stack, for example in net_pkt_trim_buffer().">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95823" target="_blank">CVE-2026-95823</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-71861" data-description="the chainguard sdk is a public go sdk for integrating with the chainguard platform. prior to 0.1.107, auth/aws.verifytoken trusts the chainguard-audience and chainguard-identity headers without requiring those headers to be covered by aws sigv4 signedheaders. an attacker with a fresh sts getcalleridentity request signed by a victim can rewrite the unsigned binding headers and replay the proof to another relying party, causing the relying party to authenticate the victim’s aws identity for an attacker-chosen audience and identity. code that only uses auth/aws.generatetoken is unaffected because the generator signs the binding headers, and exploitation requires a signed request within its validity window. this issue is fixed in version 0.1.107.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-71861" target="_blank">CVE-2026-71861</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:16 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
-                    <p>tcp_pkt_linearize() in subsys/net/ip/tcp.c is used by th_get() whenever a received TCP header is not contiguous in a single net_buf. While pulling the header bytes out of the following fragments, the loop called net_buf_unref() on an emptied fragment without first detaching its frags pointer. net_buf_unref() walks the whole fragment list, so the payload buffers still linked behind that fragment were freed as well, and the stale pointer was then reinstalled into the packet as buf->frags, producing a use-after-free and a later double free during packet teardown. The same loop also advanced to second->frags unconditionally: when the fragment still held payload after the header remainder was pulled, it was spliced out of the packet without ever being unreferenced, permanently leaking that buffer and silently dropping the data it carried.
-
-The defect is reached from tcp_recv() via th_get() on every received TCP segment, before connection lookup or any header validation, so a single unauthenticated segment that matches a listening socket is sufficient. An attacker only needs the TCP header to straddle a net_buf boundary, which they can arrange from off-link: IPv6 extension headers are accepted on receive and their length is added to the header offset by th_get(), so a Destination Options header of a suitable length places the TCP header across the boundary of the fixed-size receive buffers (CONFIG_NET_BUF_DATA_SIZE). Packet chains assembled from several sources - IPv4/IPv6 reassembly, 6LoWPAN/802.15.4 reassembly, tunnel or virtual interfaces that strip an outer header, or drivers producing scatter-gather chains - can additionally present a short interior fragment that the loop empties exactly, which is the case that frees the remainder of the packet while it is still in use.
-
-The reliably reachable consequence is exhaustion of the receive buffer pool: each crafted segment leaks one net_buf from the fixed CONFIG_NET_BUF_RX_COUNT pool, the buffers are never reclaimed, and once the pool is empty the device can no longer receive network traffic until it is rebooted. Where a fragment is emptied exactly, the impact rises to memory corruption: freed pool buffers are written through by the remainder of the loop, their contents may be delivered to the application, and the packet is double-freed on teardown.
-
-The fix saves and clears second->frags before the net_buf_unref() so only the emptied header fragment is released, and advances to the next fragment only when second->len == 0, keeping any fragment that still holds payload in the packet. This restores the detach-before-unref ownership pattern used elsewhere in the stack, for example in net_pkt_trim_buffer().</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>The Chainguard SDK is a public Go SDK for integrating with the Chainguard platform. Prior to 0.1.107, auth/aws.VerifyToken trusts the Chainguard-Audience and Chainguard-Identity headers without requiring those headers to be covered by AWS SigV4 SignedHeaders. An attacker with a fresh STS GetCallerIdentity request signed by a victim can rewrite the unsigned binding headers and replay the proof to another relying party, causing the relying party to authenticate the victim’s AWS identity for an attacker-chosen audience and identity. Code that only uses auth/aws.GenerateToken is unaffected because the generator signs the binding headers, and exploitation requires a signed request within its validity window. This issue is fixed in version 0.1.107.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95791" data-description="a vulnerability in the web management and file transfer component of aos web could allow an authenticated remote attacker to perform arbitrary file reads. successful exploitation could allow an attacker to access sensitive files on the underlying system, potentially exposing configuration data or credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95791" target="_blank">CVE-2026-95791</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.9</p>
-                    <p>A vulnerability in the web management and file transfer component of AOS web could allow an authenticated remote attacker to perform arbitrary file reads. Successful exploitation could allow an attacker to access sensitive files on the underlying system, potentially exposing configuration data or credentials.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-86866" data-description="tanium addressed a sql injection vulnerability in multiple products.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-86866" target="_blank">CVE-2026-86866</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Tanium addressed a SQL injection vulnerability in multiple products.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-82171" data-description="dell powerstore contains an xml external entity (xxe) injection vulnerability. a high-privileged attacker could exploit this vulnerability, potentially leading to disclosure of sensitive files and root-level compromise of the appliance.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82171" target="_blank">CVE-2026-82171</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.0</p>
-                    <p>Dell PowerStore contains an XML External Entity (XXE) Injection vulnerability. A high-privileged attacker could exploit this vulnerability, potentially leading to disclosure of sensitive files and root-level compromise of the appliance.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-3232" data-description="the easy appointments plugin for wordpress is vulnerable to stored cross-site scripting via the 'name' and 'phone' fields in all versions up to, and including, 3.12.23.1 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever an administrator accesses the customers page.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-3232" target="_blank">CVE-2026-3232</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The Easy Appointments plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'name' and 'phone' fields in all versions up to, and including, 3.12.23.1 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever an administrator accesses the Customers page.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-15263" data-description="a server-side request forgery (ssrf) vulnerability in the pure storage flasharray extension for windows admin center versions could allow an authenticated gateway user to direct the management gateway to an unintended host, potentially exposing stored flasharray credentials and api tokens and allowing unauthorized access to the managed flasharray.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-15263" target="_blank">CVE-2026-15263</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:42 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A server-side request forgery (SSRF) vulnerability in the Pure Storage FlashArray extension for Windows Admin Center versions could allow an authenticated Gateway User to direct the management gateway to an unintended host, potentially exposing stored FlashArray credentials and API tokens and allowing unauthorized access to the managed FlashArray.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-132150" data-description="a flaw was found in the file-xmc plugin in gimp. when processing a specially crafted xmc image file, the plugin does not properly validate the comment subtype before using it as an array index. this missing validation leads to out-of-bounds memory access, invalid free and use-after-free issues. this vulnerability can result in an application crash, leading to a denial of service, or potentially allow for arbitrary code execution.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132150" target="_blank">CVE-2026-132150</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>A flaw was found in the file-xmc plugin in GIMP. When processing a specially crafted XMC image file, the plugin does not properly validate the comment subtype before using it as an array index. This missing validation leads to out-of-bounds memory access, invalid free and use-after-free issues. This vulnerability can result in an application crash, leading to a denial of service, or potentially allow for arbitrary code execution.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-132038" data-description="rapid7 metasploit framework versions prior to 6.5.10 suffer from an improper access control issue in the msfdb database initialisation component whereby a postgresql cluster initialised via msfdb init is configured with trust authentication and a world-accessible unix domain socket in /tmp, allowing any local user on the same host to authenticate as the passwordless postgres superuser and execute arbitrary operating system commands as the msfdb owner. 
-
-
-this issue is fixed in version 6.5.10.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132038" target="_blank">CVE-2026-132038</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Rapid7 Metasploit Framework versions prior to 6.5.10 suffer from an Improper Access Control issue in the msfdb database initialisation component whereby a PostgreSQL cluster initialised via msfdb init is configured with trust authentication and a world-accessible Unix domain socket in /tmp, allowing any local user on the same host to authenticate as the passwordless postgres superuser and execute arbitrary operating system commands as the msfdb owner. 
-
-
-This issue is fixed in version 6.5.10.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-131801" data-description="tanium addressed an improper input validation vulnerability in threat response.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131801" target="_blank">CVE-2026-131801</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>Tanium addressed an improper input validation vulnerability in Threat Response.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-131653" data-description="tanium addressed an improper input validation vulnerability in discover.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131653" target="_blank">CVE-2026-131653</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:41 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Tanium addressed an improper input validation vulnerability in Discover.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-128717" data-description="an issue in phpgurukul employee leaves management system (elms) version 2.1 allows a remote attacker to escalate privileges via the php session management mechanism">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128717" target="_blank">CVE-2026-128717</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:35 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An issue in PHPGurukul Employee Leaves Management System (ELMS) Version 2.1 allows a remote attacker to escalate privileges via the PHP session management mechanism</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-116448" data-description="dell powerstore sdnas contains an os command injection vulnerability that could allow an attacker with internal network access to execute arbitrary commands as root on the nas node.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116448" target="_blank">CVE-2026-116448</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:33 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-63189" data-description="dialoqbase is an application for creating chatbots. prior to 1.11.5, the unauthenticated get /api/v1/view/* route in server/src/routes/api/v1/view/root.ts resolves its attacker-controlled wildcard path without normalization or containment, allowing traversal outside the intended uploads directory and arbitrary server file reads. reading environment files can disclose db_secret_key, the application’s jwt signing key, which permits forged administrator tokens and takeover of bots, conversations, integrations, and stored third-party credentials. this issue is fixed in version 1.11.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-63189" target="_blank">CVE-2026-63189</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:16 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Dell PowerStore SDNAS contains an OS Command Injection vulnerability that could allow an attacker with internal network access to execute arbitrary commands as root on the NAS node.</p>
+                    <p>Dialoqbase is an application for creating chatbots. Prior to 1.11.5, the unauthenticated GET /api/v1/view/* route in server/src/routes/api/v1/view/root.ts resolves its attacker-controlled wildcard path without normalization or containment, allowing traversal outside the intended uploads directory and arbitrary server file reads. Reading environment files can disclose DB_SECRET_KEY, the application’s JWT signing key, which permits forged administrator tokens and takeover of bots, conversations, integrations, and stored third-party credentials. This issue is fixed in version 1.11.5.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-116447" data-description="dell powerstore sdnas contains a local privilege-escalation vulnerability that could allow a low-privileged attacker to execute code as root on the nas node.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116447" target="_blank">CVE-2026-116447</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Dell PowerStore SDNAS contains a local privilege-escalation vulnerability that could allow a low-privileged attacker to execute code as root on the NAS node.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-48728" data-description="the glpi inventory plugin handles network discovery, inventory, software deployment, and data collection for glpi agents. prior to 1.6.8, the /b/deploy, /b/collect, and /b/esx agent api endpoints do not authenticate requests before processing deploy, collect, and esx task operations. an unauthenticated remote attacker can enumerate jobs and manipulate their status through these endpoints, disclosing job information and interfering with task processing. this issue is fixed in version 1.6.8.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-48728" target="_blank">CVE-2026-48728</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>The GLPI Inventory Plugin handles network discovery, inventory, software deployment, and data collection for GLPI agents. Prior to 1.6.8, the /b/deploy, /b/collect, and /b/esx agent API endpoints do not authenticate requests before processing Deploy, Collect, and ESX task operations. An unauthenticated remote attacker can enumerate jobs and manipulate their status through these endpoints, disclosing job information and interfering with task processing. This issue is fixed in version 1.6.8.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-116446" data-description="dell powerstore sdnas contains an out-of-bounds memory vulnerability in the nas nfs service that an unauthenticated remote attacker could exploit to cause a denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-116446" target="_blank">CVE-2026-116446</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>Dell PowerStore SDNAS contains an out-of-bounds memory vulnerability in the NAS NFS service that an unauthenticated remote attacker could exploit to cause a denial of service.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-30502" data-description="a cross-site scripting (xss) vulnerability in openkm v6.3.12 allows attackers to execute arbitrary javascript in the context of the user's browser via a crafted input injected into the content parameter.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-30502" target="_blank">CVE-2026-30502</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A Cross-Site Scripting (XSS) vulnerability in OpenKM v6.3.12 allows attackers to execute arbitrary Javascript in the context of the user's browser via a crafted input injected into the Content parameter.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111507" data-description="dell powerstore contains an authorization bypass vulnerability. a remote attacker could exploit this vulnerability to act under another user's session, potentially leading to denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111507" target="_blank">CVE-2026-111507</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:32 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-132224" data-description="optimizely web experimentation before 2026-11-17 mishandles the account signup flow, leading to presence of attacker-controlled code in the projectjs (aka project javascript) field of certain cdn.optimizely.com assets.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132224" target="_blank">CVE-2026-132224</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Optimizely Web Experimentation before 2026-11-17 mishandles the account signup flow, leading to presence of attacker-controlled code in the projectJS (aka Project JavaScript) field of certain cdn.optimizely.com assets.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-132222" data-description="bizprint (print-google-cloud-print-gcp-woocommerce) before 4.10.0 contains a missing authorization vulnerability in its debug\core component that allows any authenticated user, including the lowest-privilege subscriber role, to invoke the getprinters and sendprintrequest ajax actions without a nonce or capability check. attackers can send a crafted admin-ajax.php request with an arbitrary woocommerce order_id to dispatch print jobs for other customers' orders and disclose printer configuration, exposing cross-customer pii and abusing printer resources.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132222" target="_blank">CVE-2026-132222</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>BizPrint (print-google-cloud-print-gcp-woocommerce) before 4.10.0 contains a missing authorization vulnerability in its Debug\Core component that allows any authenticated user, including the lowest-privilege Subscriber role, to invoke the getPrinters and sendPrintRequest AJAX actions without a nonce or capability check. Attackers can send a crafted admin-ajax.php request with an arbitrary WooCommerce order_id to dispatch print jobs for other customers' orders and disclose printer configuration, exposing cross-customer PII and abusing printer resources.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-128719" data-description="an issue in phpgurukul employee leaves management system (elms) version 2.1 allows a remote attacker to escalate privileges via the password recovery functionality">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128719" target="_blank">CVE-2026-128719</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An issue in PHPGurukul Employee Leaves Management System (ELMS) Version 2.1 allows a remote attacker to escalate privileges via the password recovery functionality</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127178" data-description="a stored cross site scripting attack when viewing email aliases in postfixadmin 4.0 before 4.0.7, and postfixadmin 3.3 before 3.3.17 could be caused by signed in admins able to inject aliases.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127178" target="_blank">CVE-2026-127178</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Dell PowerStore contains an authorization bypass vulnerability. A remote attacker could exploit this vulnerability to act under another user's session, potentially leading to denial of service.</p>
+                    <p>A stored cross site scripting attack when viewing email aliases in postfixadmin 4.0 before 4.0.7, and postfixadmin 3.3 before 3.3.17 could be caused by signed in admins able to inject aliases.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-109908" data-description="a heap buffer overflow in reading encoding files in x.org libfontenc before 1.11.0 could be used by local attackers able to inject enc files to the x server could crash or escalate privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-109908" target="_blank">CVE-2026-109908</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:32 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-126822" data-description="description:
+
+
+
+
+
+when big-ip apm is provisioned, an access profile is configured as a saml sp (service provider) and is applied to a virtual server, undisclosed requests can cause the traffic management microkernel (tmm) to terminate.
+
+impact:
+
+
+
+
+
+traffic
+is disrupted while the tmm process restarts. this vulnerability allows a remote unauthenticated attacker to cause a denial-of-service (dos) on the big-ip system.
+
+
+
+
+
+
+
+
+
+there
+is no control plane exposure; this is a data plane issue only.
+
+
+
+
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126822" target="_blank">CVE-2026-126822</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>A heap buffer overflow in reading encoding files in X.Org libfontenc before 1.11.0 could be used by local attackers able to inject enc files to the X server could crash or escalate privileges.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Description:
+
+
+
+
+
+When BIG-IP APM is provisioned, an Access Profile is configured as a SAML SP (Service Provider) and is applied to a virtual server, undisclosed requests can cause the Traffic Management Microkernel (TMM) to terminate.
+
+Impact:
+
+
+
+
+
+Traffic
+is disrupted while the TMM process restarts. This vulnerability allows a remote unauthenticated attacker to cause a denial-of-service (DoS) on the BIG-IP system.
+
+
+
+
+
+
+
+
+
+There
+is no control plane exposure; this is a data plane issue only.
+
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-107511" data-description="dell powerstore contains a csv injection vulnerability. a high-privileged attacker could exploit this vulnerability, potentially leading to code execution on another user's workstation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-107511" target="_blank">CVE-2026-107511</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 09:17:31 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-126755" data-description="arangodb before 3.12.11 contains an authentication bypass vulnerability caused by a parser differential between the raw path authentication gate and the url-decoded dispatch logic. attackers can send requests with a %5f-encoded leading underscore to endpoints like /_db/_system/%5fapi/simple/first-example to reach /_api/* actions as superuser without authentication. exploitation evidence was first observed by the shadowserver foundation on 2026-09-16.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126755" target="_blank">CVE-2026-126755</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>ArangoDB before 3.12.11 contains an authentication bypass vulnerability caused by a parser differential between the raw path authentication gate and the URL-decoded dispatch logic. Attackers can send requests with a %5f-encoded leading underscore to endpoints like /_db/_system/%5fapi/simple/first-example to reach /_api/* actions as superuser without authentication. Exploitation evidence was first observed by the Shadowserver Foundation on 2026-09-16.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-126754" data-description="cpanel & whm 11.134.0.13 contains a reflected cross-site scripting vulnerability that allows unauthenticated attackers to inject scripts through the mpidentity parameter of /mailman/listinfo. attackers can send crafted requests with a script-context breakout payload in mpidentity to execute arbitrary javascript in the victim's browser. exploitation evidence was first observed by the shadowserver foundation on 2026-06-08.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126754" target="_blank">CVE-2026-126754</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>Dell PowerStore contains a CSV Injection vulnerability. A high-privileged attacker could exploit this vulnerability, potentially leading to code execution on another user's workstation.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>cPanel & WHM 11.134.0.13 contains a reflected cross-site scripting vulnerability that allows unauthenticated attackers to inject scripts through the mpidentity parameter of /mailman/listinfo. Attackers can send crafted requests with a script-context breakout payload in mpidentity to execute arbitrary JavaScript in the victim's browser. Exploitation evidence was first observed by the Shadowserver Foundation on 2026-06-08.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96841" data-description="the itro popup plugin plugin for wordpress is vulnerable to stored cross-site scripting via the 'custom_html' parameter in all versions up to, and including, 5.2.6 due to insufficient input sanitization and output escaping. this makes it possible for authenticated attackers, with subscriber-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. this is only exploitable by low-privileged roles such as subscriber when an administrator has explicitly granted that role access to the plugin settings page via the plugin's role selection option.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96841" target="_blank">CVE-2026-96841</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 08:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-126753" data-description="limesurvey 6.5.0 before 6.16.11 contains an open redirect vulnerability that allows unauthenticated attackers to redirect users by supplying arbitrary values to the url parameter. attackers can send crafted get requests to index.php?r=editorlink, where editorlinkcontroller concatenates url and route unvalidated, redirecting victims to attacker-controlled sites for phishing. exploitation evidence was first observed by the shadowserver foundation on 2026-03-20.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126753" target="_blank">CVE-2026-126753</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
-                    <p>The ITRO Popup Plugin plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'custom_html' parameter in all versions up to, and including, 5.2.6 due to insufficient input sanitization and output escaping. This makes it possible for authenticated attackers, with subscriber-level access and above, to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. This is only exploitable by low-privileged roles such as Subscriber when an administrator has explicitly granted that role access to the plugin settings page via the plugin's role selection option.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>LimeSurvey 6.5.0 before 6.16.11 contains an open redirect vulnerability that allows unauthenticated attackers to redirect users by supplying arbitrary values to the url parameter. Attackers can send crafted GET requests to index.php?r=editorLink, where EditorLinkController concatenates url and route unvalidated, redirecting victims to attacker-controlled sites for phishing. Exploitation evidence was first observed by the Shadowserver Foundation on 2026-03-20.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-96665" data-description="the sendpress newsletters plugin for wordpress is vulnerable to stored cross-site scripting via the 'sp_firstname' parameter in all versions up to, and including, 1.26.1.20 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. the public subscriber-management route uses an unsigned, forgeable base64-encoded json token, allowing an unauthenticated attacker to impersonate any subscriber and obtain a valid nonce — bypassing the post handler's only access control check.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96665" target="_blank">CVE-2026-96665</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 08:17:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-126752" data-description="dagu 1.23.0 before 2.0.0 defaults auth.mode to none, allowing unauthenticated attackers to execute os commands through the /api/v2/dag-runs endpoint. attackers can send a post request with an inline spec defining steps containing arbitrary shell commands to achieve remote code execution. exploitation evidence was first observed by the shadowserver foundation on 2026-03-11.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126752" target="_blank">CVE-2026-126752</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>Dagu 1.23.0 before 2.0.0 defaults auth.mode to none, allowing unauthenticated attackers to execute OS commands through the /api/v2/dag-runs endpoint. Attackers can send a POST request with an inline spec defining steps containing arbitrary shell commands to achieve remote code execution. Exploitation evidence was first observed by the Shadowserver Foundation on 2026-03-11.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-126751" data-description="retool versions 3.253.0 before 3.253.19, 3.254.0 before 3.284.12, and 3.285.0 before 3.300.4 contain a dom-based cross-site scripting vulnerability in the custom-component-collections.html postmessage handler that imports received code without origin validation. unauthenticated attackers can send crafted postmessage events that load attacker-controlled code via data:text/javascript uris to execute arbitrary javascript in the victim's context. exploitation evidence was first observed by the shadowserver foundation on 2026-04-22.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126751" target="_blank">CVE-2026-126751</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>Retool versions 3.253.0 before 3.253.19, 3.254.0 before 3.284.12, and 3.285.0 before 3.300.4 contain a DOM-based cross-site scripting vulnerability in the custom-component-collections.html postMessage handler that imports received code without origin validation. Unauthenticated attackers can send crafted postMessage events that load attacker-controlled code via data:text/javascript URIs to execute arbitrary JavaScript in the victim's context. Exploitation evidence was first observed by the Shadowserver Foundation on 2026-04-22.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-126721" data-description="the magic login mail or qr code plugin for wordpress is vulnerable to privilege escalation via administrator account takeover in versions up to, and including, 2.07. this is due to the `curpageurl()` function falling back to the raw `$_server['http_host']` value — with no validation against the site's configured origin via `home_url()` or `site_url()` — when `get_the_permalink()` returns empty or false, allowing an attacker-controlled host header to become the url origin of the magic-login link generated by `generate_url()` and delivered to the target via `wp_mail()`. this makes it possible for unauthenticated attackers to intercept the one-time uid and token pair sent to a targeted administrator's email and replay them against the real site, causing `autologin_via_url()` to call `wp_set_auth_cookie()` and establish a full administrator session on the targeted account. exploitation requires the `[magic_login]` shortcode to render on a path where `get_the_permalink()` returns empty or false (such as a 404 page or a block-theme header template part), the web server to forward non-canonical host headers, the attacker to know the target administrator's email address, and the administrator to click the attacker-originated magic-login link. successful exploitation gives the attacker control of a distinct, already-privileged administrator account; it does not promote the attacker's original account. successful exploitation additionally requires an action by an administrator — the attacker cannot trigger the vulnerability on their own.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126721" target="_blank">CVE-2026-126721</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.2</p>
-                    <p>The SendPress Newsletters plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'sp_firstname' parameter in all versions up to, and including, 1.26.1.20 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. The public subscriber-management route uses an unsigned, forgeable base64-encoded JSON token, allowing an unauthenticated attacker to impersonate any subscriber and obtain a valid nonce — bypassing the POST handler's only access control check.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>The Magic Login Mail or QR Code plugin for WordPress is vulnerable to Privilege Escalation via Administrator Account Takeover in versions up to, and including, 2.07. This is due to the `curpageurl()` function falling back to the raw `$_SERVER['HTTP_HOST']` value — with no validation against the site's configured origin via `home_url()` or `site_url()` — when `get_the_permalink()` returns empty or false, allowing an attacker-controlled Host header to become the URL origin of the magic-login link generated by `generate_url()` and delivered to the target via `wp_mail()`. This makes it possible for unauthenticated attackers to intercept the one-time uid and token pair sent to a targeted Administrator's email and replay them against the real site, causing `autologin_via_url()` to call `wp_set_auth_cookie()` and establish a full Administrator session on the targeted account. Exploitation requires the `[magic_login]` shortcode to render on a path where `get_the_permalink()` returns empty or false (such as a 404 page or a block-theme header template part), the web server to forward non-canonical Host headers, the attacker to know the target administrator's email address, and the administrator to click the attacker-originated magic-login link. Successful exploitation gives the attacker control of a distinct, already-privileged Administrator account; it does not promote the attacker's original account. Successful exploitation additionally requires an action by an administrator — the attacker cannot trigger the vulnerability on their own.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-95790" data-description="a vulnerability in the web-based management interface of network device management systems of aos-8 mobility controllers could allow an authenticated remote attacker to bypass authorization controls. successful exploitation could allow a low-privilege attacker to read sensitive configuration data potentially leading to unauthorized network access and further compromise of network security.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95790" target="_blank">CVE-2026-95790</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 08:17:45 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-126699" data-description="the majestic support – the leading-edge help desk & customer support plugin plugin for wordpress is vulnerable to stored cross-site scripting via the 'mjsupport_message' parameter in all versions up to, and including, 1.2.4 due to insufficient input sanitization and output escaping. this makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. successful exploitation requires that a staff member or administrator opens the affected ticket and clicks the attacker-planted link on the ticket-detail screen, as the venobox payload is triggered on click rather than on page load. successful exploitation additionally requires an action by an administrator — the attacker cannot trigger the vulnerability on their own.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126699" target="_blank">CVE-2026-126699</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>The Majestic Support – The Leading-Edge Help Desk & Customer Support Plugin plugin for WordPress is vulnerable to Stored Cross-Site Scripting via the 'mjsupport_message' parameter in all versions up to, and including, 1.2.4 due to insufficient input sanitization and output escaping. This makes it possible for unauthenticated attackers to inject arbitrary web scripts in pages that will execute whenever a user accesses an injected page. Successful exploitation requires that a staff member or administrator opens the affected ticket and clicks the attacker-planted link on the ticket-detail screen, as the VenoBox payload is triggered on click rather than on page load. Successful exploitation additionally requires an action by an administrator — the attacker cannot trigger the vulnerability on their own.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-126336" data-description="description:
+
+
+when big-ip apm is provisioned and a virtual server is configured with an apm access profile and a saml service provider (sp) agent with encrypted assertions enabled, undisclosed requests can cause the traffic management microkernel (tmm) to terminate.
+
+
+
+
+
+
+impact:
+
+
+traffic is disrupted while the tmm process restarts. this vulnerability allows a remote, unauthenticated attacker to cause a denial-of-service (dos) on the big-ip system. there is no control plane exposure; this is a data plane issue only.
+
+
+
+
+
+
+
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126336" target="_blank">CVE-2026-126336</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Description:
+
+
+When BIG-IP APM is provisioned and a virtual server is configured with an APM Access profile and a SAML Service Provider (SP) agent with encrypted assertions enabled, undisclosed requests can cause the Traffic Management Microkernel (TMM) to terminate.
+
+
+
+
+
+
+Impact:
+
+
+Traffic is disrupted while the TMM process restarts. This vulnerability allows a remote, unauthenticated attacker to cause a denial-of-service (DoS) on the BIG-IP system. There is no control plane exposure; this is a data plane issue only.
+
+
+
+
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-125806" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in wp media wp rocket wp-rocket allows stored xss.this issue affects wp rocket: from n/a before 3.24.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125806" target="_blank">CVE-2026-125806</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:06 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>A vulnerability in the web-based management interface of network device management systems of AOS-8 Mobility Controllers could allow an authenticated remote attacker to bypass authorization controls. Successful exploitation could allow a low-privilege attacker to read sensitive configuration data potentially leading to unauthorized network access and further compromise of network security.</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in WP Media WP Rocket wp-rocket allows Stored XSS.This issue affects WP Rocket: from n/a before 3.24.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-125283" data-description="when nginx plus or nginx open source is configured to use the try_files and alias directives with a map variable, certain combinations of regular expression captures in map and try_files can cause a segmentation fault in an nginx worker process.
+
+impact:
+an attacker could leverage this vulnerability to cause an nginx worker process to terminate unexpectedly. there is no control plane exposure; this is a data plane issue only.
+
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125283" target="_blank">CVE-2026-125283</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>When NGINX Plus or NGINX Open Source is configured to use the try_files and alias directives with a map variable, certain combinations of regular expression captures in map and try_files can cause a segmentation fault in an NGINX worker process.
+
+Impact:
+An attacker could leverage this vulnerability to cause an NGINX worker process to terminate unexpectedly. There is no control plane exposure; this is a data plane issue only.
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-125274" data-description="an authenticated icontrol soap user with at least guest access can inject an unauthorized management request.
+
+
+
+
+
+impact:
+
+this vulnerability may allow an authenticated attacker with network access and at least guest role privileges to the icontrol soap utility to execute arbitrary system commands, create or delete files, or disable services. there is no data plane exposure; this is a control plane issue only.
+
+
+
+
+
+note: software versions which have reached end of technical support (eots) are not evaluated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-125274" target="_blank">CVE-2026-125274</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 10:18:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>An authenticated iControl SOAP user with at least Guest access can inject an unauthorized management request.
+
+
+
+
+
+Impact:
+
+This vulnerability may allow an authenticated attacker with network access and at least Guest role privileges to the iControl SOAP utility to execute arbitrary system commands, create or delete files, or disable services. There is no data plane exposure; this is a control plane issue only.
+
+
+
+
+
+Note: Software versions which have reached End of Technical Support (EoTS) are not evaluated.</p>
                 </div>
         
             </div>
