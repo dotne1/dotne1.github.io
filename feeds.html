@@ -34,6 +34,510 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-99319" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: usx2y: refuse a retried dsp load after a failure
+
+snd_usx2y_hwdep_dsp_load() sets up the asynchronous sequence urbs and
+the interrupt urb when the fpga firmware image with index 1 is loaded,
+and then creates the alsa devices.  if usx2y_in04_init() or
+usx2y_create_alsa_devices() fails, the urbs that were already set up
+are left in place.
+
+the core keeps the index unloaded when the callback fails, so user
+space may issue the same request again.  the second attempt then enters
+usx2y_async_seq04_init() or usx2y_in04_init() with the urbs still
+allocated and trips warn_on(usx2y->as04.buffer) or
+warn_on(usx2y->in04_urb).
+
+the urbs cannot be released at this point: the card may already have
+registered pcm devices that user space can still open, and the
+disconnect handler accesses the urbs without holding the dsp lock.
+mark the chip as hung instead, so that a retried request is refused
+with -enodev and the assertions keep their meaning.  the urbs are
+released by snd_usx2y_card_private_free() when the card is freed.
+
+a failing usx2y_async_seq04_init() still releases its own urbs, so that
+path remains retryable.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99319" target="_blank">CVE-2026-99319</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:46 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: usx2y: Refuse a retried DSP load after a failure
+
+snd_usx2y_hwdep_dsp_load() sets up the asynchronous sequence URBs and
+the interrupt URB when the FPGA firmware image with index 1 is loaded,
+and then creates the ALSA devices.  If usx2y_in04_init() or
+usx2y_create_alsa_devices() fails, the URBs that were already set up
+are left in place.
+
+The core keeps the index unloaded when the callback fails, so user
+space may issue the same request again.  The second attempt then enters
+usx2y_async_seq04_init() or usx2y_in04_init() with the URBs still
+allocated and trips WARN_ON(usx2y->as04.buffer) or
+WARN_ON(usx2y->in04_urb).
+
+The URBs cannot be released at this point: the card may already have
+registered PCM devices that user space can still open, and the
+disconnect handler accesses the URBs without holding the DSP lock.
+Mark the chip as hung instead, so that a retried request is refused
+with -ENODEV and the assertions keep their meaning.  The URBs are
+released by snd_usx2y_card_private_free() when the card is freed.
+
+A failing usx2y_async_seq04_init() still releases its own URBs, so that
+path remains retryable.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99318" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: bcd2000: fix use-after-free of midi urbs on file close
+
+bcd2000_disconnect() calls snd_card_disconnect(), which only prevents
+new opens, and then frees the midi urbs.  a rawmidi file that was
+already open can still be closed afterwards, and its close callback,
+bcd2000_midi_output_close(), calls usb_kill_urb() on midi_out_urb.
+
+the urb pointers are cleared on disconnect and their accesses are
+serialized with midi_lock, but bcd2000_midi_output_close() reads
+midi_out_urb without that lock.  the check can therefore pass just
+before the pointer is cleared, and usb_kill_urb() then runs on the urb
+that has already been freed:
+
+  bug: kasan: slab-use-after-free in usb_kill_urb+0x74/0x80
+  read of size 8 at addr ffff8880078e7d40
+   usb_kill_urb
+   bcd2000_midi_output_close
+   close_substream
+   rawmidi_release_priv
+   snd_rawmidi_release
+
+  allocated by: usb_alloc_urb <- bcd2000_init_midi <- bcd2000_probe
+  freed by:     usb_free_urb <- bcd2000_midi_free
+                <- bcd2000_disconnect
+
+take the lock in bcd2000_midi_output_close() and reference the urb with
+usb_get_urb() before releasing it.  the urb then stays valid until
+usb_put_urb() after usb_kill_urb() has returned, even if a disconnect
+frees it in the meantime.  usb_kill_urb() itself cannot run under
+midi_lock, as the completion handler takes the same lock.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99318" target="_blank">CVE-2026-99318</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: bcd2000: Fix use-after-free of MIDI URBs on file close
+
+bcd2000_disconnect() calls snd_card_disconnect(), which only prevents
+new opens, and then frees the MIDI URBs.  A rawmidi file that was
+already open can still be closed afterwards, and its close callback,
+bcd2000_midi_output_close(), calls usb_kill_urb() on midi_out_urb.
+
+The URB pointers are cleared on disconnect and their accesses are
+serialized with midi_lock, but bcd2000_midi_output_close() reads
+midi_out_urb without that lock.  The check can therefore pass just
+before the pointer is cleared, and usb_kill_urb() then runs on the URB
+that has already been freed:
+
+  BUG: KASAN: slab-use-after-free in usb_kill_urb+0x74/0x80
+  Read of size 8 at addr ffff8880078e7d40
+   usb_kill_urb
+   bcd2000_midi_output_close
+   close_substream
+   rawmidi_release_priv
+   snd_rawmidi_release
+
+  Allocated by: usb_alloc_urb <- bcd2000_init_midi <- bcd2000_probe
+  Freed by:     usb_free_urb <- bcd2000_midi_free
+                <- bcd2000_disconnect
+
+Take the lock in bcd2000_midi_output_close() and reference the URB with
+usb_get_urb() before releasing it.  The URB then stays valid until
+usb_put_urb() after usb_kill_urb() has returned, even if a disconnect
+frees it in the meantime.  usb_kill_urb() itself cannot run under
+midi_lock, as the completion handler takes the same lock.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99317" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: hwdep: serialize dsp load requests
+
+the check of the loaded dsp indices and the call of the driver's
+dsp_load callback in snd_hwdep_dsp_load() are not serialized.  a hwdep
+file descriptor can be shared among threads, or inherited across fork,
+so two sndrv_hwdep_ioctl_dsp_load requests for the same index can both
+observe the index as unloaded and enter the driver's callback
+concurrently, even though the device itself is opened exclusively.
+
+this breaks the assumption behind hw->dsp_loaded that a firmware index
+is loaded only once.  for example, snd-usb-usx2y hits
+warn_on(usx2y->as04.buffer) in usx2y_async_seq04_init() and may
+allocate the us-428 sequence urbs twice.
+
+serialize the check, the callback invocation and the bookkeeping with a
+per-hwdep mutex, so that the second request returns -ebusy.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99317" target="_blank">CVE-2026-99317</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: hwdep: Serialize DSP load requests
+
+The check of the loaded DSP indices and the call of the driver's
+dsp_load callback in snd_hwdep_dsp_load() are not serialized.  A hwdep
+file descriptor can be shared among threads, or inherited across fork,
+so two SNDRV_HWDEP_IOCTL_DSP_LOAD requests for the same index can both
+observe the index as unloaded and enter the driver's callback
+concurrently, even though the device itself is opened exclusively.
+
+This breaks the assumption behind hw->dsp_loaded that a firmware index
+is loaded only once.  For example, snd-usb-usx2y hits
+WARN_ON(usx2y->as04.buffer) in usx2y_async_seq04_init() and may
+allocate the US-428 sequence URBs twice.
+
+Serialize the check, the callback invocation and the bookkeeping with a
+per-hwdep mutex, so that the second request returns -EBUSY.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99316" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: usx2y: initialize idle urbs before submitting streams
+
+usb_stream_start() submits the first two capture and playback urbs and
+only afterwards assigns sk->idle_inurb, sk->idle_outurb,
+sk->completed_inurb and sk->completed_outurb to the remaining two urbs
+of each direction.
+
+a transfer can complete as soon as usb_submit_urb() has been called, so
+the completion handler i_capture_start() or i_playback_start() may run
+before those pointers are set.  while the stream is still being
+synchronized (state below usb_stream_sync1), stream_start() then calls
+playback_prep_freqn(sk, sk->idle_outurb) with sk->idle_outurb still
+null, and the packet descriptors are written through that null pointer:
+
+  oops: general protection fault, probably for non-canonical address
+  0xdffffc0000000018: 0000 [#1] smp kasan
+  kasan: null-ptr-deref in range [0x00000000000000c0-0x00000000000000c7]
+  rip: 0010:playback_prep_freqn+0x11c/0x4a0 sound/usb/usx2y/usb_stream.c:33
+  call trace:
+   <irq>
+   stream_start+0x5dc/0x8d0 sound/usb/usx2y/usb_stream.c:596
+   i_capture_start+0x3da/0x710 sound/usb/usx2y/usb_stream.c:654
+   __usb_hcd_giveback_urb+0x238/0x550 drivers/usb/core/hcd.c:1657
+   usb_giveback_urb_bh+0x20b/0x530 drivers/usb/core/hcd.c:1691
+   tasklet_hi_action+0xa/0x20 kernel/softirq.c:994
+   handle_softirqs+0x16f/0x440 kernel/softirq.c:645
+   </irq>
+
+the four urbs referenced by these pointers are allocated long before and
+do not depend on any transfer state, so assign them before the submit
+loop.  keeping the assignment inside the retry path also restores a
+well-defined urb rotation when the start frame mismatch handling kills
+and resubmits the streams.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99316" target="_blank">CVE-2026-99316</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: usx2y: Initialize idle URBs before submitting streams
+
+usb_stream_start() submits the first two capture and playback URBs and
+only afterwards assigns sk->idle_inurb, sk->idle_outurb,
+sk->completed_inurb and sk->completed_outurb to the remaining two URBs
+of each direction.
+
+A transfer can complete as soon as usb_submit_urb() has been called, so
+the completion handler i_capture_start() or i_playback_start() may run
+before those pointers are set.  While the stream is still being
+synchronized (state below usb_stream_sync1), stream_start() then calls
+playback_prep_freqn(sk, sk->idle_outurb) with sk->idle_outurb still
+NULL, and the packet descriptors are written through that NULL pointer:
+
+  Oops: general protection fault, probably for non-canonical address
+  0xdffffc0000000018: 0000 [#1] SMP KASAN
+  KASAN: null-ptr-deref in range [0x00000000000000c0-0x00000000000000c7]
+  RIP: 0010:playback_prep_freqn+0x11c/0x4a0 sound/usb/usx2y/usb_stream.c:33
+  Call Trace:
+   <IRQ>
+   stream_start+0x5dc/0x8d0 sound/usb/usx2y/usb_stream.c:596
+   i_capture_start+0x3da/0x710 sound/usb/usx2y/usb_stream.c:654
+   __usb_hcd_giveback_urb+0x238/0x550 drivers/usb/core/hcd.c:1657
+   usb_giveback_urb_bh+0x20b/0x530 drivers/usb/core/hcd.c:1691
+   tasklet_hi_action+0xa/0x20 kernel/softirq.c:994
+   handle_softirqs+0x16f/0x440 kernel/softirq.c:645
+   </IRQ>
+
+The four URBs referenced by these pointers are allocated long before and
+do not depend on any transfer state, so assign them before the submit
+loop.  Keeping the assignment inside the retry path also restores a
+well-defined URB rotation when the start frame mismatch handling kills
+and resubmits the streams.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99315" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: us122l: fix null dereference at hwdep open and release
+
+usb_stream_hwdep_open() and usb_stream_hwdep_release() pass the result of
+usb_ifnum_to_if() straight to usb_autopm_get_interface() and
+usb_autopm_put_interface(), without checking it for null.
+
+usb_ifnum_to_if() returns null once the device is gone, since
+usb_disable_device() clears udev->actconfig on disconnect.  the hwdep file
+can outlive the disconnect: the card is released with
+snd_card_free_when_closed(), so a process that keeps the character device
+open reaches the driver's release callback after the usb configuration has
+been dropped, and interface_to_usbdev() then dereferences the null
+interface at offsetof(struct device, parent).  the open callback has the
+same problem when it races with the disconnect.
+
+check both lookups and fail the open with -enodev; in release, skip the
+runtime pm put when the interface is already gone and still run the rest
+of the per-file cleanup.  move the us122l->first bookkeeping after the
+checks so that a failed open no longer leaves a stale file pointer behind.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99315" target="_blank">CVE-2026-99315</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: us122l: Fix NULL dereference at hwdep open and release
+
+usb_stream_hwdep_open() and usb_stream_hwdep_release() pass the result of
+usb_ifnum_to_if() straight to usb_autopm_get_interface() and
+usb_autopm_put_interface(), without checking it for NULL.
+
+usb_ifnum_to_if() returns NULL once the device is gone, since
+usb_disable_device() clears udev->actconfig on disconnect.  The hwdep file
+can outlive the disconnect: the card is released with
+snd_card_free_when_closed(), so a process that keeps the character device
+open reaches the driver's release callback after the USB configuration has
+been dropped, and interface_to_usbdev() then dereferences the NULL
+interface at offsetof(struct device, parent).  The open callback has the
+same problem when it races with the disconnect.
+
+Check both lookups and fail the open with -ENODEV; in release, skip the
+runtime PM put when the interface is already gone and still run the rest
+of the per-file cleanup.  Move the us122l->first bookkeeping after the
+checks so that a failed open no longer leaves a stale file pointer behind.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99314" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+alsa: us122l: add missing null check in usb_stream_hwdep_mmap()
+
+usb_stream_hwdep_mmap() reads us122l->sk.s and dereferences it without
+checking for null.  the stream object is released by usb_stream_free(),
+which is reached through us122l_stop() both when the device is
+disconnected and when us122l_start() fails, and it leaves us122l->sk.s
+set to null.  the hwdep file stays usable after that, so a later mmap()
+
+	kasan: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
+	rip: 0010:usb_stream_hwdep_mmap+0x107/0x890 sound/usb/usx2y/us122l.c:182
+
+crashes while reading s->read_size, which sits at offset 0x10.
+
+that null is an expected state for this field: usb_stream_hwdep_vm_fault(),
+usb_stream_hwdep_poll(), usb_stream_hwdep_ioctl(), usb_stream_stop() and
+usb_stream_free() all test it before use.  only the mmap callback misses
+the check, so let it return -enodev, matching what the other hwdep mapping
+in usx2yhwdeppcm.c does when its shared buffer has not been allocated.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99314" target="_blank">CVE-2026-99314</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ALSA: us122l: Add missing NULL check in usb_stream_hwdep_mmap()
+
+usb_stream_hwdep_mmap() reads us122l->sk.s and dereferences it without
+checking for NULL.  The stream object is released by usb_stream_free(),
+which is reached through us122l_stop() both when the device is
+disconnected and when us122l_start() fails, and it leaves us122l->sk.s
+set to NULL.  The hwdep file stays usable after that, so a later mmap()
+
+	KASAN: null-ptr-deref in range [0x0000000000000010-0x0000000000000017]
+	RIP: 0010:usb_stream_hwdep_mmap+0x107/0x890 sound/usb/usx2y/us122l.c:182
+
+crashes while reading s->read_size, which sits at offset 0x10.
+
+That NULL is an expected state for this field: usb_stream_hwdep_vm_fault(),
+usb_stream_hwdep_poll(), usb_stream_hwdep_ioctl(), usb_stream_stop() and
+usb_stream_free() all test it before use.  Only the mmap callback misses
+the check, so let it return -ENODEV, matching what the other hwdep mapping
+in usx2yhwdeppcm.c does when its shared buffer has not been allocated.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99313" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+hid: logitech-hidpp: fix race condition when accessing stale stack pointer
+
+the driver uses hidpp->send_receive_buf to point to a stack-allocated
+buffer in the synchronous command path (__do_hidpp_send_message_sync).
+however, this pointer is not cleared when the function returns.
+
+if an event is processed (e.g. by a different thread) while the
+send_mutex is held by a new command, but before that command has
+updated send_receive_buf, the handler (hidpp_raw_hidpp_event) will
+observe that the mutex is locked and dereference the stale pointer.
+
+this results in an out-of-bounds access on a different thread's kernel
+stack (or a null pointer dereference on the very first command).
+
+fix this by:
+1. clearing hidpp->send_receive_buf to null before releasing the mutex
+   in the synchronous command path.
+2. moving the assignment of the local 'question' and 'answer' pointers
+   inside the mutex_is_locked() block in the handler, and adding
+   a null check before dereferencing.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99313" target="_blank">CVE-2026-99313</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+HID: logitech-hidpp: fix race condition when accessing stale stack pointer
+
+The driver uses hidpp->send_receive_buf to point to a stack-allocated
+buffer in the synchronous command path (__do_hidpp_send_message_sync).
+However, this pointer is not cleared when the function returns.
+
+If an event is processed (e.g. by a different thread) while the
+send_mutex is held by a new command, but before that command has
+updated send_receive_buf, the handler (hidpp_raw_hidpp_event) will
+observe that the mutex is locked and dereference the stale pointer.
+
+This results in an out-of-bounds access on a different thread's kernel
+stack (or a NULL pointer dereference on the very first command).
+
+Fix this by:
+1. Clearing hidpp->send_receive_buf to NULL before releasing the mutex
+   in the synchronous command path.
+2. Moving the assignment of the local 'question' and 'answer' pointers
+   inside the mutex_is_locked() block in the handler, and adding
+   a NULL check before dereferencing.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99312" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+kvm: x86: unconditionally reset mmu context when emulating init
+
+force an mmu reset when emulating an init even if paging was already
+disabled, as the mmu page role includes guest_mode (l2), i.e. an init while
+l2 is running with cr0.pg=0 will result in kvm running l1 with a stale mmu
+context.
+
+alternatively, the reset could be scoped strictly to paging being enabled
+or l2 being active, but smm is also encoded in the page role.  even though
+it _should_ be impossible for the vcpu to be init'd while smm is active,
+there's zero value in not handling smm.  at that point, the only scenario
+where kvm _doesn't_ need to reset the mmu context is on an init with the
+vcpu running in real mode or unpaged protect mode, and while init in those
+modes is somewhat common, it's far from a hot path and re-initializing the
+mmu is not expensive, especially when the role isn't changing (kvm elides
+most of the re-configuration in that case).
+
+note, like the fixes commit, this bug only affects nested svm as init is an
+unconditional intercept on vmx, i.e. it's impossible to emulate init while
+l2 is active.
+
+temporarily keep the guest tlb flush when cr0.pg is being cleared even
+though it is fully redundant with the flush that is emitted on all init
+events (kvm itself only does reset when a vcpu is being created, i.e. when
+cr0.pg must be '0').">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99312" target="_blank">CVE-2026-99312</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:45 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+KVM: x86: Unconditionally reset MMU context when emulating INIT
+
+Force an MMU reset when emulating an INIT even if paging was already
+disabled, as the MMU page role includes guest_mode (L2), i.e. an INIT while
+L2 is running with CR0.PG=0 will result in KVM running L1 with a stale MMU
+context.
+
+Alternatively, the reset could be scoped strictly to paging being enabled
+or L2 being active, but SMM is also encoded in the page role.  Even though
+it _should_ be impossible for the vCPU to be INIT'd while SMM is active,
+there's zero value in not handling SMM.  At that point, the only scenario
+where KVM _doesn't_ need to reset the MMU context is on an INIT with the
+vCPU running in Real Mode or Unpaged Protect Mode, and while INIT in those
+modes is somewhat common, it's far from a hot path and re-initializing the
+MMU is not expensive, especially when the role isn't changing (KVM elides
+most of the re-configuration in that case).
+
+Note, like the Fixes commit, this bug only affects nested SVM as INIT is an
+unconditional intercept on VMX, i.e. it's impossible to emulate INIT while
+L2 is active.
+
+Temporarily keep the guest TLB flush when CR0.PG is being cleared even
+though it is fully redundant with the flush that is emitted on all INIT
+events (KVM itself only does RESET when a vCPU is being created, i.e. when
+CR0.PG must be '0').</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95645" data-description="zohocorp manageengine ddi central build below 6500 are affected by a authenticated command injection vulnerability in the windows ddi agent's clear_blocked_domains functionality, allowing specially crafted blocked-domain values to trigger arbitrary command execution on windows systems.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95645" target="_blank">CVE-2026-95645</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:44 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>Zohocorp Manageengine DDI Central build below 6500 are affected by a authenticated command injection vulnerability in the Windows DDI Agent's clear_blocked_domains functionality, allowing specially crafted blocked-domain values to trigger arbitrary command execution on Windows systems.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-95643" data-description="zohocorp manageengine ddi central build below 6500 are affected by a authenticated powershell command injection vulnerability in the telnet connectivity feature, allowing specially crafted ipv6 scope identifiers to execute arbitrary commands on managed windows nodes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95643" target="_blank">CVE-2026-95643</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:44 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>Zohocorp Manageengine DDI Central build below 6500 are affected by a authenticated PowerShell command injection vulnerability in the Telnet connectivity feature, allowing specially crafted IPv6 scope identifiers to execute arbitrary commands on managed Windows nodes.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-128981" data-description="** unsupported when assigned ** 
+
+
+
+improper authentication in apache seatunnel web 1.0.2 allows a user whose account has been disabled to authenticate with valid credentials and obtain a new login token. the login query does not check the account status, so disabling an account does not prevent new logins or access to protected apis using the newly issued token. this issue requires valid credentials for the disabled account; it is not a credential-free authentication bypass.
+
+
+
+apache seatunnel web is no longer maintained. the affected 1.0.2 release does not contain the account-status check added to the main branch in pull request #264. there is no maintained fixed release. users should discontinue use of this unsupported component.
+
+
+
+note: this vulnerability only affects products that are no longer supported by the maintainer.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128981" target="_blank">CVE-2026-128981</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:44 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>** UNSUPPORTED WHEN ASSIGNED ** 
+
+
+
+Improper Authentication in Apache SeaTunnel Web 1.0.2 allows a user whose account has been disabled to authenticate with valid credentials and obtain a new login token. The login query does not check the account status, so disabling an account does not prevent new logins or access to protected APIs using the newly issued token. This issue requires valid credentials for the disabled account; it is not a credential-free authentication bypass.
+
+
+
+Apache SeaTunnel Web is no longer maintained. The affected 1.0.2 release does not contain the account-status check added to the main branch in pull request #264. There is no maintained fixed release. Users should discontinue use of this unsupported component.
+
+
+
+NOTE: This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-113497" data-description="a low-privileged remote attacker can change the password of arbitrary users using the rest api, including administrative accounts. by changing the administrator password, an attacker can obtain full administrative access to the device and modify all configuration settings.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-113497" target="_blank">CVE-2026-113497</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-18 03:17:44 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>A low-privileged remote attacker can change the password of arbitrary users using the REST API, including administrative accounts. By changing the administrator password, an attacker can obtain full administrative access to the device and modify all configuration settings.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-1212" data-description="the buddypress plugin for wordpress is vulnerable to insecure direct object reference in all versions up to, and including, 14.4.0. this is due to the `get_item_permissions_check` function in the messages rest api endpoint trusting a client-supplied `user_id` parameter instead of using the authenticated user's id. this makes it possible for authenticated attackers with subscriber-level access and above to read, update, or delete other users' private message threads by specifying the victim's user id in the request.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-1212" target="_blank">CVE-2026-1212</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-18 02:17:19 CDT</p>
@@ -96,102 +600,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 4.3</p>
                     <p>The BuddyPress plugin for WordPress is vulnerable to unauthorized modification of data due to a misconfigured capability check on the 'update_item_permissions_check' function in all versions up to, and including, 14.4.0. This makes it possible for authenticated attackers, with Author-level access and above, to enable and disable plugin components.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-131922" data-description="in openstack keystonemiddleware before 13.0.3, by supplying a malicious regular expression when creating an application credential (aka appcred) access_rules entry, an authenticated user may consume resources in the consuming process making a service unresponsive.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131922" target="_blank">CVE-2026-131922</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 01:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>In OpenStack keystonemiddleware before 13.0.3, by supplying a malicious regular expression when creating an application credential (aka AppCred) access_rules entry, an authenticated user may consume resources in the consuming process making a service unresponsive.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-131920" data-description="in openstack cinder before 29.1.1, by making an os-initialize_connection request with an iqn that includes a path traversal as part of the connector's initiator element, an authenticated user with a 'member' role may create or overwrite files in the volume host filesystem. only cinder-volume hosts using the lio iscsi target driver are affected. this target driver is typically used with the lvm volume driver.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131920" target="_blank">CVE-2026-131920</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 01:17:22 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In OpenStack Cinder before 29.1.1, by making an os-initialize_connection request with an IQN that includes a path traversal as part of the connector's initiator element, an authenticated user with a 'member' role may create or overwrite files in the volume host filesystem. Only cinder-volume hosts using the LIO iSCSI target driver are affected. This target driver is typically used with the LVM volume driver.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-97330" data-description="the team members wordpress plugin before 5.4.2 does not properly escape team member social link urls when they are rendered back in the administration area, allowing users with the contributor role and above to perform stored cross-site scripting attacks against higher privileged users who edit the team.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97330" target="_blank">CVE-2026-97330</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Team Members WordPress plugin before 5.4.2 does not properly escape team member social link URLs when they are rendered back in the administration area, allowing users with the Contributor role and above to perform Stored Cross-Site Scripting attacks against higher privileged users who edit the team.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-97329" data-description="the team members wordpress plugin before 5.4.2 does not properly escape a team member field when it is rendered back in the administration area, allowing users with the contributor role and above to perform stored cross-site scripting attacks against higher-privileged users who edit the team.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97329" target="_blank">CVE-2026-97329</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:31 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Team Members WordPress plugin before 5.4.2 does not properly escape a team member field when it is rendered back in the administration area, allowing users with the contributor role and above to perform Stored Cross-Site Scripting attacks against higher-privileged users who edit the team.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-75795" data-description="the edwiser bridge  wordpress plugin before 4.3.5 does not correctly scope one of its rest api authentication checks, disabling wordpress's rest nonce validation for every route on the site, which allows attackers to make a logged-in administrator perform arbitrary privileged actions, such as creating a new administrator account, via csrf.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-75795" target="_blank">CVE-2026-75795</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Edwiser Bridge  WordPress plugin before 4.3.5 does not correctly scope one of its REST API authentication checks, disabling WordPress's REST nonce validation for every route on the site, which allows attackers to make a logged-in administrator perform arbitrary privileged actions, such as creating a new administrator account, via CSRF.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-5765" data-description="the essential real estate plugin for wordpress is vulnerable to php object injection in all versions up to, and including, 5.3.3 via deserialization of untrusted input in the 'saved_search_check_result' function. this makes it possible for authenticated attackers, with subscriber-level access and above, to inject a php object. no known pop chain is present in the vulnerable software, which means this vulnerability has no impact unless another plugin or theme containing a pop chain is installed on the site. if a pop chain is present via an additional plugin or theme installed on the target system, it may allow the attacker to perform actions like delete arbitrary files, retrieve sensitive data, or execute code depending on the pop chain present.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-5765" target="_blank">CVE-2026-5765</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>The Essential Real Estate plugin for WordPress is vulnerable to PHP Object Injection in all versions up to, and including, 5.3.3 via deserialization of untrusted input in the 'saved_search_check_result' function. This makes it possible for authenticated attackers, with Subscriber-level access and above, to inject a PHP Object. No known POP chain is present in the vulnerable software, which means this vulnerability has no impact unless another plugin or theme containing a POP chain is installed on the site. If a POP chain is present via an additional plugin or theme installed on the target system, it may allow the attacker to perform actions like delete arbitrary files, retrieve sensitive data, or execute code depending on the POP chain present.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-129434" data-description="the onelogin saml sso wordpress plugin before 3.7.1 does not validate a user-supplied parameter before using it to redirect an already-authenticated user, allowing unauthenticated attackers to redirect a logged-in user to an arbitrary external domain via a crafted link (e.g. for phishing).">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129434" target="_blank">CVE-2026-129434</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:30 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The OneLogin SAML SSO WordPress plugin before 3.7.1 does not validate a user-supplied parameter before using it to redirect an already-authenticated user, allowing unauthenticated attackers to redirect a logged-in user to an arbitrary external domain via a crafted link (e.g. for phishing).</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-128851" data-description="the probono form basic wordpress plugin before 1.3.3 does not validate the real type of files uploaded through its public form, trusting the client-declared mime type instead, which could allow unauthenticated attackers to upload php files to a public directory and execute them before they are deleted, on servers that do not honour the probono form basic wordpress plugin before 1.3.3's apache-only access restriction.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-128851" target="_blank">CVE-2026-128851</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Probono Form Basic WordPress plugin before 1.3.3 does not validate the real type of files uploaded through its public form, trusting the client-declared MIME type instead, which could allow unauthenticated attackers to upload PHP files to a public directory and execute them before they are deleted, on servers that do not honour the Probono Form Basic WordPress plugin before 1.3.3's Apache-only access restriction.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127021" data-description="the flamix: bitrix24 and woocommerce products sync wordpress plugin before 1.7.0 does not restrict or validate an unauthenticated file-exchange request, allowing anyone to write a file with an attacker-chosen name, extension and path to a web-served location and thereby execute arbitrary php.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127021" target="_blank">CVE-2026-127021</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Flamix: Bitrix24 and WooCommerce Products Sync WordPress plugin before 1.7.0 does not restrict or validate an unauthenticated file-exchange request, allowing anyone to write a file with an attacker-chosen name, extension and path to a web-served location and thereby execute arbitrary PHP.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-127003" data-description="the rsvp and event management wordpress plugin before 2.7.19 does not sanitise and escape attendee data imported from a spreadsheet before outputting it on the frontend rsvp form, which could allow users with the author role and above to perform stored cross-site scripting attacks against anyone, including administrators, viewing the affected attendee, even when the unfiltered_html capability is disallowed.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127003" target="_blank">CVE-2026-127003</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The RSVP and Event Management WordPress plugin before 2.7.19 does not sanitise and escape attendee data imported from a spreadsheet before outputting it on the frontend RSVP form, which could allow users with the Author role and above to perform Stored Cross-Site Scripting attacks against anyone, including administrators, viewing the affected attendee, even when the unfiltered_html capability is disallowed.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-126041" data-description="the hide my wp ghost  wordpress plugin before 7.0.19 does not remove or restrict a debug branch in its output rewriting, allowing unauthenticated attackers to reveal the hidden login page, the hidden admin path and the renamed content folders the hide my wp ghost  wordpress plugin before 7.0.19 is meant to conceal.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126041" target="_blank">CVE-2026-126041</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Hide My WP Ghost  WordPress plugin before 7.0.19 does not remove or restrict a debug branch in its output rewriting, allowing unauthenticated attackers to reveal the hidden login page, the hidden admin path and the renamed content folders the Hide My WP Ghost  WordPress plugin before 7.0.19 is meant to conceal.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-126040" data-description="the hide my wp ghost  wordpress plugin before 7.0.19 only enforces two-factor authentication on the interactive login flow and not on other authentication paths, allowing an attacker who already has a user's valid password to authenticate as that user without completing the second factor.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126040" target="_blank">CVE-2026-126040</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-18 00:17:29 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The Hide My WP Ghost  WordPress plugin before 7.0.19 only enforces two-factor authentication on the interactive login flow and not on other authentication paths, allowing an attacker who already has a user's valid password to authenticate as that user without completing the second factor.</p>
                 </div>
         
             </div>
