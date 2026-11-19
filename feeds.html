@@ -34,198 +34,1820 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-133165" data-description="misp contains an authorization and scope flaw in the objectreference model's capturereference method. when a user saves an event (via rest api, sync, or feeds), any object reference included in the payload is looked up by its uuid across the entire misp instance rather than being scoped to the event being saved. an authenticated user with permission to add or edit events can therefore include the uuid of an object reference belonging to a different event—including events in other organizations that the user cannot view—and cause the system to overwrite that foreign reference's relationship_type, comment, deleted flag, and timestamp with attacker-supplied values. the affected reference is neither deleted nor recreated in the attacker's event; its fields are silently rewritten in place. this constitutes a cross-tenant integrity violation: data integrity of object references in events the attacker has no read or write access to is compromised. the vulnerability is reachable through any event save path (rest add/edit, inter-instance sync, feed ingestion) and requires only a valid authenticated session with event modification privileges and knowledge or discovery of a target reference uuid.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133165" target="_blank">CVE-2026-133165</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:29 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99565" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: wait for negotiation before receiving another pdu
+
+the receive thread queues a request and can read the next pdu before
+the negotiation worker finishes. while need_neg is set, the next pdu
+can cause ksmbd_init_smb_server() to replace conn->ops. a pipelined
+smb2 request can therefore make the worker handle an earlier, shorter
+smb1 request with smb2 operations and read beyond its buffer.
+
+an smb1 multi-protocol negotiate may be followed by an smb2 negotiate
+that changes conn->ops again. wait for work queued while the connection
+is new or needs negotiation to complete before reading another pdu.
+this keeps the operations stable for both stages of negotiation without
+changing when need_neg is cleared.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99565" target="_blank">CVE-2026-99565</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:13 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains an authorization and scope flaw in the ObjectReference model's captureReference method. When a user saves an event (via REST API, sync, or feeds), any object reference included in the payload is looked up by its UUID across the entire MISP instance rather than being scoped to the event being saved. An authenticated user with permission to add or edit events can therefore include the UUID of an object reference belonging to a different event—including events in other organizations that the user cannot view—and cause the system to overwrite that foreign reference's relationship_type, comment, deleted flag, and timestamp with attacker-supplied values. The affected reference is neither deleted nor recreated in the attacker's event; its fields are silently rewritten in place. This constitutes a cross-tenant integrity violation: data integrity of object references in events the attacker has no read or write access to is compromised. The vulnerability is reachable through any event save path (REST add/edit, inter-instance sync, feed ingestion) and requires only a valid authenticated session with event modification privileges and knowledge or discovery of a target reference UUID.</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: wait for negotiation before receiving another PDU
+
+The receive thread queues a request and can read the next PDU before
+the negotiation worker finishes. While need_neg is set, the next PDU
+can cause ksmbd_init_smb_server() to replace conn->ops. A pipelined
+SMB2 request can therefore make the worker handle an earlier, shorter
+SMB1 request with SMB2 operations and read beyond its buffer.
+
+An SMB1 multi-protocol negotiate may be followed by an SMB2 NEGOTIATE
+that changes conn->ops again. Wait for work queued while the connection
+is new or needs negotiation to complete before reading another PDU.
+This keeps the operations stable for both stages of negotiation without
+changing when need_neg is cleared.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133163" data-description="misp contains an authorization bypass affecting the event protection mechanism. in misp, a protected event is designed to be modifiable only through the events/edit endpoint with a valid cryptographic signature. however, the protection check was enforced solely on that single route. all other write endpoints that operate on an event—attributes (add, edit, delete), objects (delete), events (populate, publish, unprotect, upload_sample, upload_analysis_file), tags (attach, detach), event reports (edit, delete), galaxy clusters (attach, detach), and cryptographic keys (add, delete)—lacked the equivalent check.
+                <div class="cve-entry" data-cve-id="CVE-2026-99564" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-as a result, an authenticated user holding the sync permission (perm_sync) who is neither a site administrator nor an internal sync user (perm_sync_internal), and who belongs to the same organization as the event's creator (orgc_id), could modify, delete, or add data to a protected event without providing a valid signature. this included the ability to unprotect the event entirely, publish it to other instances, and add cryptographic signing keys that would subsequently permit signed edits, effectively nullifying the protection mechanism.
+smb: smbdirect: don't wait for rdma_cm_event_disconnected in smbdirect_socket_destroy_sync()
 
-the vulnerability requires an authenticated sync user account within the event's creator organization. no user interaction or special network conditions are required; standard api calls to the affected endpoints are sufficient. the security impact is a loss of integrity over protected threat-intelligence events: an attacker can inject, alter, or remove attributes, objects, tags, reports, and galaxy cluster associations, and can remove the protection flag or add signing keys to enable persistent unauthorized modification.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133163" target="_blank">CVE-2026-133163</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:29 CDT</p>
+smbdirect_socket_destroy_sync() waited for rdma_cm_event_disconnected
+after smbdirect_socket_cleanup_work() called rdma_disconnect(). that
+can take very long, e.g. if the peer just disappeared, until the
+rdma cm gives up, or forever if the event already happened, but the
+status was overwritten afterwards.
+
+this is not needed: smbdirect_socket_destroy() drains the qp under
+rdma_lock_handler(), destroys it and calls rdma_destroy_id(), which
+only waits for a currently running event handler and makes sure no
+further events are delivered. the rest of the disconnect protocol
+(dreq/drep and timewait for ib, abrupt close for iwarp) is handled
+by the rdma core asynchronously. drivers/nvme/host/rdma.c also just
+calls rdma_disconnect() and ib_drain_qp() before rdma_destroy_id().
+
+so smbdirect_socket_destroy() now also accepts
+smbdirect_socket_disconnecting and changes the status to
+smbdirect_socket_disconnected itself under rdma_lock_handler().
+
+we could still get rdma_cm_event_disconnected in the small
+windows between rdma_unlock_handler() and rdma_destroy_id(),
+but in that case smbdirect_connection_rdma_event_handler()
+is basically a no-op.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99564" target="_blank">CVE-2026-99564</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:13 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>MISP contains an authorization bypass affecting the event protection mechanism. In MISP, a protected event is designed to be modifiable only through the events/edit endpoint with a valid cryptographic signature. However, the protection check was enforced solely on that single route. All other write endpoints that operate on an event—attributes (add, edit, delete), objects (delete), events (populate, publish, unprotect, upload_sample, upload_analysis_file), tags (attach, detach), event reports (edit, delete), galaxy clusters (attach, detach), and cryptographic keys (add, delete)—lacked the equivalent check.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-As a result, an authenticated user holding the sync permission (perm_sync) who is neither a site administrator nor an internal sync user (perm_sync_internal), and who belongs to the same organization as the event's creator (orgc_id), could modify, delete, or add data to a protected event without providing a valid signature. This included the ability to unprotect the event entirely, publish it to other instances, and add cryptographic signing keys that would subsequently permit signed edits, effectively nullifying the protection mechanism.
+smb: smbdirect: don't wait for RDMA_CM_EVENT_DISCONNECTED in smbdirect_socket_destroy_sync()
 
-The vulnerability requires an authenticated sync user account within the event's creator organization. No user interaction or special network conditions are required; standard API calls to the affected endpoints are sufficient. The security impact is a loss of integrity over protected threat-intelligence events: an attacker can inject, alter, or remove attributes, objects, tags, reports, and galaxy cluster associations, and can remove the protection flag or add signing keys to enable persistent unauthorized modification.</p>
+smbdirect_socket_destroy_sync() waited for RDMA_CM_EVENT_DISCONNECTED
+after smbdirect_socket_cleanup_work() called rdma_disconnect(). That
+can take very long, e.g. if the peer just disappeared, until the
+rdma cm gives up, or forever if the event already happened, but the
+status was overwritten afterwards.
+
+This is not needed: smbdirect_socket_destroy() drains the qp under
+rdma_lock_handler(), destroys it and calls rdma_destroy_id(), which
+only waits for a currently running event handler and makes sure no
+further events are delivered. The rest of the disconnect protocol
+(DREQ/DREP and timewait for IB, abrupt close for iWarp) is handled
+by the rdma core asynchronously. drivers/nvme/host/rdma.c also just
+calls rdma_disconnect() and ib_drain_qp() before rdma_destroy_id().
+
+So smbdirect_socket_destroy() now also accepts
+SMBDIRECT_SOCKET_DISCONNECTING and changes the status to
+SMBDIRECT_SOCKET_DISCONNECTED itself under rdma_lock_handler().
+
+We could still get RDMA_CM_EVENT_DISCONNECTED in the small
+windows between rdma_unlock_handler() and rdma_destroy_id(),
+but in that case smbdirect_connection_rdma_event_handler()
+is basically a no-op.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133157" data-description="flowintel contains a csv injection vulnerability in its audit log csv export functionality. attacker-influenced text recorded in audit logs could be interpreted as spreadsheet formulas when an administrator opened the exported csv file in a spreadsheet application.
+                <div class="cve-entry" data-cve-id="CVE-2026-99563" data-description="in the linux kernel, the following vulnerability has been resolved:
 
-the vulnerable behavior allowed an attacker who could influence audit log content (for example by generating network traffic that is captured and logged) to embed formula-like strings (such as =cmd() or =hyperlink()) into audit entries. when the resulting csv export was opened in a spreadsheet application, these strings could be executed as formulas, potentially leading to data exfiltration, data manipulation, or execution of further malicious actions within the spreadsheet context.
+smb: smbdirect: release failed pending sockets of a listener
 
-preconditions:
-- an attacker must be able to influence content that is recorded in flowintel audit logs.
-- an administrator or user must export the audit logs to csv and open the file in a spreadsheet application that interprets formulas.
+a child of a listener only left the listen.pending or listen.ready
+list via smbdirect_socket_accept() or when the listener was
+destroyed. so every connection that failed before it was accepted
+(negotiate timeout, peer disconnect, invalid negotiate request, ...)
+stayed on the list and counted against the backlog until the listener
+was destroyed. after about backlog (10 for ksmbd) such connections
+smbdirect_listen_connect_request() rejected every new connection with
+-ebusy, so an unauthenticated peer was able to permanently stop
+ksmbd from accepting smb-direct connections.
 
-security impact:
-- potential information disclosure from the spreadsheet or linked resources.
-- potential integrity impact on data within the spreadsheet application.
-- no direct compromise of the flowintel application itself.
+now a failed child moves itself to a new listen.orphaned list at the
+end of smbdirect_socket_cleanup_work(), after the disconnect was
+started, and queues listen.purge_orphaned_work, which releases it
+with smbdirect_socket_release(), without holding the listener's
+rdma_lock_handler() lock, in the same way smbdirect_socket_destroy()
+does for the remaining children. orphaned sockets still count against
+the backlog until they are released.
 
-affected version: <4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133157" target="_blank">CVE-2026-133157</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:29 CDT</p>
+sc->accept.listener is now only changed under listener->listen.lock
+and whoever clears it is responsible for releasing the socket:
+smbdirect_socket_accept(), purge_orphaned_work or the destroy of the
+listener.
+
+in order to make that work:
+
+- a struct smbdirect_socket that is a listener is now freed via
+  kfree_rcu(), so that a child can dereference sc->accept.listener
+  under rcu_read_lock(), even if the listener is released concurrently.
+
+- smbdirect_listen_connect_request() adds nsc to the listen.pending
+  list and sets nsc->accept.listener before it calls
+  smbdirect_accept_connect_request(), and always returns 0 so the
+  rdma_cm core keeps the connection id and nsc owns it. on a non-zero
+  return it schedules nsc's teardown with
+  smbdirect_socket_schedule_cleanup(), which orphans it off the
+  listener so that purge_orphaned_work releases it; nsc destroys its
+  own connection id with rdma_destroy_id() in that teardown. the
+  teardown has to be deferred because the rdma_cm core holds nsc's
+  id_priv->handler_mutex across the handler, so nsc->rdma.cm_id must
+  not be destroyed synchronously from here. that same handler_mutex
+  (and the listener's) also guarantees nsc can't go away under us,
+  so setting the listener before the call is safe and lets a failure
+  orphan nsc.
+
+- smbdirect_accept_negotiate_recv_work() no longer moves a socket to
+  the ready list if it already failed or no longer belongs to the
+  listener. every accepting socket has a listener, so if
+  sc->accept.listener is already cleared, it no longer sends a
+  negotiate response, as the socket is about to be released.
+
+- smbdirect_socket_destroy() of the listener disables
+  purge_orphaned_work and also releases the orphaned sockets.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99563" target="_blank">CVE-2026-99563</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains a CSV injection vulnerability in its audit log CSV export functionality. Attacker-influenced text recorded in audit logs could be interpreted as spreadsheet formulas when an administrator opened the exported CSV file in a spreadsheet application.
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
 
-The vulnerable behavior allowed an attacker who could influence audit log content (for example by generating network traffic that is captured and logged) to embed formula-like strings (such as =CMD() or =HYPERLINK()) into audit entries. When the resulting CSV export was opened in a spreadsheet application, these strings could be executed as formulas, potentially leading to data exfiltration, data manipulation, or execution of further malicious actions within the spreadsheet context.
+smb: smbdirect: release failed pending sockets of a listener
 
-Preconditions:
-- An attacker must be able to influence content that is recorded in flowintel audit logs.
-- An administrator or user must export the audit logs to CSV and open the file in a spreadsheet application that interprets formulas.
+A child of a listener only left the listen.pending or listen.ready
+list via smbdirect_socket_accept() or when the listener was
+destroyed. So every connection that failed before it was accepted
+(negotiate timeout, peer disconnect, invalid negotiate request, ...)
+stayed on the list and counted against the backlog until the listener
+was destroyed. After about backlog (10 for ksmbd) such connections
+smbdirect_listen_connect_request() rejected every new connection with
+-EBUSY, so an unauthenticated peer was able to permanently stop
+ksmbd from accepting SMB-Direct connections.
 
-Security impact:
-- Potential information disclosure from the spreadsheet or linked resources.
-- Potential integrity impact on data within the spreadsheet application.
-- No direct compromise of the flowintel application itself.
+Now a failed child moves itself to a new listen.orphaned list at the
+end of smbdirect_socket_cleanup_work(), after the disconnect was
+started, and queues listen.purge_orphaned_work, which releases it
+with smbdirect_socket_release(), without holding the listener's
+rdma_lock_handler() lock, in the same way smbdirect_socket_destroy()
+does for the remaining children. Orphaned sockets still count against
+the backlog until they are released.
 
-Affected version: <4.1.0</p>
+sc->accept.listener is now only changed under listener->listen.lock
+and whoever clears it is responsible for releasing the socket:
+smbdirect_socket_accept(), purge_orphaned_work or the destroy of the
+listener.
+
+In order to make that work:
+
+- a struct smbdirect_socket that is a listener is now freed via
+  kfree_rcu(), so that a child can dereference sc->accept.listener
+  under rcu_read_lock(), even if the listener is released concurrently.
+
+- smbdirect_listen_connect_request() adds nsc to the listen.pending
+  list and sets nsc->accept.listener before it calls
+  smbdirect_accept_connect_request(), and always returns 0 so the
+  rdma_cm core keeps the connection id and nsc owns it. On a non-zero
+  return it schedules nsc's teardown with
+  smbdirect_socket_schedule_cleanup(), which orphans it off the
+  listener so that purge_orphaned_work releases it; nsc destroys its
+  own connection id with rdma_destroy_id() in that teardown. The
+  teardown has to be deferred because the rdma_cm core holds nsc's
+  id_priv->handler_mutex across the handler, so nsc->rdma.cm_id must
+  not be destroyed synchronously from here. That same handler_mutex
+  (and the listener's) also guarantees nsc can't go away under us,
+  so setting the listener before the call is safe and lets a failure
+  orphan nsc.
+
+- smbdirect_accept_negotiate_recv_work() no longer moves a socket to
+  the ready list if it already failed or no longer belongs to the
+  listener. Every accepting socket has a listener, so if
+  sc->accept.listener is already cleared, it no longer sends a
+  negotiate response, as the socket is about to be released.
+
+- smbdirect_socket_destroy() of the listener disables
+  purge_orphaned_work and also releases the orphaned sockets.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133116" data-description="termix 1.7.0 before 26.11.2 contains a path traversal vulnerability that allows authenticated users to write files outside the export directory via crafted usernames. attackers can self-register with a username containing ../ segments and request post /database/export to plant attacker-controlled sqlite files in writable directories, enabling disk exhaustion.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133116" target="_blank">CVE-2026-133116</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
-                    <p>Termix 1.7.0 before 26.11.2 contains a path traversal vulnerability that allows authenticated users to write files outside the export directory via crafted usernames. Attackers can self-register with a username containing ../ segments and request POST /database/export to plant attacker-controlled SQLite files in writable directories, enabling disk exhaustion.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99562" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: reject fsctl_set_zero_data on a directory handle
+
+an authenticated client with a writable tree connection can open a
+directory with file_write_data and send fsctl_set_zero_data on that
+handle. the handler only checks fp->daccess & file_write_data_le, but on
+a directory file_write_data is the legitimate add-file right, so the
+check passes. ksmbd_vfs_zero_data() then calls kernel_write() on the
+directory file, which has no fmode_write, and __kernel_write_iter()
+hits warn_on_once(!(file->f_mode & fmode_write)), panicking a
+panic_on_warn kernel.
+
+before commit 25e414db7033 ("ksmbd: report holes in allocated range
+queries") the dense-file path used vfs_fallocate(), which rejects
+directories with -eisdir. the kernel_write() loop that replaced it has
+no such check. reject a directory handle in ksmbd_vfs_zero_data() before
+writing, as ksmbd_vfs_write() already does for smb2_write.
+
+  warning: fs/read_write.c:608 at __kernel_write_iter+0x74b/0x8c0
+  workqueue: ksmbd-io handle_ksmbd_work
+  call trace:
+   kernel_write+0x1ef/0x4d0
+   ksmbd_vfs_zero_data+0x413/0x590
+   smb2_ioctl+0x21fa/0x66a0
+   handle_ksmbd_work+0x61b/0x1ff0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99562" target="_blank">CVE-2026-99562</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: reject FSCTL_SET_ZERO_DATA on a directory handle
+
+An authenticated client with a writable tree connection can open a
+directory with FILE_WRITE_DATA and send FSCTL_SET_ZERO_DATA on that
+handle. The handler only checks fp->daccess & FILE_WRITE_DATA_LE, but on
+a directory FILE_WRITE_DATA is the legitimate add-file right, so the
+check passes. ksmbd_vfs_zero_data() then calls kernel_write() on the
+directory file, which has no FMODE_WRITE, and __kernel_write_iter()
+hits WARN_ON_ONCE(!(file->f_mode & FMODE_WRITE)), panicking a
+panic_on_warn kernel.
+
+Before commit 25e414db7033 ("ksmbd: report holes in allocated range
+queries") the dense-file path used vfs_fallocate(), which rejects
+directories with -EISDIR. The kernel_write() loop that replaced it has
+no such check. Reject a directory handle in ksmbd_vfs_zero_data() before
+writing, as ksmbd_vfs_write() already does for SMB2_WRITE.
+
+  WARNING: fs/read_write.c:608 at __kernel_write_iter+0x74b/0x8c0
+  Workqueue: ksmbd-io handle_ksmbd_work
+  Call Trace:
+   kernel_write+0x1ef/0x4d0
+   ksmbd_vfs_zero_data+0x413/0x590
+   smb2_ioctl+0x21fa/0x66a0
+   handle_ksmbd_work+0x61b/0x1ff0</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133115" data-description="redmine 6.1.0 before 6.1.6 and 7.0.0 before 7.0.3 contains an incorrect authorization vulnerability that lets oauth clients exceed token scope during project creation. a client with only project-creation scope can set is_public, enabled_module_names and inherit_members, making projects public and granting parent-project members subproject access.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133115" target="_blank">CVE-2026-133115</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Redmine 6.1.0 before 6.1.6 and 7.0.0 before 7.0.3 contains an incorrect authorization vulnerability that lets OAuth clients exceed token scope during project creation. A client with only project-creation scope can set is_public, enabled_module_names and inherit_members, making projects public and granting parent-project members subproject access.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99561" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+fork: don't create io threads once pf_postcoredump is set
+
+zap_process() skips every thread that already has pf_postcoredump set.
+such a thread is past synchronize_group_exit(), so a coredump can't
+catch it anymore. it isn't counted in core_state->threads_remaining and
+it isn't sent sigkill.
+
+do_exit() sets pf_postcoredump in synchronize_group_exit() and calls
+io_uring_files_cancel() right after that. the cancellation runs task
+work and a create_worker_cb() that io-wq queued before the exit creates
+a new io-wq worker from there. if another thread started a coredump in
+the meantime that worker joins a thread-group which is already being
+dumped. zap_process() never saw it so it was never counted. but when it
+exits it sees signal->core_state in synchronize_group_exit() and
+decrements threads_remaining like any other thread.
+
+so the count reaches zero one thread early and the dumper leaves
+coredump_wait_inactive() while a thread it counted is still running.
+
+the task has no fatal signal pending because zap_process() deliberately
+didn't send it one, and it never went through get_signal() so it doesn't
+have pf_signaled either.
+
+refuse to create an io thread when the creator has pf_postcoredump.
+that costs nothing. io_uring_files_cancel() raises io_wq_bit_exit
+before it runs any task work, so a worker created from there only ever
+gets to exit again, and io_should_retry_thread() doesn't retry -eintr.
+
+clearing pf_postcoredump for the new thread in copy_process() was the
+other option. it makes the worker a thread like any other, but it only
+helps while the dump hasn't started. a worker born after zap_process()
+has run is invisible to it whatever its flags say and still decrements
+threads_remaining on the way out. refusing to create it covers both, and
+then no task is ever born with the flag, so there is nothing to clear.
+
+moving io_uring_files_cancel() ahead of synchronize_group_exit() closes
+the same window. it runs the cancellation, and whatever that can block
+on, before the thread announces itself to the dumper. a thread that
+blocks there never reaches coredump_task_exit() at all, so the dumper
+ends up waiting for a thread that never parks. refusing the creation
+leaves the cancellation where it is. but it's very ugly to run io_uring
+work even before we did all the generic exit work.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99561" target="_blank">CVE-2026-99561</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+fork: don't create io threads once PF_POSTCOREDUMP is set
+
+zap_process() skips every thread that already has PF_POSTCOREDUMP set.
+Such a thread is past synchronize_group_exit(), so a coredump can't
+catch it anymore. It isn't counted in core_state->threads_remaining and
+it isn't sent SIGKILL.
+
+do_exit() sets PF_POSTCOREDUMP in synchronize_group_exit() and calls
+io_uring_files_cancel() right after that. The cancellation runs task
+work and a create_worker_cb() that io-wq queued before the exit creates
+a new io-wq worker from there. If another thread started a coredump in
+the meantime that worker joins a thread-group which is already being
+dumped. zap_process() never saw it so it was never counted. But when it
+exits it sees signal->core_state in synchronize_group_exit() and
+decrements threads_remaining like any other thread.
+
+So the count reaches zero one thread early and the dumper leaves
+coredump_wait_inactive() while a thread it counted is still running.
+
+The task has no fatal signal pending because zap_process() deliberately
+didn't send it one, and it never went through get_signal() so it doesn't
+have PF_SIGNALED either.
+
+Refuse to create an io thread when the creator has PF_POSTCOREDUMP.
+That costs nothing. io_uring_files_cancel() raises IO_WQ_BIT_EXIT
+before it runs any task work, so a worker created from there only ever
+gets to exit again, and io_should_retry_thread() doesn't retry -EINTR.
+
+Clearing PF_POSTCOREDUMP for the new thread in copy_process() was the
+other option. It makes the worker a thread like any other, but it only
+helps while the dump hasn't started. A worker born after zap_process()
+has run is invisible to it whatever its flags say and still decrements
+threads_remaining on the way out. Refusing to create it covers both, and
+then no task is ever born with the flag, so there is nothing to clear.
+
+Moving io_uring_files_cancel() ahead of synchronize_group_exit() closes
+the same window. It runs the cancellation, and whatever that can block
+on, before the thread announces itself to the dumper. A thread that
+blocks there never reaches coredump_task_exit() at all, so the dumper
+ends up waiting for a thread that never parks. Refusing the creation
+leaves the cancellation where it is. But it's very ugly to run io_uring
+work even before we did all the generic exit work.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133114" data-description="caddy – woocommerce side cart & free shipping bar plugin for wordpress 3.0.0 before 3.2.1 contains a missing authorization vulnerability in the saved-items/add rest endpoint that exposes non-public product data. authenticated attackers with subscriber-level access can enumerate product_id values to read names, prices, images and stock status of private, draft, hidden and password-protected products.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133114" target="_blank">CVE-2026-133114</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Caddy – WooCommerce Side Cart & Free Shipping Bar plugin for WordPress 3.0.0 before 3.2.1 contains a missing authorization vulnerability in the saved-items/add REST endpoint that exposes non-public product data. Authenticated attackers with Subscriber-level access can enumerate product_id values to read names, prices, images and stock status of private, draft, hidden and password-protected products.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99560" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+wifi: mt76: mt7925: fix reset panic caused by the wm2 rx irq mask
+
+mt7925_irq_map sets wm2_complete_mask, but mt7925_dma_layout has no
+tx done ring, so the mt_rxq_mcu_wa queue and its napi are never set up.
+on a chip reset, mt7925e_mac_reset() calls napi_disable() on that napi
+and crashes:
+
+  bug: kernel null pointer dereference, address: 0000000000000a40
+  workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
+  rip: 0010:mutex_lock+0x1c/0x50
+  call trace:
+   napi_disable+0x1d/0x50
+   mt7925e_mac_reset+0x327/0x420 [mt7925e]
+   mt7925_mac_reset_work+0x9a/0x1a0 [mt7925_common]
+
+remove the wm2 mask from mt7925_irq_map and from
+mt7925_int_rx_done_all.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99560" target="_blank">CVE-2026-99560</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+wifi: mt76: mt7925: fix reset panic caused by the WM2 rx irq mask
+
+mt7925_irq_map sets wm2_complete_mask, but mt7925_dma_layout has no
+tx done ring, so the MT_RXQ_MCU_WA queue and its NAPI are never set up.
+On a chip reset, mt7925e_mac_reset() calls napi_disable() on that NAPI
+and crashes:
+
+  BUG: kernel NULL pointer dereference, address: 0000000000000a40
+  Workqueue: mt76 mt7925_mac_reset_work [mt7925_common]
+  RIP: 0010:mutex_lock+0x1c/0x50
+  Call Trace:
+   napi_disable+0x1d/0x50
+   mt7925e_mac_reset+0x327/0x420 [mt7925e]
+   mt7925_mac_reset_work+0x9a/0x1a0 [mt7925_common]
+
+Remove the WM2 mask from mt7925_irq_map and from
+MT7925_INT_RX_DONE_ALL.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133113" data-description="gogs through 0.14.4 contains an authorization bypass vulnerability that allows collaborators with write access to push to protected branches by merging pull requests. because mergepullrequest skips branch protection checks and pullrequest.merge omits hook environment variables, attackers can merge commits into branches restricted to allowlisted users.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133113" target="_blank">CVE-2026-133113</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>Gogs through 0.14.4 contains an authorization bypass vulnerability that allows collaborators with write access to push to protected branches by merging pull requests. Because MergePullRequest skips branch protection checks and PullRequest.Merge omits hook environment variables, attackers can merge commits into branches restricted to allowlisted users.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99559" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+arm: 9524/1: mm: align hugetlb mappings to the huge page size
+
+mmap(map_hugetlb) on 32-bit arm can return an address which is not
+aligned to the huge page size. in a qemu virt guest, unmapping the vma
+then hits the alignment check in __unmap_hugepage_range():
+
+  kernel bug at mm/hugetlb.c:5213!
+  internal error: oops - bug: 0 [#1] smp arm
+  pc is at __unmap_hugepage_range+0x540/0x584
+  lr is at __zap_vma_range+0x13a0/0x1410
+
+commit 7bd3f1e1a9ae ("mm: make hugetlb mappings go through
+mm_get_unmapped_area_vmflags") made hugetlb mappings use the
+architecture's arch_get_unmapped_area(). the generic implementations
+handle hugetlb alignment, but the arm implementations only account for
+the optional shmlba cache-colouring constraint. a 4 kib-page kernel can
+therefore align the mapping to 4 kib or 16 kib instead of the required
+2 mib.
+
+set the alignment mask from the file's hstate for hugetlb mappings in
+both arm implementations. huge-page alignment also satisfies the
+shmlba constraint.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99559" target="_blank">CVE-2026-99559</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ARM: 9524/1: mm: align hugetlb mappings to the huge page size
+
+mmap(MAP_HUGETLB) on 32-bit Arm can return an address which is not
+aligned to the huge page size. In a QEMU virt guest, unmapping the VMA
+then hits the alignment check in __unmap_hugepage_range():
+
+  kernel BUG at mm/hugetlb.c:5213!
+  Internal error: Oops - BUG: 0 [#1] SMP ARM
+  PC is at __unmap_hugepage_range+0x540/0x584
+  LR is at __zap_vma_range+0x13a0/0x1410
+
+Commit 7bd3f1e1a9ae ("mm: make hugetlb mappings go through
+mm_get_unmapped_area_vmflags") made hugetlb mappings use the
+architecture's arch_get_unmapped_area(). The generic implementations
+handle hugetlb alignment, but the Arm implementations only account for
+the optional SHMLBA cache-colouring constraint. A 4 KiB-page kernel can
+therefore align the mapping to 4 KiB or 16 KiB instead of the required
+2 MiB.
+
+Set the alignment mask from the file's hstate for hugetlb mappings in
+both Arm implementations. Huge-page alignment also satisfies the
+SHMLBA constraint.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133112" data-description="modified ecommerce shopsoftware through 3.3.0 contains a cross-site request forgery vulnerability in gv_send.php because the action=process step never validates a csrf token via check_secure_form(). attackers can host an auto-submitting form that makes a logged-in customer send their gift voucher balance to an attacker-controlled email address for redemption.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133112" target="_blank">CVE-2026-133112</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.1</p>
-                    <p>modified eCommerce Shopsoftware through 3.3.0 contains a cross-site request forgery vulnerability in gv_send.php because the action=process step never validates a CSRF token via check_secure_form(). Attackers can host an auto-submitting form that makes a logged-in customer send their gift voucher balance to an attacker-controlled email address for redemption.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99558" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+blk-crypto: fix null deref and uaf in __blk_crypto_evict_key()
+
+sashiko reported a possible null pointer dereference, triggered by the
+following flow:
+
+  dm-inlinecrypt ctor            # first use of the fallback
+   ├─ blk_crypto_init_key()      # succeeds, ctx->key.size != 0
+   ├─ blk_crypto_start_using_key()
+   │   ├─ hw-wrapped key: -eopnotsupp
+   │   │    # profile never allocated (null)
+   │   └─ raw key: fallback_start_using_mode()
+   │      └─ blk_crypto_fallback_init() fails
+   │         └─ kfree(profile)   # not nulled
+   ├─ goto bad
+   └─ inlinecrypt_dtr()          # evicts whenever key.size is set
+      └─ blk_crypto_evict_key()
+         └─ blk_crypto_config_supported_natively() = false
+            └─ blk_crypto_fallback_evict_key()
+               └─ __blk_crypto_evict_key(blk_crypto_fallback_profile)
+                  └─ profile->num_slots # boom!!!
+
+this issue can be reproduced using the following commands:
+
+  dd if=/dev/zero of=/tmp/backing bs=1m count=64
+  loop=$(losetup -f --show /tmp/backing)
+  sz=$(blockdev --getsz $loop)
+  key=$(head -c 64 /dev/urandom | od -an -tx1 | tr -d ' \n')
+  dmsetup create ic --table "0 $sz inlinecrypt aes-xts-plain64 \
+    $key 0 $loop 0 1 keytype:hw-wrapped"
+
+and the following oops is triggered:
+
+  ==================================================================
+  blk-crypto: loop0: no support for wrapped keys
+  oops: general protection fault, probably for non-canonical address
+        0xdffffc000000000b: 0000 [#1] smp kasan pti
+  kasan: null-ptr-deref in range [0x0000000000000058-0x000000000000005f]
+  cpu: 5 uid: 0 pid: 901 comm: dmsetup 7.3.0-rc3 #1 preempt(lazy)
+  rip: 0010:__blk_crypto_evict_key+0x2e/0x3b0
+  call trace:
+   blk_crypto_evict_key+0x24c/0x320
+   inlinecrypt_dtr+0xf6/0x160
+   inlinecrypt_ctr+0x2d3/0xbd0
+   dm_table_add_target+0x661/0xf40
+   table_load+0x1c4/0x490
+   ctl_ioctl+0x32f/0x5f0
+   dm_ctl_ioctl+0xe/0x20
+  ==================================================================
+
+dm-inlinecrypt is the only caller that can evict a key that was never
+started, as fscrypt frees such a key without evicting it.
+
+fix this by returning early from blk_crypto_fallback_evict_key() when
+tfms_inited[] is not set for the key's mode.  tfms_inited[] is only set
+after blk_crypto_fallback_init() has successfully initialized the
+profile, so the crash above is no longer reachable.
+
+the bug has been latent since commit c984ff1423ae ("blk-crypto:
+dynamically allocate fallback profile") was merged in v6.5, and only
+became actually triggerable when commit e7f57d2c47e2 ("dm-inlinecrypt:
+add target for inline block device encryption") was merged in v7.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99558" target="_blank">CVE-2026-99558</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+blk-crypto: fix NULL deref and UAF in __blk_crypto_evict_key()
+
+Sashiko reported a possible NULL pointer dereference, triggered by the
+following flow:
+
+  dm-inlinecrypt ctor            # first use of the fallback
+   ├─ blk_crypto_init_key()      # succeeds, ctx->key.size != 0
+   ├─ blk_crypto_start_using_key()
+   │   ├─ hw-wrapped key: -EOPNOTSUPP
+   │   │    # profile never allocated (NULL)
+   │   └─ raw key: fallback_start_using_mode()
+   │      └─ blk_crypto_fallback_init() fails
+   │         └─ kfree(profile)   # not NULLed
+   ├─ goto bad
+   └─ inlinecrypt_dtr()          # evicts whenever key.size is set
+      └─ blk_crypto_evict_key()
+         └─ blk_crypto_config_supported_natively() = false
+            └─ blk_crypto_fallback_evict_key()
+               └─ __blk_crypto_evict_key(blk_crypto_fallback_profile)
+                  └─ profile->num_slots # BOOM!!!
+
+This issue can be reproduced using the following commands:
+
+  dd if=/dev/zero of=/tmp/backing bs=1M count=64
+  LOOP=$(losetup -f --show /tmp/backing)
+  SZ=$(blockdev --getsz $LOOP)
+  KEY=$(head -c 64 /dev/urandom | od -An -tx1 | tr -d ' \n')
+  dmsetup create ic --table "0 $SZ inlinecrypt aes-xts-plain64 \
+    $KEY 0 $LOOP 0 1 keytype:hw-wrapped"
+
+And the following oops is triggered:
+
+  ==================================================================
+  blk-crypto: loop0: no support for wrapped keys
+  Oops: general protection fault, probably for non-canonical address
+        0xdffffc000000000b: 0000 [#1] SMP KASAN PTI
+  KASAN: null-ptr-deref in range [0x0000000000000058-0x000000000000005f]
+  CPU: 5 UID: 0 PID: 901 Comm: dmsetup 7.3.0-rc3 #1 PREEMPT(lazy)
+  RIP: 0010:__blk_crypto_evict_key+0x2e/0x3b0
+  Call Trace:
+   blk_crypto_evict_key+0x24c/0x320
+   inlinecrypt_dtr+0xf6/0x160
+   inlinecrypt_ctr+0x2d3/0xbd0
+   dm_table_add_target+0x661/0xf40
+   table_load+0x1c4/0x490
+   ctl_ioctl+0x32f/0x5f0
+   dm_ctl_ioctl+0xe/0x20
+  ==================================================================
+
+dm-inlinecrypt is the only caller that can evict a key that was never
+started, as fscrypt frees such a key without evicting it.
+
+Fix this by returning early from blk_crypto_fallback_evict_key() when
+tfms_inited[] is not set for the key's mode.  tfms_inited[] is only set
+after blk_crypto_fallback_init() has successfully initialized the
+profile, so the crash above is no longer reachable.
+
+The bug has been latent since commit c984ff1423ae ("blk-crypto:
+dynamically allocate fallback profile") was merged in v6.5, and only
+became actually triggerable when commit e7f57d2c47e2 ("dm-inlinecrypt:
+add target for inline block device encryption") was merged in v7.2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-132858" data-description="a flaw was found in gdm. the createremotedisplay d-bus method fails to perform proper authorization checks when initiating a remote display session. a local attacker with access to the login screen environment can invoke this method with an arbitrary username to bypass standard automatic login verification checks. this vulnerability allows the attacker to achieve privilege escalation and start an unauthorized session as any user on the system, including root.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132858" target="_blank">CVE-2026-132858</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:28 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>A flaw was found in gdm. The CreateRemoteDisplay D-Bus method fails to perform proper authorization checks when initiating a remote display session. A local attacker with access to the login screen environment can invoke this method with an arbitrary username to bypass standard automatic login verification checks. This vulnerability allows the attacker to achieve privilege escalation and start an unauthorized session as any user on the system, including root.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99557" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ceph: fail readdir when the mds reply carries no dirfrag
+
+a ceph mount oopses in ceph_readdir() when the mds answers a readdir
+request with a reply whose extra blob is empty.  parse_reply_info()
+skips reply blobs whose length is zero, so parse_reply_info_readdir()
+never runs, r_reply_info.dir_dir stays null, and the reply still
+parses as successful.  ceph_mdsc_do_request() returns 0 and
+ceph_readdir() then reads rinfo->dir_dir->frag with no null check:
+
+	/* extra */
+	ceph_decode_32_safe(&p, end, len, bad);
+	if (len > 0) {
+		...
+		err = parse_reply_info_extra(&p, p + len, req, features, s);
+		...
+	}
+
+the oops on v7.3.0-rc4-00537-ga3ff15db6820, one getdents64(2) on the
+mount root after an ms_mode=legacy mount, trimmed:
+
+bug: kasan: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+oops: general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] smp kasan nopti
+cpu: 1 uid: 0 pid: 266 comm: ls tainted: g                 n  7.3.0-rc4-00537-ga3ff15db6820 #1 preempt(lazy)
+rip: 0010:ceph_readdir+0xbff/0x3ea0
+call trace:
+ <task>
+ ? __pfx_ceph_readdir+0x10/0x10
+ wrap_directory_iterator+0xa2/0xe0
+ iterate_dir+0x1da/0x5d0
+ __x64_sys_getdents64+0x13b/0x2a0
+ do_syscall_64+0xdd/0x4a0
+ entry_syscall_64_after_hwframe+0x77/0x7f
+ </task>
+
+the unconditional frag read came in with 81c6aea5275ea ("ceph: handle
+frag mismatch between readdir request and reply"), so the bug is old.
+
+treat a reply with no dirfrag as a protocol violation: warn once,
+drop the request and return -eio, the same way ceph_readdir() already
+handles the two malformed-reply cases later in the function.
+
+tested on v7.3.0-rc4-00537-ga3ff15db6820 (kasan).  unpatched, the
+getdents64(2) above takes the machine down (oops=panic) on the first
+readdir reply.  with the patch it warns once and getdents64(2)
+returns -eio, no oops, no hang.  a conformant reply for an empty
+directory — dirfrag present, zero entries, frag_end|frag_complete —
+still lists "." and ".." and returns eof on both kernels, so normal
+readdir behavior is unchanged.  the oops is still present in
+v7.3-rc5 (72d3fcf802c45).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99557" target="_blank">CVE-2026-99557</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ceph: fail readdir when the MDS reply carries no dirfrag
+
+A ceph mount oopses in ceph_readdir() when the MDS answers a READDIR
+request with a reply whose extra blob is empty.  parse_reply_info()
+skips reply blobs whose length is zero, so parse_reply_info_readdir()
+never runs, r_reply_info.dir_dir stays NULL, and the reply still
+parses as successful.  ceph_mdsc_do_request() returns 0 and
+ceph_readdir() then reads rinfo->dir_dir->frag with no NULL check:
+
+	/* extra */
+	ceph_decode_32_safe(&p, end, len, bad);
+	if (len > 0) {
+		...
+		err = parse_reply_info_extra(&p, p + len, req, features, s);
+		...
+	}
+
+The oops on v7.3.0-rc4-00537-ga3ff15db6820, one getdents64(2) on the
+mount root after an ms_mode=legacy mount, trimmed:
+
+BUG: KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+Oops: general protection fault, probably for non-canonical address 0xdffffc0000000000: 0000 [#1] SMP KASAN NOPTI
+CPU: 1 UID: 0 PID: 266 Comm: ls Tainted: G                 N  7.3.0-rc4-00537-ga3ff15db6820 #1 PREEMPT(lazy)
+RIP: 0010:ceph_readdir+0xbff/0x3ea0
+Call Trace:
+ <TASK>
+ ? __pfx_ceph_readdir+0x10/0x10
+ wrap_directory_iterator+0xa2/0xe0
+ iterate_dir+0x1da/0x5d0
+ __x64_sys_getdents64+0x13b/0x2a0
+ do_syscall_64+0xdd/0x4a0
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+ </TASK>
+
+The unconditional frag read came in with 81c6aea5275ea ("ceph: handle
+frag mismatch between readdir request and reply"), so the bug is old.
+
+Treat a reply with no dirfrag as a protocol violation: warn once,
+drop the request and return -EIO, the same way ceph_readdir() already
+handles the two malformed-reply cases later in the function.
+
+Tested on v7.3.0-rc4-00537-ga3ff15db6820 (KASAN).  Unpatched, the
+getdents64(2) above takes the machine down (oops=panic) on the first
+READDIR reply.  With the patch it warns once and getdents64(2)
+returns -EIO, no oops, no hang.  A conformant reply for an empty
+directory — dirfrag present, zero entries, FRAG_END|FRAG_COMPLETE —
+still lists "." and ".." and returns EOF on both kernels, so normal
+readdir behavior is unchanged.  The oops is still present in
+v7.3-rc5 (72d3fcf802c45).</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-126827" data-description="a maliciously crafted sbsar file, when imported or loaded through the substance in 3ds max plugin in autodesk 3ds max 2027, can trigger a stack overflow vulnerability. a malicious actor may leverage this vulnerability to cause an application crash.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126827" target="_blank">CVE-2026-126827</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A maliciously crafted SBSAR file, when imported or loaded through the Substance in 3ds Max plugin in Autodesk 3ds Max 2027, can trigger a Stack Overflow vulnerability. A malicious actor may leverage this vulnerability to cause an application crash.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99556" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ksmbd: serialize directory emptiness checks with readdir
+
+smb2 query_directory holds fp->readdir_lock while it calls iterate_dir()
+on fp->filp. an smb2 set_info request with file_disposition_information
+can resolve the same fileid and call ksmbd_vfs_empty_dir() on the same
+filp without that lock.
+
+iterate_dir()'s inode read lock permits concurrent readers and does not
+serialize per-file iterator state. ext4 stores its dx readdir cursor and
+fname rb tree in file->private_data. concurrent reset or refill can
+therefore free a fname node while the other worker still traverses it or
+retains its rb-tree link, resulting in use-after-free accesses.
+
+an authenticated smb client with list and delete rights on a directory in
+a writable ksmbd share backed by ext4 can trigger this when the directory
+takes the dx readdir path. the client overlaps an smb2 query_directory
+request with an smb2 set_info request carrying file_disposition_information
+on one live fileid.
+
+in one x86_64 smp kasan multi-shot guest using ksmbd-for-next at
+171df27077fb, the unmodified kernel reported a cross-worker use-after-free
+before a panic. the first report's access and free stacks show the two
+request paths directly (trimmed):
+
+  bug: kasan: slab-use-after-free in ext4_htree_store_dirent+0x488/0x550
+  read of size 8 by task kworker/2:0/29
+  workqueue: ksmbd-io handle_ksmbd_work
+  call trace:
+   ext4_htree_store_dirent+0x488/0x550
+   htree_dirblock_to_tree+0x535/0x990
+   ext4_htree_fill_tree+0x319/0xba0
+   ext4_readdir+0x175a/0x2f40
+   iterate_dir+0x1b6/0x630
+   smb2_query_dir+0x1003/0x1cc0
+
+  freed by task 279:
+   free_rb_tree_fname+0x67/0xc0
+   ext4_readdir+0x13a9/0x2f40
+   iterate_dir+0x1b6/0x630
+   ksmbd_vfs_empty_dir+0xa2/0x100
+   smb2_set_info+0x2ffa/0x45d0
+
+take fp->readdir_lock across the entire emptiness check. this places both
+iterators over that handle's filp in the same lock domain while
+preserving the disposition status handling. the exact code change
+completed a warning-free x86_64 kasan bzimage build. tracing three request
+pairs showed that the two iterate_dir() calls no longer overlapped and the
+expected statuses were preserved. a further 1,600 reproducer iterations
+completed with expected statuses and no kasan report, oops, or panic.
+
+the reproducer and complete guest configuration are available privately
+to maintainers on request.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99556" target="_blank">CVE-2026-99556</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ksmbd: serialize directory emptiness checks with readdir
+
+SMB2 QUERY_DIRECTORY holds fp->readdir_lock while it calls iterate_dir()
+on fp->filp. An SMB2 SET_INFO request with FILE_DISPOSITION_INFORMATION
+can resolve the same FileId and call ksmbd_vfs_empty_dir() on the same
+filp without that lock.
+
+iterate_dir()'s inode read lock permits concurrent readers and does not
+serialize per-file iterator state. ext4 stores its dx readdir cursor and
+fname RB tree in file->private_data. Concurrent reset or refill can
+therefore free a fname node while the other worker still traverses it or
+retains its RB-tree link, resulting in use-after-free accesses.
+
+An authenticated SMB client with list and delete rights on a directory in
+a writable KSMBD share backed by ext4 can trigger this when the directory
+takes the dx readdir path. The client overlaps an SMB2 QUERY_DIRECTORY
+request with an SMB2 SET_INFO request carrying FILE_DISPOSITION_INFORMATION
+on one live FileId.
+
+In one x86_64 SMP KASAN multi-shot guest using ksmbd-for-next at
+171df27077fb, the unmodified kernel reported a cross-worker use-after-free
+before a panic. The first report's access and free stacks show the two
+request paths directly (trimmed):
+
+  BUG: KASAN: slab-use-after-free in ext4_htree_store_dirent+0x488/0x550
+  Read of size 8 by task kworker/2:0/29
+  Workqueue: ksmbd-io handle_ksmbd_work
+  Call Trace:
+   ext4_htree_store_dirent+0x488/0x550
+   htree_dirblock_to_tree+0x535/0x990
+   ext4_htree_fill_tree+0x319/0xba0
+   ext4_readdir+0x175a/0x2f40
+   iterate_dir+0x1b6/0x630
+   smb2_query_dir+0x1003/0x1cc0
+
+  Freed by task 279:
+   free_rb_tree_fname+0x67/0xc0
+   ext4_readdir+0x13a9/0x2f40
+   iterate_dir+0x1b6/0x630
+   ksmbd_vfs_empty_dir+0xa2/0x100
+   smb2_set_info+0x2ffa/0x45d0
+
+Take fp->readdir_lock across the entire emptiness check. This places both
+iterators over that handle's filp in the same lock domain while
+preserving the disposition status handling. The exact code change
+completed a warning-free x86_64 KASAN bzImage build. Tracing three request
+pairs showed that the two iterate_dir() calls no longer overlapped and the
+expected statuses were preserved. A further 1,600 reproducer iterations
+completed with expected statuses and no KASAN report, Oops, or panic.
+
+The reproducer and complete guest configuration are available privately
+to maintainers on request.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-126826" data-description="a maliciously crafted sbsar file, when imported or loaded through the substance in 3ds max plugin in autodesk 3ds max 2027, can trigger an out-of-bounds write vulnerability. a malicious actor may leverage this vulnerability to cause an application crash, data corruption, or potentially execute arbitrary code in the context of the current process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126826" target="_blank">CVE-2026-126826</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:27 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>A maliciously crafted SBSAR file, when imported or loaded through the Substance in 3ds Max plugin in Autodesk 3ds Max 2027, can trigger an Out-of-Bounds Write vulnerability. A malicious actor may leverage this vulnerability to cause an application crash, data corruption, or potentially execute arbitrary code in the context of the current process.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99555" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+media: usbtv: fix null-pointer dereference on disconnect
+
+a null-pointer dereference can occur in usb_make_path() when called from
+usbtv_querycap() (and other ioctl handlers) during device disconnection.
+
+oops: general protection fault, probably for non-canonical address
+0xdffffc000000000a: 0000 [#1] smp kasan nopti
+kasan: null-ptr-deref in range [0x0000000000000050-0x0000000000000057]
+rip: 0010:usb_make_path include/linux/usb.h:985 [inline]
+rip: 0010:usbtv_querycap+0x9c/0x100
+drivers/media/usb/usbtv/usbtv-video.c:612
+...
+call trace:
+ <task>
+ v4l_querycap+0x236/0x470 drivers/media/v4l2-core/v4l2-ioctl.c:1106
+ __video_do_ioctl+0x8af/0xc70 drivers/media/v4l2-core/v4l2-ioctl.c:3133
+ video_usercopy+0x860/0x1430 drivers/media/v4l2-core/v4l2-ioctl.c:3475
+ v4l2_ioctl+0x18d/0x1e0 drivers/media/v4l2-core/v4l2-dev.c:366
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
+
+this happens due to a race condition between the usb device disconnect
+routine (usbtv_disconnect()) and v4l2 ioctls. when the device is
+disconnected, usbtv_disconnect() sets usbtv->udev = null without holding
+the usbtv->v4l2_lock mutex. concurrently, an ioctl handler like
+usbtv_querycap() can be executing under the v4l2_lock and attempt to use
+usbtv->udev, leading to a crash.
+
+to fix this, move the usbtv->udev = null assignment into usbtv_video_free()
+and protect it with mutex_lock(&usbtv->v4l2_lock). this ensures that no
+non-queue ioctl handler can run concurrently with the pointer being
+nullified. if an ioctl is already running, the mutex will block the
+disconnect path until the ioctl finishes. if an ioctl is blocked waiting
+for the lock, it will acquire it after the disconnect routine releases it,
+but will then check video_is_registered() (which was cleared by
+vb2_video_unregister_device()) and safely return -enodev.
+
+acquiring v4l2_lock after vb2_video_unregister_device() avoids
+reintroducing a historical deadlock issue, and usbtv_audio_free() remains
+safe as it is called before usbtv_video_free().">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99555" target="_blank">CVE-2026-99555</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+media: usbtv: fix null-pointer dereference on disconnect
+
+A null-pointer dereference can occur in usb_make_path() when called from
+usbtv_querycap() (and other ioctl handlers) during device disconnection.
+
+Oops: general protection fault, probably for non-canonical address
+0xdffffc000000000a: 0000 [#1] SMP KASAN NOPTI
+KASAN: null-ptr-deref in range [0x0000000000000050-0x0000000000000057]
+RIP: 0010:usb_make_path include/linux/usb.h:985 [inline]
+RIP: 0010:usbtv_querycap+0x9c/0x100
+drivers/media/usb/usbtv/usbtv-video.c:612
+...
+Call Trace:
+ <TASK>
+ v4l_querycap+0x236/0x470 drivers/media/v4l2-core/v4l2-ioctl.c:1106
+ __video_do_ioctl+0x8af/0xc70 drivers/media/v4l2-core/v4l2-ioctl.c:3133
+ video_usercopy+0x860/0x1430 drivers/media/v4l2-core/v4l2-ioctl.c:3475
+ v4l2_ioctl+0x18d/0x1e0 drivers/media/v4l2-core/v4l2-dev.c:366
+ vfs_ioctl fs/ioctl.c:51 [inline]
+ __do_sys_ioctl fs/ioctl.c:597 [inline]
+ __se_sys_ioctl+0xfc/0x170 fs/ioctl.c:583
+ do_syscall_x64 arch/x86/entry/syscall_64.c:63 [inline]
+ do_syscall_64+0x174/0x580 arch/x86/entry/syscall_64.c:94
+
+This happens due to a race condition between the USB device disconnect
+routine (usbtv_disconnect()) and V4L2 ioctls. When the device is
+disconnected, usbtv_disconnect() sets usbtv->udev = NULL without holding
+the usbtv->v4l2_lock mutex. Concurrently, an ioctl handler like
+usbtv_querycap() can be executing under the v4l2_lock and attempt to use
+usbtv->udev, leading to a crash.
+
+To fix this, move the usbtv->udev = NULL assignment into usbtv_video_free()
+and protect it with mutex_lock(&usbtv->v4l2_lock). This ensures that no
+non-queue ioctl handler can run concurrently with the pointer being
+nullified. If an ioctl is already running, the mutex will block the
+disconnect path until the ioctl finishes. If an ioctl is blocked waiting
+for the lock, it will acquire it after the disconnect routine releases it,
+but will then check video_is_registered() (which was cleared by
+vb2_video_unregister_device()) and safely return -ENODEV.
+
+Acquiring v4l2_lock after vb2_video_unregister_device() avoids
+reintroducing a historical deadlock issue, and usbtv_audio_free() remains
+safe as it is called before usbtv_video_free().</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-126825" data-description="a maliciously crafted sbsar file, when imported or loaded through the substance in 3ds max plugin in autodesk 3ds max 2027, can trigger an out-of-bounds read (table-index lookup) vulnerability. a malicious actor may leverage this vulnerability to cause an application crash or potentially read sensitive data from the current process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126825" target="_blank">CVE-2026-126825</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A maliciously crafted SBSAR file, when imported or loaded through the Substance in 3ds Max plugin in Autodesk 3ds Max 2027, can trigger an Out-of-Bounds Read (table-index lookup) vulnerability. A malicious actor may leverage this vulnerability to cause an application crash or potentially read sensitive data from the current process.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99554" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net: usb: pegasus: do not advance rx_skb->data on dropped frames
+
+for the 0x8513 chip, read_bulk_callback() skips the 2-byte receive
+header by advancing pegasus->rx_skb->data in place. this is done before
+the pkt_len > pegasus_mtu check, and when that check drops the frame
+the good path resubmits the same skb with the advanced rx_skb->data as
+the transfer buffer, still pegasus_mtu bytes long.
+
+every frame with an oversized length field therefore moves the receive
+buffer two more bytes towards the end of the skb data area. a device
+that keeps sending such frames makes the host controller write received
+data over skb_shared_info and past the end of the allocation, and the
+corrupted skb_shared_info is used when the skb is eventually freed.
+with an emulated device sending frames filled with 0x5a on a kasan
+kernel:
+
+  bug: kasan: slab-out-of-bounds in dummy_timer+0xade/0x3f00 [dummy_hcd]
+  write of size 1536 at addr ffff888105821202 by task swapper/1/0
+  ...
+  oops: general protection fault, probably for non-canonical address 0xeb4b474b4b4b4b4c: 0000 [#1] preempt smp kasan nopti
+  kasan: maybe wild-memory-access in range [0x5a5a5a5a5a5a5a60-0x5a5a5a5a5a5a5a67]
+  rip: 0010:skb_release_data+0x36f/0x800
+
+only skip the header with skb_reserve() once the frame is going to be
+passed up, so the receive buffer always starts at the beginning of the
+skb data area. unlike the old pointer adjustment, skb_reserve() also
+moves skb->tail, so the two header bytes now count against the buffer
+size: lower the length limit for the 0x8513 accordingly, otherwise a
+pkt_len of pegasus_mtu - 1 or pegasus_mtu would trip skb_over_panic().
+
+found by code review with llm assistance and reproduced with an
+emulated usb device (raw-gadget + dummy_hcd).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99554" target="_blank">CVE-2026-99554</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net: usb: pegasus: do not advance rx_skb->data on dropped frames
+
+For the 0x8513 chip, read_bulk_callback() skips the 2-byte receive
+header by advancing pegasus->rx_skb->data in place. This is done before
+the pkt_len > PEGASUS_MTU check, and when that check drops the frame
+the good path resubmits the same skb with the advanced rx_skb->data as
+the transfer buffer, still PEGASUS_MTU bytes long.
+
+Every frame with an oversized length field therefore moves the receive
+buffer two more bytes towards the end of the skb data area. A device
+that keeps sending such frames makes the host controller write received
+data over skb_shared_info and past the end of the allocation, and the
+corrupted skb_shared_info is used when the skb is eventually freed.
+With an emulated device sending frames filled with 0x5a on a KASAN
+kernel:
+
+  BUG: KASAN: slab-out-of-bounds in dummy_timer+0xade/0x3f00 [dummy_hcd]
+  Write of size 1536 at addr ffff888105821202 by task swapper/1/0
+  ...
+  Oops: general protection fault, probably for non-canonical address 0xeb4b474b4b4b4b4c: 0000 [#1] PREEMPT SMP KASAN NOPTI
+  KASAN: maybe wild-memory-access in range [0x5a5a5a5a5a5a5a60-0x5a5a5a5a5a5a5a67]
+  RIP: 0010:skb_release_data+0x36f/0x800
+
+Only skip the header with skb_reserve() once the frame is going to be
+passed up, so the receive buffer always starts at the beginning of the
+skb data area. Unlike the old pointer adjustment, skb_reserve() also
+moves skb->tail, so the two header bytes now count against the buffer
+size: lower the length limit for the 0x8513 accordingly, otherwise a
+pkt_len of PEGASUS_MTU - 1 or PEGASUS_MTU would trip skb_over_panic().
+
+Found by code review with LLM assistance and reproduced with an
+emulated USB device (raw-gadget + dummy_hcd).</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-126824" data-description="a maliciously crafted sbsar file, when imported or loaded through the substance in 3ds max plugin in autodesk 3ds max 2027, can trigger an out-of-bounds read (unvalidated element begin-pointer) vulnerability. a malicious actor may leverage this vulnerability to cause an application crash or potentially read sensitive data from the current process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-126824" target="_blank">CVE-2026-126824</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:26 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A maliciously crafted SBSAR file, when imported or loaded through the Substance in 3ds Max plugin in Autodesk 3ds Max 2027, can trigger an Out-of-Bounds Read (unvalidated element begin-pointer) vulnerability. A malicious actor may leverage this vulnerability to cause an application crash or potentially read sensitive data from the current process.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99553" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+nfsd: fix race between client_info_show() and free_client()
+
+client_info_show() renders /proc/fs/nfsd/clients/<id>/info and walks
+clp->cl_sessions under clp->cl_lock to print each session's slot
+counts.  free_client() tears down the same list without taking
+cl_lock, and is the only unlocked mutator of cl_sessions.  a reader
+can observe a client mid-teardown because get_nfsdfs_clp() pins the
+nfs4_client but not its sessions: free_client() frees every session
+before calling nfsd_client_rmdir(), so an in-flight seq_file reader
+can follow a list_del()'d node whose ->next now holds list_poison1
+and take a general protection fault:
+
+  oops: general protection fault, probably for non-canonical address
+        0xdead00000000014c
+  cpu: 1 uid: 0 pid: 132488 comm: cat
+  rip: 0010:client_info_show+0x2bf/0x3d0
+  rax: dead000000000100
+  call trace:
+   seq_read_iter+0x12a/0x4b0
+   seq_read+0xf1/0x130
+   vfs_read+0xbf/0x350
+   ksys_read+0x6f/0xf0
+   do_syscall_64+0x8b/0xcb0
+   entry_syscall_64_after_hwframe+0x76/0x7e
+  kernel panic - not syncing: fatal exception
+
+detach cl_sessions onto a local reaplist under cl_lock, then free the
+sessions after dropping the lock.  removing entries from cl_sessions
+under cl_lock matches unhash_session(), and the detach-then-reap shape
+matches how __destroy_client() reaps cl_delegations.  the sessions
+cannot be freed while cl_lock is held, since free_session() calls
+nfsd4_del_conns(), which re-acquires it.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99553" target="_blank">CVE-2026-99553</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+nfsd: fix race between client_info_show() and free_client()
+
+client_info_show() renders /proc/fs/nfsd/clients/<id>/info and walks
+clp->cl_sessions under clp->cl_lock to print each session's slot
+counts.  free_client() tears down the same list without taking
+cl_lock, and is the only unlocked mutator of cl_sessions.  A reader
+can observe a client mid-teardown because get_nfsdfs_clp() pins the
+nfs4_client but not its sessions: free_client() frees every session
+before calling nfsd_client_rmdir(), so an in-flight seq_file reader
+can follow a list_del()'d node whose ->next now holds LIST_POISON1
+and take a general protection fault:
+
+  Oops: general protection fault, probably for non-canonical address
+        0xdead00000000014c
+  CPU: 1 UID: 0 PID: 132488 Comm: cat
+  RIP: 0010:client_info_show+0x2bf/0x3d0
+  RAX: dead000000000100
+  Call Trace:
+   seq_read_iter+0x12a/0x4b0
+   seq_read+0xf1/0x130
+   vfs_read+0xbf/0x350
+   ksys_read+0x6f/0xf0
+   do_syscall_64+0x8b/0xcb0
+   entry_SYSCALL_64_after_hwframe+0x76/0x7e
+  Kernel panic - not syncing: Fatal exception
+
+Detach cl_sessions onto a local reaplist under cl_lock, then free the
+sessions after dropping the lock.  Removing entries from cl_sessions
+under cl_lock matches unhash_session(), and the detach-then-reap shape
+matches how __destroy_client() reaps cl_delegations.  The sessions
+cannot be freed while cl_lock is held, since free_session() calls
+nfsd4_del_conns(), which re-acquires it.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-111506" data-description="dell powerstore contains a missing authentication vulnerability that a network-adjacent attacker could exploit to bypass authentication and authorization, leading to information disclosure and denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-111506" target="_blank">CVE-2026-111506</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 08:17:23 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
-                    <p>Dell PowerStore contains a Missing Authentication vulnerability that a network-adjacent attacker could exploit to bypass authentication and authorization, leading to information disclosure and denial of service.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99552" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ocfs2/dlm: drain join handlers before releasing module text
+
+the code for a registered dlm handler must remain resident until its
+last invocation finishes. dlm_unregister_net_handlers() only removes
+dlm_join_handlers from the o2net registry. o2net_handler_get() takes a
+kref on the wrapper, but that reference does not pin ocfs2_dlm text.
+o2net_process_message() calls nh_func after dropping o2net_handler_lock.
+
+with config_ocfs2_fs_o2cb=m, ocfs2_dlm can be loaded independently of
+ocfs2_stack_o2cb while nodemanager continues handling messages from a
+configured, heartbeating peer. if no dependent module or module reference
+prevents normal unload, the following ordering is possible:
+
+  receive worker                       module unload
+  --------------                       -------------
+  o2net_handler_get()
+    take wrapper kref
+    drop handler lock
+  <preempted>
+                                       dlm_exit()
+                                         unregister handlers
+                                       release dlm module text
+  call saved nh_func
+    in released module text
+
+use o2net_unregister_and_flush_handler_list() in the shared dlm
+unregister helper. it first prevents new lookups, then waits for the
+ordered o2net workqueue to drain, including a concurrent destruction of
+that queue. the acquired invocation therefore finishes before dlm_exit()
+returns and the loader releases the callback code. the same helper
+covers partial registration and dlm_init() error unwind before module
+memory is released.
+
+skip the drain when the private join-handler list is empty. early
+dlm_init() failures can reach this helper before any handler has been
+published. partial-registration failure also reaches it a second time
+after the first call has already unregistered and drained the list.
+neither case needs to take o2net_wq_mutex or drain unrelated work.
+the list is changed only by serialized module init/exit paths; a
+nonempty list still uses the full unregister-and-flush helper.
+
+oops report as below:
+
+    oops: int3: 0000 [#1] smp kasan nopti
+    cpu: 2 uid: 0 pid: 54 comm: kworker/u16:3 not tainted 7.3.0-rc4-next-20260921-pmb-ocfs2-functional-v1+ #1 preempt(lazy)
+
+hardware identification omitted.
+
+    workqueue: o2net o2net_rx_until_empty [ocfs2_nodemanager]
+    rip: 0010:0xffffffffc0423871
+    [instruction byte dump omitted.]
+
+register dump omitted.
+
+    call trace:
+     <task>
+     ? o2net_rx_until_empty+0x19b1/0x3300 [ocfs2_nodemanager]
+     ? __pfx_o2net_rx_until_empty+0x10/0x10 [ocfs2_nodemanager]
+     ? lock_acquire+0x190/0x300
+     ? process_one_work+0x935/0x1b40
+     ? process_one_work+0x834/0x1b40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? lock_release+0xc8/0x290
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? process_one_work+0x9a8/0x1b40
+     ? __pfx_process_one_work+0x10/0x10
+     ? lock_acquire+0x190/0x300
+     ? lock_is_held_type+0x8f/0x100
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? worker_thread+0x65c/0xe40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __kthread_parkme+0x177/0x220
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_worker_thread+0x10/0x10
+     ? kthread+0x351/0x460
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_kthread+0x10/0x10
+     ? ret_from_fork+0x659/0x940
+     ? __pfx_ret_from_fork+0x10/0x10
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __switch_to+0x74f/0xf70
+     ? __pfx_kthread+0x10/0x10
+     ? ret_from_fork_asm+0x1a/0x30
+     </task>
+    modules linked in: ocfs2_nodemanager [last unloaded: ocfs2_dlm]
+    ---[ end trace 0000000000000000 ]---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99552" target="_blank">CVE-2026-99552</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ocfs2/dlm: drain join handlers before releasing module text
+
+The code for a registered DLM handler must remain resident until its
+last invocation finishes. dlm_unregister_net_handlers() only removes
+dlm_join_handlers from the o2net registry. o2net_handler_get() takes a
+kref on the wrapper, but that reference does not pin ocfs2_dlm text.
+o2net_process_message() calls nh_func after dropping o2net_handler_lock.
+
+With CONFIG_OCFS2_FS_O2CB=m, ocfs2_dlm can be loaded independently of
+ocfs2_stack_o2cb while nodemanager continues handling messages from a
+configured, heartbeating peer. If no dependent module or module reference
+prevents normal unload, the following ordering is possible:
+
+  Receive worker                       Module unload
+  --------------                       -------------
+  o2net_handler_get()
+    take wrapper kref
+    drop handler lock
+  <preempted>
+                                       dlm_exit()
+                                         unregister handlers
+                                       release DLM module text
+  call saved nh_func
+    in released module text
+
+Use o2net_unregister_and_flush_handler_list() in the shared DLM
+unregister helper. It first prevents new lookups, then waits for the
+ordered o2net workqueue to drain, including a concurrent destruction of
+that queue. The acquired invocation therefore finishes before dlm_exit()
+returns and the loader releases the callback code. The same helper
+covers partial registration and dlm_init() error unwind before module
+memory is released.
+
+Skip the drain when the private join-handler list is empty. Early
+dlm_init() failures can reach this helper before any handler has been
+published. Partial-registration failure also reaches it a second time
+after the first call has already unregistered and drained the list.
+Neither case needs to take o2net_wq_mutex or drain unrelated work.
+The list is changed only by serialized module init/exit paths; a
+nonempty list still uses the full unregister-and-flush helper.
+
+Oops report as below:
+
+    Oops: int3: 0000 [#1] SMP KASAN NOPTI
+    CPU: 2 UID: 0 PID: 54 Comm: kworker/u16:3 Not tainted 7.3.0-rc4-next-20260921-pmb-ocfs2-functional-v1+ #1 PREEMPT(lazy)
+
+Hardware identification omitted.
+
+    Workqueue: o2net o2net_rx_until_empty [ocfs2_nodemanager]
+    RIP: 0010:0xffffffffc0423871
+    [Instruction byte dump omitted.]
+
+Register dump omitted.
+
+    Call Trace:
+     <TASK>
+     ? o2net_rx_until_empty+0x19b1/0x3300 [ocfs2_nodemanager]
+     ? __pfx_o2net_rx_until_empty+0x10/0x10 [ocfs2_nodemanager]
+     ? lock_acquire+0x190/0x300
+     ? process_one_work+0x935/0x1b40
+     ? process_one_work+0x834/0x1b40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? lock_release+0xc8/0x290
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? process_one_work+0x9a8/0x1b40
+     ? __pfx_process_one_work+0x10/0x10
+     ? lock_acquire+0x190/0x300
+     ? lock_is_held_type+0x8f/0x100
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? worker_thread+0x65c/0xe40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __kthread_parkme+0x177/0x220
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_worker_thread+0x10/0x10
+     ? kthread+0x351/0x460
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_kthread+0x10/0x10
+     ? ret_from_fork+0x659/0x940
+     ? __pfx_ret_from_fork+0x10/0x10
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __switch_to+0x74f/0xf70
+     ? __pfx_kthread+0x10/0x10
+     ? ret_from_fork_asm+0x1a/0x30
+     </TASK>
+    Modules linked in: ocfs2_nodemanager [last unloaded: ocfs2_dlm]
+    ---[ end trace 0000000000000000 ]---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-87956" data-description="when private data source connect (pdc) or a secure socks proxy is used, the mqtt data source plugin does not apply tls to broker connections for the tls, ssl, tcps, mqtts and mqtt+ssl schemes. the configured tls settings are ignored, and the broker username and password are sent unencrypted on the hop between the proxy and the broker. the server certificate is not verified, and a configured client certificate is not sent.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-87956" target="_blank">CVE-2026-87956</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 07:17:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>When Private data source connect (PDC) or a secure SOCKS proxy is used, the MQTT data source plugin does not apply TLS to broker connections for the tls, ssl, tcps, mqtts and mqtt+ssl schemes. The configured TLS settings are ignored, and the broker username and password are sent unencrypted on the hop between the proxy and the broker. The server certificate is not verified, and a configured client certificate is not sent.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99551" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ocfs2: drain quorum work before removing the cluster
+
+the configured cluster must remain available until an in-flight quorum
+decision has finished using its fencing method.  o2quo_make_decision()
+drops qs_lock before calling o2quo_fence_self(), which marks heartbeat
+regions for unclean stop and then reads
+o2nm_single_cluster->cl_fence_method.  cluster removal clears the
+singleton without waiting for this independent system-workqueue item.
+
+when a failed-quorum decision overlaps removal of the heartbeat regions,
+nodes and cluster through configfs, the worker can be preempted after
+marking the regions and resume after the singleton has been cleared:
+
+  quorum worker                     configfs removal
+  select fence; drop qs_lock
+  o2hb_stop_all_regions()
+                                    remove regions; join heartbeat threads
+                                    remove nodes; stop o2net
+                                    clear singleton; release cluster
+  read cl_fence_method
+
+the resumed read dereferences null instead of applying the configured
+fencing method. the heartbeat thread's dependency protects the local
+node only until the thread exits, and draining o2net does not wait for
+qs_work.
+
+add o2quo_flush_work() to drain pending or running quorum decisions
+before clearing the singleton in o2nm_cluster_group_drop_item(). by
+this point the heartbeat regions and nodes have been removed, so their
+work publishers are stopped. the worker can finish while the cluster
+and its configured fencing method remain available. it does not acquire
+the configfs mutex held by the removal path.
+
+keep o2quo_exit() as the counterpart of o2quo_init() for module teardown
+and initialization failure, and have it call the same drain helper.
+cluster removal uses only the explicitly named drain operation.
+
+kasan report as below:
+
+    oops: general protection fault, probably for non-canonical address 0xdffffc000000011b: 0000 [#1] smp kasan nopti
+    kasan: null-ptr-deref in range [0x00000000000008d8-0x00000000000008df]
+    cpu: 0 uid: 0 pid: 72 comm: kworker/0:2 not tainted 7.3.0-rc4-next-20260921-pmb-ocfs2-functional-v1+ #1 preempt(lazy)
+    hardware name: qemu ubuntu 24.04 pc v2 (i440fx + piix, arch_caps fix, 1996), bios 1.16.3-debian-1.16.3-2 04/01/2014
+    workqueue: events o2quo_make_decision
+    rip: 0010:o2quo_fence_self+0x65/0x200
+
+register dump omitted.
+
+    call trace:
+     <task>
+     o2quo_make_decision+0x345/0x3a0
+     ? __pfx_o2quo_make_decision+0x10/0x10
+     ? process_one_work+0x834/0x1b40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? lock_release+0xc8/0x290
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     process_one_work+0x9a8/0x1b40
+     ? __pfx_process_one_work+0x10/0x10
+     ? lock_acquire+0x190/0x300
+     ? lock_is_held_type+0x8f/0x100
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     worker_thread+0x65c/0xe40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __kthread_parkme+0x177/0x220
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_worker_thread+0x10/0x10
+     kthread+0x351/0x460
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_kthread+0x10/0x10
+     ret_from_fork+0x659/0x940
+     ? __pfx_ret_from_fork+0x10/0x10
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __switch_to+0x74f/0xf70
+     ? __pfx_kthread+0x10/0x10
+     ret_from_fork_asm+0x1a/0x30
+     </task>
+    modules linked in:
+    ---[ end trace 0000000000000000 ]---">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99551" target="_blank">CVE-2026-99551</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ocfs2: drain quorum work before removing the cluster
+
+The configured cluster must remain available until an in-flight quorum
+decision has finished using its fencing method.  o2quo_make_decision()
+drops qs_lock before calling o2quo_fence_self(), which marks heartbeat
+regions for unclean stop and then reads
+o2nm_single_cluster->cl_fence_method.  Cluster removal clears the
+singleton without waiting for this independent system-workqueue item.
+
+When a failed-quorum decision overlaps removal of the heartbeat regions,
+nodes and cluster through configfs, the worker can be preempted after
+marking the regions and resume after the singleton has been cleared:
+
+  Quorum worker                     Configfs removal
+  select fence; drop qs_lock
+  o2hb_stop_all_regions()
+                                    remove regions; join heartbeat threads
+                                    remove nodes; stop o2net
+                                    clear singleton; release cluster
+  read cl_fence_method
+
+The resumed read dereferences NULL instead of applying the configured
+fencing method. The heartbeat thread's dependency protects the local
+node only until the thread exits, and draining o2net does not wait for
+qs_work.
+
+Add o2quo_flush_work() to drain pending or running quorum decisions
+before clearing the singleton in o2nm_cluster_group_drop_item(). By
+this point the heartbeat regions and nodes have been removed, so their
+work publishers are stopped. The worker can finish while the cluster
+and its configured fencing method remain available. It does not acquire
+the configfs mutex held by the removal path.
+
+Keep o2quo_exit() as the counterpart of o2quo_init() for module teardown
+and initialization failure, and have it call the same drain helper.
+Cluster removal uses only the explicitly named drain operation.
+
+KASAN report as below:
+
+    Oops: general protection fault, probably for non-canonical address 0xdffffc000000011b: 0000 [#1] SMP KASAN NOPTI
+    KASAN: null-ptr-deref in range [0x00000000000008d8-0x00000000000008df]
+    CPU: 0 UID: 0 PID: 72 Comm: kworker/0:2 Not tainted 7.3.0-rc4-next-20260921-pmb-ocfs2-functional-v1+ #1 PREEMPT(lazy)
+    Hardware name: QEMU Ubuntu 24.04 PC v2 (i440FX + PIIX, arch_caps fix, 1996), BIOS 1.16.3-debian-1.16.3-2 04/01/2014
+    Workqueue: events o2quo_make_decision
+    RIP: 0010:o2quo_fence_self+0x65/0x200
+
+Register dump omitted.
+
+    Call Trace:
+     <TASK>
+     o2quo_make_decision+0x345/0x3a0
+     ? __pfx_o2quo_make_decision+0x10/0x10
+     ? process_one_work+0x834/0x1b40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? lock_release+0xc8/0x290
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     process_one_work+0x9a8/0x1b40
+     ? __pfx_process_one_work+0x10/0x10
+     ? lock_acquire+0x190/0x300
+     ? lock_is_held_type+0x8f/0x100
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     worker_thread+0x65c/0xe40
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __kthread_parkme+0x177/0x220
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_worker_thread+0x10/0x10
+     kthread+0x351/0x460
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __pfx_kthread+0x10/0x10
+     ret_from_fork+0x659/0x940
+     ? __pfx_ret_from_fork+0x10/0x10
+     ? srso_alias_return_thunk+0x5/0xfbef5
+     ? __switch_to+0x74f/0xf70
+     ? __pfx_kthread+0x10/0x10
+     ret_from_fork_asm+0x1a/0x30
+     </TASK>
+    Modules linked in:
+    ---[ end trace 0000000000000000 ]---</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133117" data-description="webtoffee product feed before 2.4.4 for wordpress contains a use of hard-coded cryptographic key vulnerability that allows unauthenticated attackers to bypass the url-cron signature check by computing a valid hash using the publicly known constant salt embedded in the plugin source. attackers can send forged get requests with attacker-controlled parameters to the unauthenticated init-hooked endpoint to repeatedly trigger product-feed generation, causing cpu/database resource exhaustion and overwriting of the generated feed file.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133117" target="_blank">CVE-2026-133117</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 07:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.2</p>
-                    <p>WebToffee Product Feed before 2.4.4 for WordPress contains a use of hard-coded cryptographic key vulnerability that allows unauthenticated attackers to bypass the URL-cron signature check by computing a valid hash using the publicly known constant salt embedded in the plugin source. Attackers can send forged GET requests with attacker-controlled parameters to the unauthenticated init-hooked endpoint to repeatedly trigger product-feed generation, causing CPU/database resource exhaustion and overwriting of the generated feed file.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99550" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+ocfs2: pin owning modules for open debugfs files
+
+the ocfs2 debugfs file operation tables do not set owner. the
+full debugfs proxy obtains real_fops with fops_get() at open and
+keeps it until final release. without an owner, this does not acquire
+a reference to the module containing the table and its callbacks.
+removing the debugfs entries does not drain retained open files.
+
+an open connected_nodes file can therefore outlive ocfs2_nodemanager
+and make full_proxy_release() read real_fops->release from freed
+module memory. heming also reproduced the issue with fs_state and
+asked for the other ocfs2 debugfs operation tables to be checked.
+
+set owner to this_module in all eleven explicit debugfs operation
+tables: five in ocfs2_nodemanager, four in ocfs2_dlm, and two in
+ocfs2. the existing debugfs get/put pair then holds the appropriate
+module until final release. leave the open, read and release callbacks
+unchanged. the blockcheck table already sets owner through
+define_debugfs_attribute(), so it needs no change.
+
+the original controlled test used an unloadable ocfs2 module and
+case-local probe filters without changing the candidate open, unload
+or release logic. closing a retained connected_nodes file after
+normal unload produced:
+
+  bug: unable to handle page fault for address: fffffbfff804cfef
+  oops: oops: 0000 [#1] smp kasan nopti
+  rip: 0010:full_proxy_release+0xbf/0x190
+  call trace:
+   <task>
+   __fput+0x39a/0xa60
+   fput_close_sync+0xff/0x200
+   __x64_sys_close+0x8c/0xf0
+   do_syscall_64+0x114/0x620
+   entry_syscall_64_after_hwframe+0x77/0x7f
+   </task>
+  modules linked in: [last unloaded: ocfs2_nodemanager]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99550" target="_blank">CVE-2026-99550</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+ocfs2: pin owning modules for open debugfs files
+
+The OCFS2 debugfs file operation tables do not set owner. The
+full debugfs proxy obtains real_fops with fops_get() at open and
+keeps it until final release. Without an owner, this does not acquire
+a reference to the module containing the table and its callbacks.
+Removing the debugfs entries does not drain retained open files.
+
+An open connected_nodes file can therefore outlive ocfs2_nodemanager
+and make full_proxy_release() read real_fops->release from freed
+module memory. Heming also reproduced the issue with fs_state and
+asked for the other OCFS2 debugfs operation tables to be checked.
+
+Set owner to THIS_MODULE in all eleven explicit debugfs operation
+tables: five in ocfs2_nodemanager, four in ocfs2_dlm, and two in
+ocfs2. The existing debugfs get/put pair then holds the appropriate
+module until final release. Leave the open, read and release callbacks
+unchanged. The blockcheck table already sets owner through
+DEFINE_DEBUGFS_ATTRIBUTE(), so it needs no change.
+
+The original controlled test used an unloadable OCFS2 module and
+case-local probe filters without changing the candidate open, unload
+or release logic. Closing a retained connected_nodes file after
+normal unload produced:
+
+  BUG: unable to handle page fault for address: fffffbfff804cfef
+  Oops: Oops: 0000 [#1] SMP KASAN NOPTI
+  RIP: 0010:full_proxy_release+0xbf/0x190
+  Call Trace:
+   <TASK>
+   __fput+0x39a/0xa60
+   fput_close_sync+0xff/0x200
+   __x64_sys_close+0x8c/0xf0
+   do_syscall_64+0x114/0x620
+   entry_SYSCALL_64_after_hwframe+0x77/0x7f
+   </TASK>
+  Modules linked in: [last unloaded: ocfs2_nodemanager]</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133109" data-description="in jetbrains teamcity before 2026.2.2, 2026.1.6 html injection in pipeline notification emails was possible via user and job names">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133109" target="_blank">CVE-2026-133109</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 07:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.4</p>
-                    <p>In JetBrains TeamCity before 2026.2.2, 2026.1.6 hTML injection in pipeline notification emails was possible via user and job names</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99549" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+smb: client: do not pass a null buf to is_oplock_break()
+
+receive_encrypted_read() sets *num_mids = 1 and never writes the
+caller's bufs[]. offload returns -1 with *num_mids = 0, so the
+demultiplex thread skips the frame. the inline decrypt path
+returns 0 even when smb2_find_mid() fails.
+
+cifs_demultiplex_thread() then treats mids[i] == null as an
+oplock break and calls is_oplock_break(bufs[i], server) with
+bufs[i] still null. smb2_is_valid_oplock_break() reads
+hdr.command at offset 12 and oopses.
+
+a large encrypted read whose messageid does not match is enough
+to panic cifsd.
+
+    oops: general protection fault, probably for non-canonical address
+    0xdffffc0000000001: 0000 [#1] smp kasan pti
+    kasan: null-ptr-deref in range
+    [0x0000000000000008-0x000000000000000f]
+    cpu: 0 pid: 100 comm: cifsd
+    rip: smb2_is_valid_oplock_break+0xc8/0x2270 [cifs]
+    cifs_demultiplex_thread
+    kernel panic - not syncing: fatal exception
+
+return -1 when inline decrypt finds no mid, and skip
+is_oplock_break() plus the unknown-frame dump when bufs[i]
+is null. receive_encrypted_standard() already assigns
+bufs[*num_mids].">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99549" target="_blank">CVE-2026-99549</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+smb: client: do not pass a NULL buf to is_oplock_break()
+
+receive_encrypted_read() sets *num_mids = 1 and never writes the
+caller's bufs[]. Offload returns -1 with *num_mids = 0, so the
+demultiplex thread skips the frame. The inline decrypt path
+returns 0 even when smb2_find_mid() fails.
+
+cifs_demultiplex_thread() then treats mids[i] == NULL as an
+oplock break and calls is_oplock_break(bufs[i], server) with
+bufs[i] still NULL. smb2_is_valid_oplock_break() reads
+hdr.Command at offset 12 and oopses.
+
+A large encrypted READ whose MessageId does not match is enough
+to panic cifsd.
+
+    Oops: general protection fault, probably for non-canonical address
+    0xdffffc0000000001: 0000 [#1] SMP KASAN PTI
+    KASAN: null-ptr-deref in range
+    [0x0000000000000008-0x000000000000000f]
+    CPU: 0 PID: 100 Comm: cifsd
+    RIP: smb2_is_valid_oplock_break+0xc8/0x2270 [cifs]
+    cifs_demultiplex_thread
+    Kernel panic - not syncing: Fatal exception
+
+Return -1 when inline decrypt finds no mid, and skip
+is_oplock_break() plus the unknown-frame dump when bufs[i]
+is NULL. receive_encrypted_standard() already assigns
+bufs[*num_mids].</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133108" data-description="in jetbrains teamcity before 2026.2.2 the current request details debug endpoint exposed authentication headers and session cookies">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133108" target="_blank">CVE-2026-133108</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 07:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.7</p>
-                    <p>In JetBrains TeamCity before 2026.2.2 the current request details debug endpoint exposed authentication headers and session cookies</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99548" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+smb: client: fix early procfs exposure race
+
+currently, init_cifs() calls cifs_proc_init() near the beginning of
+the function, before init_list_head, leading to a momentarily
+uninitialized, but exposed, procfs. if a userspace process reads this
+empty procfs, iterating over a zeroed list_head leads to a null
+pointer dereference and a kernel oops/panic.
+
+for example, if a delay is added between cifs_proc_init() and
+init_list_head, and a userspace process is polling
+/proc/fs/cifs/debugdata, the following oops occurs:
+
+bug: kernel null pointer dereference, address: 0000000000000608
+oops: oops: 0000 [#1] smp pti
+cpu: 0 uid: 0 pid: 3477 comm: cat not tainted
+7.3.0-02212-g4df4d2a577db-dirty #6 preempt(lazy)
+rip: 0010:cifs_debug_data_proc_show+0x103/0xd80 [cifs]
+call trace:
+<task>
+ ? seq_read_iter+0x86/0x400
+ ? seq_read_iter+0x86/0x400
+ seq_read_iter+0x183/0x400
+ proc_reg_read_iter+0x62/0x90
+ copy_splice_read+0x215/0x310
+ splice_file_to_pipe+0xec/0x1c0
+ do_splice+0x4b8/0x780
+ __se_sys_splice+0x18f/0x250
+ do_syscall_64+0x109/0x330
+ entry_syscall_64_after_hwframe+0x77/0x7f
+</task>
+
+fix this by moving cifs_proc_init() down in init_cifs(), ensuring it runs
+only after all internal lists, locks, counters, and workqueues are fully
+ready, but before registering the filesystem. update the error cleanup
+ladder and exit_cifs() to maintain proper lifo order.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99548" target="_blank">CVE-2026-99548</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:11 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+smb: client: fix early procfs exposure race
+
+Currently, init_cifs() calls cifs_proc_init() near the beginning of
+the function, before INIT_LIST_HEAD, leading to a momentarily
+uninitialized, but exposed, procfs. If a userspace process reads this
+empty procfs, iterating over a zeroed list_head leads to a NULL
+pointer dereference and a kernel oops/panic.
+
+For example, if a delay is added between cifs_proc_init() and
+INIT_LIST_HEAD, and a userspace process is polling
+/proc/fs/cifs/DebugData, the following oops occurs:
+
+BUG: kernel NULL pointer dereference, address: 0000000000000608
+Oops: Oops: 0000 [#1] SMP PTI
+CPU: 0 UID: 0 PID: 3477 Comm: cat Not tainted
+7.3.0-02212-g4df4d2a577db-dirty #6 PREEMPT(lazy)
+RIP: 0010:cifs_debug_data_proc_show+0x103/0xd80 [cifs]
+Call Trace:
+<TASK>
+ ? seq_read_iter+0x86/0x400
+ ? seq_read_iter+0x86/0x400
+ seq_read_iter+0x183/0x400
+ proc_reg_read_iter+0x62/0x90
+ copy_splice_read+0x215/0x310
+ splice_file_to_pipe+0xec/0x1c0
+ do_splice+0x4b8/0x780
+ __se_sys_splice+0x18f/0x250
+ do_syscall_64+0x109/0x330
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+</TASK>
+
+Fix this by moving cifs_proc_init() down in init_cifs(), ensuring it runs
+only after all internal lists, locks, counters, and workqueues are fully
+ready, but before registering the filesystem. Update the error cleanup
+ladder and exit_cifs() to maintain proper LIFO order.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133107" data-description="in jetbrains teamcity before 2026.2.2, 2026.1.6 html injection in pipeline notification emails was possible via commit messages">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133107" target="_blank">CVE-2026-133107</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 07:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.4</p>
-                    <p>In JetBrains TeamCity before 2026.2.2, 2026.1.6 hTML injection in pipeline notification emails was possible via commit messages</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99547" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+thunderbolt: do not rpm complete unrelated subtrees on unplug
+
+when a thunderbolt device is unplugged, that switch and every switch
+subsequent to it on the bus device list is `complete()`d, not just its
+child devices. in the case of multiple domains, it may cause, eg, an
+attempt to `complete()` the uninitialized domain 1 root switch rpm
+completion on unplug of a switch from domain 0 (though ordering is not
+guaranteed numerically sorted).
+
+i initially noticed this issue on a dell xps9720 when the system would
+seem to sporadically not wake after unplugging a thunderbolt dock. i
+tried multiple kernel versions including v7.2.7 and v7.3-rc4 to see if
+that resolved the issue, but the issue persisted. eventually i found
+that i could consistently generate a kernel oops reporting a page fault
+at 0xffff_ffff_ffff_fff8 on unplug from one side of the laptop and went
+bug hunting. i became suspicious of the `bus_for_each_dev()` walk that i
+ultimately ended up changing. to confirm this issue, i did an ebpf trace
+of `bus_for_each_dev()`, `complete_rpm()`, and `complete()` while
+unplugging in a variety of situations and found that an unplug from
+domain 0 tries to `complete_rpm()` domain 1's switch, whose rpm
+completion is not initialized and thus is holding a null wait-list
+pointer, triggering the page fault.
+
+here are the key sections of that ebpf trace. note that head denotes the
+completion's own wait-list head:
+
+```
+rescan_enter domain=0
+
+complete rescan_domain=0 target=0-1 target_domain=0
+         route=0x1 parent=0-0 unplugged=1
+completion done=0 head=head next=head prev=head
+
+bus_walk domain=0 start=0-1 callback=complete_rpm
+callback_enter rescan_domain=0 dev=1-0 parent=domain1 is_switch=1
+
+complete rescan_domain=0 target=1-0 target_domain=1
+         route=0x0 parent=domain1 unplugged=0
+completion done=0 head=head next=0 prev=0
+
+        complete+5
+        complete_rpm+43
+        bus_for_each_dev+133
+        icm_free_unplugged_children+250
+        icm_rescan_work+42
+```
+
+this patch gates the `complete()` on an additional condition - that the
+thunderbolt domain matches the domain of the device that was unplugged.
+
+i only have a single system with multiple thunderbolt domains - the dell
+xps9720. i am consistently able to reproduce the oops on that system.
+since running with this patch, i have not seen the oops reoccur. i have
+also tested it on a thinkpad x1-gen12, and that system boots and runs
+well with it, but it only has a single thunderbolt domain, so it does
+not exercise the multi-domain failure case.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99547" target="_blank">CVE-2026-99547</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+thunderbolt: Do not RPM complete unrelated subtrees on unplug
+
+When a Thunderbolt device is unplugged, that switch and every switch
+subsequent to it on the bus device list is `complete()`d, not just its
+child devices. In the case of multiple domains, it may cause, eg, an
+attempt to `complete()` the uninitialized domain 1 root switch RPM
+completion on unplug of a switch from domain 0 (though ordering is not
+guaranteed numerically sorted).
+
+I initially noticed this issue on a Dell XPS9720 when the system would
+seem to sporadically not wake after unplugging a Thunderbolt dock. I
+tried multiple kernel versions including v7.2.7 and v7.3-rc4 to see if
+that resolved the issue, but the issue persisted. Eventually I found
+that I could consistently generate a kernel Oops reporting a page fault
+at 0xffff_ffff_ffff_fff8 on unplug from one side of the laptop and went
+bug hunting. I became suspicious of the `bus_for_each_dev()` walk that I
+ultimately ended up changing. To confirm this issue, I did an eBPF trace
+of `bus_for_each_dev()`, `complete_rpm()`, and `complete()` while
+unplugging in a variety of situations and found that an unplug from
+domain 0 tries to `complete_rpm()` domain 1's switch, whose RPM
+completion is not initialized and thus is holding a null wait-list
+pointer, triggering the page fault.
+
+Here are the key sections of that eBPF trace. Note that HEAD denotes the
+completion's own wait-list HEAD:
+
+```
+RESCAN_ENTER domain=0
+
+COMPLETE rescan_domain=0 target=0-1 target_domain=0
+         route=0x1 parent=0-0 unplugged=1
+COMPLETION done=0 head=HEAD next=HEAD prev=HEAD
+
+BUS_WALK domain=0 start=0-1 callback=complete_rpm
+CALLBACK_ENTER rescan_domain=0 dev=1-0 parent=domain1 is_switch=1
+
+COMPLETE rescan_domain=0 target=1-0 target_domain=1
+         route=0x0 parent=domain1 unplugged=0
+COMPLETION done=0 head=HEAD next=0 prev=0
+
+        complete+5
+        complete_rpm+43
+        bus_for_each_dev+133
+        icm_free_unplugged_children+250
+        icm_rescan_work+42
+```
+
+This patch gates the `complete()` on an additional condition - that the
+Thunderbolt domain matches the domain of the device that was unplugged.
+
+I only have a single system with multiple Thunderbolt domains - the Dell
+XPS9720. I am consistently able to reproduce the Oops on that system.
+Since running with this patch, I have not seen the Oops reoccur. I have
+also tested it on a Thinkpad X1-Gen12, and that system boots and runs
+well with it, but it only has a single Thunderbolt domain, so it does
+not exercise the multi-domain failure case.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133106" data-description="in jetbrains teamcity before 2026.2.2, 2026.1.6 stored xss on the projects import page was possible">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133106" target="_blank">CVE-2026-133106</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-19 07:17:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>In JetBrains TeamCity before 2026.2.2, 2026.1.6 stored XSS on the Projects Import page was possible</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99546" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+net/sched: cls_flower: avoid stale mask references after delete
+
+flower releases a mask reference when a filter is removed from the
+classifier. the filter object can remain alive while dump, walk, or
+hardware reoffload paths hold a reference to it. those paths can then
+dereference f->mask after the mask has already been released.
+
+keep the mask reference until the filter reference count reaches zero.
+release the mask synchronously from the final __fl_put() while the caller
+still holds the tcf_proto reference, and leave the existing rcu work to
+free the mask. this keeps the mask available to every reader that still
+holds the filter.
+
+the filter is still removed from the classifier indexes immediately.
+therefore, a deleted filter can temporarily retain an otherwise empty
+mask; fl_delete() uses the handle idr, rather than the mask list, to
+determine whether the classifier has become empty.
+
+failed mask assignment can leave fnew->mask as an error or borrowed
+pointer without an owned mask reference. clear it before the common
+failure path so the final put cannot release an unowned reference.
+
+this fix does not add fields, snapshots, or per-filter memory.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99546" target="_blank">CVE-2026-99546</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-19 09:18:10 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+net/sched: cls_flower: avoid stale mask references after delete
+
+Flower releases a mask reference when a filter is removed from the
+classifier. The filter object can remain alive while dump, walk, or
+hardware reoffload paths hold a reference to it. Those paths can then
+dereference f->mask after the mask has already been released.
+
+Keep the mask reference until the filter reference count reaches zero.
+Release the mask synchronously from the final __fl_put() while the caller
+still holds the tcf_proto reference, and leave the existing RCU work to
+free the mask. This keeps the mask available to every reader that still
+holds the filter.
+
+The filter is still removed from the classifier indexes immediately.
+Therefore, a deleted filter can temporarily retain an otherwise empty
+mask; fl_delete() uses the handle IDR, rather than the mask list, to
+determine whether the classifier has become empty.
+
+Failed mask assignment can leave fnew->mask as an error or borrowed
+pointer without an owned mask reference. Clear it before the common
+failure path so the final put cannot release an unowned reference.
+
+This fix does not add fields, snapshots, or per-filter memory.</p>
                 </div>
         
             </div>
