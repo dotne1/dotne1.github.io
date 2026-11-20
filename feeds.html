@@ -34,732 +34,536 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-133577" data-description="a flaw was found in the kuadrant webassembly (wasm) shim shipped in red hat connectivity link 1.5. when a tokenratelimitpolicy is attached to an httproute that also has an authpolicy - or when a ratelimitpolicy with defaults or overrides is attached to the gateway or listener of such routes - the shim's action pipeline fails to dispatch the authentication guard at request time, and the request is forwarded upstream. unauthenticated requests return 200 ok instead of 401, and neither authentication nor rate limiting is enforced. both policies continue to report enforced, leaving no status-level indication of the failure.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133577" target="_blank">CVE-2026-133577</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:17:15 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-99804" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/io-wq: save worker type before dropping its reference
+
+io_wq_cancel_tw_create() inspects cb->func after calling
+io_worker_cancel_cb(). for an existing worker, that call can drop the
+last worker reference and wake io_worker_exit(). if the canceling task
+is preempted, the worker can be unlinked and freed by kfree_rcu() before
+the callback function is inspected. kasan reports a slab-use-after-free
+read in this path.
+
+save whether the callback belongs to an unpublished continuation worker
+while its reference is still held, then use the saved result for the
+conditional free. this preserves the existing accounting and frees only
+the worker allocated for the canceled continuation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99804" target="_blank">CVE-2026-99804</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:38 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/io-wq: save worker type before dropping its reference
+
+io_wq_cancel_tw_create() inspects cb->func after calling
+io_worker_cancel_cb(). For an existing worker, that call can drop the
+last worker reference and wake io_worker_exit(). If the canceling task
+is preempted, the worker can be unlinked and freed by kfree_rcu() before
+the callback function is inspected. KASAN reports a slab-use-after-free
+read in this path.
+
+Save whether the callback belongs to an unpublished continuation worker
+while its reference is still held, then use the saved result for the
+conditional free. This preserves the existing accounting and frees only
+the worker allocated for the canceled continuation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99803" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/net: mask socket type with sock_type_mask in io_socket_bpf_populate()
+
+when an ioring_op_socket request is prepared in io_socket_prep(),
+sock->type retains creation flags such as sock_cloexec and sock_nonblock
+until __sys_socket_file() masks them off with sock_type_mask during
+execution.
+
+however, io_socket_bpf_populate() copies sock->type into
+bctx->socket.type without masking off ~sock_type_mask. as a result, a
+cbpf filter inspecting bctx->socket.type against socket types such as
+sock_dgram or sock_stream can be bypassed by oring sock_cloexec or
+sock_nonblock into the socket type.
+
+mask sock->type with sock_type_mask when populating bctx->socket.type.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99803" target="_blank">CVE-2026-99803</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/net: mask socket type with SOCK_TYPE_MASK in io_socket_bpf_populate()
+
+When an IORING_OP_SOCKET request is prepared in io_socket_prep(),
+sock->type retains creation flags such as SOCK_CLOEXEC and SOCK_NONBLOCK
+until __sys_socket_file() masks them off with SOCK_TYPE_MASK during
+execution.
+
+However, io_socket_bpf_populate() copies sock->type into
+bctx->socket.type without masking off ~SOCK_TYPE_MASK. As a result, a
+cBPF filter inspecting bctx->socket.type against socket types such as
+SOCK_DGRAM or SOCK_STREAM can be bypassed by ORing SOCK_CLOEXEC or
+SOCK_NONBLOCK into the socket type.
+
+Mask sock->type with SOCK_TYPE_MASK when populating bctx->socket.type.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99802" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/register: enforce per-task restrictions in io_uring_register_blind()
+
+when io_uring_register(2) is invoked with fd == -1, it dispatches
+directly to io_uring_register_blind() without checking
+current->io_uring_restrict.
+
+as a result, a task with per-task register restrictions installed via
+ioring_register_restrictions can still invoke blind registration opcodes
+such as ioring_register_send_msg_ring even when those opcodes are not in
+the task's allowed register_op bitmap.
+
+check current->io_uring_restrict->register_op in
+io_uring_register_blind() before dispatching blind registration opcodes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99802" target="_blank">CVE-2026-99802</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/register: enforce per-task restrictions in io_uring_register_blind()
+
+When io_uring_register(2) is invoked with fd == -1, it dispatches
+directly to io_uring_register_blind() without checking
+current->io_uring_restrict.
+
+As a result, a task with per-task register restrictions installed via
+IORING_REGISTER_RESTRICTIONS can still invoke blind registration opcodes
+such as IORING_REGISTER_SEND_MSG_RING even when those opcodes are not in
+the task's allowed register_op bitmap.
+
+Check current->io_uring_restrict->register_op in
+io_uring_register_blind() before dispatching blind registration opcodes.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99801" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/bpf-ops: clear bpf_ctx while submitting sqes
+
+bpf_io_uring_submit_sqes() calls io_submit_sqes() from inside the loop
+program, with current->bpf_ctx set, and requests issued inline run with
+it set too. the socket code uses has_current_bpf_ctx() to recognize
+calls from bpf_setsockopt() and friends, where the caller holds the
+socket lock and has already been vetted, and skips both.
+
+so a socket_uring_op_setsockopt from the sq passes sockopt_capable()
+without the capability, and runs without lock_sock(). a task with no
+capability can set so_mark, ip_transparent or tcp_repair, and two
+threads changing ip_options on one socket, one through the ring, double
+free in no time. sock_destroy via ioring_op_sendmsg ends up in
+tcp_abort() without the lock the same way.
+
+clear the run context around io_submit_sqes(). the sqes come from
+userspace and must be issued like those of any other ring. they still
+run inside the program's rcu tasks trace read section, so a request
+that sleeps there holds up that grace period, but other request types
+do that already.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99801" target="_blank">CVE-2026-99801</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/bpf-ops: clear bpf_ctx while submitting SQEs
+
+bpf_io_uring_submit_sqes() calls io_submit_sqes() from inside the loop
+program, with current->bpf_ctx set, and requests issued inline run with
+it set too. The socket code uses has_current_bpf_ctx() to recognize
+calls from bpf_setsockopt() and friends, where the caller holds the
+socket lock and has already been vetted, and skips both.
+
+So a SOCKET_URING_OP_SETSOCKOPT from the SQ passes sockopt_capable()
+without the capability, and runs without lock_sock(). A task with no
+capability can set SO_MARK, IP_TRANSPARENT or TCP_REPAIR, and two
+threads changing IP_OPTIONS on one socket, one through the ring, double
+free in no time. SOCK_DESTROY via IORING_OP_SENDMSG ends up in
+tcp_abort() without the lock the same way.
+
+Clear the run context around io_submit_sqes(). The SQEs come from
+userspace and must be issued like those of any other ring. They still
+run inside the program's RCU tasks trace read section, so a request
+that sleeps there holds up that grace period, but other request types
+do that already.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99800" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring: free the task context after a grace period
+
+a task other than the owner can free a request, io_ring_exit_work()
+running the local task_work of a defer_taskrun ring for example, or
+io_do_iopoll() reaping completions. io_put_task() then takes the else
+branch:
+
+    percpu_counter_sub(&tctx->inflight, 1);
+    if (unlikely(atomic_read(&tctx->in_cancel)))
+            wake_up(&tctx->wait);
+    put_task_struct(tctx->task);
+
+the first line is what lets the owner leave io_uring_cancel_generic(),
+and on exec it frees the tctx right after. nothing holds that off for
+the remaining three lines, the task reference only covers a tctx freed
+along with the task_struct. it used to work out because
+io_uring_del_tctx_node() took the uring_lock that the freeing side holds
+across io_put_task(), until that moved to tctx_lock.
+
+free the tctx with kfree_rcu(), and enter an rcu read section in
+io_put_task() before the count is dropped.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99800" target="_blank">CVE-2026-99800</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring: free the task context after a grace period
+
+A task other than the owner can free a request, io_ring_exit_work()
+running the local task_work of a DEFER_TASKRUN ring for example, or
+io_do_iopoll() reaping completions. io_put_task() then takes the else
+branch:
+
+    percpu_counter_sub(&tctx->inflight, 1);
+    if (unlikely(atomic_read(&tctx->in_cancel)))
+            wake_up(&tctx->wait);
+    put_task_struct(tctx->task);
+
+The first line is what lets the owner leave io_uring_cancel_generic(),
+and on exec it frees the tctx right after. Nothing holds that off for
+the remaining three lines, the task reference only covers a tctx freed
+along with the task_struct. It used to work out because
+io_uring_del_tctx_node() took the uring_lock that the freeing side holds
+across io_put_task(), until that moved to tctx_lock.
+
+Free the tctx with kfree_rcu(), and enter an RCU read section in
+io_put_task() before the count is dropped.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99799" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/sqpoll: don't wait for the thread to exit
+
+io_sq_thread_stop() wakes the sqpoll thread and waits for it to exit.
+the thread belongs to the thread group that created the ring, so a
+sigstop or the cgroup freezer holds it in get_signal(), and the wake up
+doesn't change that. io_ring_exit_work() then sleeps in that wait until
+someone continues or kills the process. iou_exit has 64 slots, so 64
+closed sqpoll rings of a stopped process keep every other ring from
+being freed, for everyone.
+
+don't wait. set the stop bit, wake the thread, and let it exit when it
+gets to run again. the sqd can now outlive its last ring, so give it a
+second refcount with one reference for the rings and one for the thread,
+and free it with the last one. the thread can't reach a freed ring,
+rings leave ctx_list before dropping their reference, and the io-wq hash
+is refcounted.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99799" target="_blank">CVE-2026-99799</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/sqpoll: don't wait for the thread to exit
+
+io_sq_thread_stop() wakes the SQPOLL thread and waits for it to exit.
+The thread belongs to the thread group that created the ring, so a
+SIGSTOP or the cgroup freezer holds it in get_signal(), and the wake up
+doesn't change that. io_ring_exit_work() then sleeps in that wait until
+someone continues or kills the process. iou_exit has 64 slots, so 64
+closed SQPOLL rings of a stopped process keep every other ring from
+being freed, for everyone.
+
+Don't wait. Set the stop bit, wake the thread, and let it exit when it
+gets to run again. The sqd can now outlive its last ring, so give it a
+second refcount with one reference for the rings and one for the thread,
+and free it with the last one. The thread can't reach a freed ring,
+rings leave ctx_list before dropping their reference, and the io-wq hash
+is refcounted.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99798" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring: defer foreign io-wq enqueues to task_work
+
+an iopoll ring without defer_taskrun can be reaped by a task other than
+the one that submitted the i/o. if a polled request is marked
+req_f_reissue, io_free_batch_list() calls io_queue_iowq() with the
+original tctx. ordinary task exit can tear down tctx->io_wq after
+draining only the tracked requests. the live request pins the task, but
+not its io-wq, so the foreign task can race io_wq_put_and_exit() and
+enqueue through a freed or null queue.
+
+forward foreign userspace enqueues to the owning task before accessing
+tctx->io_wq. use a dedicated task_work callback so reissues still go
+straight to io-wq, and fail them if task_work is running in cancellation
+mode. preserve the existing pf_kthread cancellation path. this also
+covers the other callers of io_queue_iowq() without changing the
+worker-owned enqueue path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99798" target="_blank">CVE-2026-99798</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring: defer foreign io-wq enqueues to task_work
+
+An IOPOLL ring without DEFER_TASKRUN can be reaped by a task other than
+the one that submitted the I/O. If a polled request is marked
+REQ_F_REISSUE, io_free_batch_list() calls io_queue_iowq() with the
+original tctx. Ordinary task exit can tear down tctx->io_wq after
+draining only the tracked requests. The live request pins the task, but
+not its io-wq, so the foreign task can race io_wq_put_and_exit() and
+enqueue through a freed or NULL queue.
+
+Forward foreign userspace enqueues to the owning task before accessing
+tctx->io_wq. Use a dedicated task_work callback so reissues still go
+straight to io-wq, and fail them if task_work is running in cancellation
+mode. Preserve the existing PF_KTHREAD cancellation path. This also
+covers the other callers of io_queue_iowq() without changing the
+worker-owned enqueue path.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99797" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/cancel: drop sqd->lock while sqpoll waits
+
+an exiting sqpoll thread calls io_uring_cancel_generic() with sqd->lock
+held, and keeps it across cond_resched() and the sleep until nothing is
+in flight anymore. a zero-copy send notification can't be canceled and
+stays pending as long as the peer doesn't read, so the lock is held for
+as long as a user cares to. io_ring_exit_work() needs it to park the
+thread, and so do ioring_register_iowq_aff and iowq_max_workers. with
+64 such rings sharing the thread, every iou_exit slot sleeps on the lock
+and no ring gets freed for anyone.
+
+drop the lock around cond_resched() and the sleep, like the main loop of
+the thread does. each walk of ctx_list is still under one hold, and
+nothing is kept across the unlock. the thread drops its io-wq, frees its
+tctx and clears sqd->thread under one hold after the loop, so whoever
+holds the lock and finds sqd->thread set can still use them.
+
+[axboe: adapted to the schedule_timeout() based loop]">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99797" target="_blank">CVE-2026-99797</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/cancel: drop sqd->lock while SQPOLL waits
+
+An exiting SQPOLL thread calls io_uring_cancel_generic() with sqd->lock
+held, and keeps it across cond_resched() and the sleep until nothing is
+in flight anymore. A zero-copy send notification can't be canceled and
+stays pending as long as the peer doesn't read, so the lock is held for
+as long as a user cares to. io_ring_exit_work() needs it to park the
+thread, and so do IORING_REGISTER_IOWQ_AFF and IOWQ_MAX_WORKERS. With
+64 such rings sharing the thread, every iou_exit slot sleeps on the lock
+and no ring gets freed for anyone.
+
+Drop the lock around cond_resched() and the sleep, like the main loop of
+the thread does. Each walk of ctx_list is still under one hold, and
+nothing is kept across the unlock. The thread drops its io-wq, frees its
+tctx and clears sqd->thread under one hold after the loop, so whoever
+holds the lock and finds sqd->thread set can still use them.
+
+[axboe: adapted to the schedule_timeout() based loop]</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-99796" data-description="in the linux kernel, the following vulnerability has been resolved:
+
+io_uring/poll: cancel all matching requests in one pass
+
+with ioring_async_cancel_all, __io_async_cancel() calls io_try_cancel()
+until nothing is found, and io_poll_cancel() cancels one request per
+call, starting each lookup at the beginning of the hash. a cancelled
+request stays hashed until its task work runs, so every lookup walks
+past the ones already cancelled. cancelling k of n pending polls visits
+about k*n/2 requests in one io_uring_enter(), with uring_lock held.
+
+a single cancel_fd|all on 80000 polls on one eventfd takes 17.06s,
+0.02s with this change. with voluntary preemption the soft lockup
+watchdog fires:
+
+  watchdog: bug: soft lockup - cpu#1 stuck for 26s! [repro:100]
+  rip: 0010:io_cancel_req_match+0x19/0xa0
+   io_poll_cancel+0x73/0x170
+   io_try_cancel+0x7b/0xf0
+   __io_async_cancel+0x41/0x110
+
+walk the hash once and cancel every match, as io_cancel_remove() does
+for futex and waitid. cancel by user_data only needs its own bucket.
+__io_async_cancel() still loops until nothing is found, so a request
+that io-wq parks in the poll hash meanwhile is still cancelled.
+
+a cancel that matches one request now walks the whole hash twice instead
+of stopping at the match.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99796" target="_blank">CVE-2026-99796</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In the Linux kernel, the following vulnerability has been resolved:
+
+io_uring/poll: cancel all matching requests in one pass
+
+With IORING_ASYNC_CANCEL_ALL, __io_async_cancel() calls io_try_cancel()
+until nothing is found, and io_poll_cancel() cancels one request per
+call, starting each lookup at the beginning of the hash. A cancelled
+request stays hashed until its task work runs, so every lookup walks
+past the ones already cancelled. Cancelling K of N pending polls visits
+about K*N/2 requests in one io_uring_enter(), with uring_lock held.
+
+A single CANCEL_FD|ALL on 80000 polls on one eventfd takes 17.06s,
+0.02s with this change. With voluntary preemption the soft lockup
+watchdog fires:
+
+  watchdog: BUG: soft lockup - CPU#1 stuck for 26s! [repro:100]
+  RIP: 0010:io_cancel_req_match+0x19/0xa0
+   io_poll_cancel+0x73/0x170
+   io_try_cancel+0x7b/0xf0
+   __io_async_cancel+0x41/0x110
+
+Walk the hash once and cancel every match, as io_cancel_remove() does
+for futex and waitid. Cancel by user_data only needs its own bucket.
+__io_async_cancel() still loops until nothing is found, so a request
+that io-wq parks in the poll hash meanwhile is still cancelled.
+
+A cancel that matches one request now walks the whole hash twice instead
+of stopping at the match.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-89095" data-description="the shortcodes and extra features for phlox theme plugin for wordpress is vulnerable to local file inclusion in all versions up to, and including, 2.17.22 via the 'extra_template_path' parameter parameter. this makes it possible for unauthenticated attackers to include and execute arbitrary .php files on the server, allowing the execution of any php code in those files. this can be used to bypass access controls, obtain sensitive data, or achieve code execution in cases where .php file types can be uploaded and included. the slug-based allowlist introduced as the fix for cve-2023-37888 constrains only the template_part_file filename suffix and does not validate the extra_template_path directory component, meaning path traversal sequences are fully functional against this parameter.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89095" target="_blank">CVE-2026-89095</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:36 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
-                    <p>A flaw was found in the Kuadrant WebAssembly (WASM) shim shipped in Red Hat Connectivity Link 1.5. When a TokenRateLimitPolicy is attached to an HTTPRoute that also has an AuthPolicy - or when a RateLimitPolicy with defaults or overrides is attached to the Gateway or listener of such routes - the shim's action pipeline fails to dispatch the authentication guard at request time, and the request is forwarded upstream. Unauthenticated requests return 200 OK instead of 401, and neither authentication nor rate limiting is enforced. Both policies continue to report Enforced, leaving no status-level indication of the failure.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>The Shortcodes and extra features for Phlox theme plugin for WordPress is vulnerable to Local File Inclusion in all versions up to, and including, 2.17.22 via the 'extra_template_path' parameter parameter. This makes it possible for unauthenticated attackers to include and execute arbitrary .php files on the server, allowing the execution of any PHP code in those files. This can be used to bypass access controls, obtain sensitive data, or achieve code execution in cases where .php file types can be uploaded and included. The slug-based allowlist introduced as the fix for CVE-2023-37888 constrains only the template_part_file filename suffix and does not validate the extra_template_path directory component, meaning path traversal sequences are fully functional against this parameter.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133495" data-description="a weakness has been identified in d-link dir-600l 2.17b02. affected by this issue is some unknown functionality of the file hedwig.cgi of the component fatlady handler. executing a manipulation can lead to path traversal. the attack may be launched remotely.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133495" target="_blank">CVE-2026-133495</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:17:14 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133615" data-description="a vulnerability has been identified in webauthn-kotlin versions 1.1.0 through 1.1.3, where an exported device-credential authentication activity launches attacker-supplied intents without validation, potentially allowing a malicious application on the same android device to access application-protected data, depending on the host application’s content-provider configuration.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133615" target="_blank">CVE-2026-133615</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A vulnerability has been identified in webauthn-kotlin versions 1.1.0 through 1.1.3, where an exported device-credential authentication activity launches attacker-supplied intents without validation, potentially allowing a malicious application on the same Android device to access application-protected data, depending on the host application’s content-provider configuration.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133613" data-description="flowintel's community data launcher script passes the admin api key as a command-line argument to a child python helper process. on unix-like systems, process arguments are readable by all local users via standard tools such as ps or by reading /proc/<pid>/cmdline, allowing any local user to observe the key while the helper process is running.
+
+an attacker with local access to the host can capture the admin api key during the brief window in which the helper process is active. possession of the key grants full administrative access to the flowintel rest api, enabling unauthorized creation, modification, or deletion of threat intelligence data, users, roles, and organisations.
+
+preconditions:
+- the victim must invoke the community data import or deletion command (launch.sh -tdc or -dtdc) with the api key supplied as a positional argument.
+- the attacker must have a local user account on the same host and be able to observe process listings during the helper execution window.
+
+impact:
+- disclosure of the flowintel admin api key to any local user.
+- subsequent full administrative control over the flowintel instance via its rest api.
+
+affected: <4.1.0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133613" target="_blank">CVE-2026-133613</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:34 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Flowintel's community data launcher script passes the admin API key as a command-line argument to a child Python helper process. On Unix-like systems, process arguments are readable by all local users via standard tools such as ps or by reading /proc/<pid>/cmdline, allowing any local user to observe the key while the helper process is running.
+
+An attacker with local access to the host can capture the admin API key during the brief window in which the helper process is active. Possession of the key grants full administrative access to the Flowintel REST API, enabling unauthorized creation, modification, or deletion of threat intelligence data, users, roles, and organisations.
+
+Preconditions:
+- The victim must invoke the community data import or deletion command (launch.sh -tdc or -dtdc) with the API key supplied as a positional argument.
+- The attacker must have a local user account on the same host and be able to observe process listings during the helper execution window.
+
+Impact:
+- Disclosure of the Flowintel admin API key to any local user.
+- Subsequent full administrative control over the Flowintel instance via its REST API.
+
+Affected: <4.1.0</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133611" data-description="vulnerability-lookup prior to version 7.1.0 contains two security issues in its web interface. first, the /user/toggle_2fa endpoint accepted http get requests and disabled the authenticated user's two-factor authentication without requiring password confirmation. because the state-changing operation was reachable via get, an attacker with a basic account could embed an image element (or any other get-triggering markup) in a comment pointing to that endpoint. when a victim with 2fa enabled viewed the comment, their browser silently issued the get request, disabling the victim's second factor of authentication. no csrf token was enforced on the get path, and no password was required to confirm the action. second, the comment detail page (/comment/<uuid>) rendered unpublished comments to any visitor who possessed the url, bypassing the moderation workflow that was intended to keep such content hidden until approved. the api correctly restricted access, but the web view did not enforce the same authorization check. the combined effect allows an attacker to degrade a victim's account security (removal of 2fa) through a single page view and to read content that was not yet approved for public release.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133611" target="_blank">CVE-2026-133611</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>vulnerability-lookup prior to version 7.1.0 contains two security issues in its web interface. First, the /user/toggle_2fa endpoint accepted HTTP GET requests and disabled the authenticated user's two-factor authentication without requiring password confirmation. Because the state-changing operation was reachable via GET, an attacker with a basic account could embed an image element (or any other GET-triggering markup) in a comment pointing to that endpoint. When a victim with 2FA enabled viewed the comment, their browser silently issued the GET request, disabling the victim's second factor of authentication. No CSRF token was enforced on the GET path, and no password was required to confirm the action. Second, the comment detail page (/comment/<uuid>) rendered unpublished comments to any visitor who possessed the URL, bypassing the moderation workflow that was intended to keep such content hidden until approved. The API correctly restricted access, but the web view did not enforce the same authorization check. The combined effect allows an attacker to degrade a victim's account security (removal of 2FA) through a single page view and to read content that was not yet approved for public release.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133561" data-description="mattermost versions 11.2.x <= 11.2.4 fail to validate that the redirect target on the web app landing page that prompts users to open links in the desktop app stays on the mattermost origin which allows an unauthenticated attacker to redirect a user to an arbitrary external site via a crafted link. mattermost advisory id: mmsa-2026-00893">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133561" target="_blank">CVE-2026-133561</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A weakness has been identified in D-Link DIR-600L 2.17b02. Affected by this issue is some unknown functionality of the file hedwig.cgi of the component fatlady Handler. Executing a manipulation can lead to path traversal. The attack may be launched remotely.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Mattermost versions 11.2.x <= 11.2.4 fail to validate that the redirect target on the web app landing page that prompts users to open links in the desktop app stays on the Mattermost origin which allows an unauthenticated attacker to redirect a user to an arbitrary external site via a crafted link. Mattermost Advisory ID: MMSA-2026-00893</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133493" data-description="a vulnerability was identified in d-link dir-600l 2.17b02. affected is the function genacgi_main of the file gena.cgi of the component gena handler. such manipulation leads to os command injection. the attack can be launched remotely. the exploit is publicly available and might be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133493" target="_blank">CVE-2026-133493</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:17:10 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
-                    <p>A vulnerability was identified in D-Link DIR-600L 2.17b02. Affected is the function genacgi_main of the file gena.cgi of the component GENA Handler. Such manipulation leads to os command injection. The attack can be launched remotely. The exploit is publicly available and might be used.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133492" data-description="a vulnerability has been found in trendnet tew-657brm 1.00.1. the impacted element is an unknown function of the file /usr/www/images/.svn/entries of the component mini_httpd. the manipulation leads to information disclosure. it is possible to initiate the attack remotely. the exploit has been disclosed to the public and may be used. the vendor explains: "i am not able to confirm if such vulnerability exists as the product has been eol for more than 15 years. we will send out an announcement letting customers know." this vulnerability only affects products that are no longer supported by the maintainer.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133492" target="_blank">CVE-2026-133492</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:17:05 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133505" data-description="when message history is serialized and loaded again, a tool result that contains a json object in the serialized shape of one of pydantic ai's file types is rebuilt as that file. a third party who controls data a tool returns, such as a record that an mcp server or a function tool returns from an external system, can use this to make the application download a url on its local network, or make the model provider read an s3:// object or uploaded file with the application's credentials. applications are affected when tool results can contain third-party data, message history containing those results is serialized and loaded again (stored history, history a ui adapter holds on the server, or temporal, dbos or prefect durable execution), and the model is one pydantic ai downloads files for, one that honors force_download, or one whose provider resolves non-http file urls or uploaded files. history that a client submits through the vercel ai or ag-ui adapter in the default mode is not affected. the issue is fixed in pydantic-ai and pydantic-ai-slim 1.107.10 and 2.66.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133505" target="_blank">CVE-2026-133505</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability has been found in TRENDnet TEW-657BRM 1.00.1. The impacted element is an unknown function of the file /usr/www/images/.svn/entries of the component mini_httpd. The manipulation leads to information disclosure. It is possible to initiate the attack remotely. The exploit has been disclosed to the public and may be used. The vendor explains: "I am not able to confirm if such vulnerability exists as the product has been EOL for more than 15 years. We will send out an announcement letting customers know." This vulnerability only affects products that are no longer supported by the maintainer.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>When message history is serialized and loaded again, a tool result that contains a JSON object in the serialized shape of one of Pydantic AI's file types is rebuilt as that file. A third party who controls data a tool returns, such as a record that an MCP server or a function tool returns from an external system, can use this to make the application download a URL on its local network, or make the model provider read an s3:// object or uploaded file with the application's credentials. Applications are affected when tool results can contain third-party data, message history containing those results is serialized and loaded again (stored history, history a UI adapter holds on the server, or Temporal, DBOS or Prefect durable execution), and the model is one Pydantic AI downloads files for, one that honors force_download, or one whose provider resolves non-HTTP file URLs or uploaded files. History that a client submits through the Vercel AI or AG-UI adapter in the default mode is not affected. The issue is fixed in pydantic-ai and pydantic-ai-slim 1.107.10 and 2.66.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133491" data-description="a flaw has been found in konstanty libmodplug up to 0.8.9.1. the affected element is the function abc_add_drum of the file src/load_abc.cpp of the component abc file handler. executing a manipulation can lead to out-of-bounds read. the attack may be performed from remote. upgrading to version 0.8.9.2 is sufficient to fix this issue. this patch is called 540f0b8ec3d7979e17a8d6a55e31b8a7b734d463. it is recommended to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133491" target="_blank">CVE-2026-133491</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:16:58 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133499" data-description="a vulnerability was found in vahe1994 aqlm up to e79a896ed6656fe4ed06193d42d004e7d0bbdbb2. the affected element is an unknown function of the file inference_kernels/triton_kernel.py of the component triton kernel. performing a manipulation of the argument codes results in out-of-bounds read. it is possible to initiate the attack remotely. the exploit has been made public and could be used. this product is using a rolling release to provide continious delivery. therefore, no version details for affected nor updated releases are available. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133499" target="_blank">CVE-2026-133499</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>A vulnerability was found in Vahe1994 AQLM up to e79a896ed6656fe4ed06193d42d004e7d0bbdbb2. The affected element is an unknown function of the file inference_kernels/triton_kernel.py of the component Triton Kernel. Performing a manipulation of the argument codes results in out-of-bounds read. It is possible to initiate the attack remotely. The exploit has been made public and could be used. This product is using a rolling release to provide continious delivery. Therefore, no version details for affected nor updated releases are available. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133498" data-description="a flaw has been found in mozilla-ai llamafile up to .0.10.5. this issue affects the function llamafile_open_zip of the file llamafile/llamafile.c of the component container parser. this manipulation of the argument size causes out-of-bounds read. the attack is possible to be carried out remotely. upgrading to version 0.10.6 is capable of addressing this issue. patch name: 5ac1c4dbb76737fee71a54922df95342c667ba6f. it is advisable to upgrade the affected component.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133498" target="_blank">CVE-2026-133498</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A flaw has been found in Konstanty libmodplug up to 0.8.9.1. The affected element is the function abc_add_drum of the file src/load_abc.cpp of the component ABC File Handler. Executing a manipulation can lead to out-of-bounds read. The attack may be performed from remote. Upgrading to version 0.8.9.2 is sufficient to fix this issue. This patch is called 540f0b8ec3d7979e17a8d6a55e31b8a7b734d463. It is recommended to upgrade the affected component.</p>
+                    <p>A flaw has been found in mozilla-ai llamafile up to .0.10.5. This issue affects the function llamafile_open_zip of the file llamafile/llamafile.c of the component Container Parser. This manipulation of the argument size causes out-of-bounds read. The attack is possible to be carried out remotely. Upgrading to version 0.10.6 is capable of addressing this issue. Patch name: 5ac1c4dbb76737fee71a54922df95342c667ba6f. It is advisable to upgrade the affected component.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-129972" data-description="a buffer overflow vulnerability exists in the web management service of the ethernet remote i/os products. an unauthenticated remote attacker could exploit insufficient bounds checking of specially crafted http requests, potentially causing the web management service to crash and resulting in a denial-of-service condition.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129972" target="_blank">CVE-2026-129972</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:16:55 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A buffer overflow vulnerability exists in the web management service of the Ethernet Remote I/Os products. An unauthenticated remote attacker could exploit insufficient bounds checking of specially crafted HTTP requests, potentially causing the web management service to crash and resulting in a denial-of-service condition.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133497" data-description="a vulnerability was detected in itsourcecode banking management system 1.0. this vulnerability affects unknown code of the file navbar.php. the manipulation of the argument page results in cross site scripting. the attack can be executed remotely. the exploit is now public and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133497" target="_blank">CVE-2026-133497</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>A vulnerability was detected in itsourcecode Banking Management System 1.0. This vulnerability affects unknown code of the file navbar.php. The manipulation of the argument page results in cross site scripting. The attack can be executed remotely. The exploit is now public and may be used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-129971" data-description="a buffer overflow vulnerability exists in the snmp service of the ethernet remote i/os products. an unauthenticated remote attacker could exploit improper handling of specially crafted snmp requests, potentially leading to a denial-of-service condition on the affected device.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129971" target="_blank">CVE-2026-129971</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 01:16:50 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A buffer overflow vulnerability exists in the SNMP service of the Ethernet Remote I/Os products. An unauthenticated remote attacker could exploit improper handling of specially crafted SNMP requests, potentially leading to a denial-of-service condition on the affected device.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133496" data-description="a security vulnerability has been detected in matthias-wandel jhead up to 3.3. this affects the function removepngsectionbytype/removepngsection of the file src/pngfile.c of the component png section handler. the manipulation leads to double free. remote exploitation of the attack is possible. the exploit has been disclosed publicly and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133496" target="_blank">CVE-2026-133496</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:32 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A security vulnerability has been detected in Matthias-Wandel jhead up to 3.3. This affects the function RemovePngSectionByType/RemovePngSection of the file src/pngfile.c of the component PNG Section Handler. The manipulation leads to double free. Remote exploitation of the attack is possible. The exploit has been disclosed publicly and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-99795" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-133429" data-description="when validating json data into a model allowing extra data, the keys of extra data aren't validated against the key type annotated on __pydantic_extra__, resulting in extra data not matching the declared type. this is the case if you define __pydantic_extra__ as e.g. dict[annotated[str, field(pattern=r'^x_')], int].
 
-cxl/features: ensure that count is set before access to ent[] __counted_by()
+the validate_json_by_iteration() method (in pydantic-core/src/validators/model_fields.rs), used to validate json data into models, only validates the values of extra data, and stores the keys as is.
 
-get_supported_features() assigns entries->num_features only after the
-memcpy() loop that fills entries->ent[] has already run. since ent[]
-is __counted_by(num_features), the compiler's bounds instrumentation
-sees a 0-length array during that loop and fortify_source trips on
-the memcpy. set @num_features right after allocation, before any
-write into ent[], so the bound is correct for the whole lifetime of
-the array.
+the issue was fixed in commit 4c65dbda9970a488e2ff21c8693fc6f6d70a3358.
 
-this was found via a fortify panic:
+impact: validation bypass, as extra data returned by validation doesn't match the declared type. affected are applications validating untrusted json data into models allowing extra data (with extra='allow'), with a key type annotated on __pydantic_extra__ (e.g. dict[annotated[str, field(pattern=...)], int]), using pydantic from 2.13.0 up to (but excluding) 2.14.2.
 
- memcpy: detected buffer overflow: 384 byte write of buffer size 0
- warning: lib/string_helpers.c:1035 at __fortify_report+0x54/0xa0
- kernel bug at lib/string_helpers.c:1043!
- call trace:
-  __fortify_panic+0x10/0x18
-  get_supported_features.isra.0+0x4a0/0x4d0 [cxl_core]
-  devm_cxl_setup_features+0x84/0x120 [cxl_core]
-  cxl_pci_probe+0x254/0x5e0 [cxl_pci]
-
-same class of bug, same fix shape as commit 6c9d2e87df40
-("cxl/fwctl: fix __fortify_panic"), which fixed the analogous issue
-in cxlctl_get_supported_features() but missed this one.
-
-[ dj: fixed up title typo per jonathan. ]">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99795" target="_blank">CVE-2026-99795</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:19 CDT</p>
+python mode validation isn't affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133429" target="_blank">CVE-2026-133429</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:32 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+                    <p>When validating JSON data into a model allowing extra data, the keys of extra data aren't validated against the key type annotated on __pydantic_extra__, resulting in extra data not matching the declared type. This is the case if you define __pydantic_extra__ as e.g. dict[Annotated[str, Field(pattern=r'^x_')], int].
 
-cxl/features: Ensure that count is set before access to ent[] __counted_by()
+The validate_json_by_iteration() method (in pydantic-core/src/validators/model_fields.rs), used to validate JSON data into models, only validates the values of extra data, and stores the keys as is.
 
-get_supported_features() assigns entries->num_features only after the
-memcpy() loop that fills entries->ent[] has already run. Since ent[]
-is __counted_by(num_features), the compiler's bounds instrumentation
-sees a 0-length array during that loop and FORTIFY_SOURCE trips on
-the memcpy. Set @num_features right after allocation, before any
-write into ent[], so the bound is correct for the whole lifetime of
-the array.
+The issue was fixed in commit 4c65dbda9970a488e2ff21c8693fc6f6d70a3358.
 
-This was found via a fortify panic:
+Impact: validation bypass, as extra data returned by validation doesn't match the declared type. Affected are applications validating untrusted JSON data into models allowing extra data (with extra='allow'), with a key type annotated on __pydantic_extra__ (e.g. dict[Annotated[str, Field(pattern=...)], int]), using Pydantic from 2.13.0 up to (but excluding) 2.14.2.
 
- memcpy: detected buffer overflow: 384 byte write of buffer size 0
- WARNING: lib/string_helpers.c:1035 at __fortify_report+0x54/0xa0
- kernel BUG at lib/string_helpers.c:1043!
- Call trace:
-  __fortify_panic+0x10/0x18
-  get_supported_features.isra.0+0x4a0/0x4d0 [cxl_core]
-  devm_cxl_setup_features+0x84/0x120 [cxl_core]
-  cxl_pci_probe+0x254/0x5e0 [cxl_pci]
-
-Same class of bug, same fix shape as commit 6c9d2e87df40
-("cxl/fwctl: Fix __fortify_panic"), which fixed the analogous issue
-in cxlctl_get_supported_features() but missed this one.
-
-[ dj: Fixed up title typo per Jonathan. ]</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99794" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-bluetooth: l2cap: reject signalling responses in invalid states
-
-a peer can send configuration messages while an
-incoming channel is in bt_connect2, before the
-security or deferred accept gate has completed. a
-configuration response can then promote the channel
-to bt_connected. configuration responses can also
-act on channels that are closing, and a late connection
-response can move a disconnecting channel back to
-bt_config.
-
-accept connection responses only while waiting in
-bt_connect. answer configuration requests in
-bt_connect2, but defer our own request until
-bt_config so configuration cannot complete before
-the gate. ignore configuration responses outside
-bt_config and bt_connected, and only complete
-configuration in bt_config.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99794" target="_blank">CVE-2026-99794</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-Bluetooth: L2CAP: Reject signalling responses in invalid states
-
-A peer can send configuration messages while an
-incoming channel is in BT_CONNECT2, before the
-security or deferred accept gate has completed. A
-configuration response can then promote the channel
-to BT_CONNECTED. Configuration responses can also
-act on channels that are closing, and a late connection
-response can move a disconnecting channel back to
-BT_CONFIG.
-
-Accept connection responses only while waiting in
-BT_CONNECT. Answer configuration requests in
-BT_CONNECT2, but defer our own request until
-BT_CONFIG so configuration cannot complete before
-the gate. Ignore configuration responses outside
-BT_CONFIG and BT_CONNECTED, and only complete
-configuration in BT_CONFIG.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99793" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-bluetooth: l2cap: only accept connection responses to outstanding requests
-
-an outgoing channel waits in bt_connect until security
-and the feature mask exchange complete, and only then
-sends its connection request. a peer can answer it
-before that with a connection response matching our
-source cid. the channel then moves to bt_config,
-completes configuration and becomes connected before
-security has completed. if security then fails,
-l2cap_security_cfm() leaves the connected channel
-alone, so it stays up on a link that did not reach
-the required security level.
-
-a connection response with a zero source cid is
-matched by identifier. another channel can hold the
-same identifier for a response it still has to send,
-so the lookup can pick the wrong channel.
-
-only accept a connection response while our request
-is outstanding, and only look at such channels when
-matching by identifier.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99793" target="_blank">CVE-2026-99793</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-Bluetooth: L2CAP: Only accept connection responses to outstanding requests
-
-An outgoing channel waits in BT_CONNECT until security
-and the feature mask exchange complete, and only then
-sends its connection request. A peer can answer it
-before that with a connection response matching our
-source CID. The channel then moves to BT_CONFIG,
-completes configuration and becomes connected before
-security has completed. If security then fails,
-l2cap_security_cfm() leaves the connected channel
-alone, so it stays up on a link that did not reach
-the required security level.
-
-A connection response with a zero source CID is
-matched by identifier. Another channel can hold the
-same identifier for a response it still has to send,
-so the lookup can pick the wrong channel.
-
-Only accept a connection response while our request
-is outstanding, and only look at such channels when
-matching by identifier.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99792" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-smb/server: prevent file publication after tree disconnect
-
-tree_disconnect closes the tree's published file handles before marking and
-removing the tree connection. a concurrent create that already holds a tree
-reference can therefore publish its file after the close pass. when create
-drops its reference, the tree can be freed while the published file still
-points to it.
-
-mark and remove the tree connection before closing its files, and serialize
-both new-open and durable-reconnect volatile id publication with that state
-transition. an opener is then either published in time for the close pass
-or rejected after disconnect with status_network_name_deleted.
-
-keep a tree reference while a file carries its tree pointer. this protects
-asynchronous users that can defer the file's final destruction past tree
-disconnect.
-
-the close pass can race the successful fp_new to fp_inited transition.
-take the opening request's file reference atomically with that transition.
-this keeps the file alive until request completion even if teardown removes
-the id immediately.
-
-  bug: kasan: slab-use-after-free in proc_show_files (fs/smb/server/vfs_cache.c:126)
-  read of size 4 at addr ff11000101540f80 by task poc/153
-
-  call trace:
-    proc_show_files (fs/smb/server/vfs_cache.c:126)
-    seq_read_iter (fs/seq_file.c:231)
-    proc_reg_read_iter (fs/proc/inode.c:299)
-    vfs_read (fs/read_write.c:574)
-    ksys_read (fs/read_write.c:716)
-    do_syscall_64 (arch/x86/entry/syscall_64.c:84)
-    entry_syscall_64_after_hwframe (arch/x86/entry/entry_64.s:121)
-
-  allocated by:
-    ksmbd_tree_conn_connect (fs/smb/server/mgmt/tree_connect.c:35)
-    smb2_tree_connect (fs/smb/server/smb2pdu.c:2819)
-    handle_ksmbd_work (fs/smb/server/server.c:368)
-
-  freed by:
-    kfree (mm/slub.c:6801)
-    handle_ksmbd_work (fs/smb/server/server.c:332)">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99792" target="_blank">CVE-2026-99792</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-smb/server: prevent file publication after tree disconnect
-
-TREE_DISCONNECT closes the tree's published file handles before marking and
-removing the tree connection. A concurrent CREATE that already holds a tree
-reference can therefore publish its file after the close pass. When CREATE
-drops its reference, the tree can be freed while the published file still
-points to it.
-
-Mark and remove the tree connection before closing its files, and serialize
-both new-open and durable-reconnect volatile ID publication with that state
-transition. An opener is then either published in time for the close pass
-or rejected after disconnect with STATUS_NETWORK_NAME_DELETED.
-
-Keep a tree reference while a file carries its tree pointer. This protects
-asynchronous users that can defer the file's final destruction past tree
-disconnect.
-
-The close pass can race the successful FP_NEW to FP_INITED transition.
-Take the opening request's file reference atomically with that transition.
-This keeps the file alive until request completion even if teardown removes
-the ID immediately.
-
-  BUG: KASAN: slab-use-after-free in proc_show_files (fs/smb/server/vfs_cache.c:126)
-  Read of size 4 at addr ff11000101540f80 by task poc/153
-
-  Call Trace:
-    proc_show_files (fs/smb/server/vfs_cache.c:126)
-    seq_read_iter (fs/seq_file.c:231)
-    proc_reg_read_iter (fs/proc/inode.c:299)
-    vfs_read (fs/read_write.c:574)
-    ksys_read (fs/read_write.c:716)
-    do_syscall_64 (arch/x86/entry/syscall_64.c:84)
-    entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:121)
-
-  Allocated by:
-    ksmbd_tree_conn_connect (fs/smb/server/mgmt/tree_connect.c:35)
-    smb2_tree_connect (fs/smb/server/smb2pdu.c:2819)
-    handle_ksmbd_work (fs/smb/server/server.c:368)
-
-  Freed by:
-    kfree (mm/slub.c:6801)
-    handle_ksmbd_work (fs/smb/server/server.c:332)</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99791" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xfs: improve dirent bounds checking in scrub and repair
-
-lollm complains that we don't do enough bounds checking of the directory
-entries in directory blocks when we're looking for errors or trying to
-salvage entries.  let's improve that with more detailed checks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99791" target="_blank">CVE-2026-99791</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xfs: improve dirent bounds checking in scrub and repair
-
-LOLLM complains that we don't do enough bounds checking of the directory
-entries in directory blocks when we're looking for errors or trying to
-salvage entries.  Let's improve that with more detailed checks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99790" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-nfsd: stop registering with rpcbind after a failure in listener_set
-
-nfsd_nl_listener_set_doit() calls svc_xprt_create_from_sa() once for each
-requested listener and passes flags of 0, so every listener registers with
-rpcbind on its own. a rpcbind that accepts the connection and never replies
-therefore costs one timeout for each entry. with the cap of 1024 entries
-the request can hold nfsd_mutex for about 34 minutes, which is roughly 17
-times the hung-task threshold.
-
-one failure is enough to know that the next call will not fare better.
-read svc_rpcb_failure_count() before the create loop, and pass
-svc_sock_anonymous for the rest of the request once the count moves.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99790" target="_blank">CVE-2026-99790</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-NFSD: stop registering with rpcbind after a failure in listener_set
-
-nfsd_nl_listener_set_doit() calls svc_xprt_create_from_sa() once for each
-requested listener and passes flags of 0, so every listener registers with
-rpcbind on its own. A rpcbind that accepts the connection and never replies
-therefore costs one timeout for each entry. With the cap of 1024 entries
-the request can hold nfsd_mutex for about 34 minutes, which is roughly 17
-times the hung-task threshold.
-
-One failure is enough to know that the next call will not fare better.
-Read svc_rpcb_failure_count() before the create loop, and pass
-SVC_SOCK_ANONYMOUS for the rest of the request once the count moves.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99789" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-block: restore the iterator when rejecting a misaligned bio
-
-bio_iov_iter_get_pages() can extract some iovecs before encountering a
-misaligned one.  it releases the pages and rejects the entire bio, but
-leaves the supplied iterator advanced.
-
-an iomap direct-i/o caller may subsequently reexpand the iterator's
-byte count and fall back to buffered i/o.  the reexpanded count then
-includes bytes before the iterator's current segment, potentially
-causing iterate_iovec() to read beyond the imported iovec array.
-
-in a reproducer using an initial empty iovec followed by 10-byte and
-1015-byte segments, writev() returned 1015 instead of 1025 and kasan
-reported an 8-byte read beyond the nine-element iovec allocation.
-saving and restoring the iterator on the rejected-bio path makes
-writev() return 1025 and eliminates the kasan report.
-
-restore the entire iterator rather than reverting a byte count:
-advancing past an empty segment changes its position without consuming
-any bytes.
-
-leave successful and partially accepted bio paths unchanged.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99789" target="_blank">CVE-2026-99789</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-block: restore the iterator when rejecting a misaligned bio
-
-bio_iov_iter_get_pages() can extract some iovecs before encountering a
-misaligned one.  It releases the pages and rejects the entire bio, but
-leaves the supplied iterator advanced.
-
-An iomap direct-I/O caller may subsequently reexpand the iterator's
-byte count and fall back to buffered I/O.  The reexpanded count then
-includes bytes before the iterator's current segment, potentially
-causing iterate_iovec() to read beyond the imported iovec array.
-
-In a reproducer using an initial empty iovec followed by 10-byte and
-1015-byte segments, writev() returned 1015 instead of 1025 and KASAN
-reported an 8-byte read beyond the nine-element iovec allocation.
-Saving and restoring the iterator on the rejected-bio path makes
-writev() return 1025 and eliminates the KASAN report.
-
-Restore the entire iterator rather than reverting a byte count:
-advancing past an empty segment changes its position without consuming
-any bytes.
-
-Leave successful and partially accepted bio paths unchanged.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99788" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-acpi: cppc: validate ffh register fields before hardware access
-
-the x86 cppc ffh accessors construct masks and shift values using the
-firmware's bit width and bit offset without checking that the field fits
-in an msr. a zero-width field or a field extending beyond bit 63 can
-therefore cause an invalid shift. the safe msr accessors only handle an
-access fault, not invalid field arithmetic after a successful read.
-
-also, the 64-bit gas address is implicitly narrowed to the 32-bit msr
-number. a descriptor with nonzero upper address bits can access a different
-msr from the one described by firmware.
-
-the arm64 amu counter readers have the same unchecked field arithmetic.
-validate the field bounds before reading a counter, including both
-descriptors in the paired counter path.
-
-dispatch ffh accesses before decoding the gas access size in the common
-read and write paths. otherwise, a large access_width can trigger an
-invalid shift in get_bit_width() before the architecture validates its
-register. that field has architecture-specific ffh semantics and is not
-needed by the generic memory/port accessor on this path.
-
-validate x86 msr addresses and share the field-bounds checks between
-related accessors within each architecture.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99788" target="_blank">CVE-2026-99788</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-ACPI: CPPC: Validate FFH register fields before hardware access
-
-The x86 CPPC FFH accessors construct masks and shift values using the
-firmware's Bit Width and Bit Offset without checking that the field fits
-in an MSR. A zero-width field or a field extending beyond bit 63 can
-therefore cause an invalid shift. The safe MSR accessors only handle an
-access fault, not invalid field arithmetic after a successful read.
-
-Also, the 64-bit GAS address is implicitly narrowed to the 32-bit MSR
-number. A descriptor with nonzero upper address bits can access a different
-MSR from the one described by firmware.
-
-The arm64 AMU counter readers have the same unchecked field arithmetic.
-Validate the field bounds before reading a counter, including both
-descriptors in the paired counter path.
-
-Dispatch FFH accesses before decoding the GAS Access Size in the common
-read and write paths. Otherwise, a large access_width can trigger an
-invalid shift in GET_BIT_WIDTH() before the architecture validates its
-register. That field has architecture-specific FFH semantics and is not
-needed by the generic memory/port accessor on this path.
-
-Validate x86 MSR addresses and share the field-bounds checks between
-related accessors within each architecture.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99787" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-cpufreq: cppc: select the frequency-invariance callback per cpu
-
-cppc_cpufreq_cpu_fie_init() initializes deferred work only for cpus whose
-feedback counters use pcc. however, if any cpu in a shared policy uses pcc,
-it installs the pcc tick callback for the entire policy. with fie enabled,
-a non-pcc cpu then queues an uninitialized irq_work and can call a null
-function pointer when that work runs.
-
-choose the frequency-invariance callback separately for each cpu using
-the recorded work-initialization state. processor removal can unpublish
-the cpc descriptor before callback registration, so querying its counter
-transport again can incorrectly select direct reads for a pcc cpu.
-
-register the callbacks after all counter initialization has completed, so
-a failed initial read for an online cpu cannot leave a partially
-registered policy. pcc cpus use their initialized deferred work, while
-non-pcc cpus read their own counters directly from the tick.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99787" target="_blank">CVE-2026-99787</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-cpufreq: CPPC: Select the frequency-invariance callback per CPU
-
-cppc_cpufreq_cpu_fie_init() initializes deferred work only for CPUs whose
-feedback counters use PCC. However, if any CPU in a shared policy uses PCC,
-it installs the PCC tick callback for the entire policy. With FIE enabled,
-a non-PCC CPU then queues an uninitialized irq_work and can call a NULL
-function pointer when that work runs.
-
-Choose the frequency-invariance callback separately for each CPU using
-the recorded work-initialization state. Processor removal can unpublish
-the CPC descriptor before callback registration, so querying its counter
-transport again can incorrectly select direct reads for a PCC CPU.
-
-Register the callbacks after all counter initialization has completed, so
-a failed initial read for an online CPU cannot leave a partially
-registered policy. PCC CPUs use their initialized deferred work, while
-non-PCC CPUs read their own counters directly from the tick.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99786" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-xfrm: retry inexact policy lookup after node reinsertion
-
-an inexact policy lookup first records pointers to candidate hlist heads
-and then traverses the lists.  a concurrent policy insertion can merge
-inexact tree nodes between those operations:
-
-  lookup                         policy insertion
-  ------                         ----------------
-  find inexact candidates
-    save obsolete hlist head
-                                 write_seqcount_begin(&bin->count)
-                                 merge inexact tree nodes
-                                   hlist_del_rcu(&policy->bydst)
-                                   reinsert policy->bydst in survivor
-                                 write_seqcount_end(&bin->count)
-  evaluate saved candidate list
-    miss the moved policy
-
-the merge immediately reinserts the same hlist node into the surviving
-tree node.  rcu keeps the policy alive, but it does not provide a
-consistent view while its list node is moved.  a lookup that selected the
-obsolete list can observe it empty.  a lookup already traversing a moved
-policy can instead follow the next pointer rewritten by the reinsertion.
-either case can return an incorrect ipsec policy result.
-
-the per-bin sequence counter already brackets calls to
-xfrm_policy_inexact_insert_node(), including node merges.  the read side,
-however, currently validates the counter only while searching an
-individual rb-tree.  a successful search returns without validation, and
-the later candidate-list traversal is outside that read-side section.
-
-snapshot the per-bin sequence before discovering candidate heads and
-validate it after evaluating all candidate lists.   retry the lookup if
-the inexact policy tree changes while it is being searched.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99786" target="_blank">CVE-2026-99786</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-xfrm: retry inexact policy lookup after node reinsertion
-
-An inexact policy lookup first records pointers to candidate hlist heads
-and then traverses the lists.  A concurrent policy insertion can merge
-inexact tree nodes between those operations:
-
-  lookup                         policy insertion
-  ------                         ----------------
-  find inexact candidates
-    save obsolete hlist head
-                                 write_seqcount_begin(&bin->count)
-                                 merge inexact tree nodes
-                                   hlist_del_rcu(&policy->bydst)
-                                   reinsert policy->bydst in survivor
-                                 write_seqcount_end(&bin->count)
-  evaluate saved candidate list
-    miss the moved policy
-
-The merge immediately reinserts the same hlist node into the surviving
-tree node.  RCU keeps the policy alive, but it does not provide a
-consistent view while its list node is moved.  A lookup that selected the
-obsolete list can observe it empty.  A lookup already traversing a moved
-policy can instead follow the next pointer rewritten by the reinsertion.
-Either case can return an incorrect IPsec policy result.
-
-The per-bin sequence counter already brackets calls to
-xfrm_policy_inexact_insert_node(), including node merges.  The read side,
-however, currently validates the counter only while searching an
-individual rb-tree.  A successful search returns without validation, and
-the later candidate-list traversal is outside that read-side section.
-
-Snapshot the per-bin sequence before discovering candidate heads and
-validate it after evaluating all candidate lists.   Retry the lookup if
-the inexact policy tree changes while it is being searched.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99785" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-9p/trans_virtio: reject mount tags longer than name_max at probe
-
-p9_virtio_probe() reads a 16-bit mount tag length (tag_len) from the
-device config and kzalloc()s tag_len + 1 bytes for chan->tag with no
-upper bound. a malicious or compromised host can present a tag of up to
-65535 bytes; that tag is later copied into the single-page sysfs buffer
-by p9_mount_tag_show() (memcpy(buf, chan->tag, tag_len + 1)), a
-host-controlled out-of-bounds write of up to ~64 kib past the page_size
-attribute buffer.
-
-reject an overlong tag at probe time. a 9p mount tag is a name-like
-identifier, so bound it by name_max (255): that limit is independent of
-the sysfs/seq_file page size and is far above any legitimate mount tag,
-which keeps p9_mount_tag_show() safe at the root without hard-coding a
-seq_file implementation detail.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99785" target="_blank">CVE-2026-99785</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-9p/trans_virtio: reject mount tags longer than NAME_MAX at probe
-
-p9_virtio_probe() reads a 16-bit mount tag length (tag_len) from the
-device config and kzalloc()s tag_len + 1 bytes for chan->tag with no
-upper bound. A malicious or compromised host can present a tag of up to
-65535 bytes; that tag is later copied into the single-page sysfs buffer
-by p9_mount_tag_show() (memcpy(buf, chan->tag, tag_len + 1)), a
-host-controlled out-of-bounds write of up to ~64 KiB past the PAGE_SIZE
-attribute buffer.
-
-Reject an overlong tag at probe time. A 9p mount tag is a name-like
-identifier, so bound it by NAME_MAX (255): that limit is independent of
-the sysfs/seq_file page size and is far above any legitimate mount tag,
-which keeps p9_mount_tag_show() safe at the root without hard-coding a
-seq_file implementation detail.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99784" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-9p/xen: fix refcount leak in p9_xen_response() on wrong tag
-
-p9_xen_response() looks up the request for an incoming reply with
-p9_tag_lookup(), which takes a reference on the returned p9_req_t. when
-the tag does not resolve to a request in req_status_sent, the function
-warns and continues the loop without dropping that reference, permanently
-leaking the p9_req_t and its msize buffers. the reply header, including
-the tag, is supplied by the backend, so a malicious or buggy 9p backend
-can leak kernel memory on every crafted response.
-
-drop the reference before continuing.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99784" target="_blank">CVE-2026-99784</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-9p/xen: fix refcount leak in p9_xen_response() on wrong tag
-
-p9_xen_response() looks up the request for an incoming reply with
-p9_tag_lookup(), which takes a reference on the returned p9_req_t. When
-the tag does not resolve to a request in REQ_STATUS_SENT, the function
-warns and continues the loop without dropping that reference, permanently
-leaking the p9_req_t and its msize buffers. The reply header, including
-the tag, is supplied by the backend, so a malicious or buggy 9P backend
-can leak kernel memory on every crafted response.
-
-Drop the reference before continuing.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99783" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-net/9p/usbg: fix use-after-free in disable_usb9pfs()
-
-disable_usb9pfs() frees the in and out usb_request objects before it
-disables the corresponding endpoints. if either request is still queued,
-the later usb_ep_disable() call cancels the endpoint queue and the udc
-driver can still access the already freed request.
-
-with dummy_hcd and kasan, this is reproducible by queueing the out
-request and then disconnecting the configfs gadget:
-
-  bug: kasan: slab-use-after-free in dummy_disable+0x2b4/0x300
-  read of size 8 at addr ffff888009702400 by task sh/1
-  usb_ep_disable+0x8e/0x1f0
-  usb9pfs_func_unbind+0x193/0x350
-  gadget_dev_desc_udc_store+0x135/0x280
-
-dummy_free_request() also warns because the request is freed while its
-queue entry is still linked.
-
-disable both endpoints before freeing the request objects. this lets
-usb_ep_disable() cancel any queued transfers and invoke the completion
-callback while the request storage is still valid. the request objects
-are then freed only after they have been removed from the endpoint
-queues.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99783" target="_blank">CVE-2026-99783</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 00:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-net/9p/usbg: Fix use-after-free in disable_usb9pfs()
-
-disable_usb9pfs() frees the IN and OUT usb_request objects before it
-disables the corresponding endpoints. If either request is still queued,
-the later usb_ep_disable() call cancels the endpoint queue and the UDC
-driver can still access the already freed request.
-
-With dummy_hcd and KASAN, this is reproducible by queueing the OUT
-request and then disconnecting the configfs gadget:
-
-  BUG: KASAN: slab-use-after-free in dummy_disable+0x2b4/0x300
-  Read of size 8 at addr ffff888009702400 by task sh/1
-  usb_ep_disable+0x8e/0x1f0
-  usb9pfs_func_unbind+0x193/0x350
-  gadget_dev_desc_UDC_store+0x135/0x280
-
-dummy_free_request() also warns because the request is freed while its
-queue entry is still linked.
-
-Disable both endpoints before freeing the request objects. This lets
-usb_ep_disable() cancel any queued transfers and invoke the completion
-callback while the request storage is still valid. The request objects
-are then freed only after they have been removed from the endpoint
-queues.</p>
+Python mode validation isn't affected.</p>
                 </div>
         
             </div>
