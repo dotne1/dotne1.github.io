@@ -34,536 +34,214 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-99804" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-133627" data-description="flowintel contains a log injection vulnerability in its case history (audit log) subsystem. the case history is stored as a line-delimited file where each line represents a single event attributed to a specific user. user-controlled fields, including user names, event messages, and case titles used during case merging, were written to the history file without sanitizing embedded line separator characters (such as carriage return, line feed, vertical tab, form feed, and unicode line/paragraph separators).
 
-io_uring/io-wq: save worker type before dropping its reference
+an authenticated user with the ability to create or modify case history entries could embed line separators in these fields. upon writing, the injected separators would split a single intended entry into multiple lines, each of which the history format interprets as a distinct event. this allows an attacker to forge additional history entries attributed to arbitrary users, corrupting the audit trail and undermining the integrity of case records.
 
-io_wq_cancel_tw_create() inspects cb->func after calling
-io_worker_cancel_cb(). for an existing worker, that call can drop the
-last worker reference and wake io_worker_exit(). if the canceling task
-is preempted, the worker can be unlinked and freed by kfree_rcu() before
-the callback function is inspected. kasan reports a slab-use-after-free
-read in this path.
+the vulnerability affects the case history append and merge operations. no authentication bypass or privilege escalation is required beyond normal case-management access.
 
-save whether the callback belongs to an unpublished continuation worker
-while its reference is still held, then use the saved result for the
-conditional free. this preserves the existing accounting and frees only
-the worker allocated for the canceled continuation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99804" target="_blank">CVE-2026-99804</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:38 CDT</p>
+affected versions: flowintel prior to 4.1.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133627" target="_blank">CVE-2026-133627</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
+                    <p>flowintel contains a log injection vulnerability in its case history (audit log) subsystem. The case history is stored as a line-delimited file where each line represents a single event attributed to a specific user. User-controlled fields, including user names, event messages, and case titles used during case merging, were written to the history file without sanitizing embedded line separator characters (such as carriage return, line feed, vertical tab, form feed, and Unicode line/paragraph separators).
 
-io_uring/io-wq: save worker type before dropping its reference
+An authenticated user with the ability to create or modify case history entries could embed line separators in these fields. Upon writing, the injected separators would split a single intended entry into multiple lines, each of which the history format interprets as a distinct event. This allows an attacker to forge additional history entries attributed to arbitrary users, corrupting the audit trail and undermining the integrity of case records.
 
-io_wq_cancel_tw_create() inspects cb->func after calling
-io_worker_cancel_cb(). For an existing worker, that call can drop the
-last worker reference and wake io_worker_exit(). If the canceling task
-is preempted, the worker can be unlinked and freed by kfree_rcu() before
-the callback function is inspected. KASAN reports a slab-use-after-free
-read in this path.
+The vulnerability affects the case history append and merge operations. No authentication bypass or privilege escalation is required beyond normal case-management access.
 
-Save whether the callback belongs to an unpublished continuation worker
-while its reference is still held, then use the saved result for the
-conditional free. This preserves the existing accounting and frees only
-the worker allocated for the canceled continuation.</p>
+Affected versions: flowintel prior to 4.1.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-99803" data-description="in the linux kernel, the following vulnerability has been resolved:
+                <div class="cve-entry" data-cve-id="CVE-2026-133626" data-description="flowintel contains a resource exhaustion vulnerability in its file-to-note conversion feature. when a user converts an attached csv or json file into a case note, the application renders the data as a markdown table by padding every row to the maximum column count. a crafted file with a small number of filled cells but a very large number of columns (or keys) causes the application to allocate a quadratic number of padded table cells, potentially exhausting a worker process in memory or cpu.
 
-io_uring/net: mask socket type with sock_type_mask in io_socket_bpf_populate()
-
-when an ioring_op_socket request is prepared in io_socket_prep(),
-sock->type retains creation flags such as sock_cloexec and sock_nonblock
-until __sys_socket_file() masks them off with sock_type_mask during
-execution.
-
-however, io_socket_bpf_populate() copies sock->type into
-bctx->socket.type without masking off ~sock_type_mask. as a result, a
-cbpf filter inspecting bctx->socket.type against socket types such as
-sock_dgram or sock_stream can be bypassed by oring sock_cloexec or
-sock_nonblock into the socket type.
-
-mask sock->type with sock_type_mask when populating bctx->socket.type.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99803" target="_blank">CVE-2026-99803</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/net: mask socket type with SOCK_TYPE_MASK in io_socket_bpf_populate()
-
-When an IORING_OP_SOCKET request is prepared in io_socket_prep(),
-sock->type retains creation flags such as SOCK_CLOEXEC and SOCK_NONBLOCK
-until __sys_socket_file() masks them off with SOCK_TYPE_MASK during
-execution.
-
-However, io_socket_bpf_populate() copies sock->type into
-bctx->socket.type without masking off ~SOCK_TYPE_MASK. As a result, a
-cBPF filter inspecting bctx->socket.type against socket types such as
-SOCK_DGRAM or SOCK_STREAM can be bypassed by ORing SOCK_CLOEXEC or
-SOCK_NONBLOCK into the socket type.
-
-Mask sock->type with SOCK_TYPE_MASK when populating bctx->socket.type.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99802" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring/register: enforce per-task restrictions in io_uring_register_blind()
-
-when io_uring_register(2) is invoked with fd == -1, it dispatches
-directly to io_uring_register_blind() without checking
-current->io_uring_restrict.
-
-as a result, a task with per-task register restrictions installed via
-ioring_register_restrictions can still invoke blind registration opcodes
-such as ioring_register_send_msg_ring even when those opcodes are not in
-the task's allowed register_op bitmap.
-
-check current->io_uring_restrict->register_op in
-io_uring_register_blind() before dispatching blind registration opcodes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99802" target="_blank">CVE-2026-99802</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/register: enforce per-task restrictions in io_uring_register_blind()
-
-When io_uring_register(2) is invoked with fd == -1, it dispatches
-directly to io_uring_register_blind() without checking
-current->io_uring_restrict.
-
-As a result, a task with per-task register restrictions installed via
-IORING_REGISTER_RESTRICTIONS can still invoke blind registration opcodes
-such as IORING_REGISTER_SEND_MSG_RING even when those opcodes are not in
-the task's allowed register_op bitmap.
-
-Check current->io_uring_restrict->register_op in
-io_uring_register_blind() before dispatching blind registration opcodes.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99801" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring/bpf-ops: clear bpf_ctx while submitting sqes
-
-bpf_io_uring_submit_sqes() calls io_submit_sqes() from inside the loop
-program, with current->bpf_ctx set, and requests issued inline run with
-it set too. the socket code uses has_current_bpf_ctx() to recognize
-calls from bpf_setsockopt() and friends, where the caller holds the
-socket lock and has already been vetted, and skips both.
-
-so a socket_uring_op_setsockopt from the sq passes sockopt_capable()
-without the capability, and runs without lock_sock(). a task with no
-capability can set so_mark, ip_transparent or tcp_repair, and two
-threads changing ip_options on one socket, one through the ring, double
-free in no time. sock_destroy via ioring_op_sendmsg ends up in
-tcp_abort() without the lock the same way.
-
-clear the run context around io_submit_sqes(). the sqes come from
-userspace and must be issued like those of any other ring. they still
-run inside the program's rcu tasks trace read section, so a request
-that sleeps there holds up that grace period, but other request types
-do that already.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99801" target="_blank">CVE-2026-99801</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/bpf-ops: clear bpf_ctx while submitting SQEs
-
-bpf_io_uring_submit_sqes() calls io_submit_sqes() from inside the loop
-program, with current->bpf_ctx set, and requests issued inline run with
-it set too. The socket code uses has_current_bpf_ctx() to recognize
-calls from bpf_setsockopt() and friends, where the caller holds the
-socket lock and has already been vetted, and skips both.
-
-So a SOCKET_URING_OP_SETSOCKOPT from the SQ passes sockopt_capable()
-without the capability, and runs without lock_sock(). A task with no
-capability can set SO_MARK, IP_TRANSPARENT or TCP_REPAIR, and two
-threads changing IP_OPTIONS on one socket, one through the ring, double
-free in no time. SOCK_DESTROY via IORING_OP_SENDMSG ends up in
-tcp_abort() without the lock the same way.
-
-Clear the run context around io_submit_sqes(). The SQEs come from
-userspace and must be issued like those of any other ring. They still
-run inside the program's RCU tasks trace read section, so a request
-that sleeps there holds up that grace period, but other request types
-do that already.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99800" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring: free the task context after a grace period
-
-a task other than the owner can free a request, io_ring_exit_work()
-running the local task_work of a defer_taskrun ring for example, or
-io_do_iopoll() reaping completions. io_put_task() then takes the else
-branch:
-
-    percpu_counter_sub(&tctx->inflight, 1);
-    if (unlikely(atomic_read(&tctx->in_cancel)))
-            wake_up(&tctx->wait);
-    put_task_struct(tctx->task);
-
-the first line is what lets the owner leave io_uring_cancel_generic(),
-and on exec it frees the tctx right after. nothing holds that off for
-the remaining three lines, the task reference only covers a tctx freed
-along with the task_struct. it used to work out because
-io_uring_del_tctx_node() took the uring_lock that the freeing side holds
-across io_put_task(), until that moved to tctx_lock.
-
-free the tctx with kfree_rcu(), and enter an rcu read section in
-io_put_task() before the count is dropped.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99800" target="_blank">CVE-2026-99800</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring: free the task context after a grace period
-
-A task other than the owner can free a request, io_ring_exit_work()
-running the local task_work of a DEFER_TASKRUN ring for example, or
-io_do_iopoll() reaping completions. io_put_task() then takes the else
-branch:
-
-    percpu_counter_sub(&tctx->inflight, 1);
-    if (unlikely(atomic_read(&tctx->in_cancel)))
-            wake_up(&tctx->wait);
-    put_task_struct(tctx->task);
-
-The first line is what lets the owner leave io_uring_cancel_generic(),
-and on exec it frees the tctx right after. Nothing holds that off for
-the remaining three lines, the task reference only covers a tctx freed
-along with the task_struct. It used to work out because
-io_uring_del_tctx_node() took the uring_lock that the freeing side holds
-across io_put_task(), until that moved to tctx_lock.
-
-Free the tctx with kfree_rcu(), and enter an RCU read section in
-io_put_task() before the count is dropped.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99799" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring/sqpoll: don't wait for the thread to exit
-
-io_sq_thread_stop() wakes the sqpoll thread and waits for it to exit.
-the thread belongs to the thread group that created the ring, so a
-sigstop or the cgroup freezer holds it in get_signal(), and the wake up
-doesn't change that. io_ring_exit_work() then sleeps in that wait until
-someone continues or kills the process. iou_exit has 64 slots, so 64
-closed sqpoll rings of a stopped process keep every other ring from
-being freed, for everyone.
-
-don't wait. set the stop bit, wake the thread, and let it exit when it
-gets to run again. the sqd can now outlive its last ring, so give it a
-second refcount with one reference for the rings and one for the thread,
-and free it with the last one. the thread can't reach a freed ring,
-rings leave ctx_list before dropping their reference, and the io-wq hash
-is refcounted.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99799" target="_blank">CVE-2026-99799</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/sqpoll: don't wait for the thread to exit
-
-io_sq_thread_stop() wakes the SQPOLL thread and waits for it to exit.
-The thread belongs to the thread group that created the ring, so a
-SIGSTOP or the cgroup freezer holds it in get_signal(), and the wake up
-doesn't change that. io_ring_exit_work() then sleeps in that wait until
-someone continues or kills the process. iou_exit has 64 slots, so 64
-closed SQPOLL rings of a stopped process keep every other ring from
-being freed, for everyone.
-
-Don't wait. Set the stop bit, wake the thread, and let it exit when it
-gets to run again. The sqd can now outlive its last ring, so give it a
-second refcount with one reference for the rings and one for the thread,
-and free it with the last one. The thread can't reach a freed ring,
-rings leave ctx_list before dropping their reference, and the io-wq hash
-is refcounted.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99798" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring: defer foreign io-wq enqueues to task_work
-
-an iopoll ring without defer_taskrun can be reaped by a task other than
-the one that submitted the i/o. if a polled request is marked
-req_f_reissue, io_free_batch_list() calls io_queue_iowq() with the
-original tctx. ordinary task exit can tear down tctx->io_wq after
-draining only the tracked requests. the live request pins the task, but
-not its io-wq, so the foreign task can race io_wq_put_and_exit() and
-enqueue through a freed or null queue.
-
-forward foreign userspace enqueues to the owning task before accessing
-tctx->io_wq. use a dedicated task_work callback so reissues still go
-straight to io-wq, and fail them if task_work is running in cancellation
-mode. preserve the existing pf_kthread cancellation path. this also
-covers the other callers of io_queue_iowq() without changing the
-worker-owned enqueue path.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99798" target="_blank">CVE-2026-99798</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring: defer foreign io-wq enqueues to task_work
-
-An IOPOLL ring without DEFER_TASKRUN can be reaped by a task other than
-the one that submitted the I/O. If a polled request is marked
-REQ_F_REISSUE, io_free_batch_list() calls io_queue_iowq() with the
-original tctx. Ordinary task exit can tear down tctx->io_wq after
-draining only the tracked requests. The live request pins the task, but
-not its io-wq, so the foreign task can race io_wq_put_and_exit() and
-enqueue through a freed or NULL queue.
-
-Forward foreign userspace enqueues to the owning task before accessing
-tctx->io_wq. Use a dedicated task_work callback so reissues still go
-straight to io-wq, and fail them if task_work is running in cancellation
-mode. Preserve the existing PF_KTHREAD cancellation path. This also
-covers the other callers of io_queue_iowq() without changing the
-worker-owned enqueue path.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99797" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring/cancel: drop sqd->lock while sqpoll waits
-
-an exiting sqpoll thread calls io_uring_cancel_generic() with sqd->lock
-held, and keeps it across cond_resched() and the sleep until nothing is
-in flight anymore. a zero-copy send notification can't be canceled and
-stays pending as long as the peer doesn't read, so the lock is held for
-as long as a user cares to. io_ring_exit_work() needs it to park the
-thread, and so do ioring_register_iowq_aff and iowq_max_workers. with
-64 such rings sharing the thread, every iou_exit slot sleeps on the lock
-and no ring gets freed for anyone.
-
-drop the lock around cond_resched() and the sleep, like the main loop of
-the thread does. each walk of ctx_list is still under one hold, and
-nothing is kept across the unlock. the thread drops its io-wq, frees its
-tctx and clears sqd->thread under one hold after the loop, so whoever
-holds the lock and finds sqd->thread set can still use them.
-
-[axboe: adapted to the schedule_timeout() based loop]">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99797" target="_blank">CVE-2026-99797</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/cancel: drop sqd->lock while SQPOLL waits
-
-An exiting SQPOLL thread calls io_uring_cancel_generic() with sqd->lock
-held, and keeps it across cond_resched() and the sleep until nothing is
-in flight anymore. A zero-copy send notification can't be canceled and
-stays pending as long as the peer doesn't read, so the lock is held for
-as long as a user cares to. io_ring_exit_work() needs it to park the
-thread, and so do IORING_REGISTER_IOWQ_AFF and IOWQ_MAX_WORKERS. With
-64 such rings sharing the thread, every iou_exit slot sleeps on the lock
-and no ring gets freed for anyone.
-
-Drop the lock around cond_resched() and the sleep, like the main loop of
-the thread does. Each walk of ctx_list is still under one hold, and
-nothing is kept across the unlock. The thread drops its io-wq, frees its
-tctx and clears sqd->thread under one hold after the loop, so whoever
-holds the lock and finds sqd->thread set can still use them.
-
-[axboe: adapted to the schedule_timeout() based loop]</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-99796" data-description="in the linux kernel, the following vulnerability has been resolved:
-
-io_uring/poll: cancel all matching requests in one pass
-
-with ioring_async_cancel_all, __io_async_cancel() calls io_try_cancel()
-until nothing is found, and io_poll_cancel() cancels one request per
-call, starting each lookup at the beginning of the hash. a cancelled
-request stays hashed until its task work runs, so every lookup walks
-past the ones already cancelled. cancelling k of n pending polls visits
-about k*n/2 requests in one io_uring_enter(), with uring_lock held.
-
-a single cancel_fd|all on 80000 polls on one eventfd takes 17.06s,
-0.02s with this change. with voluntary preemption the soft lockup
-watchdog fires:
-
-  watchdog: bug: soft lockup - cpu#1 stuck for 26s! [repro:100]
-  rip: 0010:io_cancel_req_match+0x19/0xa0
-   io_poll_cancel+0x73/0x170
-   io_try_cancel+0x7b/0xf0
-   __io_async_cancel+0x41/0x110
-
-walk the hash once and cancel every match, as io_cancel_remove() does
-for futex and waitid. cancel by user_data only needs its own bucket.
-__io_async_cancel() still loops until nothing is found, so a request
-that io-wq parks in the poll hash meanwhile is still cancelled.
-
-a cancel that matches one request now walks the whole hash twice instead
-of stopping at the match.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-99796" target="_blank">CVE-2026-99796</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:37 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>In the Linux kernel, the following vulnerability has been resolved:
-
-io_uring/poll: cancel all matching requests in one pass
-
-With IORING_ASYNC_CANCEL_ALL, __io_async_cancel() calls io_try_cancel()
-until nothing is found, and io_poll_cancel() cancels one request per
-call, starting each lookup at the beginning of the hash. A cancelled
-request stays hashed until its task work runs, so every lookup walks
-past the ones already cancelled. Cancelling K of N pending polls visits
-about K*N/2 requests in one io_uring_enter(), with uring_lock held.
-
-A single CANCEL_FD|ALL on 80000 polls on one eventfd takes 17.06s,
-0.02s with this change. With voluntary preemption the soft lockup
-watchdog fires:
-
-  watchdog: BUG: soft lockup - CPU#1 stuck for 26s! [repro:100]
-  RIP: 0010:io_cancel_req_match+0x19/0xa0
-   io_poll_cancel+0x73/0x170
-   io_try_cancel+0x7b/0xf0
-   __io_async_cancel+0x41/0x110
-
-Walk the hash once and cancel every match, as io_cancel_remove() does
-for futex and waitid. Cancel by user_data only needs its own bucket.
-__io_async_cancel() still loops until nothing is found, so a request
-that io-wq parks in the poll hash meanwhile is still cancelled.
-
-A cancel that matches one request now walks the whole hash twice instead
-of stopping at the match.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-89095" data-description="the shortcodes and extra features for phlox theme plugin for wordpress is vulnerable to local file inclusion in all versions up to, and including, 2.17.22 via the 'extra_template_path' parameter parameter. this makes it possible for unauthenticated attackers to include and execute arbitrary .php files on the server, allowing the execution of any php code in those files. this can be used to bypass access controls, obtain sensitive data, or achieve code execution in cases where .php file types can be uploaded and included. the slug-based allowlist introduced as the fix for cve-2023-37888 constrains only the template_part_file filename suffix and does not validate the extra_template_path directory component, meaning path traversal sequences are fully functional against this parameter.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-89095" target="_blank">CVE-2026-89095</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:36 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>The Shortcodes and extra features for Phlox theme plugin for WordPress is vulnerable to Local File Inclusion in all versions up to, and including, 2.17.22 via the 'extra_template_path' parameter parameter. This makes it possible for unauthenticated attackers to include and execute arbitrary .php files on the server, allowing the execution of any PHP code in those files. This can be used to bypass access controls, obtain sensitive data, or achieve code execution in cases where .php file types can be uploaded and included. The slug-based allowlist introduced as the fix for CVE-2023-37888 constrains only the template_part_file filename suffix and does not validate the extra_template_path directory component, meaning path traversal sequences are fully functional against this parameter.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133615" data-description="a vulnerability has been identified in webauthn-kotlin versions 1.1.0 through 1.1.3, where an exported device-credential authentication activity launches attacker-supplied intents without validation, potentially allowing a malicious application on the same android device to access application-protected data, depending on the host application’s content-provider configuration.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133615" target="_blank">CVE-2026-133615</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:34 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A vulnerability has been identified in webauthn-kotlin versions 1.1.0 through 1.1.3, where an exported device-credential authentication activity launches attacker-supplied intents without validation, potentially allowing a malicious application on the same Android device to access application-protected data, depending on the host application’s content-provider configuration.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133613" data-description="flowintel's community data launcher script passes the admin api key as a command-line argument to a child python helper process. on unix-like systems, process arguments are readable by all local users via standard tools such as ps or by reading /proc/<pid>/cmdline, allowing any local user to observe the key while the helper process is running.
-
-an attacker with local access to the host can capture the admin api key during the brief window in which the helper process is active. possession of the key grants full administrative access to the flowintel rest api, enabling unauthorized creation, modification, or deletion of threat intelligence data, users, roles, and organisations.
+the same issue affects nested json values rendered inside table cells, where pretty-printed indentation further inflates the output size.
 
 preconditions:
-- the victim must invoke the community data import or deletion command (launch.sh -tdc or -dtdc) with the api key supplied as a positional argument.
-- the attacker must have a local user account on the same host and be able to observe process listings during the helper execution window.
+- an authenticated user with access to a case in flowintel
+- ability to attach and convert a csv or json file to a note
 
 impact:
-- disclosure of the flowintel admin api key to any local user.
-- subsequent full administrative control over the flowintel instance via its rest api.
+- denial of service: exhaustion of a worker process, potentially disrupting service for other users
+- no confidentiality or integrity impact
 
-affected: <4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133613" target="_blank">CVE-2026-133613</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:34 CDT</p>
+affected versions: flowintel prior to 4.1.0">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133626" target="_blank">CVE-2026-133626</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Flowintel's community data launcher script passes the admin API key as a command-line argument to a child Python helper process. On Unix-like systems, process arguments are readable by all local users via standard tools such as ps or by reading /proc/<pid>/cmdline, allowing any local user to observe the key while the helper process is running.
+                    <p>FlowIntel contains a resource exhaustion vulnerability in its file-to-note conversion feature. When a user converts an attached CSV or JSON file into a case note, the application renders the data as a Markdown table by padding every row to the maximum column count. A crafted file with a small number of filled cells but a very large number of columns (or keys) causes the application to allocate a quadratic number of padded table cells, potentially exhausting a worker process in memory or CPU.
 
-An attacker with local access to the host can capture the admin API key during the brief window in which the helper process is active. Possession of the key grants full administrative access to the Flowintel REST API, enabling unauthorized creation, modification, or deletion of threat intelligence data, users, roles, and organisations.
+The same issue affects nested JSON values rendered inside table cells, where pretty-printed indentation further inflates the output size.
 
 Preconditions:
-- The victim must invoke the community data import or deletion command (launch.sh -tdc or -dtdc) with the API key supplied as a positional argument.
-- The attacker must have a local user account on the same host and be able to observe process listings during the helper execution window.
+- An authenticated user with access to a case in FlowIntel
+- Ability to attach and convert a CSV or JSON file to a note
 
 Impact:
-- Disclosure of the Flowintel admin API key to any local user.
-- Subsequent full administrative control over the Flowintel instance via its REST API.
+- Denial of service: exhaustion of a worker process, potentially disrupting service for other users
+- No confidentiality or integrity impact
 
-Affected: <4.1.0</p>
+Affected versions: FlowIntel prior to 4.1.0</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133611" data-description="vulnerability-lookup prior to version 7.1.0 contains two security issues in its web interface. first, the /user/toggle_2fa endpoint accepted http get requests and disabled the authenticated user's two-factor authentication without requiring password confirmation. because the state-changing operation was reachable via get, an attacker with a basic account could embed an image element (or any other get-triggering markup) in a comment pointing to that endpoint. when a victim with 2fa enabled viewed the comment, their browser silently issued the get request, disabling the victim's second factor of authentication. no csrf token was enforced on the get path, and no password was required to confirm the action. second, the comment detail page (/comment/<uuid>) rendered unpublished comments to any visitor who possessed the url, bypassing the moderation workflow that was intended to keep such content hidden until approved. the api correctly restricted access, but the web view did not enforce the same authorization check. the combined effect allows an attacker to degrade a victim's account security (removal of 2fa) through a single page view and to read content that was not yet approved for public release.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133611" target="_blank">CVE-2026-133611</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>vulnerability-lookup prior to version 7.1.0 contains two security issues in its web interface. First, the /user/toggle_2fa endpoint accepted HTTP GET requests and disabled the authenticated user's two-factor authentication without requiring password confirmation. Because the state-changing operation was reachable via GET, an attacker with a basic account could embed an image element (or any other GET-triggering markup) in a comment pointing to that endpoint. When a victim with 2FA enabled viewed the comment, their browser silently issued the GET request, disabling the victim's second factor of authentication. No CSRF token was enforced on the GET path, and no password was required to confirm the action. Second, the comment detail page (/comment/<uuid>) rendered unpublished comments to any visitor who possessed the URL, bypassing the moderation workflow that was intended to keep such content hidden until approved. The API correctly restricted access, but the web view did not enforce the same authorization check. The combined effect allows an attacker to degrade a victim's account security (removal of 2FA) through a single page view and to read content that was not yet approved for public release.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133561" data-description="mattermost versions 11.2.x <= 11.2.4 fail to validate that the redirect target on the web app landing page that prompts users to open links in the desktop app stays on the mattermost origin which allows an unauthenticated attacker to redirect a user to an arbitrary external site via a crafted link. mattermost advisory id: mmsa-2026-00893">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133561" target="_blank">CVE-2026-133561</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>Mattermost versions 11.2.x <= 11.2.4 fail to validate that the redirect target on the web app landing page that prompts users to open links in the desktop app stays on the Mattermost origin which allows an unauthenticated attacker to redirect a user to an arbitrary external site via a crafted link. Mattermost Advisory ID: MMSA-2026-00893</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133505" data-description="when message history is serialized and loaded again, a tool result that contains a json object in the serialized shape of one of pydantic ai's file types is rebuilt as that file. a third party who controls data a tool returns, such as a record that an mcp server or a function tool returns from an external system, can use this to make the application download a url on its local network, or make the model provider read an s3:// object or uploaded file with the application's credentials. applications are affected when tool results can contain third-party data, message history containing those results is serialized and loaded again (stored history, history a ui adapter holds on the server, or temporal, dbos or prefect durable execution), and the model is one pydantic ai downloads files for, one that honors force_download, or one whose provider resolves non-http file urls or uploaded files. history that a client submits through the vercel ai or ag-ui adapter in the default mode is not affected. the issue is fixed in pydantic-ai and pydantic-ai-slim 1.107.10 and 2.66.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133505" target="_blank">CVE-2026-133505</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
-                    <p>When message history is serialized and loaded again, a tool result that contains a JSON object in the serialized shape of one of Pydantic AI's file types is rebuilt as that file. A third party who controls data a tool returns, such as a record that an MCP server or a function tool returns from an external system, can use this to make the application download a URL on its local network, or make the model provider read an s3:// object or uploaded file with the application's credentials. Applications are affected when tool results can contain third-party data, message history containing those results is serialized and loaded again (stored history, history a UI adapter holds on the server, or Temporal, DBOS or Prefect durable execution), and the model is one Pydantic AI downloads files for, one that honors force_download, or one whose provider resolves non-HTTP file URLs or uploaded files. History that a client submits through the Vercel AI or AG-UI adapter in the default mode is not affected. The issue is fixed in pydantic-ai and pydantic-ai-slim 1.107.10 and 2.66.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133499" data-description="a vulnerability was found in vahe1994 aqlm up to e79a896ed6656fe4ed06193d42d004e7d0bbdbb2. the affected element is an unknown function of the file inference_kernels/triton_kernel.py of the component triton kernel. performing a manipulation of the argument codes results in out-of-bounds read. it is possible to initiate the attack remotely. the exploit has been made public and could be used. this product is using a rolling release to provide continious delivery. therefore, no version details for affected nor updated releases are available. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133499" target="_blank">CVE-2026-133499</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133625" data-description="ilbc audio codec crash in 4.6.0 to 4.6.9 and 4.4.0 to 4.4.19 allows denial of service">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133625" target="_blank">CVE-2026-133625</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A vulnerability was found in Vahe1994 AQLM up to e79a896ed6656fe4ed06193d42d004e7d0bbdbb2. The affected element is an unknown function of the file inference_kernels/triton_kernel.py of the component Triton Kernel. Performing a manipulation of the argument codes results in out-of-bounds read. It is possible to initiate the attack remotely. The exploit has been made public and could be used. This product is using a rolling release to provide continious delivery. Therefore, no version details for affected nor updated releases are available. The project was informed of the problem early through an issue report but has not responded yet.</p>
+                    <p>iLBC audio codec crash in 4.6.0 to 4.6.9 and 4.4.0 to 4.4.19 allows denial of service</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133498" data-description="a flaw has been found in mozilla-ai llamafile up to .0.10.5. this issue affects the function llamafile_open_zip of the file llamafile/llamafile.c of the component container parser. this manipulation of the argument size causes out-of-bounds read. the attack is possible to be carried out remotely. upgrading to version 0.10.6 is capable of addressing this issue. patch name: 5ac1c4dbb76737fee71a54922df95342c667ba6f. it is advisable to upgrade the affected component.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133498" target="_blank">CVE-2026-133498</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133624" data-description="sctp protocol dissector heap disclosure in 4.6.0 to 4.6.9 and 4.4.0 to 4.4.19 might enable denial of service or code execution">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133624" target="_blank">CVE-2026-133624</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A flaw has been found in mozilla-ai llamafile up to .0.10.5. This issue affects the function llamafile_open_zip of the file llamafile/llamafile.c of the component Container Parser. This manipulation of the argument size causes out-of-bounds read. The attack is possible to be carried out remotely. Upgrading to version 0.10.6 is capable of addressing this issue. Patch name: 5ac1c4dbb76737fee71a54922df95342c667ba6f. It is advisable to upgrade the affected component.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
+                    <p>SCTP protocol dissector heap disclosure in 4.6.0 to 4.6.9 and 4.4.0 to 4.4.19 might enable denial of service or code execution</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133497" data-description="a vulnerability was detected in itsourcecode banking management system 1.0. this vulnerability affects unknown code of the file navbar.php. the manipulation of the argument page results in cross site scripting. the attack can be executed remotely. the exploit is now public and may be used.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133497" target="_blank">CVE-2026-133497</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:33 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A vulnerability was detected in itsourcecode Banking Management System 1.0. This vulnerability affects unknown code of the file navbar.php. The manipulation of the argument page results in cross site scripting. The attack can be executed remotely. The exploit is now public and may be used.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133622" data-description="a flaw was found in certmonger. this vulnerability allows a malicious certificate authority or an attacker positioned on an unencrypted network to cause a denial of service (dos) by sending oversized or deliberately slow responses. certmonger fails to enforce size limits or transfer timeouts when downloading and buffering simple certificate enrollment protocol (scep) replies over http. consequently, an attacker can exhaust host memory, drive cpu usage to capacity, or cause certificate requests to hang indefinitely.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133622" target="_blank">CVE-2026-133622</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:08 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.7</p>
+                    <p>A flaw was found in certmonger. This vulnerability allows a malicious certificate authority or an attacker positioned on an unencrypted network to cause a Denial of Service (DoS) by sending oversized or deliberately slow responses. Certmonger fails to enforce size limits or transfer timeouts when downloading and buffering Simple Certificate Enrollment Protocol (SCEP) replies over HTTP. Consequently, an attacker can exhaust host memory, drive CPU usage to capacity, or cause certificate requests to hang indefinitely.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133496" data-description="a security vulnerability has been detected in matthias-wandel jhead up to 3.3. this affects the function removepngsectionbytype/removepngsection of the file src/pngfile.c of the component png section handler. the manipulation leads to double free. remote exploitation of the attack is possible. the exploit has been disclosed publicly and may be used. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133496" target="_blank">CVE-2026-133496</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:32 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A security vulnerability has been detected in Matthias-Wandel jhead up to 3.3. This affects the function RemovePngSectionByType/RemovePngSection of the file src/pngfile.c of the component PNG Section Handler. The manipulation leads to double free. Remote exploitation of the attack is possible. The exploit has been disclosed publicly and may be used. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133429" data-description="when validating json data into a model allowing extra data, the keys of extra data aren't validated against the key type annotated on __pydantic_extra__, resulting in extra data not matching the declared type. this is the case if you define __pydantic_extra__ as e.g. dict[annotated[str, field(pattern=r'^x_')], int].
+                <div class="cve-entry" data-cve-id="CVE-2026-133620" data-description="flowintel's template repository subsystem did not adequately constrain file access to the configured repository base directory. two related weaknesses existed:
 
-the validate_json_by_iteration() method (in pydantic-core/src/validators/model_fields.rs), used to validate json data into models, only validates the values of extra data, and stores the keys as is.
+- repository registration and editing accepted arbitrary local paths without verifying they resolved inside the configured repository_base_path, allowing an authenticated user to point a repository at any readable directory on the host.
+- manifest and template file lookups used normalized (non-canonical) path joins and a startswith-based guard that could be bypassed by symbolic links, permitting reads of files outside the intended repository.
 
-the issue was fixed in commit 4c65dbda9970a488e2ff21c8693fc6f6d70a3358.
+an authenticated user with the ability to add or edit a template repository could therefore cause the application to read and return the contents of arbitrary files readable by the service account, including configuration files, credentials, or other sensitive data.
 
-impact: validation bypass, as extra data returned by validation doesn't match the declared type. affected are applications validating untrusted json data into models allowing extra data (with extra='allow'), with a key type annotated on __pydantic_extra__ (e.g. dict[annotated[str, field(pattern=...)], int]), using pydantic from 2.13.0 up to (but excluding) 2.14.2.
-
-python mode validation isn't affected.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133429" target="_blank">CVE-2026-133429</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 02:18:32 CDT</p>
+affected: flowintel versions prior to 4.1.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133620" target="_blank">CVE-2026-133620</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When validating JSON data into a model allowing extra data, the keys of extra data aren't validated against the key type annotated on __pydantic_extra__, resulting in extra data not matching the declared type. This is the case if you define __pydantic_extra__ as e.g. dict[Annotated[str, Field(pattern=r'^x_')], int].
+                    <p>Flowintel's template repository subsystem did not adequately constrain file access to the configured repository base directory. Two related weaknesses existed:
 
-The validate_json_by_iteration() method (in pydantic-core/src/validators/model_fields.rs), used to validate JSON data into models, only validates the values of extra data, and stores the keys as is.
+- Repository registration and editing accepted arbitrary local paths without verifying they resolved inside the configured REPOSITORY_BASE_PATH, allowing an authenticated user to point a repository at any readable directory on the host.
+- Manifest and template file lookups used normalized (non-canonical) path joins and a startswith-based guard that could be bypassed by symbolic links, permitting reads of files outside the intended repository.
 
-The issue was fixed in commit 4c65dbda9970a488e2ff21c8693fc6f6d70a3358.
+An authenticated user with the ability to add or edit a template repository could therefore cause the application to read and return the contents of arbitrary files readable by the service account, including configuration files, credentials, or other sensitive data.
 
-Impact: validation bypass, as extra data returned by validation doesn't match the declared type. Affected are applications validating untrusted JSON data into models allowing extra data (with extra='allow'), with a key type annotated on __pydantic_extra__ (e.g. dict[Annotated[str, Field(pattern=...)], int]), using Pydantic from 2.13.0 up to (but excluding) 2.14.2.
-
-Python mode validation isn't affected.</p>
+Affected: Flowintel versions prior to 4.1.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133531" data-description="a flaw was found in cluster-network-operator. the ovn ipsec certificate signer does not verify that the requested certificate subject and dns names belong to the requesting node. an attacker with an accepted ovn node credential and permission to submit certificate signing requests could obtain a signed certificate identifying another node. in certificate authenticated ovn ipsec deployments, this could enable peer impersonation when the attacker can also satisfy the configured peer address check, potentially compromising protected traffic.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133531" target="_blank">CVE-2026-133531</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>A flaw was found in cluster-network-operator. The OVN IPsec certificate signer does not verify that the requested certificate Subject and DNS names belong to the requesting node. An attacker with an accepted OVN node credential and permission to submit certificate signing requests could obtain a signed certificate identifying another node. In certificate authenticated OVN IPsec deployments, this could enable peer impersonation when the attacker can also satisfy the configured peer address check, potentially compromising protected traffic.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133503" data-description="a security vulnerability has been detected in modelcloud gptqmodel up to 7.6.0. affected by this vulnerability is the function gptqmodel.adapter.remote.resolve_path of the file gptqmodel/adapter/remote.py of the component adapter resolution pipeline. such manipulation of the argument adapter.path leads to improper input validation. the attack may be launched remotely. the exploit has been disclosed publicly and may be used. upgrading to version 7.7.0 addresses this issue. the name of the patch is ed99ac8d59940bf27bb24ce2e80002ae9e44469f. it is advisable to upgrade the affected component.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133503" target="_blank">CVE-2026-133503</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>A security vulnerability has been detected in ModelCloud GPTQModel up to 7.6.0. Affected by this vulnerability is the function gptqmodel.adapter.remote.resolve_path of the file gptqmodel/adapter/remote.py of the component Adapter Resolution Pipeline. Such manipulation of the argument adapter.path leads to improper input validation. The attack may be launched remotely. The exploit has been disclosed publicly and may be used. Upgrading to version 7.7.0 addresses this issue. The name of the patch is ed99ac8d59940bf27bb24ce2e80002ae9e44469f. It is advisable to upgrade the affected component.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133502" data-description="a weakness has been identified in blinkospace blinko up to 1.8.8. affected is an unknown function of the file /api/auth/verify-2fa of the component 2fa endpoint. this manipulation of the argument userid causes improper authentication. the attack may be initiated remotely. the exploit has been made available to the public and could be used for attacks. upgrading to version 1.8.9 is able to address this issue. patch name: 80e1c4ffaffe66a97df2b5d85fad864ff3691dc8. upgrading the affected component is advised.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133502" target="_blank">CVE-2026-133502</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
+                    <p>A weakness has been identified in blinkospace blinko up to 1.8.8. Affected is an unknown function of the file /api/auth/verify-2fa of the component 2FA Endpoint. This manipulation of the argument userId causes improper authentication. The attack may be initiated remotely. The exploit has been made available to the public and could be used for attacks. Upgrading to version 1.8.9 is able to address this issue. Patch name: 80e1c4ffaffe66a97df2b5d85fad864ff3691dc8. Upgrading the affected component is advised.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133501" data-description="a security flaw has been discovered in gladys assistant up to 4.71.0. this impacts an unknown function of the file server/lib/gateway/gateway.downloadbackup.js of the component backup restore handler. the manipulation results in path traversal. the attack can be launched remotely. the exploit has been released to the public and may be used for attacks. upgrading to version 4.72.0 will fix this issue. it is recommended to upgrade the affected component.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133501" target="_blank">CVE-2026-133501</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.0</p>
+                    <p>A security flaw has been discovered in Gladys Assistant up to 4.71.0. This impacts an unknown function of the file server/lib/gateway/gateway.downloadBackup.js of the component Backup Restore Handler. The manipulation results in path traversal. The attack can be launched remotely. The exploit has been released to the public and may be used for attacks. Upgrading to version 4.72.0 will fix this issue. It is recommended to upgrade the affected component.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133500" data-description="a vulnerability was identified in gladys assistant up to 4.71.0. this affects an unknown function of the file gateway.downloadbackup.js of the component backup restore endpoint. the manipulation of the argument file_url leads to os command injection. the attack can be initiated remotely. the exploit is publicly available and might be used. upgrading to version 4.72.0 mitigates this issue. upgrading the affected component is recommended.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133500" target="_blank">CVE-2026-133500</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:07 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
+                    <p>A vulnerability was identified in Gladys Assistant up to 4.71.0. This affects an unknown function of the file gateway.downloadBackup.js of the component Backup Restore Endpoint. The manipulation of the argument file_url leads to os command injection. The attack can be initiated remotely. The exploit is publicly available and might be used. Upgrading to version 4.72.0 mitigates this issue. Upgrading the affected component is recommended.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131770" data-description="missing authorization vulnerability in liquid web / stellarwp the events calendar the-events-calendar allows exploiting incorrectly configured access control security levels.this issue affects the events calendar: from n/a through 6.18.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131770" target="_blank">CVE-2026-131770</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Missing Authorization vulnerability in Liquid Web / StellarWP The Events Calendar the-events-calendar allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects The Events Calendar: from n/a through 6.18.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131769" data-description="missing authorization vulnerability in liquid web / stellarwp the events calendar the-events-calendar allows exploiting incorrectly configured access control security levels.this issue affects the events calendar: from n/a through 6.18.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131769" target="_blank">CVE-2026-131769</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Missing Authorization vulnerability in Liquid Web / StellarWP The Events Calendar the-events-calendar allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects The Events Calendar: from n/a through 6.18.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131768" data-description="improper neutralization of script-related html tags in a web page (basic xss) vulnerability in liquid web / stellarwp the events calendar the-events-calendar allows code injection.this issue affects the events calendar: from n/a through 6.18.4.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131768" target="_blank">CVE-2026-131768</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS) vulnerability in Liquid Web / StellarWP The Events Calendar the-events-calendar allows Code Injection.This issue affects The Events Calendar: from n/a through 6.18.4.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131764" data-description="missing authorization vulnerability in brainstorm force surecart surecart allows exploiting incorrectly configured access control security levels.this issue affects surecart: from n/a through 4.13.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131764" target="_blank">CVE-2026-131764</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>Missing Authorization vulnerability in Brainstorm Force SureCart surecart allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects SureCart: from n/a through 4.13.0.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131761" data-description="missing authorization vulnerability in magepeople inc. booking and rental manager booking-and-rental-manager-for-woocommerce allows exploiting incorrectly configured access control security levels.this issue affects booking and rental manager: from n/a through 2.8.5.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131761" target="_blank">CVE-2026-131761</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Missing Authorization vulnerability in Magepeople inc. Booking and Rental Manager booking-and-rental-manager-for-woocommerce allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects Booking and Rental Manager: from n/a through 2.8.5.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131757" data-description="insertion of sensitive information into sent data vulnerability in wproyal royal elementor addons royal-elementor-addons allows retrieve embedded sensitive data.this issue affects royal elementor addons: from n/a through 1.7.1069.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131757" target="_blank">CVE-2026-131757</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Insertion of Sensitive Information Into Sent Data vulnerability in WProyal Royal Elementor Addons royal-elementor-addons allows Retrieve Embedded Sensitive Data.This issue affects Royal Elementor Addons: from n/a through 1.7.1069.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131753" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in wpfunnels team mail mint mail-mint allows stored xss.this issue affects mail mint: from n/a through 1.31.9.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131753" target="_blank">CVE-2026-131753</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:06 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in WPFunnels Team Mail Mint mail-mint allows Stored XSS.This issue affects Mail Mint: from n/a through 1.31.9.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131734" data-description="improper neutralization of input during web page generation ('cross-site scripting') vulnerability in crocoblock jetengine jet-engine allows stored xss.this issue affects jetengine: from n/a through 3.9.1.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131734" target="_blank">CVE-2026-131734</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') vulnerability in Crocoblock JetEngine jet-engine allows Stored XSS.This issue affects JetEngine: from n/a through 3.9.1.1.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131733" data-description="missing authorization vulnerability in brainstorm force surecart surecart allows exploiting incorrectly configured access control security levels.this issue affects surecart: from n/a through 4.13.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131733" target="_blank">CVE-2026-131733</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 03:20:05 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Missing Authorization vulnerability in Brainstorm Force SureCart surecart allows Exploiting Incorrectly Configured Access Control Security Levels.This issue affects SureCart: from n/a through 4.13.0.</p>
                 </div>
         
             </div>
