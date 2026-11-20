@@ -34,502 +34,184 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-44908" data-description="improper following of a certificate’s chain of trust in the remote-attestation verifier used to establish trust with meta ai's confidential computing backend in whatsapp for ios before 2.26.24.72, whatsapp business for ios and whatsapp for mac desktop before v2.26.23.72, whatsapp for android before v2.26.23.74, and whatsapp business for android before v2.26.23.70 could have allowed someone positioned within meta infrastructure to bypass the hardware root of trust by presenting clients with a vcek certificate signed by a key other than the hardware manufacturer’s. any such vcek cert would first have to be published to the third-party binary transparency ledger used by whatsapp private processing. the ledger shows that every published vcek certificate chains to the hardware root of trust, confirming no exploitation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-44908" target="_blank">CVE-2026-44908</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 10:18:04 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-95824" data-description="the ipv6 neighbor discovery code in subsys/net/ip/ipv6_nbr.c flushes a neighbour's queued packets at the end of handle_ra_input(). the source link-layer address option (sllao) is optional in a router advertisement; when it is absent, handle_ra_input() still obtains (or creates) a neighbour cache entry for the ra source via net_ipv6_nbr_add() with a null link-layer address, so the entry stays in net_ipv6_nbr_state_incomplete with nbr->idx == net_nbr_lladdr_unknown. the pending-packet drain loop was entered unconditionally for that unresolved entry.
+
+each net_send_data() in the drain loop runs synchronously into net_ipv6_prepare_for_send(), which finds the neighbour still unresolved and hands the packet to net_ipv6_send_ns(), which puts it straight back onto the same pending_queue. the loop therefore never sees an empty queue. with a single queued packet it transmits a fresh neighbor solicitation on every iteration; with two or more queued packets it rotates the queue with no allocation and no transmission at all. the loop runs in the network rx thread with the global ipv6 neighbour mutex held.
+
+an unauthenticated attacker on the same link can trigger this deterministically: advertise itself as a router, induce the victim to queue off-link traffic toward that router (for example by sending echo requests with an off-link source address) while leaving the solicitation unanswered, then send a second router advertisement without an sllao option. spoofing an sllao-less ra from the legitimate router's link-local address has the same effect whenever traffic is queued for it. router advertisements are processed with no authentication whenever config_net_ipv6_nd is enabled, which is the default for ipv6-capable builds.
+
+the result is a permanent denial of service: the rx thread spins forever holding the neighbour lock, so all ipv6 transmission and every other user of the neighbour cache blocks, and the neighbor advertisement that would resolve the entry can no longer be processed. the ipv6_ns_reply_timer work item that would normally drop the pending packets also blocks on the same mutex. in the single-packet variant the loop additionally floods the link with neighbor solicitations. the fix restricts the flush to resolved entries (nbr->idx != net_nbr_lladdr_unknown), leaving the packets queued for the ns reply timeout. there is no memory-safety impact.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-95824" target="_blank">CVE-2026-95824</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:28 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>Improper following of a certificate’s chain of trust in the remote-attestation verifier used to establish trust with Meta AI's confidential computing backend in WhatsApp for iOS before 2.26.24.72, WhatsApp Business for iOS and WhatsApp for Mac Desktop before v2.26.23.72, WhatsApp for Android before v2.26.23.74, and WhatsApp Business for Android before v2.26.23.70 could have allowed someone positioned within Meta infrastructure to bypass the hardware root of trust by presenting clients with a VCEK certificate signed by a key other than the hardware manufacturer’s. Any such VCEK Cert would first have to be published to the third-party binary transparency ledger used by WhatsApp Private Processing. The ledger shows that every published VCEK certificate chains to the hardware root of trust, confirming no exploitation.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>The IPv6 Neighbor Discovery code in subsys/net/ip/ipv6_nbr.c flushes a neighbour's queued packets at the end of handle_ra_input(). The Source Link-Layer Address Option (SLLAO) is optional in a Router Advertisement; when it is absent, handle_ra_input() still obtains (or creates) a neighbour cache entry for the RA source via net_ipv6_nbr_add() with a NULL link-layer address, so the entry stays in NET_IPV6_NBR_STATE_INCOMPLETE with nbr->idx == NET_NBR_LLADDR_UNKNOWN. The pending-packet drain loop was entered unconditionally for that unresolved entry.
+
+Each net_send_data() in the drain loop runs synchronously into net_ipv6_prepare_for_send(), which finds the neighbour still unresolved and hands the packet to net_ipv6_send_ns(), which puts it straight back onto the same pending_queue. The loop therefore never sees an empty queue. With a single queued packet it transmits a fresh Neighbor Solicitation on every iteration; with two or more queued packets it rotates the queue with no allocation and no transmission at all. The loop runs in the network RX thread with the global IPv6 neighbour mutex held.
+
+An unauthenticated attacker on the same link can trigger this deterministically: advertise itself as a router, induce the victim to queue off-link traffic toward that router (for example by sending echo requests with an off-link source address) while leaving the solicitation unanswered, then send a second Router Advertisement without an SLLAO option. Spoofing an SLLAO-less RA from the legitimate router's link-local address has the same effect whenever traffic is queued for it. Router Advertisements are processed with no authentication whenever CONFIG_NET_IPV6_ND is enabled, which is the default for IPv6-capable builds.
+
+The result is a permanent denial of service: the RX thread spins forever holding the neighbour lock, so all IPv6 transmission and every other user of the neighbour cache blocks, and the Neighbor Advertisement that would resolve the entry can no longer be processed. The ipv6_ns_reply_timer work item that would normally drop the pending packets also blocks on the same mutex. In the single-packet variant the loop additionally floods the link with Neighbor Solicitations. The fix restricts the flush to resolved entries (nbr->idx != NET_NBR_LLADDR_UNKNOWN), leaving the packets queued for the NS reply timeout. There is no memory-safety impact.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-102769" data-description="a sql injection vulnerability when the recipient tapped on a specially crafted “order details” message from an unofficial client in whatsapp for android prior to version 2.26.35.74 could have allowed deletion of locally-stored whatsapp files and, only if the user is online at time of receipt, leaked one bit of information asked by the attacker about the user’s chat database via an induced-crash delivery receipt timing sidechannel. we have not seen evidence of exploitation in the wild.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102769" target="_blank">CVE-2026-102769</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 10:17:59 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-82676" data-description="the givewp – donation plugin and fundraising platform plugin for wordpress is vulnerable to cross-site request forgery in all versions up to, and including, 4.16.7.2. this is due to missing nonce validation on the `give_render_donor_view()` function. this makes it possible for unauthenticated attackers to reassign an arbitrary givewp donor record to an arbitrary wordpress user via a forged request granted they can trick a site administrator into performing an action such as clicking on a link. the resulting association changes donor-account ownership and can satisfy the linked-donor precondition for a separately tracked account-takeover vulnerability (cve-2026-82675).">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82676" target="_blank">CVE-2026-82676</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>A SQL injection vulnerability when the recipient tapped on a specially crafted “order details” message from an unofficial client in WhatsApp for Android prior to version 2.26.35.74 could have allowed deletion of locally-stored WhatsApp files and, only if the user is online at time of receipt, leaked one bit of information asked by the attacker about the user’s chat database via an induced-crash delivery receipt timing sidechannel. We have not seen evidence of exploitation in the wild.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>The GiveWP – Donation Plugin and Fundraising Platform plugin for WordPress is vulnerable to Cross-Site Request Forgery in all versions up to, and including, 4.16.7.2. This is due to missing nonce validation on the `give_render_donor_view()` function. This makes it possible for unauthenticated attackers to reassign an arbitrary GiveWP donor record to an arbitrary WordPress user via a forged request granted they can trick a site administrator into performing an action such as clicking on a link. The resulting association changes donor-account ownership and can satisfy the linked-donor precondition for a separately tracked account-takeover vulnerability (CVE-2026-82675).</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133855" data-description="flowintel contains an information disclosure vulnerability in its case history feature. when a user views the history of a case they are authorized to access, the history output includes references to other cases (linked, unlinked, or forked) without verifying whether the requesting user has permission to view those referenced cases. this exposes the identifiers and titles of cases that the user should not be able to discover.
-
-the vulnerability affects multiple output paths:
-- browser-based case history view
-- api history endpoint
-- plain-text history download
-- markdown history download
-- report timeline generation
-
-an authenticated user with access to any single case can enumerate the existence and identifiers of other cases by reading the history of a case they can access. this bypasses the intended per-case access control model and may reveal the existence of sensitive investigations, their identifiers, and associated metadata to unauthorized users.
-
-the raw audit storage is not modified; the issue is solely in the presentation layer failing to filter references to inaccessible cases before returning history data to the user.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133855" target="_blank">CVE-2026-133855</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:54 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-82675" data-description="the givewp – donation plugin and fundraising platform plugin for wordpress is vulnerable to donor account account takeover in all versions up to, and including, 4.17.0. this is due to the plugin not properly validating a donor's identity prior to updating the password of a linked wordpress account. the donation receipt processes an attacker-controlled first name through the v3 template engine and then reprocesses the result through the legacy `{meta_donor_*}` engine, which can disclose the donor's email-access bearer token. the donor-dashboard password endpoint accepts that token by itself and calls `wp_set_password()` for the wordpress user linked to the donor. this makes it possible for unauthenticated attackers to reset the password of any wordpress account linked to a givewp donor record and gain access to that account. if the linked account is an administrator, the attacker can achieve full site compromise and remote code execution through standard administrator functionality. a published givewp form with a usable gateway, enabled donor email access (enabled by default), knowledge of the donor email address, and an account already linked to the targeted donor record are required. note: this vulnerability can be chained with cve-2026-82676 to satisfy the administrator donor pre-requisite for a targeted administrator user attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82675" target="_blank">CVE-2026-82675</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>The GiveWP – Donation Plugin and Fundraising Platform plugin for WordPress is vulnerable to donor account account takeover in all versions up to, and including, 4.17.0. This is due to the plugin not properly validating a donor's identity prior to updating the password of a linked WordPress account. The donation receipt processes an attacker-controlled first name through the V3 template engine and then reprocesses the result through the legacy `{meta_donor_*}` engine, which can disclose the donor's email-access bearer token. The donor-dashboard password endpoint accepts that token by itself and calls `wp_set_password()` for the WordPress user linked to the donor. This makes it possible for unauthenticated attackers to reset the password of any WordPress account linked to a GiveWP donor record and gain access to that account. If the linked account is an administrator, the attacker can achieve full site compromise and remote code execution through standard administrator functionality. A published GiveWP form with a usable gateway, enabled donor email access (enabled by default), knowledge of the donor email address, and an account already linked to the targeted donor record are required. NOTE: This vulnerability can be chained with CVE-2026-82676 to satisfy the administrator donor pre-requisite for a targeted administrator user attack.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-79751" data-description="sportease is a web application for managing school sports events, class rosters, and competition teams. prior to 1.3, an authenticated account with is_profile_complete=false can submit an attacker-selected class_id for any class in the currently active event to put /api/user/profile during first profile completion. authhandler.updateprofile accepts the class without validating the user's legitimate membership and automatically derives and assigns the corresponding {class_name}_rep role while isfirstcompletion is true. the attacker can become representative of one selected class, view roster information including email addresses, and add or remove competition-team assignments. downstream handlers correctly reject access to other classes, so the impact is bounded to the selected class, but the representative privilege cannot be revoked through the exposed api and requires direct database intervention or another out-of-band remediation method. this issue is fixed in version 1.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-79751" target="_blank">CVE-2026-79751</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:27 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.6</p>
+                    <p>SportEase is a web application for managing school sports events, class rosters, and competition teams. Prior to 1.3, an authenticated account with is_profile_complete=false can submit an attacker-selected class_id for any class in the currently active event to PUT /api/user/profile during first profile completion. AuthHandler.UpdateProfile accepts the class without validating the user's legitimate membership and automatically derives and assigns the corresponding {class_name}_rep role while isFirstCompletion is true. The attacker can become representative of one selected class, view roster information including email addresses, and add or remove competition-team assignments. Downstream handlers correctly reject access to other classes, so the impact is bounded to the selected class, but the representative privilege cannot be revoked through the exposed API and requires direct database intervention or another out-of-band remediation method. This issue is fixed in version 1.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77332" data-description="memtomem-stm is a short-term memory proxy gateway with proactive memory surfacing for ai agents. from 0.1.0 until 0.1.34, untrusted long-term and working-memory fields can introduce markdown or html-compatible structure into the surfaced-memory envelope because those fields are not serialized as inert data. a crafted memory can create misleading structural boundaries or visually conceal surfaced content, affecting how a consuming agent interprets the memory context. ordinary natural-language persuasion remains a residual model-level risk and is outside the structural serialization flaw. this issue is fixed in version 0.1.34.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77332" target="_blank">CVE-2026-77332</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains an information disclosure vulnerability in its case history feature. When a user views the history of a case they are authorized to access, the history output includes references to other cases (linked, unlinked, or forked) without verifying whether the requesting user has permission to view those referenced cases. This exposes the identifiers and titles of cases that the user should not be able to discover.
-
-The vulnerability affects multiple output paths:
-- Browser-based case history view
-- API history endpoint
-- Plain-text history download
-- Markdown history download
-- Report timeline generation
-
-An authenticated user with access to any single case can enumerate the existence and identifiers of other cases by reading the history of a case they can access. This bypasses the intended per-case access control model and may reveal the existence of sensitive investigations, their identifiers, and associated metadata to unauthorized users.
-
-The raw audit storage is not modified; the issue is solely in the presentation layer failing to filter references to inaccessible cases before returning history data to the user.
-
-Affected versions: flowintel prior to 4.1.0.</p>
+                    <p>memtomem-stm is a short-term memory proxy gateway with proactive memory surfacing for AI agents. From 0.1.0 until 0.1.34, untrusted long-term and working-memory fields can introduce Markdown or HTML-compatible structure into the surfaced-memory envelope because those fields are not serialized as inert data. A crafted memory can create misleading structural boundaries or visually conceal surfaced content, affecting how a consuming agent interprets the memory context. Ordinary natural-language persuasion remains a residual model-level risk and is outside the structural serialization flaw. This issue is fixed in version 0.1.34.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133854" data-description="flowintel contains a vulnerability in the case and task classification usage endpoints that allows authenticated users to view classification data associated with cases they do not have permission to access.
-
-the affected endpoints, which provide lists of used taxonomies, tags, galaxies, clusters, and custom tags, did not properly enforce object-level access controls. while the endpoints required authentication, they failed to filter the returned data based on the requesting user's visibility permissions for the underlying cases. this allowed any authenticated user to enumerate classification usage across all cases, including private or restricted cases belonging to other organizations or users.
-
-this issue could lead to the disclosure of sensitive information, such as the existence of specific cases, the types of threats or indicators associated with them, and the relationships between different classification elements, potentially aiding an attacker in reconnaissance or targeting.
-
-affected versions: < 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133854" target="_blank">CVE-2026-133854</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:54 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-77331" data-description="memtomem-stm is a short-term memory proxy gateway with proactive memory surfacing for ai agents. from 0.1.2 until 0.1.34, concurrent surfacing rpc failures can start more than one reconnect for the same dirty session because concurrent ltm recovery is not uniquely owned by a session generation. cancellation during a post-reconnect retry can also leave the replacement transport reusable after an interrupted protocol exchange, causing session-state integrity loss or local service degradation. the duplicate-reconnect subcase was introduced in 0.1.24, while the cancellation-recovery subcase affects the broader listed range. this issue is fixed in version 0.1.34.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77331" target="_blank">CVE-2026-77331</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:27 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains a vulnerability in the case and task classification usage endpoints that allows authenticated users to view classification data associated with cases they do not have permission to access.
-
-The affected endpoints, which provide lists of used taxonomies, tags, galaxies, clusters, and custom tags, did not properly enforce object-level access controls. While the endpoints required authentication, they failed to filter the returned data based on the requesting user's visibility permissions for the underlying cases. This allowed any authenticated user to enumerate classification usage across all cases, including private or restricted cases belonging to other organizations or users.
-
-This issue could lead to the disclosure of sensitive information, such as the existence of specific cases, the types of threats or indicators associated with them, and the relationships between different classification elements, potentially aiding an attacker in reconnaissance or targeting.
-
-Affected versions: < 4.1.0</p>
+                    <p>memtomem-stm is a short-term memory proxy gateway with proactive memory surfacing for AI agents. From 0.1.2 until 0.1.34, concurrent surfacing RPC failures can start more than one reconnect for the same dirty session because concurrent LTM recovery is not uniquely owned by a session generation. Cancellation during a post-reconnect retry can also leave the replacement transport reusable after an interrupted protocol exchange, causing session-state integrity loss or local service degradation. The duplicate-reconnect subcase was introduced in 0.1.24, while the cancellation-recovery subcase affects the broader listed range. This issue is fixed in version 0.1.34.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133853" data-description="flowintel's chatbot component used a single shared mcp (model context protocol) session and process-wide environment variable to pass per-user api credentials to a child process. because the session and the ambient flowintel_api_key environment variable were shared across all concurrent requests, a user's authenticated identity could be applied to another user's tool invocation, or a stale/ambient credential could be inherited by a new request.
-
-preconditions:
-- an authenticated user with access to the chatbot interface.
-- concurrent or overlapping chatbot tool invocations from different users, or a request made after another user's credentials were written to the process environment.
-
-impact:
-- a lower-privilege user could read data belonging to a higher-privilege user (e.g., private investigation cases).
-- a user whose session was invalidated (deleted, password changed, key revoked) could still operate under a previously cached ambient credential.
-- the parent process environment was mutated with user-specific secrets, creating a persistent credential leak surface.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133853" target="_blank">CVE-2026-133853</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:53 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-77329" data-description="tapo provides rust and python apis and an mcp server for tp-link tapo smart devices. from 0.3.1 until 0.5.0, the streamable http implementation in tapo-mcp/src/server.rs calls disable_allowed_hosts() without replacement host or origin validation, while tapo_mcp_api_key remains optional for a listener that can bind to all interfaces. a malicious website can use dns rebinding to send same-origin browser requests to the victim's local or lan tapo mcp listener when it runs without an api key. the attacker can invoke exposed tools including control_device for smart-device actuation and take_snapshot for configured cameras. deployments with tapo_mcp_api_key set are not affected by the unauthenticated path, and exploitation requires a running listener configured with real tapo credentials and devices, plus victim interaction with the malicious site. this issue is fixed in version 0.5.0.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77329" target="_blank">CVE-2026-77329</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:26 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel's chatbot component used a single shared MCP (Model Context Protocol) session and process-wide environment variable to pass per-user API credentials to a child process. Because the session and the ambient FLOWINTEL_API_KEY environment variable were shared across all concurrent requests, a user's authenticated identity could be applied to another user's tool invocation, or a stale/ambient credential could be inherited by a new request.
-
-Preconditions:
-- An authenticated user with access to the chatbot interface.
-- Concurrent or overlapping chatbot tool invocations from different users, or a request made after another user's credentials were written to the process environment.
-
-Impact:
-- A lower-privilege user could read data belonging to a higher-privilege user (e.g., private investigation cases).
-- A user whose session was invalidated (deleted, password changed, key revoked) could still operate under a previously cached ambient credential.
-- The parent process environment was mutated with user-specific secrets, creating a persistent credential leak surface.
-
-Affected versions: FlowIntel prior to 4.1.0.</p>
+                    <p>Tapo provides Rust and Python APIs and an MCP server for TP-Link Tapo smart devices. From 0.3.1 until 0.5.0, the Streamable HTTP implementation in tapo-mcp/src/server.rs calls disable_allowed_hosts() without replacement Host or Origin validation, while TAPO_MCP_API_KEY remains optional for a listener that can bind to all interfaces. A malicious website can use DNS rebinding to send same-origin browser requests to the victim's local or LAN Tapo MCP listener when it runs without an API key. The attacker can invoke exposed tools including control_device for smart-device actuation and take_snapshot for configured cameras. Deployments with TAPO_MCP_API_KEY set are not affected by the unauthenticated path, and exploitation requires a running listener configured with real Tapo credentials and devices, plus victim interaction with the malicious site. This issue is fixed in version 0.5.0.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133852" data-description="flowintel is a case management application that enforces an approval workflow for tasks in privileged cases. tasks in such cases are required to start in a requested status, meaning they must receive explicit approval before becoming active.
-
-a logic flaw in the task-creation path allowed tasks to be initialized with a created status (bypassing the approval step) in two scenarios:
-
-- when a task was created from a template and no acting user was supplied, the privileged-case check was skipped entirely, leaving the task in created status.
-- when a case was created from a template, all copied tasks were unconditionally assigned the created status regardless of the case's privileged designation.
-
-an authenticated user with the ability to create tasks from templates or to instantiate cases from templates could therefore place tasks directly into an active state within privileged cases, circumventing the intended approval gate. this may expose restricted case content or permit actions that should require supervisory sign-off.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133852" target="_blank">CVE-2026-133852</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel is a case management application that enforces an approval workflow for tasks in privileged cases. Tasks in such cases are required to start in a Requested status, meaning they must receive explicit approval before becoming active.
-
-A logic flaw in the task-creation path allowed tasks to be initialized with a Created status (bypassing the approval step) in two scenarios:
-
-- When a task was created from a template and no acting user was supplied, the privileged-case check was skipped entirely, leaving the task in Created status.
-- When a case was created from a template, all copied tasks were unconditionally assigned the Created status regardless of the case's privileged designation.
-
-An authenticated user with the ability to create tasks from templates or to instantiate cases from templates could therefore place tasks directly into an active state within privileged cases, circumventing the intended approval gate. This may expose restricted case content or permit actions that should require supervisory sign-off.
-
-Affected versions: flowintel prior to 4.1.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-23871" data-description="incomplete validation of external ad-reply urls in whatsapp for android and whatsapp business for android before 2.26.17.4 could have caused a target's device to reveal its ip information to an attacker if an attacker sent media from an attacker-controlled url when a crafted click to whatsapp ad-reply message was rendered and displayed in a message thread. this issue may have been abused in conjunction with specific spam messages.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-23871" target="_blank">CVE-2026-23871</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 3.5</p>
+                    <p>Incomplete validation of external ad-reply URLs in WhatsApp for Android and WhatsApp Business for Android before 2.26.17.4 could have caused a target's device to reveal its IP information to an attacker if an attacker sent media from an attacker-controlled URL when a crafted Click to WhatsApp ad-reply message was rendered and displayed in a message thread. This issue may have been abused in conjunction with specific spam messages.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133851" data-description="flowintel's alerting module contained an authorization bypass in the alert access control logic. when an alert was linked to a private case, the system relied solely on connector ownership (user or organization) to determine access, without verifying that the requesting user still held valid membership in the associated private case.
-
-this meant that a user who was a connector owner of an alert could continue to read alert details, review history, raw payloads, and action comments, and could perform review-status updates or case-creation actions, even after their access to the linked private case had been revoked or they were never a member of that case.
-
-additionally, a time-of-check to time-of-use (toctou) gap existed: after a review-status update or a competing case-creation claim was committed, the response could disclose private case identifiers or review history to a user whose access had been concurrently removed by another session linking the alert to a private case.
-
-impact:
-- unauthorized disclosure of private case data (review comments, raw payloads, action history) through alert endpoints.
-- unauthorized modification of alert review status and creation of cases from alerts the user should no longer access.
-- leakage of a competing case identifier to an unauthorized user during concurrent case-creation races.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133851" target="_blank">CVE-2026-133851</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel's alerting module contained an authorization bypass in the alert access control logic. When an alert was linked to a private case, the system relied solely on connector ownership (user or organization) to determine access, without verifying that the requesting user still held valid membership in the associated private case.
-
-This meant that a user who was a connector owner of an alert could continue to read alert details, review history, raw payloads, and action comments, and could perform review-status updates or case-creation actions, even after their access to the linked private case had been revoked or they were never a member of that case.
-
-Additionally, a time-of-check to time-of-use (TOCTOU) gap existed: after a review-status update or a competing case-creation claim was committed, the response could disclose private case identifiers or review history to a user whose access had been concurrently removed by another session linking the alert to a private case.
-
-Impact:
-- Unauthorized disclosure of private case data (review comments, raw payloads, action history) through alert endpoints.
-- Unauthorized modification of alert review status and creation of cases from alerts the user should no longer access.
-- Leakage of a competing case identifier to an unauthorized user during concurrent case-creation races.
-
-Affected versions: FlowIntel prior to 4.1.0.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133879" data-description="a flaw was found in kubevirt/containerized-data-importer. when a virtualmachine with an embedded datavolumetemplate carrying the cdi.kubevirt.io/storage.checkstaticvolume annotation and a cross-namespace clone source is created by a tenant, the service-account clone authorization check can be bypassed, allowing a pvc from another namespace to be cloned into the tenant's namespace without the required permissions. this can result in cross-tenant data disclosure.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133879" target="_blank">CVE-2026-133879</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:25 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
+                    <p>A flaw was found in KubeVirt/containerized-data-importer. When a VirtualMachine with an embedded DataVolumeTemplate carrying the cdi.kubevirt.io/storage.checkStaticVolume annotation and a cross-namespace clone source is created by a tenant, the service-account clone authorization check can be bypassed, allowing a PVC from another namespace to be cloned into the tenant's namespace without the required permissions. This can result in cross-tenant data disclosure.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-133850" data-description="flowintel contains an authorization flaw in its recurring reminder notification subsystem. when a user is subscribed to recurring notifications for a case, the system does not re-verify the recipient's current access rights to that case before generating or displaying the notification.
-
-as a result, a user who previously had access to a private case and later had that access revoked can still:
-- receive recurring reminder notifications containing case-related content.
-- view stored reminder notifications in their notification list, including notification counts, even though they no longer have permission to view the underlying case.
-
-the vulnerability affects both the notification creation path (recurring reminder generation) and the notification display path (listing and counting stored reminders). the issue arises because the authorization check performed at subscription time is not re-applied at delivery or retrieval time.
-
-security impact is limited to information disclosure: an unauthorized user may observe case titles, reminder messages, and associated metadata that they no longer have permission to access. no integrity or availability impact is indicated by the patch.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133850" target="_blank">CVE-2026-133850</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains an authorization flaw in its recurring reminder notification subsystem. When a user is subscribed to recurring notifications for a case, the system does not re-verify the recipient's current access rights to that case before generating or displaying the notification.
-
-As a result, a user who previously had access to a private case and later had that access revoked can still:
-- Receive recurring reminder notifications containing case-related content.
-- View stored reminder notifications in their notification list, including notification counts, even though they no longer have permission to view the underlying case.
-
-The vulnerability affects both the notification creation path (recurring reminder generation) and the notification display path (listing and counting stored reminders). The issue arises because the authorization check performed at subscription time is not re-applied at delivery or retrieval time.
-
-Security impact is limited to information disclosure: an unauthorized user may observe case titles, reminder messages, and associated metadata that they no longer have permission to access. No integrity or availability impact is indicated by the patch.
-
-Affected versions: flowintel prior to 4.1.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133849" data-description="a vulnerability exists in the flowintel application's calendar functionality that allows unauthorized access to private case data. the task calendar queries failed to enforce visibility checks on the parent case associated with tasks. specifically, tasks assigned to a user or belonging to the user's organization were returned in calendar views (including browser and api ics feeds) without verifying whether the user had permission to view the parent case. this allowed users to potentially discover and access details of private cases they were not authorized to view, leading to information disclosure.
-
-the issue affected the default task visibility logic and the assigned-only task queries. the fix ensures that case visibility is rechecked in addition to task assignment or organization membership, preventing the exposure of private case data in calendar outputs.
-
-affected versions: flowintel < 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133849" target="_blank">CVE-2026-133849</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:53 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A vulnerability exists in the flowintel application's calendar functionality that allows unauthorized access to private case data. The task calendar queries failed to enforce visibility checks on the parent case associated with tasks. Specifically, tasks assigned to a user or belonging to the user's organization were returned in calendar views (including browser and API ICS feeds) without verifying whether the user had permission to view the parent case. This allowed users to potentially discover and access details of private cases they were not authorized to view, leading to information disclosure.
-
-The issue affected the default task visibility logic and the assigned-only task queries. The fix ensures that case visibility is rechecked in addition to task assignment or organization membership, preventing the exposure of private case data in calendar outputs.
-
-Affected versions: flowintel < 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133848" data-description="flowintel contains an authorization flaw in its user deletion functionality. organization-scoped administrators (org admins) are able to delete platform-level administrator accounts through both the browser-based admin interface and the rest api.
-
-the existing authorization logic verified that an org admin could only target users within their own organization, but it did not enforce the privilege hierarchy between organization admins and platform admins. as a result, an authenticated org admin could issue a deletion request against any platform-admin account belonging to the same organization, causing the target account, its sessions, and related records to be permanently removed.
-
-impact:
-- loss of platform-level administrative oversight
-- potential disruption of platform-wide management functions
-- removal of higher-privilege accounts that should be protected from lower-privilege roles
-
-affected versions: flowintel prior to 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133848" target="_blank">CVE-2026-133848</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains an authorization flaw in its user deletion functionality. Organization-scoped administrators (org admins) are able to delete platform-level administrator accounts through both the browser-based admin interface and the REST API.
-
-The existing authorization logic verified that an org admin could only target users within their own organization, but it did not enforce the privilege hierarchy between organization admins and platform admins. As a result, an authenticated org admin could issue a deletion request against any platform-admin account belonging to the same organization, causing the target account, its sessions, and related records to be permanently removed.
-
-Impact:
-- Loss of platform-level administrative oversight
-- Potential disruption of platform-wide management functions
-- Removal of higher-privilege accounts that should be protected from lower-privilege roles
-
-Affected versions: flowintel prior to 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133847" data-description="flowintel contains an authorization bypass in the browser-based admin user editing interface. the edit_user view in the admin panel verified that a non-platform-admin user could only edit accounts belonging to their own organization, but it did not verify that the target account was not a platform-admin account. as a result, an authenticated user holding an organization-admin role could open the edit form for any platform-admin account and submit modifications, including changes to credentials, roles, or other account attributes.
-
-the api layer already enforced a restriction preventing non-admin users from targeting admin accounts, but the browser-based admin view lacked the equivalent check, creating an inconsistent authorization boundary.
-
-impact:
-- unauthorized modification of platform-admin account data (integrity)
-- potential lockout or privilege manipulation of platform administrators (availability)
-- escalation of an organization-admin role to effectively control platform-level administration
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133847" target="_blank">CVE-2026-133847</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains an authorization bypass in the browser-based admin user editing interface. The edit_user view in the admin panel verified that a non-platform-admin user could only edit accounts belonging to their own organization, but it did not verify that the target account was not a platform-admin account. As a result, an authenticated user holding an organization-admin role could open the edit form for any platform-admin account and submit modifications, including changes to credentials, roles, or other account attributes.
-
-The API layer already enforced a restriction preventing non-admin users from targeting admin accounts, but the browser-based admin view lacked the equivalent check, creating an inconsistent authorization boundary.
-
-Impact:
-- Unauthorized modification of platform-admin account data (integrity)
-- Potential lockout or privilege manipulation of platform administrators (availability)
-- Escalation of an organization-admin role to effectively control platform-level administration
-
-Affected versions: flowintel prior to 4.1.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133846" data-description="flowintel contains an authorization bypass in its task management workflow. when a user reopens a completed task (by toggling its completion state or changing its status to a non-finished value) or creates a new task within a completed privileged case, the parent case is automatically revived (un-completed, status reset to created, finish date cleared). the system failed to enforce the required admin or case admin privilege check before performing this case revival side effect.
-
-a user with basic task-level permissions (e.g., editor, queuer, or queue admin) could trigger the revival of a completed privileged case through the browser interface or the rest api, without holding the elevated role required for case-level operations. this could disrupt case lifecycle management, clear completion metadata, and potentially expose the case to further unauthorized modifications.
-
-the vulnerability affects both the browser-based task completion/status-change endpoints and the corresponding api endpoints, as well as the task creation flow.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133846" target="_blank">CVE-2026-133846</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel contains an authorization bypass in its task management workflow. When a user reopens a completed task (by toggling its completion state or changing its status to a non-finished value) or creates a new task within a completed privileged case, the parent case is automatically revived (un-completed, status reset to Created, finish date cleared). The system failed to enforce the required Admin or Case Admin privilege check before performing this case revival side effect.
-
-A user with basic task-level permissions (e.g., editor, queuer, or queue admin) could trigger the revival of a completed privileged case through the browser interface or the REST API, without holding the elevated role required for case-level operations. This could disrupt case lifecycle management, clear completion metadata, and potentially expose the case to further unauthorized modifications.
-
-The vulnerability affects both the browser-based task completion/status-change endpoints and the corresponding API endpoints, as well as the task creation flow.
-
-Affected versions: FlowIntel prior to 4.1.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133844" data-description="flowintel, a threat intelligence case management platform, contains an information disclosure vulnerability in its case serialization logic. when a case is rendered via the rest api or browser views, all connector instances associated with that case were included in the response regardless of the requesting user's permissions.
-
-this means that any authenticated user with read access to a case could observe connector metadata belonging to other users (personal-scope connectors) or other organizations (org-scope connectors), including connector urls, descriptions, uuids, and potentially embedded api credentials.
-
-preconditions:
-- an authenticated user account with at least read access to the affected case
-- the case must have connector instances attached that belong to other users or organizations
-
-impact:
-- disclosure of personal connector endpoints and credentials of other users
-- disclosure of organization-scoped connector metadata across organizational boundaries
-- enumeration of connector infrastructure (urls, uuids, descriptions) not intended for the viewer
-
-affected versions: < 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133844" target="_blank">CVE-2026-133844</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel, a threat intelligence case management platform, contains an information disclosure vulnerability in its case serialization logic. When a case is rendered via the REST API or browser views, all connector instances associated with that case were included in the response regardless of the requesting user's permissions.
-
-This means that any authenticated user with read access to a case could observe connector metadata belonging to other users (personal-scope connectors) or other organizations (org-scope connectors), including connector URLs, descriptions, UUIDs, and potentially embedded API credentials.
-
-Preconditions:
-- An authenticated user account with at least read access to the affected case
-- The case must have connector instances attached that belong to other users or organizations
-
-Impact:
-- Disclosure of personal connector endpoints and credentials of other users
-- Disclosure of organization-scoped connector metadata across organizational boundaries
-- Enumeration of connector infrastructure (URLs, UUIDs, descriptions) not intended for the viewer
-
-Affected versions: < 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133843" data-description="flowintel contains a vulnerability in the misp correlation feature that allows unauthorized disclosure of case identifiers.
-
-the application failed to enforce proper access controls when generating correlation lists for misp attributes. specifically, the system did not verify whether the requesting user had permission to view the source case or the matching cases returned in the correlation results. this lack of authorization checks allowed authenticated users to potentially discover the existence of cases they do not have access to, leading to information disclosure.
-
-the vulnerability affects the following components:
-- case correlation logic
-- api endpoints for retrieving correlation attributes
-- misp object handling
-
-affected versions: < 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133843" target="_blank">CVE-2026-133843</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:52 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains a vulnerability in the MISP correlation feature that allows unauthorized disclosure of case identifiers.
-
-The application failed to enforce proper access controls when generating correlation lists for MISP attributes. Specifically, the system did not verify whether the requesting user had permission to view the source case or the matching cases returned in the correlation results. This lack of authorization checks allowed authenticated users to potentially discover the existence of cases they do not have access to, leading to information disclosure.
-
-The vulnerability affects the following components:
-- Case correlation logic
-- API endpoints for retrieving correlation attributes
-- MISP object handling
-
-Affected versions: < 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133841" data-description="flowintel contains an authorization bypass in its case serialization logic that allows an authenticated user to view metadata of private cases they do not have access to.
-
-when a case is linked to another case, the json representation of the source case included the id, title, and description of every linked case regardless of the requesting user's permissions. this affected multiple access paths:
-
-- browser views (case detail, case info, search, calendar)
-- rest api endpoints (get case, list cases, search, title lookup, completed/not-completed lists)
-- internal tooling and connector module context building
-
-an attacker with valid credentials and access to any case that contains a link to a private case could enumerate the private case's identifier, title, and description without holding a membership or role on that private case. the exposure occurred because the serialization method did not receive or evaluate the acting user's identity before including linked-case data in the response.
-
-security impact:
-- disclosure of private case identifiers, titles, and descriptions to unauthorized users
-- facilitation of further targeted attacks against the exposed private cases
-- bypass of the intended per-case access control model
-
-affected versions: flowintel prior to 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133841" target="_blank">CVE-2026-133841</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel contains an authorization bypass in its case serialization logic that allows an authenticated user to view metadata of private cases they do not have access to.
-
-When a case is linked to another case, the JSON representation of the source case included the ID, title, and description of every linked case regardless of the requesting user's permissions. This affected multiple access paths:
-
-- Browser views (case detail, case info, search, calendar)
-- REST API endpoints (get case, list cases, search, title lookup, completed/not-completed lists)
-- Internal tooling and connector module context building
-
-An attacker with valid credentials and access to any case that contains a link to a private case could enumerate the private case's identifier, title, and description without holding a membership or role on that private case. The exposure occurred because the serialization method did not receive or evaluate the acting user's identity before including linked-case data in the response.
-
-Security impact:
-- Disclosure of private case identifiers, titles, and descriptions to unauthorized users
-- Facilitation of further targeted attacks against the exposed private cases
-- Bypass of the intended per-case access control model
-
-Affected versions: FlowIntel prior to 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133840" data-description="flowintel contains an authorization bypass in the file-to-note conversion feature for case tasks. when a task is in a restricted workflow state (requested, rejected, or request review) within a privileged case, the conversion endpoint did not enforce elevated role requirements. any authenticated user with basic case membership (e.g., editor or queuer) could invoke the conversion action, causing the system to read the attached file contents and create a note on the restricted task.
-
-this bypasses the intended workflow restriction that only admin, case admin, or queue admin roles may modify tasks in those states. an attacker with a low-privilege account in a privileged case could:
-- extract file contents into note format, potentially circumventing file-level access controls
-- create unauthorized notes that alter the task's note count, modification timestamp, and case history
-- disrupt the review/approval workflow on restricted tasks
-
-the vulnerability requires an authenticated user with at least editor-level access to the affected case and a task in one of the restricted states.
-
-affected versions: flowintel < 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133840" target="_blank">CVE-2026-133840</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains an authorization bypass in the file-to-note conversion feature for case tasks. When a task is in a restricted workflow state (Requested, Rejected, or Request Review) within a privileged case, the conversion endpoint did not enforce elevated role requirements. Any authenticated user with basic case membership (e.g., editor or queuer) could invoke the conversion action, causing the system to read the attached file contents and create a note on the restricted task.
-
-This bypasses the intended workflow restriction that only Admin, Case Admin, or Queue Admin roles may modify tasks in those states. An attacker with a low-privilege account in a privileged case could:
-- Extract file contents into note format, potentially circumventing file-level access controls
-- Create unauthorized notes that alter the task's note count, modification timestamp, and case history
-- Disrupt the review/approval workflow on restricted tasks
-
-The vulnerability requires an authenticated user with at least editor-level access to the affected case and a task in one of the restricted states.
-
-Affected versions: flowintel < 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133839" data-description="flowintel contains a missing authorization vulnerability in its task file deletion functionality. when a privileged task is in a restricted state (requested, rejected, or request review), any authenticated user with basic case membership (e.g., editor or queuer) was able to delete evidence files associated with that task via both the browser interface and the rest api. the deletion operation should have been restricted to users holding admin, case admin, or queue admin roles.
-
-the vulnerability affects the core file deletion logic, the browser-facing task endpoint, and the api task endpoint. no role-based restriction was enforced prior to performing disk removal, database record deletion, timeline event removal, or history log updates.
-
-an attacker with a low-privilege case membership could destroy evidence files, corrupt investigation timelines, and alter case history, compromising the integrity of ongoing investigations.
-
-affected versions: flowintel prior to 4.1.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133839" target="_blank">CVE-2026-133839</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel contains a missing authorization vulnerability in its task file deletion functionality. When a privileged task is in a restricted state (Requested, Rejected, or Request Review), any authenticated user with basic case membership (e.g., editor or queuer) was able to delete evidence files associated with that task via both the browser interface and the REST API. The deletion operation should have been restricted to users holding Admin, Case Admin, or Queue Admin roles.
-
-The vulnerability affects the core file deletion logic, the browser-facing task endpoint, and the API task endpoint. No role-based restriction was enforced prior to performing disk removal, database record deletion, timeline event removal, or history log updates.
-
-An attacker with a low-privilege case membership could destroy evidence files, corrupt investigation timelines, and alter case history, compromising the integrity of ongoing investigations.
-
-Affected versions: FlowIntel prior to 4.1.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133838" data-description="flowintel contains an authorization bypass that allows non-approver case members to modify restricted tasks (those in requested, rejected, or request review status) through several indirect code paths that lacked the required approver permission check.
-
-affected operations include:
-- self-unassignment from a restricted task
-- reordering tasks, including indirectly moving restricted sibling tasks
-- linking or unlinking misp objects and attributes to/from restricted tasks
-- creating misp objects or standalone attributes with task ids referencing restricted tasks
-- deleting misp objects or attributes that are linked to restricted tasks
-- executing modules on restricted tasks
-
-a user with case member access (but without admin, case admin, or queue admin privileges) could exploit these paths to alter the state of tasks that are supposed to be locked pending approval, effectively bypassing the intended approval workflow and potentially manipulating associated misp data.
-
-affected versions: flowintel prior to 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133838" target="_blank">CVE-2026-133838</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>FlowIntel contains an authorization bypass that allows non-approver case members to modify restricted tasks (those in Requested, Rejected, or Request Review status) through several indirect code paths that lacked the required approver permission check.
-
-Affected operations include:
-- Self-unassignment from a restricted task
-- Reordering tasks, including indirectly moving restricted sibling tasks
-- Linking or unlinking MISP objects and attributes to/from restricted tasks
-- Creating MISP objects or standalone attributes with task IDs referencing restricted tasks
-- Deleting MISP objects or attributes that are linked to restricted tasks
-- Executing modules on restricted tasks
-
-A user with case member access (but without Admin, Case Admin, or Queue Admin privileges) could exploit these paths to alter the state of tasks that are supposed to be locked pending approval, effectively bypassing the intended approval workflow and potentially manipulating associated MISP data.
-
-Affected versions: FlowIntel prior to 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133837" data-description="flowintel contains an authorization bypass in its task completion workflow for privileged cases. users with lower-privilege roles (editor, queuer) were able to mark tasks as completed without the required approver review (admin, case admin, or queue admin), undermining the approval workflow.
-
-the vulnerability was exploitable through multiple paths:
-- direct task completion via browser ui or rest api
-- changing a task's status to "finished", which implicitly completed the task
-- creating a new task in a privileged case with the completed flag already set
-- using uuid aliases or matrix delegation to reach the same endpoints
-
-preconditions:
-- an authenticated user with at least editor or queuer role
-- a privileged case with tasks in a non-completed state
-
-security impact:
-- bypass of the mandatory approver review process for privileged cases
-- unauthorized modification of task completion state
-- potential to mark sensitive work as finished without proper oversight
-
-affected versions: flowintel prior to 4.1.0">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133837" target="_blank">CVE-2026-133837</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:51 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>flowintel contains an authorization bypass in its task completion workflow for privileged cases. Users with lower-privilege roles (editor, queuer) were able to mark tasks as completed without the required approver review (Admin, Case Admin, or Queue Admin), undermining the approval workflow.
-
-The vulnerability was exploitable through multiple paths:
-- Direct task completion via browser UI or REST API
-- Changing a task's status to "Finished", which implicitly completed the task
-- Creating a new task in a privileged case with the completed flag already set
-- Using UUID aliases or Matrix delegation to reach the same endpoints
-
-Preconditions:
-- An authenticated user with at least editor or queuer role
-- A privileged case with tasks in a non-completed state
-
-Security impact:
-- Bypass of the mandatory approver review process for privileged cases
-- Unauthorized modification of task completion state
-- Potential to mark sensitive work as finished without proper oversight
-
-Affected versions: flowintel prior to 4.1.0</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133629" data-description="a vulnerability was determined in sunnet ctms up to 10.11. impacted is an unknown function of the file /cltcms/api/external-training/ext-course of the component external training application form feature. this manipulation of the argument memberids causes improper control of resource identifiers. remote exploitation of the attack is possible. the exploit has been publicly disclosed and may be utilized. the vendor was contacted early about this disclosure but did not respond in any way.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133629" target="_blank">CVE-2026-133629</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-20 09:17:50 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133878" data-description="mattermost versions 11.11.x <= 11.11.1, 11.7.x <= 11.7.14, 11.10.x <= 11.10.4 fail to restrict the broadcast scope of group websocket events to sessions permitted to read the group which allows an authenticated user, including guests, to obtain the display name, description, member count and member ids of non-referenceable groups via the received_group event emitted when a group is created, updated, deleted or restored. mattermost advisory id: mmsa-2026-00731">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133878" target="_blank">CVE-2026-133878</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:25 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
-                    <p>A vulnerability was determined in Sunnet CTMS up to 10.11. Impacted is an unknown function of the file /cltcms/api/external-training/ext-course of the component External Training Application Form Feature. This manipulation of the argument memberids causes improper control of resource identifiers. Remote exploitation of the attack is possible. The exploit has been publicly disclosed and may be utilized. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>Mattermost versions 11.11.x <= 11.11.1, 11.7.x <= 11.7.14, 11.10.x <= 11.10.4 fail to restrict the broadcast scope of group WebSocket events to sessions permitted to read the group which allows an authenticated user, including guests, to obtain the display name, description, member count and member IDs of non-referenceable groups via the received_group event emitted when a group is created, updated, deleted or restored. Mattermost Advisory ID: MMSA-2026-00731</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133876" data-description="kartones flask-calendar before commit bfde72e contains a stored cross-site scripting vulnerability because task_details_for_markup returns unescaped content rendered with the |safe filter. authenticated shared calendar members can store script in task details that executes for other members, letting attackers read and modify their private calendars.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133876" target="_blank">CVE-2026-133876</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>Kartones flask-calendar before commit bfde72e contains a stored cross-site scripting vulnerability because task_details_for_markup returns unescaped content rendered with the |safe filter. Authenticated shared calendar members can store script in task details that executes for other members, letting attackers read and modify their private calendars.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133875" data-description="one-hub through 0.14.27 contains a server-side request forgery vulnerability in getimagefromurl in common/image/image.go that fetches vision chat image_url values without destination restrictions. attackers holding a standard non-admin api token can send crafted /v1/chat/completions requests via claude, openrouter or ollama providers to reach internal services or cloud metadata endpoints.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133875" target="_blank">CVE-2026-133875</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
+                    <p>one-hub through 0.14.27 contains a server-side request forgery vulnerability in GetImageFromUrl in common/image/image.go that fetches vision chat image_url values without destination restrictions. Attackers holding a standard non-admin API token can send crafted /v1/chat/completions requests via Claude, OpenRouter or Ollama providers to reach internal services or cloud metadata endpoints.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133874" data-description="iceburg crm through 5.0.0 contains an incorrect authorization vulnerability in module::saverecord() that allows authenticated users to write to unauthorized modules by prefixing request body keys with another module id. attackers with write access to one module can submit crafted requests to post /data/save or put /api/crm/{id} to set their role_id to admin and access administrative data.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133874" target="_blank">CVE-2026-133874</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
+                    <p>Iceburg CRM through 5.0.0 contains an incorrect authorization vulnerability in Module::saveRecord() that allows authenticated users to write to unauthorized modules by prefixing request body keys with another module id. Attackers with write access to one module can submit crafted requests to POST /data/save or PUT /api/crm/{id} to set their role_id to Admin and access administrative data.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133873" data-description="cloud mail before 3.6.0 contains a stored cross-site scripting vulnerability in attservice.addatt that allows unauthenticated attackers to store inline attachments with sender-supplied mime types. attackers can email svg or html attachments, compute the content-hash url under /oss/ or /attachments/, and steal session jwts from localstorage to hijack accounts including administrators.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133873" target="_blank">CVE-2026-133873</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
+                    <p>Cloud Mail before 3.6.0 contains a stored cross-site scripting vulnerability in attService.addAtt that allows unauthenticated attackers to store inline attachments with sender-supplied MIME types. Attackers can email SVG or HTML attachments, compute the content-hash URL under /oss/ or /attachments/, and steal session JWTs from localStorage to hijack accounts including administrators.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133872" data-description="lesspass self-hosted sync server backend before commit 9469b0c lacks rate limiting on the jwt login endpoints /tokens/auth/ and /auth/jwt/create/, allowing unlimited authentication attempts. unauthenticated remote attackers can brute force passwords or perform credential stuffing against known account emails to obtain tokens granting read and write access to stored profiles.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133872" target="_blank">CVE-2026-133872</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>LessPass self-hosted sync server backend before commit 9469b0c lacks rate limiting on the JWT login endpoints /tokens/auth/ and /auth/jwt/create/, allowing unlimited authentication attempts. Unauthenticated remote attackers can brute force passwords or perform credential stuffing against known account emails to obtain tokens granting read and write access to stored profiles.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133871" data-description="pydici through 2026.11.1 contains a stored cross-site scripting vulnerability that allows authenticated users to inject script by storing html in contact names rendered unescaped in the contact detail mermaid diagram. attackers with contact edit permission can store malicious markup that contact.relationdata() interpolates and contact_detail.html renders with the safe filter, executing script in victims' sessions.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133871" target="_blank">CVE-2026-133871</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:24 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.4</p>
+                    <p>Pydici through 2026.11.1 contains a stored cross-site scripting vulnerability that allows authenticated users to inject script by storing HTML in contact names rendered unescaped in the contact detail mermaid diagram. Attackers with contact edit permission can store malicious markup that Contact.relationData() interpolates and contact_detail.html renders with the safe filter, executing script in victims' sessions.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133199" data-description="incorrect privilege assignment in the user and group reconciliation logic in aws ssosync before 2.9.5 might allow an authenticated remote user who is assigned a reused google workspace e-mail address or group name to inherit the iam identity center group memberships and permission set assignments of a previously synchronized, unrelated identity, via automatic synchronization of that google workspace account or group.
+
+
+
+to remediate this issue, users should upgrade to version 2.9.5 or later.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133199" target="_blank">CVE-2026-133199</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:17 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.5</p>
+                    <p>Incorrect privilege assignment in the user and group reconciliation logic in AWS ssosync before 2.9.5 might allow an authenticated remote user who is assigned a reused Google Workspace e-mail address or group name to inherit the IAM Identity Center group memberships and permission set assignments of a previously synchronized, unrelated identity, via automatic synchronization of that Google Workspace account or group.
+
+
+
+To remediate this issue, users should upgrade to version 2.9.5 or later.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-132277" data-description="inscriptis is a python library for converting html to text. from 2.0.0 until 2.7.6, when the parent is block-level, table_end_handler() in model/tag/table_tag.py writes each sibling table through htmlelement.write_verbatim_text() in model/html_element.py; canvas.open_block() leaves the parent padding_inline prefix on the stack, canvas.close_block() does not remove it, and only canvas.close_tag() calls prefix.remove_last_prefix(). each following sibling table therefore carries forward accumulated indentation, making get_text() output grow quadratically and allowing small attacker-controlled html to exhaust memory in applications converting it without authentication or user interaction. this issue is fixed in 2.7.6.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132277" target="_blank">CVE-2026-132277</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>Inscriptis is a Python library for converting HTML to text. From 2.0.0 until 2.7.6, when the parent is block-level, table_end_handler() in model/tag/table_tag.py writes each sibling table through HtmlElement.write_verbatim_text() in model/html_element.py; Canvas.open_block() leaves the parent padding_inline prefix on the stack, Canvas.close_block() does not remove it, and only Canvas.close_tag() calls prefix.remove_last_prefix(). Each following sibling table therefore carries forward accumulated indentation, making get_text() output grow quadratically and allowing small attacker-controlled HTML to exhaust memory in applications converting it without authentication or user interaction. This issue is fixed in 2.7.6.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-132276" data-description="wcmatch is a python library for wildcard file-name matching. prior to 11.2, under the default flags, matching a non-matching attacker-controlled name against an application-supplied pattern containing several star wildcards separated by literals makes the lazy .? and [^/]? segments, including _star and _path_star emitted by _handle_star() in wcmatch/_wcparse.py, backtrack across possible splits, so a single comparison can consume prolonged cpu time. the pattern remains a developer-controlled constant and only the name is attacker-controlled; affected paths include fnmatch.fnmatch(), glob.globmatch(), and filesystem glob scans where another user can create names, without enabling extglob or any non-default flag. this issue is fixed in 11.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132276" target="_blank">CVE-2026-132276</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.9</p>
+                    <p>wcmatch is a Python library for wildcard file-name matching. Prior to 11.2, under the default flags, matching a non-matching attacker-controlled name against an application-supplied pattern containing several star wildcards separated by literals makes the lazy .? and [^/]? segments, including _STAR and _PATH_STAR emitted by _handle_star() in wcmatch/_wcparse.py, backtrack across possible splits, so a single comparison can consume prolonged CPU time. The pattern remains a developer-controlled constant and only the name is attacker-controlled; affected paths include fnmatch.fnmatch(), glob.globmatch(), and filesystem glob scans where another user can create names, without enabling extglob or any non-default flag. This issue is fixed in 11.2.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-132275" data-description="svglib reads svg files and converts them to other formats. prior to 2.3.1, the svg2rlg() renderer recursively expands nested svg <use> references by deep-copying each referenced subtree; svgrenderer.renderuse() in src/svglib/svglib.py calls xlink_href_target(), which rejects direct cycles but permits acyclic reference graphs with repeated fan-out. a small attacker-controlled svg can therefore trigger exponentially increasing node expansion, consuming excessive cpu and memory in any application that renders it without a non-default option; html-to-pdf workflows using xhtml2pdf can reach the same renderer when an embedded data:image/svg+xml image in an html img element is passed to pisa.createpdf(). this issue is fixed in 2.3.1.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132275" target="_blank">CVE-2026-132275</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-20 11:18:12 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>svglib reads SVG files and converts them to other formats. Prior to 2.3.1, the svg2rlg() renderer recursively expands nested SVG <use> references by deep-copying each referenced subtree; SvgRenderer.renderUse() in src/svglib/svglib.py calls xlink_href_target(), which rejects direct cycles but permits acyclic reference graphs with repeated fan-out. A small attacker-controlled SVG can therefore trigger exponentially increasing node expansion, consuming excessive CPU and memory in any application that renders it without a non-default option; HTML-to-PDF workflows using xhtml2pdf can reach the same renderer when an embedded data:image/svg+xml image in an HTML img element is passed to pisa.CreatePDF(). This issue is fixed in 2.3.1.</p>
                 </div>
         
             </div>
