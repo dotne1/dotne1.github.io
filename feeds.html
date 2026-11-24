@@ -34,308 +34,718 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-19881" data-description="cross-site scripting in the conversation file-sharing feature of unblu inc. unblu spark 7.0 through 7.57.10 and 8.0 before 8.41.1, on on-premises and cloud deployments, allows an unauthenticated remote attacker in the visitor role to execute arbitrary javascript in the browser of a user who opens a crafted link to a file the attacker uploaded, via a file type that the browser renders as active content, such as svg.
+                <div class="cve-entry" data-cve-id="CVE-2026-97893" data-description="a denial of service (dos) vulnerability exists in the arq sparql query optimiser in apache jena arq prior to version 6.3.0 that allows a sparql query to use that cause excessive memory usage.
+users are recommended to upgrade to version 6.3.0, which fixes this issue.
 
 
 
-the javascript runs in the context and under the identity of that user's session.
 
 
 
-exploitation requires the victim to open the crafted link.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-19881" target="_blank">CVE-2026-19881</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:50 CDT</p>
+users who are unable to upgrade immediately, especially those who operate a public facing sparql service/application backed by apache jena are recommended to configure the arq symbol arq:optpathflatten=false in their sparql execution context which disables the problematic optimisation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-97893" target="_blank">CVE-2026-97893</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:22 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Cross-site scripting in the conversation file-sharing feature of Unblu inc. Unblu Spark 7.0 through 7.57.10 and 8.0 before 8.41.1, on on-premises and cloud deployments, allows an unauthenticated remote attacker in the visitor role to execute arbitrary JavaScript in the browser of a user who opens a crafted link to a file the attacker uploaded, via a file type that the browser renders as active content, such as SVG.
+                    <p>A Denial of Service (DoS) vulnerability exists in the ARQ SPARQL Query Optimiser in Apache Jena ARQ prior to version 6.3.0 that allows a SPARQL query to use that cause excessive memory usage.
+Users are recommended to upgrade to version 6.3.0, which fixes this issue.
 
 
 
-The JavaScript runs in the context and under the identity of that user's session.
 
 
 
-Exploitation requires the victim to open the crafted link.</p>
+Users who are unable to upgrade immediately, especially those who operate a public facing SPARQL service/application backed by Apache Jena are recommended to configure the ARQ symbol arq:optPathFlatten=false in their SPARQL execution context which disables the problematic optimisation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-135125" data-description="in eclipse basyx java server sdk versions 2.0.0-milestone-10 to 2.0.0-milestone-16, the destination validation of the operation delegation feature, introduced to prevent server-side request forgery (cve-2026-7412), can be bypassed through dns rebinding.
+                <div class="cve-entry" data-cve-id="CVE-2026-96354" data-description="missing authorization vulnerability in the public project rest api of apache texera (incubating).
 
 
 
-before dispatching a delegated operation invocation, the server resolves the host of the `invocationdelegation` qualifier uri and rejects loopback, private, link-local, multicast and cloud metadata addresses. the outbound http client (reactor netty), however, performs its own, independent dns lookup when opening the connection and does not use the validated addresses. an attacker who can create or update a submodel operation and controls the dns records of the delegation host can answer the validation lookup with a public address and the connection lookup with an internal address. no authentication is required when the authorization feature is not enabled.
+the public project api did not check that a project had been made public before granting the caller read access to it. any authenticated user with an approved account (the regular or admin role; new accounts need administrator approval by default) could give themselves lasting read access to other users' private projects and to the private workflows in them, including their version and execution history. only deployments in which users have created projects are affected; the project feature is hidden in the web ui by default.
 
 
 
-invoking the operation then causes the basyx server to send http post requests to destinations the protection is meant to block, such as services in internal it/ot networks, loopback-only interfaces, or cloud metadata endpoints. the server can be used to pivot into network segments that are not directly reachable by the attacker.
+this issue affects apache texera: from 1.1.0-incubating before 1.3.0-incubating.
 
 
 
-only deployments with the operation delegation feature enabled are affected. the feature is enabled by default.
+users are recommended to upgrade to version 1.3.0-incubating, which fixes the issue by removing the deprecated project feature and its data.
 
 
 
-the issue is fixed in eclipse basyx java server sdk 2.0.0-milestone-17.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135125" target="_blank">CVE-2026-135125</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:49 CDT</p>
+if you cannot upgrade immediately, configure the reverse proxy in front of texera to reject every request whose path starts with /api/project, /api/public/project or /api/access/project, and every request whose path contains ';', which the texera server ignores when routing. respond with 403 or 404, not 401: from 1.2.0-incubating the web ui treats a 401 as an expired session, and the workflow pages request the project list when they load. unless an administrator has enabled the project feature, this does not affect other functionality; those project-list requests are simply rejected. make sure the texera server is reachable only through that proxy.
+
+
+
+blocking and upgrading do not undo access obtained earlier. before upgrading, review the project_user_access table, which remains empty unless someone has used the feature: treat any read grant on a project that is not listed in public_project, and that the project's owner did not give, as suspect. the upgrade deletes this table. removing a grant does not remove copies the user may already have made of the workflows.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96354" target="_blank">CVE-2026-96354</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing Authorization vulnerability in the public project REST API of Apache Texera (incubating).
+
+
+
+The public project API did not check that a project had been made public before granting the caller read access to it. Any authenticated user with an approved account (the REGULAR or ADMIN role; new accounts need administrator approval by default) could give themselves lasting read access to other users' private projects and to the private workflows in them, including their version and execution history. Only deployments in which users have created projects are affected; the project feature is hidden in the web UI by default.
+
+
+
+This issue affects Apache Texera: from 1.1.0-incubating before 1.3.0-incubating.
+
+
+
+Users are recommended to upgrade to version 1.3.0-incubating, which fixes the issue by removing the deprecated project feature and its data.
+
+
+
+If you cannot upgrade immediately, configure the reverse proxy in front of Texera to reject every request whose path starts with /api/project, /api/public/project or /api/access/project, and every request whose path contains ';', which the Texera server ignores when routing. Respond with 403 or 404, not 401: from 1.2.0-incubating the web UI treats a 401 as an expired session, and the workflow pages request the project list when they load. Unless an administrator has enabled the project feature, this does not affect other functionality; those project-list requests are simply rejected. Make sure the Texera server is reachable only through that proxy.
+
+
+
+Blocking and upgrading do not undo access obtained earlier. Before upgrading, review the project_user_access table, which remains empty unless someone has used the feature: treat any READ grant on a project that is not listed in public_project, and that the project's owner did not give, as suspect. The upgrade deletes this table. Removing a grant does not remove copies the user may already have made of the workflows.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-96353" data-description="missing authorization vulnerability in the project rest api of apache texera (incubating).
+
+
+
+the project api did not check that the caller owns, or has been granted access to, the project being accessed. any authenticated user with an approved account (the regular or admin role; new accounts need administrator approval by default) could view, modify or delete other users' projects, change which workflows those projects contain, and see the e-mail addresses of a project's owner and collaborators. the project feature is hidden in the web ui by default, but the api was reachable regardless of that setting.
+
+
+
+this issue affects apache texera: from 1.1.0-incubating before 1.3.0-incubating.
+
+
+
+users are recommended to upgrade to version 1.3.0-incubating, which fixes the issue by removing the deprecated project feature and its data.
+
+
+
+if you cannot upgrade immediately, configure the reverse proxy in front of texera to reject every request whose path starts with /api/project, /api/public/project or /api/access/project, and every request whose path contains ';', which the texera server ignores when routing. respond with 403 or 404, not 401: from 1.2.0-incubating the web ui treats a 401 as an expired session, and the workflow pages request the project list when they load. unless an administrator has enabled the project feature, this does not affect other functionality; those project-list requests are simply rejected. make sure the texera server is reachable only through that proxy.
+
+
+
+blocking and upgrading do not undo access obtained earlier. before upgrading, review the project, project_user_access and workflow_of_project tables, which remain empty unless someone has used the feature, and remove rows you do not expect; the upgrade deletes these tables. do not copy project grants into workflow_user_access without checking each one.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96353" target="_blank">CVE-2026-96353</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing Authorization vulnerability in the project REST API of Apache Texera (incubating).
+
+
+
+The project API did not check that the caller owns, or has been granted access to, the project being accessed. Any authenticated user with an approved account (the REGULAR or ADMIN role; new accounts need administrator approval by default) could view, modify or delete other users' projects, change which workflows those projects contain, and see the e-mail addresses of a project's owner and collaborators. The project feature is hidden in the web UI by default, but the API was reachable regardless of that setting.
+
+
+
+This issue affects Apache Texera: from 1.1.0-incubating before 1.3.0-incubating.
+
+
+
+Users are recommended to upgrade to version 1.3.0-incubating, which fixes the issue by removing the deprecated project feature and its data.
+
+
+
+If you cannot upgrade immediately, configure the reverse proxy in front of Texera to reject every request whose path starts with /api/project, /api/public/project or /api/access/project, and every request whose path contains ';', which the Texera server ignores when routing. Respond with 403 or 404, not 401: from 1.2.0-incubating the web UI treats a 401 as an expired session, and the workflow pages request the project list when they load. Unless an administrator has enabled the project feature, this does not affect other functionality; those project-list requests are simply rejected. Make sure the Texera server is reachable only through that proxy.
+
+
+
+Blocking and upgrading do not undo access obtained earlier. Before upgrading, review the project, project_user_access and workflow_of_project tables, which remain empty unless someone has used the feature, and remove rows you do not expect; the upgrade deletes these tables. Do not copy project grants into workflow_user_access without checking each one.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-96298" data-description="missing authorization vulnerability in the computing unit workflow websocket of apache texera (incubating) allows an authenticated user to view workflow results, control workflow executions, and run code in a computing unit they have not been granted. in local jvm and single-node docker compose deployments this is possible directly; in kubernetes deployments it is possible from code running inside another computing unit in the cluster.
+
+
+
+this issue affects apache texera : from 1.1.0 through 1.2.0.
+
+
+
+users are recommended to upgrade to version 1.3.0, which fixes the issue. local jvm and docker compose deployments do not provide the full security model and should only be used by trusted users.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96298" target="_blank">CVE-2026-96298</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Missing Authorization vulnerability in the computing unit workflow websocket of Apache Texera (incubating) allows an authenticated user to view workflow results, control workflow executions, and run code in a computing unit they have not been granted. In local JVM and single-node Docker Compose deployments this is possible directly; in Kubernetes deployments it is possible from code running inside another computing unit in the cluster.
+
+
+
+This issue affects Apache Texera : from 1.1.0 through 1.2.0.
+
+
+
+Users are recommended to upgrade to version 1.3.0, which fixes the issue. Local JVM and Docker Compose deployments do not provide the full security model and should only be used by trusted users.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-96296" data-description="an api which can allow a user to delete any workflow execution results is missing authentication. this means that any workflow result could be deleted by someone able to reach the texera instance.
+
+
+
+this issue affects apache texera: from 1.1.0-incubating before 1.3.0-incubating.
+
+
+
+users are recommended to upgrade to version 1.3.0-incubating, which fixes the issue.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-96296" target="_blank">CVE-2026-96296</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>An API which can allow a user to delete any workflow execution results is missing authentication. This means that any workflow result could be deleted by someone able to reach the Texera instance.
+
+
+
+This issue affects Apache Texera: from 1.1.0-incubating before 1.3.0-incubating.
+
+
+
+Users are recommended to upgrade to version 1.3.0-incubating, which fixes the issue.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82446" data-description="description
+
+when stormcrawler fetches a host's `/robots.txt` and receives a redirect, `httprobotrulesparser`
+resolves the `location` header and re-fetches the target for up to five hops. the loop checks neither
+the scheme, the host nor the port of the resolved target, and it is not governed by
+`http.allow.redirects`, which only affects the page fetch. a crawled site can therefore point the
+robots.txt fetch at any address reachable from the fetcher worker, including loopback interfaces,
+private ranges and cloud metadata endpoints. every crawled url triggers a robots.txt fetch on a cache
+miss, so no unusual configuration is required to reach the loop.
+
+the fetched body is only parsed as robots rules and is not returned to the caller, so the read itself
+is blind. the more direct impact is on credentials: the okhttp protocol applies its configured request
+headers, including the `authorization` header built from `http.basicauth.user` and
+`http.basicauth.password` and anything in `http.custom.headers`, to every request it makes. because
+stormcrawler follows the redirect itself and issues a new request, okhttp's own removal of the
+`authorization` header across a host change does not apply, and the operator's crawl credentials are
+delivered to the host the redirect names.
+
+the connection-time ip filter, `http.filter.ipaddress.include` and `http.filter.ipaddress.exclude`, is
+installed as an okhttp network interceptor on the same client and does apply to these hops when it is
+configured. it ships with no rules, which is why the path is reachable in a default configuration. url
+filtering never applies, because the robots.txt fetch does not pass through the outlink filter chain.
+
+mitigation
+
+upgrade to 4.0.0, where a robots.txt redirect is followed only when the target uses http or https and
+shares scheme, host and port with the url it was reached from. deployments that legitimately serve
+robots.txt through a cross-host redirect can restore the previous behaviour with
+`http.robots.redirect.crosshost.allow`.
+
+users who cannot upgrade immediately should set `http.filter.ipaddress.exclude` to cover loopback,
+private, link-local and cgnat ranges, which is enforced after dns resolution and therefore also on
+redirect hops. operators who configure `http.basicauth.*` or `http.custom.headers` for a crawl should
+assume those credentials may have been sent to third-party hosts and rotate them, and should scope
+credentials by running a separate topology per origin.
+
+credit
+
+independently reported to the apache stormcrawler pmc by n0mi1k, with a proof of concept.
+
+also found by the asf -- using claude agents to study the security of open-source projects, validated
+and reported by apache stormcrawler.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82446" target="_blank">CVE-2026-82446</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Description
+
+When StormCrawler fetches a host's `/robots.txt` and receives a redirect, `HttpRobotRulesParser`
+resolves the `Location` header and re-fetches the target for up to five hops. The loop checks neither
+the scheme, the host nor the port of the resolved target, and it is not governed by
+`http.allow.redirects`, which only affects the page fetch. A crawled site can therefore point the
+robots.txt fetch at any address reachable from the fetcher worker, including loopback interfaces,
+private ranges and cloud metadata endpoints. Every crawled URL triggers a robots.txt fetch on a cache
+miss, so no unusual configuration is required to reach the loop.
+
+The fetched body is only parsed as robots rules and is not returned to the caller, so the read itself
+is blind. The more direct impact is on credentials: the okhttp protocol applies its configured request
+headers, including the `Authorization` header built from `http.basicauth.user` and
+`http.basicauth.password` and anything in `http.custom.headers`, to every request it makes. Because
+StormCrawler follows the redirect itself and issues a new request, okhttp's own removal of the
+`Authorization` header across a host change does not apply, and the operator's crawl credentials are
+delivered to the host the redirect names.
+
+The connection-time IP filter, `http.filter.ipaddress.include` and `http.filter.ipaddress.exclude`, is
+installed as an okhttp network interceptor on the same client and does apply to these hops when it is
+configured. It ships with no rules, which is why the path is reachable in a default configuration. URL
+filtering never applies, because the robots.txt fetch does not pass through the outlink filter chain.
+
+Mitigation
+
+Upgrade to 4.0.0, where a robots.txt redirect is followed only when the target uses http or https and
+shares scheme, host and port with the URL it was reached from. Deployments that legitimately serve
+robots.txt through a cross-host redirect can restore the previous behaviour with
+`http.robots.redirect.crosshost.allow`.
+
+Users who cannot upgrade immediately should set `http.filter.ipaddress.exclude` to cover loopback,
+private, link-local and CGNAT ranges, which is enforced after DNS resolution and therefore also on
+redirect hops. Operators who configure `http.basicauth.*` or `http.custom.headers` for a crawl should
+assume those credentials may have been sent to third-party hosts and rotate them, and should scope
+credentials by running a separate topology per origin.
+
+Credit
+
+Independently reported to the Apache StormCrawler PMC by n0mi1k, with a proof of concept.
+
+Also found by the ASF -- using Claude agents to study the security of open-source projects, validated
+and reported by Apache StormCrawler.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82445" data-description="description
+
+the sql status backend serialises per-url metadata into a single column by concatenating a tabulation,
+the key, an equals sign and the value, with no escaping. on read-back the string is split on the same
+two characters, so the round trip is not injective: a value that contains a tabulation returns as one
+or more additional keys that were never written.
+
+values on that path are supplied by crawled servers. `fetcherbolt` records the raw `location` header of
+a redirect as `_redirto`, and `_redirto` is part of the default `metadata.persist` set, so a redirect
+whose `location` contains a tabulation followed by `key=value` pairs introduces those keys into the
+crawler's own control metadata on the next scheduling cycle. several control keys are read without a
+prefix, so the injected keys are live: `http.proxy.host`, `http.proxy.port`, `http.proxy.user` and
+`http.proxy.pass` among them, as well as scheduling and request-shaping keys such as `depth`,
+`max.depth`, `crawl.delay`, `http.content.limit` and `issitemap`.
+
+where a proxy manager is configured, the consequence is not limited to corrupted scheduling data.
+`singleproxymanager.getproxy(metadata)` consults the per-url metadata first and returns what it finds,
+so an injected proxy host and port take precedence over the operator's configured proxy and subsequent
+fetches, together with any configured `authorization` header, are routed through a host the crawled
+content chose. a related defect in `abstractstatusupdaterbolt` compounds this: an injected
+`status.store.as.is.with.nextfetchdate` that is not a valid instant escapes the enclosing try/catch and
+stops the bolt, and because the stored row is replayed the failure repeats.
+
+deployments using the opensearch or solr status backends are unaffected, because those serialise
+metadata structurally.
+
+mitigation
+
+upgrade to 4.0.0, where the metadata column is written in an escaped form behind a format marker, rows
+written by earlier versions are still decoded unchanged, and the stored next-fetch-date is parsed
+defensively.
+
+the fix does not repair rows written before the upgrade. operators using the sql status backend should
+inspect the metadata column of an existing status table for tabulation characters and remove the
+affected rows, and should assume any proxy credentials configured for the crawl may have been exercised
+through an attacker-chosen proxy and rotate them. users who cannot upgrade immediately can remove
+`_redirto` from `metadata.persist` to close the demonstrated path, though other crawled values reaching
+persisted metadata remain.
+
+credit
+
+independently reported to the apache stormcrawler pmc by n0mi1k, with a proof of concept.
+
+also found by the asf -- using claude agents to study the security of open-source projects, validated
+and reported by apache stormcrawler.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82445" target="_blank">CVE-2026-82445</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Description
+
+The SQL status backend serialises per-URL metadata into a single column by concatenating a tabulation,
+the key, an equals sign and the value, with no escaping. On read-back the string is split on the same
+two characters, so the round trip is not injective: a value that contains a tabulation returns as one
+or more additional keys that were never written.
+
+Values on that path are supplied by crawled servers. `FetcherBolt` records the raw `Location` header of
+a redirect as `_redirTo`, and `_redirTo` is part of the default `metadata.persist` set, so a redirect
+whose `Location` contains a tabulation followed by `key=value` pairs introduces those keys into the
+crawler's own control metadata on the next scheduling cycle. Several control keys are read without a
+prefix, so the injected keys are live: `http.proxy.host`, `http.proxy.port`, `http.proxy.user` and
+`http.proxy.pass` among them, as well as scheduling and request-shaping keys such as `depth`,
+`max.depth`, `crawl.delay`, `http.content.limit` and `isSitemap`.
+
+Where a proxy manager is configured, the consequence is not limited to corrupted scheduling data.
+`SingleProxyManager.getProxy(Metadata)` consults the per-URL metadata first and returns what it finds,
+so an injected proxy host and port take precedence over the operator's configured proxy and subsequent
+fetches, together with any configured `Authorization` header, are routed through a host the crawled
+content chose. A related defect in `AbstractStatusUpdaterBolt` compounds this: an injected
+`status.store.as.is.with.nextfetchdate` that is not a valid instant escapes the enclosing try/catch and
+stops the bolt, and because the stored row is replayed the failure repeats.
+
+Deployments using the OpenSearch or Solr status backends are unaffected, because those serialise
+metadata structurally.
+
+Mitigation
+
+Upgrade to 4.0.0, where the metadata column is written in an escaped form behind a format marker, rows
+written by earlier versions are still decoded unchanged, and the stored next-fetch-date is parsed
+defensively.
+
+The fix does not repair rows written before the upgrade. Operators using the SQL status backend should
+inspect the metadata column of an existing status table for tabulation characters and remove the
+affected rows, and should assume any proxy credentials configured for the crawl may have been exercised
+through an attacker-chosen proxy and rotate them. Users who cannot upgrade immediately can remove
+`_redirTo` from `metadata.persist` to close the demonstrated path, though other crawled values reaching
+persisted metadata remain.
+
+Credit
+
+Independently reported to the Apache StormCrawler PMC by n0mi1k, with a proof of concept.
+
+Also found by the ASF -- using Claude agents to study the security of open-source projects, validated
+and reported by Apache StormCrawler.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82444" data-description="description
+
+`cookieconverter.getcookies` decides which stored cookies to attach to an outbound request. the
+applicability check is nested inside a test for the presence of a `domain` attribute, so a cookie
+without one, which is the ordinary form of a session cookie, skips scoping entirely and is returned for
+whatever target url was passed. rfc 6265 requires the opposite: a cookie with no `domain` attribute is
+host-only and belongs to the host that set it.
+
+two further defects sit in the same method. the domain comparison has no notion of a registrable
+domain, so a `domain` value of `com` matches every host under it, and the comparison returns true when
+it throws, so a failure to evaluate the check admits the cookie. neither the converter nor
+`metadatatransfer`, which carries the stored cookie to outlinks, ever considers the host that issued
+it.
+
+cookie handling is opt-in: it requires `http.use.cookies` to be set to true, which is not the default,
+and the cookie key to be listed in `metadata.transfer`. the documented recipe does not work as written,
+because the `metadata.transfer` example in the internals documentation names `set-cookie` while the key
+present in metadata is `protocol.set-cookie` and the transfer matches key names exactly. deployments
+affected are therefore those where an operator determined the correct key, enabled cookie handling and
+crawls an authenticated site whose pages link or redirect to other hosts. in that case the session
+cookie of the authenticated origin is sent to those hosts.
+
+mitigation
+
+upgrade to 4.0.0, where a cookie without a `domain` attribute is sent only to the host that set it, a
+single-label domain is rejected and the domain check fails closed. because the protocol does not yet
+record the host that issued a cookie, cookies without a `domain` attribute are not sent at all until
+that host is recorded; operators relying on cookie transfer will notice this. the documentation error
+is corrected in the same release.
+
+users who cannot upgrade immediately should confine an authenticated crawl to a topology whose url
+filters keep it on the origin that issued the credentials, and should not rely on cookie scoping as a
+boundary. rotating session credentials used for such crawls is advisable.
+
+credit
+
+independently reported to the apache stormcrawler pmc by n0mi1k, with a proof of concept.
+
+also found by the asf -- using claude agents to study the security of open-source projects, validated
+and reported by apache stormcrawler.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82444" target="_blank">CVE-2026-82444</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:21 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Description
+
+`CookieConverter.getCookies` decides which stored cookies to attach to an outbound request. The
+applicability check is nested inside a test for the presence of a `Domain` attribute, so a cookie
+without one, which is the ordinary form of a session cookie, skips scoping entirely and is returned for
+whatever target URL was passed. RFC 6265 requires the opposite: a cookie with no `Domain` attribute is
+host-only and belongs to the host that set it.
+
+Two further defects sit in the same method. The domain comparison has no notion of a registrable
+domain, so a `Domain` value of `com` matches every host under it, and the comparison returns true when
+it throws, so a failure to evaluate the check admits the cookie. Neither the converter nor
+`MetadataTransfer`, which carries the stored cookie to outlinks, ever considers the host that issued
+it.
+
+Cookie handling is opt-in: it requires `http.use.cookies` to be set to true, which is not the default,
+and the cookie key to be listed in `metadata.transfer`. The documented recipe does not work as written,
+because the `metadata.transfer` example in the internals documentation names `set-cookie` while the key
+present in metadata is `protocol.set-cookie` and the transfer matches key names exactly. Deployments
+affected are therefore those where an operator determined the correct key, enabled cookie handling and
+crawls an authenticated site whose pages link or redirect to other hosts. In that case the session
+cookie of the authenticated origin is sent to those hosts.
+
+Mitigation
+
+Upgrade to 4.0.0, where a cookie without a `Domain` attribute is sent only to the host that set it, a
+single-label domain is rejected and the domain check fails closed. Because the protocol does not yet
+record the host that issued a cookie, cookies without a `Domain` attribute are not sent at all until
+that host is recorded; operators relying on cookie transfer will notice this. The documentation error
+is corrected in the same release.
+
+Users who cannot upgrade immediately should confine an authenticated crawl to a topology whose URL
+filters keep it on the origin that issued the credentials, and should not rely on cookie scoping as a
+boundary. Rotating session credentials used for such crawls is advisable.
+
+Credit
+
+Independently reported to the Apache StormCrawler PMC by n0mi1k, with a proof of concept.
+
+Also found by the ASF -- using Claude agents to study the security of open-source projects, validated
+and reported by Apache StormCrawler.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-82442" data-description="description
+
+`hosturlfilter.configure` reads the `ignoreoutsidedomain` parameter but tests the node belonging to
+`ignoreoutsidehost` when deciding whether the domain mode was configured. a filter configuration that
+names only `ignoreoutsidedomain`, which the class documentation presents as an independent mode, is
+therefore discarded: the flag is forced to false, `filter` short-circuits on its guard and every url is
+returned unchanged. the filter enforces nothing while appearing to be configured, and the failure is
+silent. the mirror-image configuration, naming only `ignoreoutsidehost`, fails with a
+`nullpointerexception` while the topology is starting.
+
+the effect is the loss of a scope control the operator configured, so a crawled page's outlinks are
+followed to hosts the operator intended to exclude. impact beyond crawl scope depends on what the
+crawler then fetches and is not claimed here. projects generated from the stormcrawler maven archetypes
+are not affected, because all three shipped filter configurations set both parameters.
+
+mitigation
+
+upgrade to 4.0.0, where each parameter is tested independently. operators whose configuration sets only
+`ignoreoutsidedomain` will find the crawl restricted to the source domain, as configured, which may
+reduce the number of outlinks accepted.
+
+users who cannot upgrade immediately should set both `ignoreoutsidehost` and `ignoreoutsidedomain`
+explicitly in the `hosturlfilter` configuration, which produces the intended behaviour on affected
+versions.
+
+credit
+
+independently reported to the apache stormcrawler pmc by n0mi1k, with a proof of concept.
+
+also found by the asf -- using claude agents to study the security of open-source projects, validated
+and reported by apache stormcrawler.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-82442" target="_blank">CVE-2026-82442</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Description
+
+`HostURLFilter.configure` reads the `ignoreOutsideDomain` parameter but tests the node belonging to
+`ignoreOutsideHost` when deciding whether the domain mode was configured. A filter configuration that
+names only `ignoreOutsideDomain`, which the class documentation presents as an independent mode, is
+therefore discarded: the flag is forced to false, `filter` short-circuits on its guard and every URL is
+returned unchanged. The filter enforces nothing while appearing to be configured, and the failure is
+silent. The mirror-image configuration, naming only `ignoreOutsideHost`, fails with a
+`NullPointerException` while the topology is starting.
+
+The effect is the loss of a scope control the operator configured, so a crawled page's outlinks are
+followed to hosts the operator intended to exclude. Impact beyond crawl scope depends on what the
+crawler then fetches and is not claimed here. Projects generated from the StormCrawler Maven archetypes
+are not affected, because all three shipped filter configurations set both parameters.
+
+Mitigation
+
+Upgrade to 4.0.0, where each parameter is tested independently. Operators whose configuration sets only
+`ignoreOutsideDomain` will find the crawl restricted to the source domain, as configured, which may
+reduce the number of outlinks accepted.
+
+Users who cannot upgrade immediately should set both `ignoreOutsideHost` and `ignoreOutsideDomain`
+explicitly in the `HostURLFilter` configuration, which produces the intended behaviour on affected
+versions.
+
+Credit
+
+Independently reported to the Apache StormCrawler PMC by n0mi1k, with a proof of concept.
+
+Also found by the ASF -- using Claude agents to study the security of open-source projects, validated
+and reported by Apache StormCrawler.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-59415" data-description="typesensevectorstore is vulnerable to a document id injection in its delete operation that can cause unintended documents to be deleted.
+
+
+
+ typesensevectorstore.dodelete(list<string>) builds a typesense filter_by expression by raw string concatenation of caller-supplied document ids into the form id: [id1,id2,...] . the typesense id field uses bare (unquoted) values in this list form with no escaping mechanism. an id containing characters with syntactic meaning in the typesense filter grammar — such as a comma ( , ), a closing bracket ( ] ), or operator tokens ( || , && ) — can break out of the list literal and alter the structure of the filter expression.
+
+
+
+ an attacker who controls a document id passed to the delete operation can use this to delete documents other than the intended ones (comma injection), or to construct a filter that matches every document in the collection (operator breakout), resulting in unintended bulk deletion.
+
+
+
+ applications that pass externally supplied or user-controlled document ids to vectorstore.delete(list<string>) backed by typesensevectorstore are affected.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-59415" target="_blank">CVE-2026-59415</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 10.0</p>
+                    <p>TypesenseVectorStore is vulnerable to a document ID injection in its delete operation that can cause unintended documents to be deleted.
+
+
+
+ TypesenseVectorStore.doDelete(List<String>) builds a Typesense filter_by expression by raw string concatenation of caller-supplied document IDs into the form id: [id1,id2,...] . The Typesense id field uses bare (unquoted) values in this list form with no escaping mechanism. An ID containing characters with syntactic meaning in the Typesense filter grammar — such as a comma ( , ), a closing bracket ( ] ), or operator tokens ( || , && ) — can break out of the list literal and alter the structure of the filter expression.
+
+
+
+ An attacker who controls a document ID passed to the delete operation can use this to delete documents other than the intended ones (comma injection), or to construct a filter that matches every document in the collection (operator breakout), resulting in unintended bulk deletion.
+
+
+
+ Applications that pass externally supplied or user-controlled document IDs to VectorStore.delete(List<String>) backed by TypesenseVectorStore are affected.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127183" data-description="various memory-safety issues in dataplane of suse neuvector before 5.5, 5.5.0 before 5.5.6, 5.6.0 before 5.6.5 could be used by remote attackers to trigger crashes.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127183" target="_blank">CVE-2026-127183</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>Various memory-safety issues in dataplane of SUSE Neuvector before 5.5, 5.5.0 before 5.5.6, 5.6.0 before 5.6.5 could be used by remote attackers to trigger crashes.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127182" data-description="a stack buffer overflow in dlp/waf in the enforcer dataplane of suse neuvector before 5.5, 5.5 before 5.5.6, 5.6.0 before 5.6.5 could be used by remote attackers to crash or potentially execute code.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127182" target="_blank">CVE-2026-127182</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:09 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>A stack buffer overflow in DLP/WAF in the enforcer dataplane of SUSE NeuVector before 5.5, 5.5 before 5.5.6, 5.6.0 before 5.6.5 could be used by remote attackers to crash or potentially execute code.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-127180" data-description="the suse neuvector image scanner before version 4.331 writes each per-scan task request to a temporary file on disk with mode 0644 (world-readable). this could allow local attackers to gain the registry access credentials of the scanned images.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-127180" target="_blank">CVE-2026-127180</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:09 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
-                    <p>In Eclipse BaSyx Java Server SDK versions 2.0.0-milestone-10 to 2.0.0-milestone-16, the destination validation of the Operation Delegation feature, introduced to prevent server-side request forgery (CVE-2026-7412), can be bypassed through DNS rebinding.
-
-
-
-Before dispatching a delegated Operation invocation, the server resolves the host of the `invocationDelegation` qualifier URI and rejects loopback, private, link-local, multicast and cloud metadata addresses. The outbound HTTP client (Reactor Netty), however, performs its own, independent DNS lookup when opening the connection and does not use the validated addresses. An attacker who can create or update a Submodel Operation and controls the DNS records of the delegation host can answer the validation lookup with a public address and the connection lookup with an internal address. No authentication is required when the authorization feature is not enabled.
-
-
-
-Invoking the Operation then causes the BaSyx server to send HTTP POST requests to destinations the protection is meant to block, such as services in internal IT/OT networks, loopback-only interfaces, or cloud metadata endpoints. The server can be used to pivot into network segments that are not directly reachable by the attacker.
-
-
-
-Only deployments with the Operation Delegation feature enabled are affected. The feature is enabled by default.
-
-
-
-The issue is fixed in Eclipse BaSyx Java Server SDK 2.0.0-milestone-17.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.0</p>
+                    <p>The SUSE NeuVector image scanner before version 4.331 writes each per-scan task request to a temporary file on disk with mode 0644 (world-readable). This could allow local attackers to gain the registry access credentials of the scanned images.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-134894" data-description="an sql injection vulnerability exists in the firewall management component of adm defender due to insufficient validation and improper handling of input data in sqlite queries. this vulnerability may allow an attacker with access to the affected functionality to manipulate database queries, potentially resulting in unauthorized access to or modification of firewall-related data.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-134894" target="_blank">CVE-2026-134894</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:49 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-124832" data-description="stored cross-site scripting (xss) in 'activity[description]' field in the post request to '/people/{person_id}/cvs/{cv_id}/activities' on the job portal. the server stores the data entered by an authenticated candidate and displays it in the recruitment interface without sanitizing it. when reviewing an application, the recruiter’s browser can execute the injected javascript code within the context of their session on the portal.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124832" target="_blank">CVE-2026-124832</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An SQL injection vulnerability exists in the firewall management component of ADM Defender due to insufficient validation and improper handling of input data in SQLite queries. This vulnerability may allow an attacker with access to the affected functionality to manipulate database queries, potentially resulting in unauthorized access to or modification of firewall-related data.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
+                    <p>Stored Cross-Site Scripting (XSS) in 'activity[description]' field in the POST request to '/people/{person_id}/cvs/{cv_id}/activities' on the job portal. The server stores the data entered by an authenticated candidate and displays it in the recruitment interface without sanitizing it. When reviewing an application, the recruiter’s browser can execute the injected JavaScript code within the context of their session on the portal.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-124828" data-description="authorization bypass using a user-controlled token (idor) on the globaleduca job portal. the get endpoint ‘/attachments/{attachment_id}’ fails to verify whether the attachment belongs to the authenticated user. a user with a registered account can enumerate sequential identifiers and download attachments belonging to other candidates, including resumes containing personal data.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124828" target="_blank">CVE-2026-124828</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:49 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-124831" data-description="stored cross-site scripting (xss) in 'experiencia_laboral[descripcion]' field in the post request to '/personas/{persona_id}/experiencias_laborales' on the job portal. the server stores the data entered by an authenticated candidate and displays it in the recruitment interface without sanitizing it. when reviewing an application, the recruiter’s browser can execute the injected javascript code within the context of their session on the portal.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124831" target="_blank">CVE-2026-124831</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Authorization bypass using a user-controlled token (IDOR) on the GlobalEduca job portal. The GET endpoint ‘/attachments/{attachment_id}’ fails to verify whether the attachment belongs to the authenticated user. A user with a registered account can enumerate sequential identifiers and download attachments belonging to other candidates, including resumes containing personal data.</p>
+                    <p>Stored Cross-Site Scripting (XSS) in 'experiencia_laboral[descripcion]' field in the POST request to '/personas/{persona_id}/experiencias_laborales' on the job portal. The server stores the data entered by an authenticated candidate and displays it in the recruitment interface without sanitizing it. When reviewing an application, the recruiter’s browser can execute the injected JavaScript code within the context of their session on the portal.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-120949" data-description="an improper authorization vulnerability exists in the wallpaper component of adm. an authenticated, low-privileged user can bypass shared-folder access controls by specifying an image path within a restricted share. the cgi processes the request with root privileges without enforcing the source share's access permissions, allowing the attacker to copy and retrieve images they are not authorized to access, resulting in unauthorized information disclosure.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120949" target="_blank">CVE-2026-120949</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:49 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-124830" data-description="uploading pdf files with active content to the languages form. the post endpoint ‘/people/{person_id}/languages’ checks the declared mime type and allows an authenticated user to upload a pdf with embedded javascript. the portal serves the file via a get request to ‘/attachments/{attachment_id}’ with the ‘content-disposition: inline’ header, so it can be opened in the browser’s pdf viewer during review. the handling of active content depends on the viewer used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124830" target="_blank">CVE-2026-124830</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>An improper authorization vulnerability exists in the wallpaper component of ADM. An authenticated, low-privileged user can bypass shared-folder access controls by specifying an image path within a restricted share. The CGI processes the request with root privileges without enforcing the source share's access permissions, allowing the attacker to copy and retrieve images they are not authorized to access, resulting in unauthorized information disclosure.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
+                    <p>Uploading PDF files with active content to the languages form. The POST endpoint ‘/people/{person_id}/languages’ checks the declared MIME type and allows an authenticated user to upload a PDF with embedded JavaScript. The portal serves the file via a GET request to ‘/attachments/{attachment_id}’ with the ‘Content-Disposition: inline’ header, so it can be opened in the browser’s PDF viewer during review. The handling of active content depends on the viewer used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-120939" data-description="a heap-based buffer overflow vulnerability in the wi-fi connection handler of adm allows an authenticated administrator to corrupt heap memory and terminate the affected cgi request by supplying an oversized wi-fi pre-shared key.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120939" target="_blank">CVE-2026-120939</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-124829" data-description="stored cross-site scripting (xss) in 'carta_presentacion[contenido]' field in the post request to '/personas/{persona_id}/cvs/{cv_id}/carta_presentaciones' on the job portal. the server stores the data entered by an authenticated candidate and displays it in the recruitment interface without sanitizing it. when reviewing an application, the recruiter’s browser can execute the injected javascript code within the context of their session on the portal.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124829" target="_blank">CVE-2026-124829</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:08 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A heap-based buffer overflow vulnerability in the Wi-Fi connection handler of ADM allows an authenticated administrator to corrupt heap memory and terminate the affected CGI request by supplying an oversized Wi-Fi pre-shared key.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
+                    <p>Stored Cross-Site Scripting (XSS) in 'carta_presentacion[contenido]' field in the POST request to '/personas/{persona_id}/cvs/{cv_id}/carta_presentaciones' on the job portal. The server stores the data entered by an authenticated candidate and displays it in the recruitment interface without sanitizing it. When reviewing an application, the recruiter’s browser can execute the injected JavaScript code within the context of their session on the portal.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-120938" data-description="insufficient bounds checks in the link aggregation handler of asustor adm allow an authenticated administrator to submit an excessive number of interface tokens. crafted requests can corrupt memory and terminate the affected privileged cgi process.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120938" target="_blank">CVE-2026-120938</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-112788" data-description="missing authentication for critical function in apache texera (incubating).
+
+
+
+the python virtual environment (pve) management endpoints of a computing unit are not authenticated by the application itself. in the local jvm and single-node docker compose deployments, which place no authenticating gateway in front of the services, these endpoints are reachable without credentials. the kubernetes deployment gates them at the gateway, so only the kubernetes deployment provides the full security model described in security.md.
+
+
+
+this issue affects apache texera (incubating): from 1.1.0 through 1.2.0.
+
+
+
+users are recommended to use the kubernetes deployment, which enforces the full security model, and to upgrade to 1.3.0-incubating, which documents that the local jvm and single-node docker compose deployments do not provide the full security model and should only be used by trusted users.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-112788" target="_blank">CVE-2026-112788</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:06 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Insufficient bounds checks in the Link Aggregation handler of ASUSTOR ADM allow an authenticated administrator to submit an excessive number of interface tokens. Crafted requests can corrupt memory and terminate the affected privileged CGI process.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
+                    <p>Missing Authentication for Critical Function in Apache Texera (incubating).
+
+
+
+The Python virtual environment (PVE) management endpoints of a computing unit are not authenticated by the application itself. In the local JVM and single-node Docker Compose deployments, which place no authenticating gateway in front of the services, these endpoints are reachable without credentials. The Kubernetes deployment gates them at the gateway, so only the Kubernetes deployment provides the full security model described in SECURITY.md.
+
+
+
+This issue affects Apache Texera (incubating): from 1.1.0 through 1.2.0.
+
+
+
+Users are recommended to use the Kubernetes deployment, which enforces the full security model, and to upgrade to 1.3.0-incubating, which documents that the local JVM and single-node Docker Compose deployments do not provide the full security model and should only be used by trusted users.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-120937" data-description="a reflected cross-site scripting (xss) vulnerability exists in the initialization component of adm. when the nas is uninitialized, the endpoint accepts an unauthenticated sid query parameter and inserts its url-decoded value into an inline javascript string without proper javascript-context encoding. an unauthenticated remote attacker can craft a malicious url that, when opened by a user, executes arbitrary javascript in the adm management origin. successful exploitation may allow manipulation of the setup page and execution of same-origin requests in the victim's browser. the vulnerability is limited to the first-run initialization state.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-120937" target="_blank">CVE-2026-120937</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:48 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-108765" data-description="missing authorization in the workflow export service of apache
+
+texera allows a logged-in user to potentially read the result
+
+of a workflow for which they do not otherwise have permission for
+
+
+
+
+this issue affects apache texera: from 1.1.0-incubating
+
+before 1.3.0-incubating.
+
+
+
+users are recommended to upgrade to version 1.3.0-incubating, which
+
+fixes the issue">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108765" target="_blank">CVE-2026-108765</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:06 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A reflected cross-site scripting (XSS) vulnerability exists in the initialization component of ADM. When the NAS is uninitialized, the endpoint accepts an unauthenticated sid query parameter and inserts its URL-decoded value into an inline JavaScript string without proper JavaScript-context encoding. An unauthenticated remote attacker can craft a malicious URL that, when opened by a user, executes arbitrary JavaScript in the ADM management origin. Successful exploitation may allow manipulation of the setup page and execution of same-origin requests in the victim's browser. The vulnerability is limited to the first-run initialization state.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-118890" data-description="z80 ultra product has an improper modification control vulnerability. successful exploitation of this vulnerability may affect integrity and availability.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118890" target="_blank">CVE-2026-118890</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
-                    <p>Z80 Ultra product has an improper modification control vulnerability. Successful exploitation of this vulnerability may affect integrity and availability.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-118880" data-description="z80 ultra product has an improper access control vulnerability in the game assistant module. successful exploitation of this vulnerability may affect confidentiality and integrity.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118880" target="_blank">CVE-2026-118880</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.8</p>
-                    <p>Z80 Ultra product has an improper access control vulnerability in the game assistant module. Successful exploitation of this vulnerability may affect confidentiality and integrity.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-118879" data-description="z80 ultra is affected by an information disclosure vulnerability in service interfaces related to application scenarios. successful exploitation of this vulnerability may result in an impact on confidentiality.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118879" target="_blank">CVE-2026-118879</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>Z80 Ultra is affected by an information disclosure vulnerability in service interfaces related to application scenarios. Successful exploitation of this vulnerability may result in an impact on confidentiality.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-118878" data-description="a logical flaw vulnerability exists in the zte nubia redmagic 9s pro+. successful exploitation of this vulnerability may compromise confidentiality.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-118878" target="_blank">CVE-2026-118878</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 04:17:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A logical flaw vulnerability exists in the ZTE Nubia RedMagic 9S Pro+. Successful exploitation of this vulnerability may compromise confidentiality.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-78338" data-description="missing authentication in the conversation session resource handling of unblu inc. unblu spark 7.0 through 7.57.10 and 8.0 before 8.38.0, on on-premises and cloud deployments, allows an unauthenticated remote attacker to download a resource of a conversation session via its exact url, without an agent session.
+                    <p>Missing authorization in the workflow export service of Apache
+
+Texera allows a logged-in user to potentially read the result
+
+of a workflow for which they do not otherwise have permission for
 
 
 
-the resource urls contain random identifiers that can't be guessed, so the attacker must obtain the exact url of a resource first.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-78338" target="_blank">CVE-2026-78338</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:09 CDT</p>
+
+This issue affects Apache Texera: from 1.1.0-incubating
+
+before 1.3.0-incubating.
+
+
+
+Users are recommended to upgrade to version 1.3.0-incubating, which
+
+fixes the issue</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-108368" data-description="missing authorization in the workflow compiling service of apache
+
+texera allows a logged-in user to read the column names
+
+of datasets they have not been given access to, and the header line of
+
+files on the host that runs the service.
+
+
+
+this issue affects apache texera: from 1.1.0-incubating
+
+before 1.3.0-incubating.
+
+
+
+users are recommended to upgrade to version 1.3.0-incubating, which
+
+fixes the issue">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-108368" target="_blank">CVE-2026-108368</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 05:17:05 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
                     <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Missing authentication in the conversation session resource handling of Unblu inc. Unblu Spark 7.0 through 7.57.10 and 8.0 before 8.38.0, on on-premises and cloud deployments, allows an unauthenticated remote attacker to download a resource of a conversation session via its exact URL, without an agent session.
+                    <p>Missing authorization in the workflow compiling service of Apache
+
+Texera allows a logged-in user to read the column names
+
+of datasets they have not been given access to, and the header line of
+
+files on the host that runs the service.
 
 
 
-The resource URLs contain random identifiers that can't be guessed, so the attacker must obtain the exact URL of a resource first.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135804" data-description="the fix for cve-2026-45756 lowers pcre.backtrack_limit to 10000 around each preg_match() call of the match() and search() filter functions. that limit applies to one starting position, not to one call. pcre resets its counter at every position it tries a match from. so an unanchored pattern that stays just under the limit is paid once per byte of the subject. each call also starts from a fresh limit, so chaining clauses in one filter multiplies the work.
+This issue affects Apache Texera: from 1.1.0-incubating
 
-two other paths made the cost of a query grow faster than its size, without any regular expression:
-- the filter evaluator scanned the whole expression for logical operators once per node. its cost grew with the square of the number of chained clauses.
-- queries starting with $ inside a filter, like @.x == $.limit or length($.items), were evaluated again for every node the filter visits.
+before 1.3.0-incubating.
 
-an application that evaluates an attacker-influenced jsonpath expression can therefore still be made to hold a php worker. a document of 2 mb and a query of 2.5 kb take 3.5 minutes of cpu.
 
-jsoncrawler::find() now bounds the total regex work of one call, and throws an exception when that budget is exhausted. filter expressions are parsed once per query, and absolute queries inside filters are evaluated once per query.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135804" target="_blank">CVE-2026-135804</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The fix for CVE-2026-45756 lowers pcre.backtrack_limit to 10000 around each preg_match() call of the match() and search() filter functions. That limit applies to one starting position, not to one call. PCRE resets its counter at every position it tries a match from. So an unanchored pattern that stays just under the limit is paid once per byte of the subject. Each call also starts from a fresh limit, so chaining clauses in one filter multiplies the work.
 
-Two other paths made the cost of a query grow faster than its size, without any regular expression:
-- The filter evaluator scanned the whole expression for logical operators once per node. Its cost grew with the square of the number of chained clauses.
-- Queries starting with $ inside a filter, like @.x == $.limit or length($.items), were evaluated again for every node the filter visits.
+Users are recommended to upgrade to version 1.3.0-incubating, which
 
-An application that evaluates an attacker-influenced JSONPath expression can therefore still be made to hold a PHP worker. A document of 2 MB and a query of 2.5 KB take 3.5 minutes of CPU.
-
-JsonCrawler::find() now bounds the total regex work of one call, and throws an exception when that budget is exhausted. Filter expressions are parsed once per query, and absolute queries inside filters are evaluated once per query.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135803" data-description="most methods of symfony\component\filesystem\path rely on path::split(), which takes everything before the first :// as the root of a path. it doesn't check that this prefix is a uri scheme, so the .. segments in that prefix are never resolved. php sees a scheme only at the start of a string. so /base/../x://../secret.txt is a plain local path to /secret.txt for php, while path::isbasepath('/base', '/base/../x://../secret.txt') returns true. canonicalize(), join(), makeabsolute() and makerelative() are affected the same way.
-
-some applications check a path built from user input with isbasepath() or canonicalize(), and then open it. they can be made to read or write files outside the expected directory.
-
-on symfony 6.4 and later, the assetmapper component builds with path::join() the path of the files that a remote package references from its css. a malicious or compromised package can therefore make importmap:require or importmap:install write a file of its choice outside assets/vendor. for example, the css url(../../../../../public/x://shell.php) writes public/x:/shell.php.
-
-a prefix is now a scheme only when php would look for a stream wrapper with that name. that is two or more letters, digits, +, - or ., followed by :// at the start of the path. other prefixes are regular path segments, and the .. segments after them are resolved. real schemes such as phar://, file://, vfs:// or compress.zlib:// keep working.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135803" target="_blank">CVE-2026-135803</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Most methods of Symfony\Component\Filesystem\Path rely on Path::split(), which takes everything before the first :// as the root of a path. It doesn't check that this prefix is a URI scheme, so the .. segments in that prefix are never resolved. PHP sees a scheme only at the start of a string. So /base/../x://../secret.txt is a plain local path to /secret.txt for PHP, while Path::isBasePath('/base', '/base/../x://../secret.txt') returns true. canonicalize(), join(), makeAbsolute() and makeRelative() are affected the same way.
-
-Some applications check a path built from user input with isBasePath() or canonicalize(), and then open it. They can be made to read or write files outside the expected directory.
-
-On Symfony 6.4 and later, the AssetMapper component builds with Path::join() the path of the files that a remote package references from its CSS. A malicious or compromised package can therefore make importmap:require or importmap:install write a file of its choice outside assets/vendor. For example, the CSS url(../../../../../public/x://shell.php) writes public/x:/shell.php.
-
-A prefix is now a scheme only when PHP would look for a stream wrapper with that name. That is two or more letters, digits, +, - or ., followed by :// at the start of the path. Other prefixes are regular path segments, and the .. segments after them are resolved. Real schemes such as phar://, file://, vfs:// or compress.zlib:// keep working.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135802" data-description="when request::getbaseurl() does not find the script name at the start of the request uri, it looks for it further into the path. this supports web servers that rewrite every url to a front controller in a subdirectory. the base url then kept everything before the script name, and the client chooses that part. a request uri starting with // or /\ made the base url start with a host.
-
-with script_name=/public/index.php, a request for //evil.example/public/index.php/login is routed to /login, with the base url //evil.example/public/index.php and the base path //evil.example/public. the urls generated for that page then point to evil.example:
-- links built with path() and the actions of forms, so a login form sends the credentials of the user to evil.example;
-- redirects to generated urls, such as the ones of redirecttoroute();
-- assets referenced with a relative path through asset(), so the page can load scripts from evil.example.
-
-the attacker has to make a user follow a crafted link, such as https://app.example//evil.example/public/index.php/login. framework.trusted_hosts does not help, since the host of the request is the real one.
-
-applications are affected when their front controller is in a subdirectory and the web server sends it uris that do not start with that directory. a .htaccess file at the root of the project that rewrites every url to public/ does that, for instance.
-
-applications are also affected when the web server sets script_name to the path of the request. some nginx configurations do that when they send every request to the front controller without fastcgi_split_path_info. php -s does it too, with a router script outside the document root. a request for /\evil.example/index.php then gets the base url /\evil.example/index.php, which browsers read as a link to evil.example.
-
-the configurations recommended in the symfony documentation are not affected.
-
-request::getbaseurl() now returns an empty base url when the request uri starts with // or /\.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135802" target="_blank">CVE-2026-135802</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>When Request::getBaseUrl() does not find the script name at the start of the request URI, it looks for it further into the path. This supports web servers that rewrite every URL to a front controller in a subdirectory. The base URL then kept everything before the script name, and the client chooses that part. A request URI starting with // or /\ made the base URL start with a host.
-
-With SCRIPT_NAME=/public/index.php, a request for //evil.example/public/index.php/login is routed to /login, with the base URL //evil.example/public/index.php and the base path //evil.example/public. The URLs generated for that page then point to evil.example:
-- links built with path() and the actions of forms, so a login form sends the credentials of the user to evil.example;
-- redirects to generated URLs, such as the ones of redirectToRoute();
-- assets referenced with a relative path through asset(), so the page can load scripts from evil.example.
-
-The attacker has to make a user follow a crafted link, such as https://app.example//evil.example/public/index.php/login. framework.trusted_hosts does not help, since the host of the request is the real one.
-
-Applications are affected when their front controller is in a subdirectory and the web server sends it URIs that do not start with that directory. A .htaccess file at the root of the project that rewrites every URL to public/ does that, for instance.
-
-Applications are also affected when the web server sets SCRIPT_NAME to the path of the request. Some nginx configurations do that when they send every request to the front controller without fastcgi_split_path_info. php -S does it too, with a router script outside the document root. A request for /\evil.example/index.php then gets the base URL /\evil.example/index.php, which browsers read as a link to evil.example.
-
-The configurations recommended in the Symfony documentation are not affected.
-
-Request::getBaseUrl() now returns an empty base URL when the request URI starts with // or /\.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135801" data-description="since the fix for cve-2025-64500, request::getpathinfo() strips the script name from the start of the url. it does so even when the script name is only the start of a longer path segment. with script_name set to /index.php, a request to /index.phpadmin gets the path info /admin and is routed like /admin. encoded spellings such as /index%2ephpadmin or /%69ndex.phpadmin work too. before that fix, the path info was admin, which no route matched.
-
-rules enforced by symfony are not affected: access_control and firewalls read the same path info as the router. rules enforced in front of php are. the nginx configuration of the symfony documentation and the .htaccess file of symfony/apache-pack make /index.php/admin unreachable, but they pass /index.phpadmin to the front controller. so a location /admin block in nginx, a <location /admin> section in apache, or a cdn or waf rule on /admin can be bypassed.
-
-the script name is now stripped only when it is followed by /, ? or the end of the url. a request to /index.phpadmin gets the path info /index.phpadmin.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135801" target="_blank">CVE-2026-135801</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>Since the fix for CVE-2025-64500, Request::getPathInfo() strips the script name from the start of the URL. It does so even when the script name is only the start of a longer path segment. With SCRIPT_NAME set to /index.php, a request to /index.phpadmin gets the path info /admin and is routed like /admin. Encoded spellings such as /index%2Ephpadmin or /%69ndex.phpadmin work too. Before that fix, the path info was admin, which no route matched.
-
-Rules enforced by Symfony are not affected: access_control and firewalls read the same path info as the router. Rules enforced in front of PHP are. The nginx configuration of the Symfony documentation and the .htaccess file of symfony/apache-pack make /index.php/admin unreachable, but they pass /index.phpadmin to the front controller. So a location /admin block in nginx, a <Location /admin> section in Apache, or a CDN or WAF rule on /admin can be bypassed.
-
-The script name is now stripped only when it is followed by /, ? or the end of the URL. A request to /index.phpadmin gets the path info /index.phpadmin.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-134898" data-description="a path traversal vulnerability in the file explorer share-link folder-listing endpoint allows a remote attacker with a folder-scoped share link to list directory contents outside the shared folder, including other samba shares readable by the link creator, because path validation occurs before path canonicalization.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-134898" target="_blank">CVE-2026-134898</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A path traversal vulnerability in the File Explorer share-link folder-listing endpoint allows a remote attacker with a folder-scoped share link to list directory contents outside the shared folder, including other Samba shares readable by the link creator, because path validation occurs before path canonicalization.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-134895" data-description="a path traversal vulnerability in the file explorer share-link upload component allows a remote attacker with a folder-scoped upload share link to upload or overwrite files in the shared folder's immediate parent directory due to missing trailing validation prior to path canonicalization.
-affected products and versions include: from adm 4.1.0 through adm 4.3.3.ry62 as well as from adm 5.0.0 through adm 5.1.4.rm62.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-134895" target="_blank">CVE-2026-134895</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:08 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>A path traversal vulnerability in the File Explorer share-link upload component allows a remote attacker with a folder-scoped upload share link to upload or overwrite files in the shared folder's immediate parent directory due to missing trailing validation prior to path canonicalization.
-Affected products and versions include: from ADM 4.1.0 through ADM 4.3.3.RY62 as well as from ADM 5.0.0 through ADM 5.1.4.RM62.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133781" data-description="the controllers.json loader of @symfony/stimulus-bridge loads the package.json file of each package listed in controllers.json with require(). node resolves this path through the exports field of the package, which can map ./package.json to a script. require() then runs that script during the webpack or symfony encore build.
-
-this is a build-time vulnerability: it doesn't affect browsers or end users. a malicious or compromised package listed in controllers.json can run code on the developer machine or the ci server. this works even when the package manager doesn't run install scripts. this code can read the files and environment variables of the build, like ci secrets, and change the built assets.
-
-the loader now reads the resolved file and parses it as json, so that a mapped script fails to parse instead of running.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133781" target="_blank">CVE-2026-133781</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 03:17:07 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
-                    <p>The controllers.json loader of @symfony/stimulus-bridge loads the package.json file of each package listed in controllers.json with require(). Node resolves this path through the exports field of the package, which can map ./package.json to a script. require() then runs that script during the Webpack or Symfony Encore build.
-
-This is a build-time vulnerability: it doesn't affect browsers or end users. A malicious or compromised package listed in controllers.json can run code on the developer machine or the CI server. This works even when the package manager doesn't run install scripts. This code can read the files and environment variables of the build, like CI secrets, and change the built assets.
-
-The loader now reads the resolved file and parses it as JSON, so that a mapped script fails to parse instead of running.</p>
+fixes the issue</p>
                 </div>
         
             </div>
