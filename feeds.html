@@ -34,6 +34,178 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-66734" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-66734" target="_blank">CVE-2026-66734</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-57840" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57840" target="_blank">CVE-2026-57840</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-57838" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57838" target="_blank">CVE-2026-57838</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:53 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-57837" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-57837" target="_blank">CVE-2026-57837</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:52 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16665" data-description="summary
+
+mcuboot enforces several security-critical invariants on the boot, image-swap, and validation paths using assert(). in a standard release/production build (ndebug defined) assert() expands to a no-op, so an invariant the code intends to halt on instead falls through, and execution continues with the bad or inconsistent state. where the guarded condition is attacker-influenceable through the flash-write boundary (serial-recovery / dfu), this is a security check that is simply absent in release builds.
+
+this is one root cause (assert-as-security-guard, no-op under ndebug) with one fix approach (replace the security-critical asserts with real fail-closed checks), so it is filed as a single advisory covering the enumerated sites.
+
+worst reachable instance — inconsistent swap status completes the swap without validation
+
+in the swap-resume status read, an inconsistent status (erased_sections > 1) is detected, logged, and — when mcuboot_validate_primary_slot is disabled — is meant to abort, because "there is no way to be sure the swapped primary slot is ok." the abort is assert(0):
+
+boot/bootutil/src/swap_move.c:181-194 — if (erased_sections > 1) { ... #if !defined(mcuboot_validate_primary_slot) / ... abort! / assert(0); #endif }, then execution falls through to compute bs->op/idx/state from the inconsistent status (lines 197-208) and return 0 (success).
+boot/bootutil/src/swap_offset.c:266-280 — identical pattern; falls through to bs->op/idx/state and return 0.
+boot/bootutil/src/swap_scratch.c:227-241 — same invalid/assert(0) pattern for the scratch backend.
+
+under ndebug with primary-slot validation off, the inconsistent status is neither aborted (assert is a no-op) nor re-validated (validation off), so boot_complete_partial_swap() finishes the swap on inconsistent metadata and the primary slot is booted without a signature check. an attacker who can write the swap-status trailer can craft the inconsistent status.
+
+reachability (threat model). secondary slot + scratch trailers are a2-writable by definition (that is what a dfu upload is). under mcuboot_serial_recovery the primary trailer is a2-writable too: boot/boot_serial/src/boot_serial.c:978 opens flash_area_id_from_multi_image_slot(img_num, 0) (== primary) and writes from offset 0 bounded by area_size, so it can paint the primary swap-status/magic. this is how the a2 (recovery/dfu, unauthenticated by design) attacker influences the guarded condition. property violated: p1 (image authenticity / secure-boot bypass) when un-revalidated content is booted, and p6 (boot/recovery availability).
+
+second reachable instance — resume-path swap_size from an unguarded trailer
+
+boot/bootutil/src/loader.c:1190-1193: the swap resume branch does fap = boot_find_status(...); assert(fap != null); rc = boot_read_swap_size(fap, &bs->swap_size); assert(rc == 0);. boot_find_status() (boot/bootutil/src/bootutil_misc.c:166-204) searches {scratch, primary} and, on no-valid-magic-match, returns the last-iterated area (primary), not null — so assert(fap != null) cannot fire even in debug, and under ndebug neither assert fires. swap_size is then read from an a2-writable (serial-recovery primary, or scratch) trailer with no fail-closed handling. this is the same swap-metadata-trust family as the recorded resume/swap_size disclosure.
+
+reachable-security sites (center the fix here)
+
+1. boot/bootutil/src/swap_move.c:193 — inconsistent-status assert(0), falls through to complete swap. a2 + !validate_primary. [worst]
+2. boot/bootutil/src/swap_offset.c:278 — same, swap-offset backend.
+3. boot/bootutil/src/swap_scratch.c:239 — same, swap-scratch backend.
+4. boot/bootutil/src/loader.c:1191 and :1193 — resume assert(fap != null) / assert(rc == 0) guarding swap_size read from an a2-writable trailer; compounded by boot_find_status() never returning null.
+
+(truncated. the full description is in the advisory: https://github.com/mcu-tools/mcuboot/security/advisories/ghsa-cr9j-p626-pwcc)">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16665" target="_blank">CVE-2026-16665</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>Summary
+
+MCUboot enforces several security-critical invariants on the boot, image-swap, and validation paths using assert(). In a standard release/production build (NDEBUG defined) assert() expands to a no-op, so an invariant the code intends to halt on instead falls through, and execution continues with the bad or inconsistent state. Where the guarded condition is attacker-influenceable through the flash-write boundary (serial-recovery / DFU), this is a security check that is simply absent in release builds.
+
+This is one root cause (assert-as-security-guard, no-op under NDEBUG) with one fix approach (replace the security-critical asserts with real fail-closed checks), so it is filed as a single advisory covering the enumerated sites.
+
+Worst reachable instance — inconsistent swap status completes the swap without validation
+
+In the swap-resume status read, an inconsistent status (erased_sections > 1) is detected, logged, and — when MCUBOOT_VALIDATE_PRIMARY_SLOT is disabled — is meant to abort, because "there is no way to be sure the swapped primary slot is OK." The abort is assert(0):
+
+boot/bootutil/src/swap_move.c:181-194 — if (erased_sections > 1) { ... #if !defined(MCUBOOT_VALIDATE_PRIMARY_SLOT) / ... abort! / assert(0); #endif }, then execution falls through to compute bs->op/idx/state from the inconsistent status (lines 197-208) and return 0 (success).
+boot/bootutil/src/swap_offset.c:266-280 — identical pattern; falls through to bs->op/idx/state and return 0.
+boot/bootutil/src/swap_scratch.c:227-241 — same invalid/assert(0) pattern for the scratch backend.
+
+Under NDEBUG with primary-slot validation off, the inconsistent status is neither aborted (assert is a no-op) nor re-validated (validation off), so boot_complete_partial_swap() finishes the swap on inconsistent metadata and the primary slot is booted without a signature check. An attacker who can write the swap-status trailer can craft the inconsistent status.
+
+Reachability (threat model). Secondary slot + scratch trailers are A2-writable by definition (that is what a DFU upload is). Under MCUBOOT_SERIAL_RECOVERY the primary trailer is A2-writable too: boot/boot_serial/src/boot_serial.c:978 opens flash_area_id_from_multi_image_slot(img_num, 0) (== primary) and writes from offset 0 bounded by area_size, so it can paint the primary swap-status/magic. This is how the A2 (recovery/DFU, unauthenticated by design) attacker influences the guarded condition. Property violated: P1 (image authenticity / secure-boot bypass) when un-revalidated content is booted, and P6 (boot/recovery availability).
+
+Second reachable instance — resume-path swap_size from an unguarded trailer
+
+boot/bootutil/src/loader.c:1190-1193: the swap resume branch does fap = boot_find_status(...); assert(fap != NULL); rc = boot_read_swap_size(fap, &bs->swap_size); assert(rc == 0);. boot_find_status() (boot/bootutil/src/bootutil_misc.c:166-204) searches {scratch, primary} and, on no-valid-magic-match, returns the last-iterated area (primary), not NULL — so assert(fap != NULL) cannot fire even in debug, and under NDEBUG neither assert fires. swap_size is then read from an A2-writable (serial-recovery primary, or scratch) trailer with no fail-closed handling. This is the same swap-metadata-trust family as the recorded resume/swap_size disclosure.
+
+Reachable-security sites (center the fix here)
+
+1. boot/bootutil/src/swap_move.c:193 — inconsistent-status assert(0), falls through to complete swap. A2 + !VALIDATE_PRIMARY. [worst]
+2. boot/bootutil/src/swap_offset.c:278 — same, swap-offset backend.
+3. boot/bootutil/src/swap_scratch.c:239 — same, swap-scratch backend.
+4. boot/bootutil/src/loader.c:1191 and :1193 — resume assert(fap != NULL) / assert(rc == 0) guarding swap_size read from an A2-writable trailer; compounded by boot_find_status() never returning NULL.
+
+(Truncated. The full description is in the advisory: https://github.com/mcu-tools/mcuboot/security/advisories/GHSA-cr9j-p626-pwcc)</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-16663" data-description="mcuboot's encrypted serial-recovery path contains an attacker-controlled out-of-bounds stack write in decrypt_region_inplace() in boot/boot_serial/src/boot_serial_encryption.c. the routine decrypts an uploaded encrypted image one flash sector at a time into a sector-sized stack vla buf[sz], but when the current sector is still inside the image header it sets the destination index to the absolute header size (idx = hdr->ih_hdr_size; at boot/boot_serial/src/boot_serial_encryption.c:156) and then decrypts into &buf[idx]. the correct sibling routine boot/bootutil/src/loader.c:876 uses the sector-relative idx = hdr->ih_hdr_size - abs_off; the serial path is missing the - abs_off term, so for any sector after the first the index runs past the end of the stack buffer.
+
+the ih_hdr_size field is a uint16_t taken verbatim from the uploaded image header. on the second sector onward, when ih_hdr_size exceeds the sector size, &buf[idx] points beyond buf and boot_enc_decrypt() writes attacker-controlled plaintext into adjacent stack frames. the path is reached pre-authentication: bs_upload() calls boot_handle_enc_fw() (boot/boot_serial/src/boot_serial.c:1208) after upload, and the pre-decryption signature gate in decrypt_image_inplace() is compiled out (#if 0 at boot/boot_serial/src/boot_serial_encryption.c:226-233), so the header is never validated before decryption.
+
+a second error in the same window computation affects the first sector. when a sector holds both the end of the header and the start of the tlv area, the decrypt length is clamped to tlv_off - (off + bytes_copied), measured from the start of the sector rather than from idx (boot/boot_serial/src/boot_serial_encryption.c:166). an encrypted image whose header and payload end within the first sector is therefore decrypted for ih_hdr_size bytes more than it should be: into the tlv area and, when the image ends near the end of the sector, past buf. this form needs no oversized header, so even an ordinary small encrypted image can trigger it, and it reaches devices with sectors of up to about 128 kib rather than only those whose sector is smaller than the 16-bit ih_hdr_size.
+
+reaching the sink requires a build with mcuboot_enc_images and serial recovery enabled, and access to the device's serial/usb recovery interface (unauthenticated by design). with the public-key encryption schemes the aes content key is wrapped to the device's public encryption key, so an attacker can author a fully crafted encrypted image — including a malicious ih_hdr_size — without the image-signing private key. the result is a controllable stack memory-corruption inside the bootloader before any signature check, providing a path to code execution in the secure-boot root of trust that bypasses image authentication, as well as a denial-of-service. a 2048-byte out-of-bounds write was reproduced under addresssanitizer (sz=4096, off=4096, ih_hdr_size=6144).
+
+on releases before v2.0.0 (v1.9.0 and v1.10.0) the destination is a file-scope static uint8_t buf[soc_flash_erase_blk_sz] in .bss rather than the stack vla described above — the code then lived in boot/zephyr/single_loader.c, before commit c9fa6088 relocated it to boot/boot_serial/src/boot_serial_encryption.c and changed the buffer's storage class. the out-of-bounds write is equally real and equally pre-authentication on those releases, but it corrupts adjacent static data rather than the stack, so a stack-smashing proof of concept written against a current release will not reproduce as-is there.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-16663" target="_blank">CVE-2026-16663</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.4</p>
+                    <p>MCUboot's encrypted serial-recovery path contains an attacker-controlled out-of-bounds stack write in decrypt_region_inplace() in boot/boot_serial/src/boot_serial_encryption.c. The routine decrypts an uploaded encrypted image one flash sector at a time into a sector-sized stack VLA buf[sz], but when the current sector is still inside the image header it sets the destination index to the absolute header size (idx = hdr->ih_hdr_size; at boot/boot_serial/src/boot_serial_encryption.c:156) and then decrypts into &buf[idx]. The correct sibling routine boot/bootutil/src/loader.c:876 uses the sector-relative idx = hdr->ih_hdr_size - abs_off; the serial path is missing the - abs_off term, so for any sector after the first the index runs past the end of the stack buffer.
+
+The ih_hdr_size field is a uint16_t taken verbatim from the uploaded image header. On the second sector onward, when ih_hdr_size exceeds the sector size, &buf[idx] points beyond buf and boot_enc_decrypt() writes attacker-controlled plaintext into adjacent stack frames. The path is reached pre-authentication: bs_upload() calls boot_handle_enc_fw() (boot/boot_serial/src/boot_serial.c:1208) after upload, and the pre-decryption signature gate in decrypt_image_inplace() is compiled out (#if 0 at boot/boot_serial/src/boot_serial_encryption.c:226-233), so the header is never validated before decryption.
+
+A second error in the same window computation affects the first sector. When a sector holds both the end of the header and the start of the TLV area, the decrypt length is clamped to tlv_off - (off + bytes_copied), measured from the start of the sector rather than from idx (boot/boot_serial/src/boot_serial_encryption.c:166). An encrypted image whose header and payload end within the first sector is therefore decrypted for ih_hdr_size bytes more than it should be: into the TLV area and, when the image ends near the end of the sector, past buf. This form needs no oversized header, so even an ordinary small encrypted image can trigger it, and it reaches devices with sectors of up to about 128 KiB rather than only those whose sector is smaller than the 16-bit ih_hdr_size.
+
+Reaching the sink requires a build with MCUBOOT_ENC_IMAGES and serial recovery enabled, and access to the device's serial/USB recovery interface (unauthenticated by design). With the public-key encryption schemes the AES content key is wrapped to the device's public encryption key, so an attacker can author a fully crafted encrypted image — including a malicious ih_hdr_size — without the image-signing private key. The result is a controllable stack memory-corruption inside the bootloader before any signature check, providing a path to code execution in the secure-boot root of trust that bypasses image authentication, as well as a denial-of-service. A 2048-byte out-of-bounds write was reproduced under AddressSanitizer (sz=4096, off=4096, ih_hdr_size=6144).
+
+On releases before v2.0.0 (v1.9.0 and v1.10.0) the destination is a file-scope static uint8_t buf[SOC_FLASH_ERASE_BLK_SZ] in .bss rather than the stack VLA described above — the code then lived in boot/zephyr/single_loader.c, before commit c9fa6088 relocated it to boot/boot_serial/src/boot_serial_encryption.c and changed the buffer's storage class. The out-of-bounds write is equally real and equally pre-authentication on those releases, but it corrupts adjacent static data rather than the stack, so a stack-smashing proof of concept written against a current release will not reproduce as-is there.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-135817" data-description="a vulnerability was determined in beenuar aisoc up to 17.0.0. affected by this vulnerability is an unknown functionality of the component auditmiddleware. this manipulation causes improper verification of cryptographic signature. the attack may be initiated remotely. upgrading to version 17.1.0 addresses this issue. patch name: 8f2224299124010536ff0e3ebcd9efb0149af26c. upgrading the affected component is recommended.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135817" target="_blank">CVE-2026-135817</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:51 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
+                    <p>A vulnerability was determined in beenuar AiSOC up to 17.0.0. Affected by this vulnerability is an unknown functionality of the component AuditMiddleware. This manipulation causes improper verification of cryptographic signature. The attack may be initiated remotely. Upgrading to version 17.1.0 addresses this issue. Patch name: 8f2224299124010536ff0e3ebcd9efb0149af26c. Upgrading the affected component is recommended.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-135816" data-description="a flaw has been found in gougucms up to 4.08.18. this affects the function detail of the file app/home/controller/pages.php. executing a manipulation can lead to code injection. it is possible to launch the attack remotely. the exploit has been published and may be used. the vendor was contacted early about this disclosure but did not respond in any way.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135816" target="_blank">CVE-2026-135816</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
+                    <p>A flaw has been found in GouguCMS up to 4.08.18. This affects the function detail of the file app/home/controller/Pages.php. Executing a manipulation can lead to code injection. It is possible to launch the attack remotely. The exploit has been published and may be used. The vendor was contacted early about this disclosure but did not respond in any way.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-135815" data-description="a vulnerability was found in zhblue hustoj up to 26.08.19. affected is the function prepare_files of the file trunk/core/judge_client/judge_client.cc. the manipulation results in os command injection. the attack can be launched remotely. the exploit has been made public and could be used. upgrading to version 26.10.31 is able to address this issue. the patch is identified as 07c73e1434c4c8e49094396c7d93bb09d6f159a4. it is suggested to upgrade the affected component.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135815" target="_blank">CVE-2026-135815</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
+                    <p>A vulnerability was found in zhblue hustoj up to 26.08.19. Affected is the function prepare_files of the file trunk/core/judge_client/judge_client.cc. The manipulation results in os command injection. The attack can be launched remotely. The exploit has been made public and could be used. Upgrading to version 26.10.31 is able to address this issue. The patch is identified as 07c73e1434c4c8e49094396c7d93bb09d6f159a4. It is suggested to upgrade the affected component.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-135814" data-description="a vulnerability has been found in zhblue hustoj up to 26.08.19. this impacts an unknown function of the file trunk/core/judged/judged.cc of the component judge daemon sandbox. the manipulation leads to execution with unnecessary privileges. the attack can be initiated remotely. the exploit has been disclosed to the public and may be used. upgrading to version 26.10.31 will fix this issue. the identifier of the patch is 07c73e1434c4c8e49094396c7d93bb09d6f159a4/b5488154c7842fbfa0c38af93a737a85622cdf86. the affected component should be upgraded.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135814" target="_blank">CVE-2026-135814</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
+                    <p>A vulnerability has been found in zhblue hustoj up to 26.08.19. This impacts an unknown function of the file trunk/core/judged/judged.cc of the component Judge Daemon Sandbox. The manipulation leads to execution with unnecessary privileges. The attack can be initiated remotely. The exploit has been disclosed to the public and may be used. Upgrading to version 26.10.31 will fix this issue. The identifier of the patch is 07c73e1434c4c8e49094396c7d93bb09d6f159a4/b5488154c7842fbfa0c38af93a737a85622cdf86. The affected component should be upgraded.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-133456" data-description="autogpt is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. from 0.11.1 before 0.11.3, anyone with an exa search monitor trigger's url can start one run of the owner's workflow per request with fake event data, even when a secret is set. the workflow runs with the owner's saved credentials and credits, and nothing is returned to the attacker. this issue is fixed in version 0.11.3.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133456" target="_blank">CVE-2026-133456</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:50 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.5</p>
+                    <p>AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. From 0.11.1 before 0.11.3, anyone with an Exa Search Monitor trigger's URL can start one run of the owner's workflow per request with fake event data, even when a secret is set. The workflow runs with the owner's saved credentials and credits, and nothing is returned to the attacker. This issue is fixed in version 0.11.3.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-124284" data-description="a critical security vulnerability affects certain authentication methods in genetec security center, including external identity providers using openid connect (oidc) or saml 2.0, and active directory federation services (ad fs) using ws-trust or ws-federation.
+under specific conditions, successful exploitation may allow an unauthenticated attacker to gain unauthorized access to the system with the privileges of an affected user. successful exploitation requires a specific combination of conditions to be met, which reduces the likelihood of a successful attack.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-124284" target="_blank">CVE-2026-124284</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-24 16:18:49 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
+                    <p>A critical security vulnerability affects certain authentication methods in Genetec Security Center, including external identity providers using OpenID Connect (OIDC) or SAML 2.0, and Active Directory Federation Services (AD FS) using WS-Trust or WS-Federation.
+Under specific conditions, successful exploitation may allow an unauthenticated attacker to gain unauthorized access to the system with the privileges of an affected user. Successful exploitation requires a specific combination of conditions to be met, which reduces the likelihood of a successful attack.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-61513" data-description="veracrypt through 1.26.31 on linux contains an improper path restriction vulnerability in the elevated coreservice, which passes the path and owner uid from a setfileownerrequest directly to chown() in coreunix::setfileowner without target validation on linux. an attacker with an active elevated coreservice session and same-uid access who reopens the request pipe through /proc/<pid>/fd/<n> can take ownership of arbitrary system files such as /etc/passwd and /etc/shadow, achieving full root compromise.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-61513" target="_blank">CVE-2026-61513</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-24 15:18:31 CDT</p>
@@ -120,106 +292,6 @@ the specific flaw exists within the handling of mcp stdio configurations. the is
                     <p>LiteLLM MCP Command Injection Remote Code Execution Vulnerability. This vulnerability allows remote attackers to execute arbitrary code on affected installations of LiteLLM. Authentication is required to exploit this vulnerability.
 
 The specific flaw exists within the handling of MCP stdio configurations. The issue results from the lack of proper validation of a user-supplied string before using it to execute a system call. An attacker can leverage this vulnerability to execute code in the context of the service account. Was ZDI-CAN-31815.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-136534" data-description="devin desktop uncontrolled search path element local privilege escalation vulnerability. this vulnerability allows local attackers to escalate privileges on affected installations of devin desktop. an attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
-
-the specific flaw exists within the configuration of the electron framework. the product loads a script file from an unsecured location. an attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of a target user. was zdi-can-33385.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-136534" target="_blank">CVE-2026-136534</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>Devin Desktop Uncontrolled Search Path Element Local Privilege Escalation Vulnerability. This vulnerability allows local attackers to escalate privileges on affected installations of Devin Desktop. An attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
-
-The specific flaw exists within the configuration of the Electron framework. The product loads a script file from an unsecured location. An attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of a target user. Was ZDI-CAN-33385.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-136522" data-description="cubewp forms before 1.1.13 contains an unauthenticated stored cross-site scripting vulnerability that allows attackers to inject malicious javascript by submitting unregistered field names through the public rest route cubewp-custom-form/v1/submit/, which bypasses its own nonce check and saves unsanitized values due to a missing default case in the sanitizer, later rendered unescaped on the admin leads detail page. attackers can send a single crafted get request containing a script payload in a custom form field to execute arbitrary javascript in an administrator's wp-admin session when the lead is viewed, enabling full site takeover such as creating a new administrator account.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-136522" target="_blank">CVE-2026-136522</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:20 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.6</p>
-                    <p>CubeWP Forms before 1.1.13 contains an unauthenticated stored cross-site scripting vulnerability that allows attackers to inject malicious JavaScript by submitting unregistered field names through the public REST route cubewp-custom-form/v1/submit/, which bypasses its own nonce check and saves unsanitized values due to a missing default case in the sanitizer, later rendered unescaped on the admin Leads detail page. Attackers can send a single crafted GET request containing a script payload in a custom form field to execute arbitrary JavaScript in an administrator's wp-admin session when the lead is viewed, enabling full site takeover such as creating a new administrator account.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135812" data-description="a weakness has been identified in gongshengyue onlinebooks up to dfc5eacc08d3b0396c266049548618f6fb9587ea. impacted is an unknown function. this manipulation causes cross-site request forgery. the attack is possible to be carried out remotely. this product adopts a rolling release strategy to maintain continuous delivery. therefore, version details for affected or updated releases cannot be specified. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135812" target="_blank">CVE-2026-135812</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>A weakness has been identified in GongShengyue OnlineBooks up to dfc5eacc08d3b0396c266049548618f6fb9587ea. Impacted is an unknown function. This manipulation causes cross-site request forgery. The attack is possible to be carried out remotely. This product adopts a rolling release strategy to maintain continuous delivery. Therefore, version details for affected or updated releases cannot be specified. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135811" data-description="a security flaw has been discovered in gongshengyue onlinebooks up to dfc5eacc08d3b0396c266049548618f6fb9587ea. this issue affects the function listsplit of the file src/cn/ylcto/book/servlet/booksservlet.java of the component booksservlet. the manipulation results in missing authentication. the attack can be executed remotely. the exploit has been released to the public and may be used for attacks. this product implements a rolling release for ongoing delivery, which means version information for affected or updated releases is unavailable. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135811" target="_blank">CVE-2026-135811</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A security flaw has been discovered in GongShengyue OnlineBooks up to dfc5eacc08d3b0396c266049548618f6fb9587ea. This issue affects the function listSplit of the file src/cn/ylcto/book/servlet/BooksServlet.java of the component BooksServlet. The manipulation results in missing authentication. The attack can be executed remotely. The exploit has been released to the public and may be used for attacks. This product implements a rolling release for ongoing delivery, which means version information for affected or updated releases is unavailable. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135810" data-description="a vulnerability was identified in gongshengyue onlinebooks up to dfc5eacc08d3b0396c266049548618f6fb9587ea. this vulnerability affects the function insert of the file src/cn/ylcto/book/filter/adminloginfilter.java of the component booksservlet. the manipulation leads to missing authorization. remote exploitation of the attack is possible. the exploit is publicly available and might be used. this product follows a rolling release approach for continuous delivery, so version details for affected or updated releases are not provided. the project was informed of the problem early through an issue report but has not responded yet.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135810" target="_blank">CVE-2026-135810</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>A vulnerability was identified in GongShengyue OnlineBooks up to dfc5eacc08d3b0396c266049548618f6fb9587ea. This vulnerability affects the function insert of the file src/cn/ylcto/book/filter/AdminLoginFilter.java of the component BooksServlet. The manipulation leads to missing authorization. Remote exploitation of the attack is possible. The exploit is publicly available and might be used. This product follows a rolling release approach for continuous delivery, so version details for affected or updated releases are not provided. The project was informed of the problem early through an issue report but has not responded yet.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-135809" data-description="a vulnerability has been found in javahuang surveyking up to 0.3.0-beta.3. affected by this vulnerability is the function resolvepath of the file server/shared/src/main/java/cn/surveyking/server/storage/localstorageservice.java of the component file upload. such manipulation of the argument basepath leads to path traversal. the attack can be launched remotely. the name of the patch is d469ef73d935ff64fd0cf603cf91b76877af02b6. it is advisable to implement a patch to correct this issue.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-135809" target="_blank">CVE-2026-135809</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:19 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>A vulnerability has been found in javahuang SurveyKing up to 0.3.0-beta.3. Affected by this vulnerability is the function resolvePath of the file server/shared/src/main/java/cn/surveyking/server/storage/LocalStorageService.java of the component File Upload. Such manipulation of the argument basePath leads to path traversal. The attack can be launched remotely. The name of the patch is d469ef73d935ff64fd0cf603cf91b76877af02b6. It is advisable to implement a patch to correct this issue.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133453" data-description="autogpt is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. in versions 0.7.1 through 0.10.0, a user can add a version under another user's workflow id and take over its marketplace listing. an attacker with an account and the target's workflow id can replace the creator's pending marketplace submission with their own, so that approval installs the attacker's workflow under the creator's listing. without reviewer involvement, the attacker can also stop the owner from saving new versions and break runs that name no version. this issue is fixed in version 0.11.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133453" target="_blank">CVE-2026-133453</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:18 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.1</p>
-                    <p>AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. In versions 0.7.1 through 0.10.0, a user can add a version under another user's workflow ID and take over its Marketplace listing. An attacker with an account and the target's workflow ID can replace the creator's pending Marketplace submission with their own, so that approval installs the attacker's workflow under the creator's listing. Without reviewer involvement, the attacker can also stop the owner from saving new versions and break runs that name no version. This issue is fixed in version 0.11.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-133449" data-description="autogpt is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. in versions 0.6.1 through 0.10.0, credentials are sent to a third party when a redirect's location header hides the new host behind a backslash. a signed-in user who connects an mcp server url, or runs a shared or marketplace workflow with a host-scoped credential, can have that credential delivered to a third party if the host responds with a redirect whose location the other party influenced. this issue is fixed in version 0.11.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133449" target="_blank">CVE-2026-133449</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. In versions 0.6.1 through 0.10.0, credentials are sent to a third party when a redirect's Location header hides the new host behind a backslash. A signed-in user who connects an MCP server URL, or runs a shared or marketplace workflow with a host-scoped credential, can have that credential delivered to a third party if the host responds with a redirect whose Location the other party influenced. This issue is fixed in version 0.11.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-132264" data-description="autogpt is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. in versions 0.6.63 through 0.10.0, an external api key or oauth token that has only the execute_block permission can run autopilotblock through the external api and receive a full, unattended autopilot turn. this lets the holder use the account owner's stored third-party credentials, library agents, and workspace files, and run autopilot's sandboxed shell, which the same key is refused when it requests those directly. this issue is fixed in version 0.11.0.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132264" target="_blank">CVE-2026-132264</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. In versions 0.6.63 through 0.10.0, an external API key or OAuth token that has only the EXECUTE_BLOCK permission can run AutoPilotBlock through the external API and receive a full, unattended AutoPilot turn. This lets the holder use the account owner's stored third-party credentials, library agents, and workspace files, and run AutoPilot's sandboxed shell, which the same key is refused when it requests those directly. This issue is fixed in version 0.11.0.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-132254" data-description="autogpt is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. in versions 0.6.67 through 0.11.2, an external api key created while a user was a member of an organization keeps working in that organization after the user is removed. a former member holding such a key with the write_graph and write_library scopes, or use_tools for schedules, can add workflows, library entries, and schedules to the organization, where remaining members can see them. the key gives no read access to the organization's data. this issue is fixed in version 0.11.3.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132254" target="_blank">CVE-2026-132254</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
-                    <p>AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. In versions 0.6.67 through 0.11.2, an External API key created while a user was a member of an organization keeps working in that organization after the user is removed. A former member holding such a key with the WRITE_GRAPH and WRITE_LIBRARY scopes, or USE_TOOLS for schedules, can add workflows, library entries, and schedules to the organization, where remaining members can see them. The key gives no read access to the organization's data. This issue is fixed in version 0.11.3.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-129970" data-description="a maliciously crafted png file, when imported into autodesk revit, can trigger a null pointer dereference vulnerability. a malicious actor may leverage this vulnerability to cause the application to terminate unexpectedly, resulting in a denial-of-service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129970" target="_blank">CVE-2026-129970</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:17 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A maliciously crafted PNG file, when imported into Autodesk Revit, can trigger a NULL Pointer Dereference vulnerability. A malicious actor may leverage this vulnerability to cause the application to terminate unexpectedly, resulting in a denial-of-service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-129969" data-description="a maliciously crafted pdf file, when imported into autodesk revit, can trigger a memory allocation with excessive size value vulnerability. a malicious actor may leverage this vulnerability to cause excessive memory consumption, potentially resulting in the application terminating unexpectedly.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-129969" target="_blank">CVE-2026-129969</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-24 15:18:16 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 5.5</p>
-                    <p>A maliciously crafted PDF file, when imported into Autodesk Revit, can trigger a Memory Allocation with Excessive Size Value vulnerability. A malicious actor may leverage this vulnerability to cause excessive memory consumption, potentially resulting in the application terminating unexpectedly.</p>
                 </div>
         
             </div>
