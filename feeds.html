@@ -34,164 +34,232 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
-                <div class="cve-entry" data-cve-id="CVE-2026-137093" data-description="assimp before 6.0.6 contains an out-of-bounds write vulnerability in md5importer::loadmd5meshfile() that allows attackers to corrupt heap memory via unvalidated weight ranges and bone indices. attackers can supply a crafted .md5mesh file with out-of-range mbone values to increment heap words past the picount allocation, causing memory corruption, out-of-bounds reads, or crashes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137093" target="_blank">CVE-2026-137093</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
-                    <p>Assimp before 6.0.6 contains an out-of-bounds write vulnerability in MD5Importer::LoadMD5MeshFile() that allows attackers to corrupt heap memory via unvalidated weight ranges and bone indices. Attackers can supply a crafted .md5mesh file with out-of-range mBone values to increment heap words past the piCount allocation, causing memory corruption, out-of-bounds reads, or crashes.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-90592" data-description="the ite it51xxx i2c driver, when operating as an i2c target (slave) in buffer mode (config_i2c_target + config_i2c_target_buffer_mode), transmits response data from the fixed-size data->target_out_buffer inside its target fifo interrupt handler target_i2c_isr_fifo() in drivers/i2c/i2c_ite_it51xxx.c. on every data interrupt of a host read transaction the handler pushes a fixed 16 bytes from target_out_buffer[i + data->r_index] into the hardware fifo and then advances data->r_index by 16, without ever checking that index against the size of the buffer.
+
+data->r_index is reset to zero only on a stop or timeout condition, so within a single transaction it only accumulates. an i2c host that keeps clocking read bytes without issuing stop drives data->r_index past the end of the buffer after sixteen interrupts (default config_i2c_target_it51xxx_max_buf_size = 256 bytes), and every interrupt after that reads 16 bytes from beyond target_out_buffer and places them on the bus. what follows the buffer in the driver's device data structure is data->target_shared_fifo and the remaining static device state, so a sufficiently long read transaction streams adjacent firmware memory to the host.
+
+the same handler, and the shared-fifo arm of target_i2c_isr_pio(), also declare the transfer length uninitialised and invoke the optional buf_read_requested() callback without checking that it is registered. a target that supplies no read callback leaves the source pointer null and the length indeterminate; when that length compares below the destination size, memcpy() runs with a null source. because the transmit path feeds the fifo whether or not the callback provided data, such a target also places whatever the previous request left in the buffer onto the bus.
+
+the trigger is a malicious or misbehaving i2c master on the same bus (for example a compromised application processor or a rogue device on an exposed i2c bus); no software privilege on the victim is required and the handler runs in the target's kernel/firmware context. the disclosed bytes are not attacker-chosen, but their extent is: the host controls how long the transaction runs and therefore how far past the buffer the driver reads.
+
+this is the read-direction counterpart of cve-2026-14986, which closed the write direction of the same routine without adding the matching bound on the read path.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-90592" target="_blank">CVE-2026-90592</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.6</p>
+                    <p>The ITE it51xxx I2C driver, when operating as an I2C target (slave) in buffer mode (CONFIG_I2C_TARGET + CONFIG_I2C_TARGET_BUFFER_MODE), transmits response data from the fixed-size data->target_out_buffer inside its target FIFO interrupt handler target_i2c_isr_fifo() in drivers/i2c/i2c_ite_it51xxx.c. On every data interrupt of a host read transaction the handler pushes a fixed 16 bytes from target_out_buffer[i + data->r_index] into the hardware FIFO and then advances data->r_index by 16, without ever checking that index against the size of the buffer.
+
+data->r_index is reset to zero only on a STOP or timeout condition, so within a single transaction it only accumulates. An I2C host that keeps clocking read bytes without issuing STOP drives data->r_index past the end of the buffer after sixteen interrupts (default CONFIG_I2C_TARGET_IT51XXX_MAX_BUF_SIZE = 256 bytes), and every interrupt after that reads 16 bytes from beyond target_out_buffer and places them on the bus. What follows the buffer in the driver's device data structure is data->target_shared_fifo and the remaining static device state, so a sufficiently long read transaction streams adjacent firmware memory to the host.
+
+The same handler, and the shared-FIFO arm of target_i2c_isr_pio(), also declare the transfer length uninitialised and invoke the optional buf_read_requested() callback without checking that it is registered. A target that supplies no read callback leaves the source pointer NULL and the length indeterminate; when that length compares below the destination size, memcpy() runs with a NULL source. Because the transmit path feeds the FIFO whether or not the callback provided data, such a target also places whatever the previous request left in the buffer onto the bus.
+
+The trigger is a malicious or misbehaving I2C master on the same bus (for example a compromised application processor or a rogue device on an exposed I2C bus); no software privilege on the victim is required and the handler runs in the target's kernel/firmware context. The disclosed bytes are not attacker-chosen, but their extent is: the host controls how long the transaction runs and therefore how far past the buffer the driver reads.
+
+This is the read-direction counterpart of CVE-2026-14986, which closed the write direction of the same routine without adding the matching bound on the read path.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137092" data-description="assimp before 6.0.6 contains an out-of-bounds write vulnerability in md5importer::makedataunique() that allows attackers to corrupt heap memory by supplying unvalidated face indices. attackers can craft an .md5mesh file with out-of-range face vertex indices or unfilled faces to set bits past the abhad allocation, read vertex data out of bounds, or crash the application.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137092" target="_blank">CVE-2026-137092</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.0</p>
-                    <p>Assimp before 6.0.6 contains an out-of-bounds write vulnerability in MD5Importer::MakeDataUnique() that allows attackers to corrupt heap memory by supplying unvalidated face indices. Attackers can craft an .md5mesh file with out-of-range face vertex indices or unfilled faces to set bits past the abHad allocation, read vertex data out of bounds, or crash the application.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-81336" data-description="gitlab has remediated an issue in gitlab ce/ee affecting all versions from 12.8 before 19.4.11, 19.5 before 19.5.9, and 19.6 before 19.6.2 that could have allowed an unauthenticated user to execute quick actions through service desk emails due to improper input sanitization.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-81336" target="_blank">CVE-2026-81336</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
+                    <p>GitLab has remediated an issue in GitLab CE/EE affecting all versions from 12.8 before 19.4.11, 19.5 before 19.5.9, and 19.6 before 19.6.2 that could have allowed an unauthenticated user to execute quick actions through Service Desk emails due to improper input sanitization.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137091" data-description="everos before 1.8.0 contains a cross-origin local file disclosure vulnerability that allows malicious websites to read local files by abusing a wildcard cors policy with credentials and unrestricted file:// ingestion. attackers can host javascript that calls post /api/v2/memory/add with file:// uris, then read parsed contents via post /api/v2/memory/search to exfiltrate ssh keys, credentials, and alter or delete memories.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137091" target="_blank">CVE-2026-137091</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-67210" data-description="diaspora* through 0.10.1, using the diaspora_federation gem through 1.2.0, contains a server-side request forgery vulnerability that allows unauthenticated attackers to make the pod send requests to arbitrary internal hosts by supplying a crafted diaspora handle to the get /link endpoint, which triggers webfinger discovery without private-address filtering. attackers can specify a handle containing an ipv4/ipv6 address and port such as diaspora://probe@host:port to force the httpclient to connect to loopback, rfc1918, link-local, or cloud metadata addresses, enabling blind probing of the pod's internal network.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67210" target="_blank">CVE-2026-67210</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:20 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 5.8</p>
+                    <p>diaspora* through 0.10.1, using the diaspora_federation gem through 1.2.0, contains a server-side request forgery vulnerability that allows unauthenticated attackers to make the pod send requests to arbitrary internal hosts by supplying a crafted diaspora handle to the GET /link endpoint, which triggers WebFinger discovery without private-address filtering. Attackers can specify a handle containing an IPv4/IPv6 address and port such as diaspora://probe@host:port to force the HttpClient to connect to loopback, RFC1918, link-local, or cloud metadata addresses, enabling blind probing of the pod's internal network.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-67209" data-description="metasfresh through 5.175 contains a sql injection vulnerability in the stresstest_masscacheinvalidation handler of debugrestcontroller, which concatenates the caller-supplied tablename request parameter into select statements without parameterization or validation and only checks that the caller is authenticated. authenticated webui users with any role can send get requests to /rest/api/debug/stresstest/masscacheinvalidation with sql in the tablename parameter to run time-based and error-based blind queries against the postgresql database, extracting sensitive erp data such as user credentials and financial records while also degrading availability through sleep payloads.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-67209" target="_blank">CVE-2026-67209</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:20 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 7.1</p>
-                    <p>EverOS before 1.8.0 contains a cross-origin local file disclosure vulnerability that allows malicious websites to read local files by abusing a wildcard CORS policy with credentials and unrestricted file:// ingestion. Attackers can host JavaScript that calls POST /api/v2/memory/add with file:// URIs, then read parsed contents via POST /api/v2/memory/search to exfiltrate SSH keys, credentials, and alter or delete memories.</p>
+                    <p>metasfresh through 5.175 contains a SQL injection vulnerability in the stressTest_massCacheInvalidation handler of DebugRestController, which concatenates the caller-supplied tableName request parameter into SELECT statements without parameterization or validation and only checks that the caller is authenticated. Authenticated WebUI users with any role can send GET requests to /rest/api/debug/stressTest/massCacheInvalidation with SQL in the tableName parameter to run time-based and error-based blind queries against the PostgreSQL database, extracting sensitive ERP data such as user credentials and financial records while also degrading availability through sleep payloads.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137090" data-description="build-git-clone before 1.0.4 contains an os command injection vulnerability in the clone() function that allows attackers to execute commands by supplying crafted repository urls. attackers can embed shell metacharacters such as ; or $() in the url argument, which is concatenated into a sh -c command, to execute operating system commands with node.js process privileges.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137090" target="_blank">CVE-2026-137090</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:46 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-136822" data-description="a vulnerability has been found in d-link r32 1.10b02. the impacted element is the function setdevicesettings of the file /usr/bin/httpd of the component dhmapi action handler. such manipulation of the argument tzlocation leads to os command injection. it is possible to launch the attack remotely. the exploit has been disclosed to the public and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-136822" target="_blank">CVE-2026-136822</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:19 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 9.8</p>
-                    <p>build-git-clone before 1.0.4 contains an OS command injection vulnerability in the clone() function that allows attackers to execute commands by supplying crafted repository URLs. Attackers can embed shell metacharacters such as ; or $() in the url argument, which is concatenated into a sh -c command, to execute operating system commands with Node.js process privileges.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
+                    <p>A vulnerability has been found in D-Link R32 1.10B02. The impacted element is the function SetDeviceSettings of the file /usr/bin/httpd of the component DHMAPI Action Handler. Such manipulation of the argument TZLocation leads to os command injection. It is possible to launch the attack remotely. The exploit has been disclosed to the public and may be used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137089" data-description="merge-deep-composed through 0.1.4 contains a prototype pollution vulnerability in _mergedeepone() that allows remote attackers to modify object.prototype by supplying __proto__ keys. attackers can pass json-parsed input containing __proto__ as a merge source to inject inherited properties, causing logic bypass or denial of service in node.js processes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137089" target="_blank">CVE-2026-137089</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:46 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>merge-deep-composed through 0.1.4 contains a prototype pollution vulnerability in _mergeDeepOne() that allows remote attackers to modify Object.prototype by supplying __proto__ keys. Attackers can pass JSON-parsed input containing __proto__ as a merge source to inject inherited properties, causing logic bypass or denial of service in Node.js processes.</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-136821" data-description="a flaw has been found in d-link r32 1.10b02. the affected element is the function settimesettings of the component dhmapi action handler. this manipulation of the argument tzlocation causes os command injection. it is possible to initiate the attack remotely. the exploit has been published and may be used.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-136821" target="_blank">CVE-2026-136821</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:19 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">CRITICAL</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 9.9</p>
+                    <p>A flaw has been found in D-Link R32 1.10B02. The affected element is the function SetTimeSettings of the component DHMAPI Action Handler. This manipulation of the argument TZLocation causes os command injection. It is possible to initiate the attack remotely. The exploit has been published and may be used.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137088" data-description="@oleksii-pavlov/deep-merge before 1.2.4 contains a prototype pollution vulnerability in deepmergetwoassignable() that allows remote attackers to modify object.prototype by supplying a __proto__ key. attackers can pass json-parsed input to deepmerge(), deepmergeandassign(), deepupdate() or deepupdateandassign() to inject inherited properties, causing logic bypass or denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137088" target="_blank">CVE-2026-137088</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>@oleksii-pavlov/deep-merge before 1.2.4 contains a prototype pollution vulnerability in deepMergeTwoAssignable() that allows remote attackers to modify Object.prototype by supplying a __proto__ key. Attackers can pass JSON-parsed input to deepMerge(), deepMergeAndAssign(), deepUpdate() or deepUpdateAndAssign() to inject inherited properties, causing logic bypass or denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137087" data-description="@irrelon/path 6.2.2 before 7.0.3 contains a prototype pollution vulnerability in merge() and mergeimmutable() that allows remote attackers to modify object.prototype by supplying __proto__ keys. attackers can pass untrusted json containing __proto__ or constructor.prototype payloads to merged objects, causing property injection, authorization bypass, or denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137087" target="_blank">CVE-2026-137087</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>@irrelon/path 6.2.2 before 7.0.3 contains a prototype pollution vulnerability in merge() and mergeImmutable() that allows remote attackers to modify Object.prototype by supplying __proto__ keys. Attackers can pass untrusted JSON containing __proto__ or constructor.prototype payloads to merged objects, causing property injection, authorization bypass, or denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137086" data-description="teracom tcw122b-cm firmware before 4.07 contains a predictable session cookie vulnerability that allows unauthenticated remote attackers to hijack administrator sessions by guessing tick-counter-derived cookies. attackers can predict or brute-force the 32-bit cookie from device uptime and login timing to control relays, settings, and administrator credentials.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137086" target="_blank">CVE-2026-137086</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:45 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>Teracom TCW122B-CM firmware before 4.07 contains a predictable session cookie vulnerability that allows unauthenticated remote attackers to hijack administrator sessions by guessing tick-counter-derived cookies. Attackers can predict or brute-force the 32-bit cookie from device uptime and login timing to control relays, settings, and administrator credentials.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137085" data-description="projeqtor before 13.1.2 contains a missing authorization vulnerability in tool/getafieldforaclassbyid.php that allows authenticated low-privilege users to read any object property. attackers can request class=user with an administrator id and field=password or email to retrieve password hashes for offline cracking.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137085" target="_blank">CVE-2026-137085</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:45 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-133451" data-description="autogpt is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. in versions 0.6.46 through 0.11.1, autopilot does not remove the media files that its block runs write to the executor's disk, leading to exhaustion. a signed-in user who can use autopilot can grow the temporary storage used by autopilot's tool process by about 1 gib per chat. once that filesystem is full, file handling fails for every user served by that executor and for anything else writing to the same disk. no other user's data is read or changed. this issue is fixed in version 0.11.2.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-133451" target="_blank">CVE-2026-133451</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:18 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>ProjeQtOr before 13.1.2 contains a missing authorization vulnerability in tool/getAFieldForAClassById.php that allows authenticated low-privilege users to read any object property. Attackers can request Class=User with an administrator id and field=password or email to retrieve password hashes for offline cracking.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>AutoGPT is a workflow automation platform for creating, deploying, and managing continuous artificial intelligence agents. In versions 0.6.46 through 0.11.1, AutoPilot does not remove the media files that its block runs write to the executor's disk, leading to exhaustion. A signed-in user who can use AutoPilot can grow the temporary storage used by AutoPilot's tool process by about 1 GiB per chat. Once that filesystem is full, file handling fails for every user served by that executor and for anything else writing to the same disk. No other user's data is read or changed. This issue is fixed in version 0.11.2.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137084" data-description="nodebb 4.12.0 before 4.16.4 contains an execution after redirect vulnerability in the intents.create controller that allows unauthenticated attackers to trigger activitypub note ingestion. attackers can send get requests to /intents/create with a remote note uri in the topid parameter to inject federated content as local topics and posts.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137084" target="_blank">CVE-2026-137084</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:45 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-132794" data-description="gitlab has remediated an issue in gitlab ce/ee affecting all versions from 18.10 before 19.4.11, 19.5 before 19.5.9, and 19.6 before 19.6.2 that under certain conditions could have allowed an authenticated user with a fine-grained personal access token to read work items in projects or groups they have access to but that were not granted to the token due to incorrect authorization checks.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132794" target="_blank">CVE-2026-132794</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.5</p>
-                    <p>NodeBB 4.12.0 before 4.16.4 contains an execution after redirect vulnerability in the Intents.create controller that allows unauthenticated attackers to trigger ActivityPub note ingestion. Attackers can send GET requests to /intents/create with a remote note URI in the toPid parameter to inject federated content as local topics and posts.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>GitLab has remediated an issue in GitLab CE/EE affecting all versions from 18.10 before 19.4.11, 19.5 before 19.5.9, and 19.6 before 19.6.2 that under certain conditions could have allowed an authenticated user with a fine-grained personal access token to read work items in projects or groups they have access to but that were not granted to the token due to incorrect authorization checks.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137083" data-description="opencv 3.0.0 through 4.14.0 and 5.0.0 through 5.1.0 contains an out-of-bounds read vulnerability in the built-in mjpeg encoder when writing grayscale frames due to incorrect level shifting in converttoyuv(). attackers controlling pixel content written as grayscale mjpeg video can trigger unchecked cat_table and huff_dc_tab lookups, leaking adjacent or uninitialized memory into the output file or crashing the process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137083" target="_blank">CVE-2026-137083</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:45 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-132102" data-description="gitlab has remediated an issue in gitlab ce/ee affecting all versions from 14.4 before 19.4.11, 19.5 before 19.5.9, and 19.6 before 19.6.2 that under certain conditions could have allowed an unauthenticated user to cause denial of service due to unconstrained backtracking in regular expression evaluation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-132102" target="_blank">CVE-2026-132102</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 5.3</p>
-                    <p>OpenCV 3.0.0 through 4.14.0 and 5.0.0 through 5.1.0 contains an out-of-bounds read vulnerability in the built-in MJPEG encoder when writing grayscale frames due to incorrect level shifting in convertToYUV(). Attackers controlling pixel content written as grayscale MJPEG video can trigger unchecked cat_table and huff_dc_tab lookups, leaking adjacent or uninitialized memory into the output file or crashing the process.</p>
+                    <p>GitLab has remediated an issue in GitLab CE/EE affecting all versions from 14.4 before 19.4.11, 19.5 before 19.5.9, and 19.6 before 19.6.2 that under certain conditions could have allowed an unauthenticated user to cause denial of service due to unconstrained backtracking in regular expression evaluation.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137082" data-description="gnome libxml2 through 2.15.4 contains a null pointer dereference vulnerability in xmlparsestarttag2() that allows attackers to crash applications by triggering parser context reuse after sax1 parsing. attackers can supply documents with attributes parsed first with xml_parse_sax1 and then without it on a reused context, causing writes to unallocated ctxt->attallocs and denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137082" target="_blank">CVE-2026-137082</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
-                    <p>GNOME libxml2 through 2.15.4 contains a NULL pointer dereference vulnerability in xmlParseStartTag2() that allows attackers to crash applications by triggering parser context reuse after SAX1 parsing. Attackers can supply documents with attributes parsed first with XML_PARSE_SAX1 and then without it on a reused context, causing writes to unallocated ctxt->attallocs and denial of service.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137081" data-description="xiph.org libflac 1.5.0 contains a memory leak in flac__stream_encoder_finish() because free_() never releases the main thread task's frame bit writer buffer. attackers submitting many audio streams to a long-running service that reuses one encoder can leak at least 32 kib per stream, causing memory exhaustion.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137081" target="_blank">CVE-2026-137081</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.3</p>
-                    <p>Xiph.Org libFLAC 1.5.0 contains a memory leak in FLAC__stream_encoder_finish() because free_() never releases the main thread task's frame bit writer buffer. Attackers submitting many audio streams to a long-running service that reuses one encoder can leak at least 32 KiB per stream, causing memory exhaustion.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137080" data-description="libical 4.0.0 before 4.0.7 contains an infinite loop vulnerability in icalrecur_iterator_set_range() that allows attackers to cause denial of service by supplying crafted recurrence rules. attackers can provide a calendar whose recurrence rule is iterated over a reverse range, causing the loop to never terminate and spin the calling thread at full cpu indefinitely.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137080" target="_blank">CVE-2026-137080</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
-                    <p>libical 4.0.0 before 4.0.7 contains an infinite loop vulnerability in icalrecur_iterator_set_range() that allows attackers to cause denial of service by supplying crafted recurrence rules. Attackers can provide a calendar whose recurrence rule is iterated over a reverse range, causing the loop to never terminate and spin the calling thread at full CPU indefinitely.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137079" data-description="libvorbis through 1.3.7 contains a stack buffer overflow vulnerability in _ov_getlap() in lib/vorbisfile.c that passes a negative sample count from vorbis_synthesis_lapout() to memcpy(). attackers can supply a short, valid ogg vorbis file with suitable block sizes to overwrite stack frames and crash applications performing two consecutive lapped seeks.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137079" target="_blank">CVE-2026-137079</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 6.1</p>
-                    <p>libvorbis through 1.3.7 contains a stack buffer overflow vulnerability in _ov_getlap() in lib/vorbisfile.c that passes a negative sample count from vorbis_synthesis_lapout() to memcpy(). Attackers can supply a short, valid Ogg Vorbis file with suitable block sizes to overwrite stack frames and crash applications performing two consecutive lapped seeks.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137078" data-description="xiph.org libvorbis through 1.3.7 contains a heap out-of-bounds read vulnerability in ov_time_tell() in lib/vorbisfile.c that reads vf->vi[-1].rate after a failed seek leaves vf->pcm_offset at -1. attackers can supply a crafted ogg vorbis file with a corrupted page to applications that seek and query playback time, leaking heap bytes via the returned value or crashing the process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137078" target="_blank">CVE-2026-137078</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:44 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.4</p>
-                    <p>Xiph.Org libvorbis through 1.3.7 contains a heap out-of-bounds read vulnerability in ov_time_tell() in lib/vorbisfile.c that reads vf->vi[-1].rate after a failed seek leaves vf->pcm_offset at -1. Attackers can supply a crafted Ogg Vorbis file with a corrupted page to applications that seek and query playback time, leaking heap bytes via the returned value or crashing the process.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137077" data-description="freerdp before 3.33.0 contains a heap out-of-bounds write in h264_context_reset() in libfreerdp/codec/h264.c, which stores new dimensions before the yuv planes are reallocated. remote peers can trigger surface height increases so avc420_compress() writes taller frames past undersized luma and chroma planes, corrupting heap memory or crashing the process.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137077" target="_blank">CVE-2026-137077</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:44 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-131827" data-description="rustdesk client for windows reg_recovery missing authorization local privilege escalation vulnerability. this vulnerability allows local attackers to escalate privileges on affected installations of rustdesk client for windows. an attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+the specific flaw exists within the main ipc endpoint exposed by the rustdesk service. the issue results from the lack of authorization prior to allowing access to functionality. an attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of system. was zdi-can-34805.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131827" target="_blank">CVE-2026-131827</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.4</p>
-                    <p>FreeRDP before 3.33.0 contains a heap out-of-bounds write in h264_context_reset() in libfreerdp/codec/h264.c, which stores new dimensions before the YUV planes are reallocated. Remote peers can trigger surface height increases so avc420_compress() writes taller frames past undersized luma and chroma planes, corrupting heap memory or crashing the process.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>RustDesk Client for Windows reg_recovery Missing Authorization Local Privilege Escalation Vulnerability. This vulnerability allows local attackers to escalate privileges on affected installations of RustDesk Client for Windows. An attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+The specific flaw exists within the main IPC endpoint exposed by the RustDesk service. The issue results from the lack of authorization prior to allowing access to functionality. An attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of SYSTEM. Was ZDI-CAN-34805.</p>
                 </div>
         
-                <div class="cve-entry" data-cve-id="CVE-2026-137076" data-description="ffmpeg through 9.1 contains an information disclosure vulnerability because avcodec_flush_buffers() does not release the decoder context's frame buffer pool, so recycled buffers retain prior picture data. attackers can supply crafted damaged streams to applications reusing one decoder context across users to recover another user's decoded picture content from unwritten frame regions.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137076" target="_blank">CVE-2026-137076</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 2.5</p>
-                    <p>FFmpeg through 9.1 contains an information disclosure vulnerability because avcodec_flush_buffers() does not release the decoder context's frame buffer pool, so recycled buffers retain prior picture data. Attackers can supply crafted damaged streams to applications reusing one decoder context across users to recover another user's decoded picture content from unwritten frame regions.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137075" data-description="gnome libxml2 2.14.0 through 2.15.4 contains a missing nul termination flaw in xmlbufferaddhead() in buf.c that leaves uninitialized heap bytes as the terminator for storage-less buffers. attackers supplying data to applications reusing an xmlbuffer can trigger over-reads via xmlbuffercat() and xmlstrlen(), disclosing adjacent heap memory or causing crashes.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137075" target="_blank">CVE-2026-137075</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:43 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-offline">LOW</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 3.6</p>
-                    <p>GNOME libxml2 2.14.0 through 2.15.4 contains a missing NUL termination flaw in xmlBufferAddHead() in buf.c that leaves uninitialized heap bytes as the terminator for storage-less buffers. Attackers supplying data to applications reusing an xmlBuffer can trigger over-reads via xmlBufferCat() and xmlStrlen(), disclosing adjacent heap memory or causing crashes.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-137074" data-description="gnome libxml2 2.12.6 through 2.15.4 contains a null pointer dereference vulnerability in xmltextreaderconstencoding() after a reader is reset with xmlreadernewwalker(). because xmlctxtreset() leaves ctxt->input null, querying the document encoding makes xmlgetactualencoding() read ctxt->input->flags without a check, crashing the application and causing denial of service.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137074" target="_blank">CVE-2026-137074</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-25 14:18:43 CDT</p>
+                <div class="cve-entry" data-cve-id="CVE-2026-131819" data-description="chargepoint home flex debug interface with improper access control authentication bypass vulnerability. this vulnerability allows physically present attackers to bypass authentication on affected chargepoint home flex ev chargers. authentication is not required to exploit this vulnerability.
+
+the specific flaw exists within the serial debug interface. the issue results from the lack of access control prior to allowing access to functionality. an attacker can leverage this vulnerability to bypass authentication on the system. was zdi-can-28997.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131819" target="_blank">CVE-2026-131819</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:17 CDT</p>
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 4.7</p>
-                    <p>GNOME libxml2 2.12.6 through 2.15.4 contains a NULL pointer dereference vulnerability in xmlTextReaderConstEncoding() after a reader is reset with xmlReaderNewWalker(). Because xmlCtxtReset() leaves ctxt->input NULL, querying the document encoding makes xmlGetActualEncoding() read ctxt->input->flags without a check, crashing the application and causing denial of service.</p>
+                    <p><span class="feed-label">CVSS Score:</span> 4.3</p>
+                    <p>ChargePoint Home Flex Debug Interface With Improper Access Control Authentication Bypass Vulnerability. This vulnerability allows physically present attackers to bypass authentication on affected ChargePoint Home Flex EV chargers. Authentication is not required to exploit this vulnerability.
+
+The specific flaw exists within the serial debug interface. The issue results from the lack of access control prior to allowing access to functionality. An attacker can leverage this vulnerability to bypass authentication on the system. Was ZDI-CAN-28997.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131818" data-description="chargepoint home flex busybox unnecessary privileges local privilege escalation vulnerability. this vulnerability allows local attackers to escalate privileges on affected installations of chargepoint home flex ev chargers. an attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+the specific flaw exists within the busybox binary. the issue results from the setuid flag being set. an attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of root. was zdi-can-29090.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131818" target="_blank">CVE-2026-131818</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>ChargePoint Home Flex busybox Unnecessary Privileges Local Privilege Escalation Vulnerability. This vulnerability allows local attackers to escalate privileges on affected installations of ChargePoint Home Flex EV chargers. An attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+The specific flaw exists within the busybox binary. The issue results from the setuid flag being set. An attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of root. Was ZDI-CAN-29090.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131817" data-description="chargepoint home flex wpa_passphrase command injection remote code execution vulnerability. this vulnerability allows network-adjacent attackers to execute arbitrary code on affected installations of chargepoint home flex ev chargers. authentication is not required to exploit this vulnerability.
+
+the specific flaw exists within the psk parameter passed to the wpa_passphrase endpoint. the issue results from the lack of proper validation of a user-supplied string before using it to execute a system call. an attacker can leverage this vulnerability to execute arbitrary code in the context of root. was zdi-can-29000.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131817" target="_blank">CVE-2026-131817</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 8.8</p>
+                    <p>ChargePoint Home Flex wpa_passphrase Command Injection Remote Code Execution Vulnerability. This vulnerability allows network-adjacent attackers to execute arbitrary code on affected installations of ChargePoint Home Flex EV chargers. Authentication is not required to exploit this vulnerability.
+
+The specific flaw exists within the PSK parameter passed to the wpa_passphrase endpoint. The issue results from the lack of proper validation of a user-supplied string before using it to execute a system call. An attacker can leverage this vulnerability to execute arbitrary code in the context of root. Was ZDI-CAN-29000.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131816" data-description="chargepoint home flex ssh hard-coded credentials authentication bypass vulnerability. this vulnerability allows network-adjacent attackers to bypass authentication on affected installations of chargepoint home flex ev chargers. authentication is not required to exploit this vulnerability.
+
+the specific flaw exists within the ssh service, which listens on tcp port 22 by default. the issue results from the use of hard-coded credentials. an attacker can leverage this vulnerability to bypass authentication on the system. was zdi-can-28996.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131816" target="_blank">CVE-2026-131816</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.3</p>
+                    <p>ChargePoint Home Flex ssh Hard-coded Credentials Authentication Bypass Vulnerability. This vulnerability allows network-adjacent attackers to bypass authentication on affected installations of ChargePoint Home Flex EV chargers. Authentication is not required to exploit this vulnerability.
+
+The specific flaw exists within the ssh service, which listens on TCP port 22 by default. The issue results from the use of hard-coded credentials. An attacker can leverage this vulnerability to bypass authentication on the system. Was ZDI-CAN-28996.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131815" data-description="chargepoint home flex uploadsm filetype link following local privilege escalation vulnerability. this vulnerability allows local attackers to escalate privileges on affected installations of chargepoint home flex ev chargers. an attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+the specific flaw exists within the handling of the filetype parameter passed to the uploadsm endpoint. by creating a symbolic link, an attacker can abuse the service to write an arbitrary file. an attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of root. was zdi-can-29096.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131815" target="_blank">CVE-2026-131815</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>ChargePoint Home Flex uploadsm filetype Link Following Local Privilege Escalation Vulnerability. This vulnerability allows local attackers to escalate privileges on affected installations of ChargePoint Home Flex EV chargers. An attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+The specific flaw exists within the handling of the filetype parameter passed to the uploadsm endpoint. By creating a symbolic link, an attacker can abuse the service to write an arbitrary file. An attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of root. Was ZDI-CAN-29096.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-131814" data-description="chargepoint home flex dwnldlogsm tar command injection local privilege escalation vulnerability. this vulnerability allows local attackers to escalate privileges on affected installations of chargepoint home flex ev chargers. an attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+the specific flaw exists within the tar function. the issue results from the lack of proper validation of a user-supplied string before using it to execute a system call. an attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of root. was zdi-can-29057.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-131814" target="_blank">CVE-2026-131814</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.8</p>
+                    <p>ChargePoint Home Flex dwnldlogsm tar Command Injection Local Privilege Escalation Vulnerability. This vulnerability allows local attackers to escalate privileges on affected installations of ChargePoint Home Flex EV chargers. An attacker must first obtain the ability to execute low-privileged code on the target system in order to exploit this vulnerability.
+
+The specific flaw exists within the tar function. The issue results from the lack of proper validation of a user-supplied string before using it to execute a system call. An attacker can leverage this vulnerability to escalate privileges and execute arbitrary code in the context of root. Was ZDI-CAN-29057.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-123879" data-description="in authd before 0.7.2, an improper access control vulnerability allows an authenticated remote attacker to complete a first-time ssh login with another account's uid and incorrect primary gid, and to read or modify files owned by that account. this allows an attacker to access another account's data, potentially enabling account takeover or privilege escalation.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-123879" target="_blank">CVE-2026-123879</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>In authd before 0.7.2, an improper access control vulnerability allows an authenticated remote attacker to complete a first-time SSH login with another account's UID and incorrect primary GID, and to read or modify files owned by that account. This allows an attacker to access another account's data, potentially enabling account takeover or privilege escalation.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102960" data-description="the grow r502-a fingerprint sensor driver (drivers/sensor/grow_r502a/grow_r502a.c) receives sensor responses in the uart interrupt handler uart_cb_handler(). once the 9-byte header has arrived, the handler reads the 16-bit package length from the header and uses it as the byte count for further uart_fifo_read() calls into rx_buf.data. it never checks that length against the destination buffer. that buffer is a union r502a_packet on the calling thread's stack, set up by transceive_packet(), and is only config_r502a_data_pkt_size + 12 bytes long (140 bytes by default).
+
+a malicious or counterfeit sensor module, or an attacker who tampers with the uart wiring, can reply to any driver command with a header that declares a length of up to 65535 bytes. the isr then writes that many attacker-supplied bytes past the end of the stack buffer. the existing length check in r502a_validate_rx_packet() runs only after the data has been written, so it does not prevent the overflow. every sensor transaction is affected, including the ones issued by fps_init() during device initialization.
+
+the result is a stack overwrite with attacker-controlled length and content in the calling thread. this can corrupt control data and may lead to arbitrary code execution on the host mcu, which would undermine any function the fingerprint sensor is meant to protect. the fix validates the declared length against config_r502a_data_pkt_size as soon as the header is complete and aborts the reception if it is out of range.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102960" target="_blank">CVE-2026-102960</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:16 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.8</p>
+                    <p>The Grow R502-A fingerprint sensor driver (drivers/sensor/grow_r502a/grow_r502a.c) receives sensor responses in the UART interrupt handler uart_cb_handler(). Once the 9-byte header has arrived, the handler reads the 16-bit package length from the header and uses it as the byte count for further uart_fifo_read() calls into rx_buf.data. It never checks that length against the destination buffer. That buffer is a union r502a_packet on the calling thread's stack, set up by transceive_packet(), and is only CONFIG_R502A_DATA_PKT_SIZE + 12 bytes long (140 bytes by default).
+
+A malicious or counterfeit sensor module, or an attacker who tampers with the UART wiring, can reply to any driver command with a header that declares a length of up to 65535 bytes. The ISR then writes that many attacker-supplied bytes past the end of the stack buffer. The existing length check in r502a_validate_rx_packet() runs only after the data has been written, so it does not prevent the overflow. Every sensor transaction is affected, including the ones issued by fps_init() during device initialization.
+
+The result is a stack overwrite with attacker-controlled length and content in the calling thread. This can corrupt control data and may lead to arbitrary code execution on the host MCU, which would undermine any function the fingerprint sensor is meant to protect. The fix validates the declared length against CONFIG_R502A_DATA_PKT_SIZE as soon as the header is complete and aborts the reception if it is out of range.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102959" data-description="the grow r502-a fingerprint sensor driver (drivers/sensor/grow_r502a/grow_r502a.c) points drv_data->rx_buf.data at an rx_packet buffer on the caller's stack and enables the uart rx interrupt before waiting 1500 ms for a reply. when the wait timed out, transceive_packet() returned -etimedout but left the rx interrupt enabled and rx_buf.data still pointing at the caller's buffer.
+
+once the caller's frame has returned, any bytes that arrive late on the uart are written by the interrupt handler uart_cb_handler() through the dangling pointer into stack memory that the thread has since reused. the bytes come from the device on the other end of the uart. an attacker with physical access who replaces or impersonates the fingerprint module can trigger this by delaying a reply past the timeout and then sending a packet. a slow or faulty genuine module can also trigger it by accident.
+
+the result is a write of attacker-chosen bytes into a live thread stack. the write length comes from the header of the late packet. commit 96968fac22b, which landed together with this fix, bounds it to a header plus config_r502a_data_pkt_size bytes; affected releases do not have that bound. this can crash the device and may allow control-flow hijacking, depending on what occupies the reused stack region. the fix disables the rx interrupt, resets the rx semaphore and clears rx_buf.data on timeout, and the interrupt handler now refuses to write when no receive buffer is armed.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102959" target="_blank">CVE-2026-102959</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 6.4</p>
+                    <p>The Grow R502-A fingerprint sensor driver (drivers/sensor/grow_r502a/grow_r502a.c) points drv_data->rx_buf.data at an rx_packet buffer on the caller's stack and enables the UART RX interrupt before waiting 1500 ms for a reply. When the wait timed out, transceive_packet() returned -ETIMEDOUT but left the RX interrupt enabled and rx_buf.data still pointing at the caller's buffer.
+
+Once the caller's frame has returned, any bytes that arrive late on the UART are written by the interrupt handler uart_cb_handler() through the dangling pointer into stack memory that the thread has since reused. The bytes come from the device on the other end of the UART. An attacker with physical access who replaces or impersonates the fingerprint module can trigger this by delaying a reply past the timeout and then sending a packet. A slow or faulty genuine module can also trigger it by accident.
+
+The result is a write of attacker-chosen bytes into a live thread stack. The write length comes from the header of the late packet. Commit 96968fac22b, which landed together with this fix, bounds it to a header plus CONFIG_R502A_DATA_PKT_SIZE bytes; affected releases do not have that bound. This can crash the device and may allow control-flow hijacking, depending on what occupies the reused stack region. The fix disables the RX interrupt, resets the RX semaphore and clears rx_buf.data on timeout, and the interrupt handler now refuses to write when no receive buffer is armed.</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-102957" data-description="z_impl_pwm_capture_cycles() in drivers/pwm/pwm_capture.c stores its capture context (struct z_pwm_capture_cb_data, including a struct k_sem) on its own stack and registers a pointer to it as the driver capture callback's user_data. when called with a k_no_wait timeout, k_sem_take() returns -ebusy, which the function did not handle: it fell through, returned the uninitialized status field, copied uninitialized period/pulse values to the caller when that status happened to be zero, and returned without disabling the capture or clearing the callback.
+
+pwm_capture_cycles() is a system call, and z_vrfy_pwm_capture_cycles() passes the caller's timeout through unchanged. with config_userspace and config_pwm_capture enabled, an unprivileged user-mode thread that has been granted access to a capture-capable pwm device can pass k_no_wait to trigger the defect. without userspace the function is only reachable from trusted application code.
+
+the uninitialized values come from the thread's privileged (kernel) stack, so a user-mode caller can read up to 8 bytes of stale kernel stack memory per call. more seriously, when the capture later completes, the driver isr invokes z_pwm_capture_cycles_callback() with the dangling pointer. the callback writes into the expired kernel stack region and calls k_sem_give() on whatever memory now occupies it, which can corrupt live kernel stack frames and make the scheduler walk a forged wait queue. the result is kernel memory corruption from interrupt context, leading at least to a crash and possibly to privilege escalation out of the userspace sandbox. the fix rejects k_no_wait with -einval before any capture is configured.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-102957" target="_blank">CVE-2026-102957</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-25 15:17:15 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> 7.7</p>
+                    <p>z_impl_pwm_capture_cycles() in drivers/pwm/pwm_capture.c stores its capture context (struct z_pwm_capture_cb_data, including a struct k_sem) on its own stack and registers a pointer to it as the driver capture callback's user_data. When called with a K_NO_WAIT timeout, k_sem_take() returns -EBUSY, which the function did not handle: it fell through, returned the uninitialized status field, copied uninitialized period/pulse values to the caller when that status happened to be zero, and returned without disabling the capture or clearing the callback.
+
+pwm_capture_cycles() is a system call, and z_vrfy_pwm_capture_cycles() passes the caller's timeout through unchanged. With CONFIG_USERSPACE and CONFIG_PWM_CAPTURE enabled, an unprivileged user-mode thread that has been granted access to a capture-capable PWM device can pass K_NO_WAIT to trigger the defect. Without userspace the function is only reachable from trusted application code.
+
+The uninitialized values come from the thread's privileged (kernel) stack, so a user-mode caller can read up to 8 bytes of stale kernel stack memory per call. More seriously, when the capture later completes, the driver ISR invokes z_pwm_capture_cycles_callback() with the dangling pointer. The callback writes into the expired kernel stack region and calls k_sem_give() on whatever memory now occupies it, which can corrupt live kernel stack frames and make the scheduler walk a forged wait queue. The result is kernel memory corruption from interrupt context, leading at least to a crash and possibly to privilege escalation out of the userspace sandbox. The fix rejects K_NO_WAIT with -EINVAL before any capture is configured.</p>
                 </div>
         
             </div>
