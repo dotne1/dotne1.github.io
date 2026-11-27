@@ -34,6 +34,98 @@
             <div class="feed-preview" id="cveFeed">
                 <div class="feed-header">Latest Vulnerabilities</div>
     
+                <div class="cve-entry" data-cve-id="CVE-2026-77682" data-description="a code injection vulnerability exists in epiphany when the user invokes form autofill from the context menu on a page containing a malicious html form.
+
+in embed/web-process-extension/resources/js/ephy_autofill.js, getselector() builds a css selector by directly interpolating an element's id attribute:
+
+    path.unshift(`#${el.id}`);
+
+when the user selects an autofill entry, the browser process in embed/ephy-web-view.c previously constructed javascript using sprintf with the selector embedded in single quotes:
+
+    ephyautofill.fill(page_id, 'selector', fill_choice);
+
+because selector comes from attacker-controlled page content and is not escaped, a crafted id such as a'); payload; var _=(' breaks out of the string literal and executes arbitrary javascript when the script is evaluated.
+
+the injected code runs in epiphany's private autofill script world, which hosts ephyautofill credential apis and password manager save/request handlers. the reporter demonstrated a proof of concept that injects credentials into another domain and uses ephy.permissionsmanager to enumerate domains with special permissions. full exfiltration of all saved passwords was not demonstrated but may be possible given the privileges of this context.
+
+exploitation requires the victim to visit a malicious page, right-click on a form field, and choose an autofill context menu item. this is a deliberate user action but does not require installing software or entering credentials manually.
+
+affected versions: epiphany >= 47.beta.
+fixed upstream in epiphany 50.6 and 49.9 via merge request !2147, which replaces sprintf-based script evaluation with a webkit user message and jsc_value_object_invoke_method() passing the selector as a typed string argument.
+upstream report: https://gitlab.gnome.org/gnome/epiphany/-/issues/2921">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77682" target="_blank">CVE-2026-77682</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-27 01:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A code injection vulnerability exists in Epiphany when the user invokes form autofill from the context menu on a page containing a malicious HTML form.
+
+In embed/web-process-extension/resources/js/ephy_autofill.js, getSelector() builds a CSS selector by directly interpolating an element's id attribute:
+
+    path.unshift(`#${el.id}`);
+
+When the user selects an autofill entry, the browser process in embed/ephy-web-view.c previously constructed JavaScript using sprintf with the selector embedded in single quotes:
+
+    EphyAutofill.fill(PAGE_ID, 'SELECTOR', FILL_CHOICE);
+
+Because SELECTOR comes from attacker-controlled page content and is not escaped, a crafted id such as a'); PAYLOAD; var _=(' breaks out of the string literal and executes arbitrary JavaScript when the script is evaluated.
+
+The injected code runs in Epiphany's private autofill script world, which hosts EphyAutofill credential APIs and password manager save/request handlers. The reporter demonstrated a proof of concept that injects credentials into another domain and uses Ephy.permissionsManager to enumerate domains with special permissions. Full exfiltration of all saved passwords was not demonstrated but may be possible given the privileges of this context.
+
+Exploitation requires the victim to visit a malicious page, right-click on a form field, and choose an Autofill context menu item. This is a deliberate user action but does not require installing software or entering credentials manually.
+
+Affected versions: Epiphany >= 47.beta.
+Fixed upstream in epiphany 50.6 and 49.9 via merge request !2147, which replaces sprintf-based script evaluation with a WebKit user message and jsc_value_object_invoke_method() passing the selector as a typed string argument.
+Upstream report: https://gitlab.gnome.org/GNOME/epiphany/-/issues/2921</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2026-77679" data-description="a path traversal (zip slip) vulnerability exists in epiphany when installing webextension packages from .xpi files.
+
+in src/webextension/ephy-web-extension-manager.c, the decompress_xpi_thread() function extracts xpi archives (zip format) to disk using libarchive. for each archive entry, the output path is built by concatenating the intended extraction directory with the raw pathname from the archive:
+
+    full_path = g_build_filename(path, archive_entry_pathname(entry), null);
+    archive_entry_set_pathname(entry, full_path);
+    ret = archive_write_header(ext, entry);
+
+the libarchive extraction options did not include archive_extract_secure_nodotdot or archive_extract_secure_symlinks. as a result, archive entries containing parent-directory traversal sequences (for example "../../../../../.bashrc") are written outside the intended web_extensions extraction directory.
+
+a malicious .xpi file can therefore overwrite arbitrary files writable by the user running epiphany, such as ~/.bashrc, ~/.config/autostart/*.desktop, or ~/.ssh/authorized_keys. this can lead to persistent code execution on subsequent shell startup or gnome login.
+
+exploitation requires the victim to install or open a crafted .xpi file. the reporter notes that opening an xpi can trigger extraction even when the webextensions feature is not enabled by default.
+
+affected versions: epiphany >= 47.rc.
+fixed upstream in epiphany 50.6 and 49.9 via merge request !2143, which adds archive_extract_secure_nodotdot and archive_extract_secure_symlinks to archive_write_disk_set_options().
+upstream report: https://gitlab.gnome.org/gnome/epiphany/-/issues/2922">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-77679" target="_blank">CVE-2026-77679</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-27 01:17:03 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>A path traversal (ZIP slip) vulnerability exists in Epiphany when installing WebExtension packages from .xpi files.
+
+In src/webextension/ephy-web-extension-manager.c, the decompress_xpi_thread() function extracts XPI archives (ZIP format) to disk using libarchive. For each archive entry, the output path is built by concatenating the intended extraction directory with the raw pathname from the archive:
+
+    full_path = g_build_filename(path, archive_entry_pathname(entry), NULL);
+    archive_entry_set_pathname(entry, full_path);
+    ret = archive_write_header(ext, entry);
+
+The libarchive extraction options did not include ARCHIVE_EXTRACT_SECURE_NODOTDOT or ARCHIVE_EXTRACT_SECURE_SYMLINKS. As a result, archive entries containing parent-directory traversal sequences (for example "../../../../../.bashrc") are written outside the intended web_extensions extraction directory.
+
+A malicious .xpi file can therefore overwrite arbitrary files writable by the user running Epiphany, such as ~/.bashrc, ~/.config/autostart/*.desktop, or ~/.ssh/authorized_keys. This can lead to persistent code execution on subsequent shell startup or GNOME login.
+
+Exploitation requires the victim to install or open a crafted .xpi file. The reporter notes that opening an XPI can trigger extraction even when the WebExtensions feature is not enabled by default.
+
+Affected versions: Epiphany >= 47.rc.
+Fixed upstream in epiphany 50.6 and 49.9 via merge request !2143, which adds ARCHIVE_EXTRACT_SECURE_NODOTDOT and ARCHIVE_EXTRACT_SECURE_SYMLINKS to archive_write_disk_set_options().
+Upstream report: https://gitlab.gnome.org/GNOME/epiphany/-/issues/2922</p>
+                </div>
+        
+                <div class="cve-entry" data-cve-id="CVE-2025-3088" data-description="rejected reason: this cve id has been rejected or withdrawn by its cve numbering authority.">
+                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2025-3088" target="_blank">CVE-2025-3088</a></h2>
+                    <p><span class="feed-label">Published:</span> 2026-11-27 01:17:01 CDT</p>
+                    <p><span class="feed-label">Severity:</span> <span class="status-offline">N/A</span></p>
+                    <p><span class="feed-label">CVSS Score:</span> N/A</p>
+                    <p>Rejected reason: This CVE ID has been rejected or withdrawn by its CVE Numbering Authority.</p>
+                </div>
+        
                 <div class="cve-entry" data-cve-id="CVE-2026-137738" data-description="in realvnc server before 7.19.1, udp-based connections could potentially be exploited without authentication to execute code remotely or cause the software to crash. this could allow an attacker to remotely execute code as root on certain platforms or perform a denial of service attack. this issue affects realvnc viewer: from 8.4.0 through 8.6.1; realvnc classic viewer: from 6.4.0 through 7.18.2; realvnc server: from 6.4.0 through 7.19.0; realvnc connect app: through 8.6.1; realvnc ios viewer: from 3.7.0 through 4.9.5; realvnc android viewer: from 3.5.0 through 4.9.5; realvnc ios server: through 2.8.1; realvnc android server: through 2.8.3; on-demand assist: through 3.4.1.">
                     <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-137738" target="_blank">CVE-2026-137738</a></h2>
                     <p><span class="feed-label">Published:</span> 2026-11-27 00:17:09 CDT</p>
@@ -168,38 +260,6 @@
                     <p><span class="feed-label">Severity:</span> <span class="status-offline">MEDIUM</span></p>
                     <p><span class="feed-label">CVSS Score:</span> 5.3</p>
                     <p>The W3 Total Cache plugin for WordPress is vulnerable to Sensitive Information Exposure in all versions up to, and including, 2.11.0 via the 'utm_source (and the wp-resetpass-<hash> cookie on the victim side)' parameter. This makes it possible for unauthenticated attackers to extract the live password-reset key (rp_key) embedded in the cached reset form, enabling full account takeover of the targeted administrator. Exploitation requires the page-cache engine to be configured as Disk: Basic, Memcached, Redis, or APC with the 'Cache URI with query string variables' option enabled, and the victim must visit an attacker-crafted URL containing utm_source=wp-locations.php while their wp-resetpass cookie remains active.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-119071" data-description="the w3 total cache plugin for wordpress is vulnerable to unauthorized file deletion in all versions up to, and including, 2.11.0 via the `ajax_revert()` ajax handler. the vulnerability exists because the `remove_optimizations()` function reads attacker-controlled values from the unprotected `w3tc_imageservice` post meta key — which carries no underscore prefix and no registered authorization callback, making it writable by any user with `edit_post` capability via wordpress's built-in custom-fields ajax endpoint — and passes those values directly to `wp_delete_attachment()` with no check that the referenced id is a child of the caller's own post, is an actual attachment, or that the caller holds `delete_post` capability on it. this makes it possible for authenticated attackers with author-level access or above to permanently delete any wordpress attachment in the media library, including media files owned by other users along with their associated files on disk, regardless of ownership — a capability not available through the normal wordpress interface. the revert nonce is exposed via `wp_localize_script` on `/wp-admin/upload.php` to any user with `upload_files` capability, ensuring the nonce check that is present does not serve as a meaningful barrier to author-level exploitation.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-119071" target="_blank">CVE-2026-119071</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-26 23:19:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.1</p>
-                    <p>The W3 Total Cache plugin for WordPress is vulnerable to unauthorized File Deletion in all versions up to, and including, 2.11.0 via the `ajax_revert()` AJAX handler. The vulnerability exists because the `remove_optimizations()` function reads attacker-controlled values from the unprotected `w3tc_imageservice` post meta key — which carries no underscore prefix and no registered authorization callback, making it writable by any user with `edit_post` capability via WordPress's built-in custom-fields AJAX endpoint — and passes those values directly to `wp_delete_attachment()` with no check that the referenced ID is a child of the caller's own post, is an actual attachment, or that the caller holds `delete_post` capability on it. This makes it possible for authenticated attackers with Author-level access or above to permanently delete any WordPress attachment in the media library, including media files owned by other users along with their associated files on disk, regardless of ownership — a capability not available through the normal WordPress interface. The revert nonce is exposed via `wp_localize_script` on `/wp-admin/upload.php` to any user with `upload_files` capability, ensuring the nonce check that is present does not serve as a meaningful barrier to Author-level exploitation.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-115288" data-description="missing authentication vulnerability in bs2500/bs500 virtage firmware.
-
-this issue affects bladesymphony bs2500: from 02-02 through 02-76*; bladesymphony bs500: from 01-01 through 02-76*.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115288" target="_blank">CVE-2026-115288</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-26 23:19:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 8.4</p>
-                    <p>Missing authentication vulnerability in BS2500/BS500 Virtage Firmware.
-
-This issue affects BladeSymphony BS2500: from 02-02 through 02-76*; BladeSymphony BS500: from 01-01 through 02-76*.</p>
-                </div>
-        
-                <div class="cve-entry" data-cve-id="CVE-2026-115287" data-description="dos vulnerability in bs2500/bs500 virtage firmware.
-
-this issue affects bladesymphony bs2500: from 02-02 through 02-76; bladesymphony bs500: from 01-01 through 02-76.">
-                    <h2><a class="contact-button" href="https://nvd.nist.gov/vuln/detail/CVE-2026-115287" target="_blank">CVE-2026-115287</a></h2>
-                    <p><span class="feed-label">Published:</span> 2026-11-26 23:19:00 CDT</p>
-                    <p><span class="feed-label">Severity:</span> <span class="status-online">HIGH</span></p>
-                    <p><span class="feed-label">CVSS Score:</span> 7.3</p>
-                    <p>DoS vulnerability in BS2500/BS500 Virtage Firmware.
-
-This issue affects BladeSymphony BS2500: from 02-02 through 02-76; BladeSymphony BS500: from 01-01 through 02-76.</p>
                 </div>
         
             </div>
